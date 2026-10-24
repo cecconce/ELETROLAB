@@ -2,7 +2,7 @@
 
 Simulatore didattico gratuito per gli istituti tecnici: impianti elettrici, PLC Ladder, Arduino ed elettronica in un unico programma per Windows.
 
-> **Stato:** in sviluppo — Fase 0 (progettazione). L'avanzamento è descritto in [STATO.md](STATO.md).
+> **Stato:** in sviluppo — Fase 1 (guscio dell'applicazione). L'avanzamento è descritto in [STATO.md](STATO.md).
 
 ## Moduli previsti
 
@@ -23,3 +23,7 @@ Simulatore didattico gratuito per gli istituti tecnici: impianti elettrici, PLC 
 ## Autore
 
 Pierluigi Ceccon — progetto realizzato per uso didattico e distribuito gratuitamente.
+
+## Licenza
+
+GPL-3.0 — vedi [LICENSE](LICENSE). Si può usare, studiare, modificare e ridistribuire liberamente; le versioni modificate devono restare libere.

@@ -1,20 +1,30 @@
 # Stato dei lavori
 
-Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripartire e aggiorna lo stato alla fine.
+Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripartire e aggiorna lo stato alla fine. Le regole sono in [CLAUDE.md](CLAUDE.md).
 
 ## Fase corrente
 
-**Fase 0 – Architettura** — proposta inviata, in attesa di conferma su:
-- [ ] Licenza (proposta: GPL-3.0)
-- [ ] Guscio desktop (proposta: Tauri 2 + TypeScript + React + Konva)
-- [ ] Orario sessioni notturne (proposta: 23:00, 00:00, 01:00, 02:00)
+**Fase 1 – Guscio dell'applicazione** — in corso
+
+### Attività (una per sessione, in ordine)
+
+- [ ] 1.1 Scheletro Tauri 2 + React + TypeScript + Vite; Vitest configurato con un test di prova; `npm test` e `npm run build` funzionanti.
+- [ ] 1.2 Workflow GitHub Actions (`windows-latest`): test + build Tauri; artefatti scaricabili: zip portable (con `portable.txt`) e installer NSIS.
+- [ ] 1.3 Schermata iniziale: 4 grandi tessere (Impianti elettrici, PLC, Arduino, Elettronica), "Apri esercizio recente", "Esempi"; tema chiaro/scuro; testi da `lingue/it.json`.
+- [ ] 1.4 Editor grafico comune su Konva: griglia con aggancio, zoom con rotellina, spostamento vista, selezione e trascinamento componenti.
+- [ ] 1.5 Libreria laterale: componenti caricati da file JSON in `libreria/`, icone SVG originali, categorie, ricerca per nome, drag & drop nell'editor, tooltip didattico.
+- [ ] 1.6 Collegamenti: clic su morsetto → clic sull'altro; fili ortogonali instradati automaticamente e spostabili; sigle automatiche (K1, S1, H1, M1…).
+- [ ] 1.7 Annulla/Ripeti illimitati (con test), eliminazione, copia/incolla.
+- [ ] 1.8 Formato progetto `.elab` (JSON con versione), Salva/Apri/Salva con nome, salvataggio automatico, elenco file recenti; gestione modalità portable vs `%APPDATA%` lato Rust (con test).
+- [ ] 1.9 Finestra "Informazioni" (autore, istituto, versione, licenza, elenco librerie) e `LICENZE.txt`; blocco di ogni accesso di rete (CSP).
+- [ ] 1.10 Verifica finale: build Actions verde, prova dell'.exe portable, resoconto di fase.
 
 ## Piano delle fasi
 
 | Fase | Contenuto | Stato |
 |---|---|---|
-| 0 | Architettura, struttura, tecnologie, licenza | in corso |
-| 1 | Guscio app: schermata iniziale, editor, libreria, salva/apri, .exe portable | da fare |
+| 0 | Architettura, struttura, tecnologie, licenza | completata (confermata 2026-10-24) |
+| 1 | Guscio app: schermata iniziale, editor, libreria, salva/apri, .exe portable | in corso |
 | 2 | Impianti elettrici + esempi pronti | da fare |
 | 3 | PLC Ladder + impianti virtuali animati | da fare |
 | 4 | Elettronica con SPICE e strumenti virtuali | da fare |
@@ -23,8 +33,8 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Regola
 
-Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e **stop** fino alla conferma del docente.
+Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e **stop** fino alla conferma del docente. La conferma si dà scrivendo nella riga della fase "confermata" oppure dicendolo a Claude in chat.
 
 ## Registro sessioni
 
-- 2026-10-24 — creato il repository e questo file.
+- 2026-10-24 — creato il repository. Fase 0 confermata: GPL-3.0, Tauri 2 + React + Konva, sessioni notturne nel cloud alle 23, 00, 01, 02.
