@@ -1,5 +1,26 @@
 {
   "app.titolo": "ElettroLab",
   "app.sottotitolo": "Simulatore didattico di impianti elettrici, PLC, Arduino ed elettronica",
-  "app.versione": "Versione {versione}"
+  "app.versione": "Versione {versione}",
+  "comune.home": "Schermata iniziale",
+  "comune.ok": "Ho capito",
+  "tema.passaScuro": "Tema scuro",
+  "tema.passaChiaro": "Tema chiaro",
+  "home.moduli": "Moduli",
+  "home.recenti": "Apri esercizio recente",
+  "home.recentiVuoto": "Nessun esercizio recente. I file che salvi compariranno qui.",
+  "home.recentiInArrivo": "L'apertura dei file arriverà in una prossima versione.",
+  "home.esempi": "Esempi",
+  "home.esempiDescrizione": "Schemi pronti da aprire, provare e modificare.",
+  "home.apriEsempi": "Sfoglia gli esempi",
+  "home.esempiInArrivo": "Gli esempi arriveranno insieme ai moduli di simulazione.",
+  "modulo.impianti.titolo": "Impianti elettrici",
+  "modulo.impianti.descrizione": "Schemi di potenza e comando: contattori, pulsanti, motori.",
+  "modulo.plc.titolo": "PLC",
+  "modulo.plc.descrizione": "Programmazione Ladder con impianti animati da comandare.",
+  "modulo.arduino.titolo": "Arduino",
+  "modulo.arduino.descrizione": "Breadboard, componenti e codice, con monitor seriale.",
+  "modulo.elettronica.titolo": "Elettronica",
+  "modulo.elettronica.descrizione": "Circuiti analogici e digitali con strumenti virtuali.",
+  "modulo.inCostruzione": "Questo modulo è in costruzione: l'area di disegno arriverà a breve."
 }
