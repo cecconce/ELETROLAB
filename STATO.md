@@ -9,7 +9,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 ### Attività (una per sessione, in ordine)
 
 - [x] 1.1 Scheletro Tauri 2 + React + TypeScript + Vite; Vitest configurato con un test di prova; `npm test` e `npm run build` funzionanti.
-- [ ] 1.2 Workflow GitHub Actions (`windows-latest`): test + build Tauri; artefatti scaricabili: zip portable (con `portable.txt`) e installer NSIS.
+- [x] 1.2 Workflow GitHub Actions (`windows-latest`): test + build Tauri; artefatti scaricabili: zip portable (con `portable.txt`) e installer NSIS.
 - [ ] 1.3 Schermata iniziale: 4 grandi tessere (Impianti elettrici, PLC, Arduino, Elettronica), "Apri esercizio recente", "Esempi"; tema chiaro/scuro; testi da `lingue/it.json`.
 - [ ] 1.4 Editor grafico comune su Konva: griglia con aggancio, zoom con rotellina, spostamento vista, selezione e trascinamento componenti.
 - [ ] 1.5 Libreria laterale: componenti caricati da file JSON in `libreria/`, icone SVG originali, categorie, ricerca per nome, drag & drop nell'editor, tooltip didattico.
@@ -39,3 +39,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 
 - 2026-10-24 — creato il repository. Fase 0 confermata: GPL-3.0, Tauri 2 + React + Konva, sessioni notturne nel cloud alle 23, 00, 01, 02.
 - 2026-10-24 — attività 1.1: scheletro Tauri 2 + React 18 + TypeScript + Vite 6, Vitest 3 con test di prova sui testi (`src/testi.ts`, `lingue/it.json`), parte Rust in `src-tauri/` (CSP restrittiva, profilo release leggero, icone provvisorie originali). `npm test` (4 test) e `npm run build` OK; `cargo check` OK su Linux. La build `.exe` vera sarà verificata su Windows con l'attività 1.2. Su richiesta di Pierluigi le sessioni notturne ora girano solo venerdì, sabato, domenica e lunedì (23, 00, 01, 02).
+- 2026-10-24 — attività 1.2: workflow `.github/workflows/build-windows.yml` su `windows-latest` (push su main, PR, avvio manuale): `npm ci` → `npm test` → `npx tauri build`, poi artefatti `ElettroLab-portable` (zip con `ElettroLab.exe`, `portable.txt`, `LICENSE.txt`) e `ElettroLab-installer` (NSIS). Installer impostato per utente corrente (`installMode: currentUser`, nessun permesso di amministratore), in italiano; silenzioso con `/S`. Aggiunti 6 test di controllo sulla configurazione (`test/configurazione-build.test.ts`). In locale: `npm test` (10 test), `npm run build` e `cargo check` OK. L'esito della prima build su Windows si vedrà nella pagina Actions; da verificare nella 1.10. Nota: l'app richiede il runtime WebView2 (già presente in Windows 10/11 aggiornati); l'installer lo scarica se manca, la versione portable no.

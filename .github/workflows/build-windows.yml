@@ -1,0 +1,78 @@
+# Compilazione di ElettroLab per Windows.
+# Ad ogni push su main (e su richiesta manuale) esegue i test e produce:
+#  - ElettroLab-portable.zip  → cartella da copiare su chiavetta, con portable.txt
+#  - ElettroLab-installer     → installer NSIS (.exe), anche silenzioso con /S
+# Gli artefatti si scaricano dalla pagina "Actions" del repository.
+name: Build Windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Una sola build alla volta per ramo: le build superate vengono annullate.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Rust (stabile)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache di Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Installa le dipendenze
+        run: npm ci
+
+      - name: Test dei motori e dell'interfaccia
+        run: npm test
+
+      - name: Compila l'app (Tauri + NSIS)
+        run: npx tauri build
+
+      - name: Prepara la versione portable
+        shell: pwsh
+        run: |
+          $dest = "ElettroLab-portable"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item "src-tauri/target/release/elettrolab.exe" "$dest/ElettroLab.exe"
+          Copy-Item "LICENSE" "$dest/LICENSE.txt"
+          # La presenza di portable.txt attiva la modalità portable:
+          # impostazioni e progetti vengono salvati in .\dati\ accanto all'exe.
+          Set-Content -Encoding utf8 -Path "$dest/portable.txt" -Value @(
+            "ElettroLab - modalita' portable.",
+            "Finche' questo file resta accanto a ElettroLab.exe, i dati vengono salvati nella cartella 'dati' qui accanto.",
+            "Cancellalo per usare invece la cartella utente (%APPDATA%\ElettroLab)."
+          )
+          Compress-Archive -Path "$dest/*" -DestinationPath "ElettroLab-portable.zip" -Force
+
+      - name: Carica la versione portable
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElettroLab-portable
+          path: ElettroLab-portable.zip
+          if-no-files-found: error
+
+      - name: Carica l'installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElettroLab-installer
+          path: src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
