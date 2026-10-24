@@ -22,5 +22,10 @@
   "modulo.arduino.descrizione": "Breadboard, componenti e codice, con monitor seriale.",
   "modulo.elettronica.titolo": "Elettronica",
   "modulo.elettronica.descrizione": "Circuiti analogici e digitali con strumenti virtuali.",
-  "modulo.inCostruzione": "Questo modulo è in costruzione: l'area di disegno arriverà a breve."
+  "editor.zoom": "Zoom",
+  "editor.ingrandisci": "Ingrandisci",
+  "editor.rimpicciolisci": "Rimpicciolisci",
+  "editor.adatta": "Adatta alla finestra",
+  "editor.suggerimento": "Rotellina: zoom · Tasto destro o centrale (o Spazio) + trascina: sposta la vista · Trascina sul vuoto: seleziona",
+  "editor.bloccoProva": "Blocco {n}"
 }

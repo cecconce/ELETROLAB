@@ -1,0 +1,14 @@
+ElettroLab - Librerie di terze parti
+=====================================
+
+ElettroLab è distribuito con licenza GPL-3.0 (vedi LICENSE).
+Usa le seguenti librerie, tutte con licenza compatibile con la GPL-3.0.
+L'elenco completo, con autori e testo delle licenze, sarà mostrato anche
+nella finestra "Informazioni" (attività 1.9).
+
+Libreria            Licenza      Uso
+------------------  -----------  ---------------------------------------------
+Tauri 2             MIT/Apache-2.0  Guscio dell'applicazione desktop
+React, React DOM    MIT          Interfaccia
+Konva               MIT          Area di disegno su canvas
+react-konva         MIT          Collegamento fra Konva e React

@@ -33,7 +33,7 @@ export default function App() {
 
   const modulo = moduloAperto ? trovaModulo(moduloAperto) : undefined;
   if (modulo) {
-    return <SchermataModulo modulo={modulo} onIndietro={() => setModuloAperto(null)} />;
+    return <SchermataModulo modulo={modulo} tema={tema} onIndietro={() => setModuloAperto(null)} />;
   }
 
   return (
