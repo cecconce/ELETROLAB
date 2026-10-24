@@ -8,7 +8,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ### Attività (una per sessione, in ordine)
 
-- [ ] 1.1 Scheletro Tauri 2 + React + TypeScript + Vite; Vitest configurato con un test di prova; `npm test` e `npm run build` funzionanti.
+- [x] 1.1 Scheletro Tauri 2 + React + TypeScript + Vite; Vitest configurato con un test di prova; `npm test` e `npm run build` funzionanti.
 - [ ] 1.2 Workflow GitHub Actions (`windows-latest`): test + build Tauri; artefatti scaricabili: zip portable (con `portable.txt`) e installer NSIS.
 - [ ] 1.3 Schermata iniziale: 4 grandi tessere (Impianti elettrici, PLC, Arduino, Elettronica), "Apri esercizio recente", "Esempi"; tema chiaro/scuro; testi da `lingue/it.json`.
 - [ ] 1.4 Editor grafico comune su Konva: griglia con aggancio, zoom con rotellina, spostamento vista, selezione e trascinamento componenti.
@@ -38,3 +38,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 ## Registro sessioni
 
 - 2026-10-24 — creato il repository. Fase 0 confermata: GPL-3.0, Tauri 2 + React + Konva, sessioni notturne nel cloud alle 23, 00, 01, 02.
+- 2026-10-24 — attività 1.1: scheletro Tauri 2 + React 18 + TypeScript + Vite 6, Vitest 3 con test di prova sui testi (`src/testi.ts`, `lingue/it.json`), parte Rust in `src-tauri/` (CSP restrittiva, profilo release leggero, icone provvisorie originali). `npm test` (4 test) e `npm run build` OK; `cargo check` OK su Linux. La build `.exe` vera sarà verificata su Windows con l'attività 1.2. Su richiesta di Pierluigi le sessioni notturne ora girano solo sabato, domenica e lunedì (23, 00, 01, 02).
