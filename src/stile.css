@@ -216,3 +216,113 @@ button {
   font-size: 0.85rem;
   margin-left: 8px;
 }
+
+/* --- Libreria laterale dei componenti --- */
+.corpo-modulo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+}
+.libreria {
+  width: 248px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--superficie);
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.libreria h2 {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+.libreria-ricerca input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 1rem;
+  border: 1px solid var(--bordo);
+  border-radius: 6px;
+  background: var(--sfondo);
+  color: var(--testo);
+}
+.libreria-elenco {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+.libreria-categoria h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--testo-tenue);
+  margin: 12px 0 6px;
+}
+.libreria-griglia {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.voce-libreria {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border: 2px solid var(--bordo);
+  border-radius: 8px;
+  background: var(--sfondo);
+  color: var(--testo);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.15;
+  cursor: grab;
+  text-align: center;
+}
+.voce-libreria:hover,
+.voce-libreria:focus-visible {
+  border-color: var(--testo-tenue);
+}
+.voce-libreria.scelta {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
+.voce-libreria img {
+  height: 48px;
+  max-width: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.libreria-vuota,
+.libreria-aiuto {
+  color: var(--testo-tenue);
+  font-size: 0.85rem;
+}
+.libreria-aiuto {
+  margin: 8px 0 0;
+}
+.tooltip-libreria {
+  position: fixed;
+  z-index: 10;
+  max-width: 280px;
+  background: var(--superficie);
+  color: var(--testo);
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: var(--ombra);
+  pointer-events: none;
+  font-size: 0.9rem;
+}
+.tooltip-libreria p {
+  margin: 6px 0 0;
+}
+.tooltip-libreria .sigla {
+  color: var(--testo-tenue);
+  font-weight: normal;
+}

@@ -27,5 +27,9 @@
   "editor.rimpicciolisci": "Rimpicciolisci",
   "editor.adatta": "Adatta alla finestra",
   "editor.suggerimento": "Rotellina: zoom · Tasto destro o centrale (o Spazio) + trascina: sposta la vista · Trascina sul vuoto: seleziona",
-  "editor.bloccoProva": "Blocco {n}"
+  "libreria.titolo": "Componenti",
+  "libreria.cerca": "Cerca un componente…",
+  "libreria.nessunRisultato": "Nessun componente trovato. Prova con un'altra parola.",
+  "libreria.aiuto": "Trascina un componente sul foglio, oppure cliccalo e poi clicca sul foglio.",
+  "libreria.aiutoPosa": "Clicca sul foglio per posare il componente. Esc per annullare."
 }

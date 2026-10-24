@@ -1,0 +1,130 @@
+{
+  "versione": 1,
+  "modulo": "arduino",
+  "categorie": [
+    { "id": "schede", "nome": "Schede" },
+    { "id": "uscite", "nome": "Uscite" },
+    { "id": "ingressi", "nome": "Ingressi e sensori" },
+    { "id": "passivi", "nome": "Resistenze" }
+  ],
+  "componenti": [
+    {
+      "id": "arduino-uno",
+      "nome": "Arduino Uno",
+      "categoria": "schede",
+      "sigla": "U",
+      "descrizione": "La scheda con il microcontrollore: esegue il programma e legge o comanda i pin digitali (0-13) e analogici (A0-A5).",
+      "paroleChiave": ["scheda", "microcontrollore", "board"],
+      "icona": "scheda-uno.svg",
+      "larghezza": 160,
+      "altezza": 100,
+      "morsetti": []
+    },
+    {
+      "id": "led",
+      "nome": "LED",
+      "categoria": "uscite",
+      "sigla": "D",
+      "descrizione": "Diodo che emette luce. Ha un verso: il piedino lungo (anodo, +) va verso il pin, quello corto (catodo, −) verso GND. Serve sempre una resistenza in serie.",
+      "paroleChiave": ["luce", "diodo", "lampadina"],
+      "icona": "led.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A", "x": 20, "y": 0 },
+        { "id": "K", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "buzzer",
+      "nome": "Buzzer",
+      "categoria": "uscite",
+      "sigla": "BZ",
+      "descrizione": "Piccolo altoparlante che suona quando riceve un segnale. Con tone() puoi scegliere la nota.",
+      "paroleChiave": ["suono", "cicalino", "piezo", "tone"],
+      "icona": "buzzer.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "+", "x": 20, "y": 0 },
+        { "id": "-", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "servo",
+      "nome": "Servomotore",
+      "categoria": "uscite",
+      "sigla": "M",
+      "descrizione": "Motorino che ruota il braccio fino all'angolo che scegli (da 0° a 180°) con la libreria Servo.",
+      "paroleChiave": ["motore", "angolo", "servo"],
+      "icona": "servo.svg",
+      "larghezza": 80,
+      "altezza": 60,
+      "morsetti": [
+        { "id": "GND", "x": 0, "y": 20 },
+        { "id": "V+", "x": 0, "y": 40 }
+      ]
+    },
+    {
+      "id": "pulsante",
+      "nome": "Pulsante",
+      "categoria": "ingressi",
+      "sigla": "S",
+      "descrizione": "Chiude il contatto mentre lo premi. Con digitalRead() il programma sa se è premuto.",
+      "paroleChiave": ["bottone", "tasto", "digitalRead"],
+      "icona": "pulsante.svg",
+      "larghezza": 80,
+      "altezza": 60,
+      "morsetti": [
+        { "id": "1", "x": 0, "y": 40 },
+        { "id": "2", "x": 80, "y": 40 }
+      ]
+    },
+    {
+      "id": "potenziometro",
+      "nome": "Potenziometro",
+      "categoria": "ingressi",
+      "sigla": "R",
+      "descrizione": "Resistenza regolabile con una manopola. Collegato a un pin analogico, analogRead() restituisce un valore da 0 a 1023.",
+      "paroleChiave": ["manopola", "trimmer", "analogRead"],
+      "icona": "potenziometro.svg",
+      "larghezza": 80,
+      "altezza": 60,
+      "morsetti": [
+        { "id": "1", "x": 0, "y": 40 },
+        { "id": "cursore", "x": 40, "y": 0 },
+        { "id": "2", "x": 80, "y": 40 }
+      ]
+    },
+    {
+      "id": "fotoresistenza",
+      "nome": "Fotoresistenza",
+      "categoria": "ingressi",
+      "sigla": "R",
+      "descrizione": "La sua resistenza diminuisce quando c'è più luce: serve per misurare la luminosità dell'ambiente.",
+      "paroleChiave": ["luce", "LDR", "sensore", "luminosità"],
+      "icona": "fotoresistenza.svg",
+      "larghezza": 80,
+      "altezza": 60,
+      "morsetti": [
+        { "id": "1", "x": 0, "y": 40 },
+        { "id": "2", "x": 80, "y": 40 }
+      ]
+    },
+    {
+      "id": "resistenza",
+      "nome": "Resistenza",
+      "categoria": "passivi",
+      "sigla": "R",
+      "descrizione": "Limita la corrente che scorre nel circuito. Il valore si legge dalle fasce colorate e si misura in ohm (Ω).",
+      "paroleChiave": ["resistore", "ohm"],
+      "icona": "resistenza.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "1", "x": 0, "y": 20 },
+        { "id": "2", "x": 80, "y": 20 }
+      ]
+    }
+  ]
+}

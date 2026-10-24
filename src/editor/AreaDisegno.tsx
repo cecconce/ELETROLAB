@@ -6,13 +6,18 @@
 // - selezione: clic (Maiusc/Ctrl per aggiungere), rettangolo trascinando sul vuoto,
 //   Esc per deselezionare
 // - trascinamento dei componenti (il gruppo selezionato si muove insieme)
+// - posa dei componenti della libreria: rilasciandoli sul foglio (drag & drop)
+//   oppure, dopo averli scelti con un clic, cliccando sul foglio
 // La logica (calcoli e modifiche allo schema) sta in geometria.ts e schema.ts.
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Group, Layer, Rect, Shape, Stage, Text } from "react-konva";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Group, Image as ImmagineKonva, Layer, Rect, Shape, Stage, Text } from "react-konva";
 import type Konva from "konva";
 import { t } from "../testi";
 import type { Tema } from "../interfaccia/tema";
 import { coloriEditor } from "./colori";
+import { ICONE, trovaVoce } from "./caricaLibreria";
+import { componenteDaVoce, svgComeDataUrl, type Libreria, type VoceLibreria } from "./libreria";
+import { MIME_COMPONENTE } from "./LibreriaLaterale";
 import {
   FATTORE_ZOOM,
   VISTA_INIZIALE,
@@ -27,6 +32,7 @@ import {
   type Vista,
 } from "./geometria";
 import {
+  aggiungiComponente,
   componentiNelRettangolo,
   ingombroSchema,
   rettangoloTra,
@@ -41,6 +47,39 @@ export interface PropsAreaDisegno {
   tema: Tema;
   schema: Schema;
   onCambiaSchema: (schema: Schema) => void;
+  /** Libreria del modulo: dà icona e dimensioni ai componenti. */
+  libreria: Libreria;
+  /** Voce della libreria scelta con un clic, da posare al prossimo clic sul foglio. */
+  daPosare?: string | null;
+  /** Chiamata quando la posa con clic è conclusa o annullata (Esc). */
+  onFinePosa?: () => void;
+}
+
+/**
+ * Immagini delle icone della libreria, colorate per il tema. La mappa si
+ * aggiorna quando le immagini finiscono di caricarsi (servono per Konva).
+ */
+function useImmaginiIcone(libreria: Libreria, colore: string): ReadonlyMap<string, HTMLImageElement> {
+  const [pronte, setPronte] = useState<ReadonlyMap<string, HTMLImageElement>>(new Map());
+  useEffect(() => {
+    let attivo = true;
+    const mappa = new Map<string, HTMLImageElement>();
+    const nomi = [...new Set(libreria.componenti.map((v) => v.icona))];
+    let mancanti = nomi.length;
+    for (const nome of nomi) {
+      const img = new window.Image();
+      img.onload = img.onerror = () => {
+        mancanti--;
+        if (attivo && mancanti === 0) setPronte(mappa);
+      };
+      img.src = svgComeDataUrl(ICONE.get(nome) ?? "", colore);
+      mappa.set(nome, img);
+    }
+    return () => {
+      attivo = false;
+    };
+  }, [libreria, colore]);
+  return pronte;
 }
 
 /** Dimensioni in pixel del riquadro che contiene il canvas (seguono la finestra). */
@@ -58,8 +97,13 @@ function useDimensioni(rif: React.RefObject<HTMLDivElement>) {
   return dim;
 }
 
-export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) {
+export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare = null, onFinePosa }: PropsAreaDisegno) {
   const colori = coloriEditor(tema);
+  const immagini = useImmaginiIcone(libreria, colori.testo);
+  const vociPerTipo = useMemo(() => new Map(libreria.componenti.map((v) => [v.id, v])), [libreria]);
+  const voceDaPosare = daPosare ? trovaVoce(libreria, daPosare) : undefined;
+  // Posizione del mouse sul foglio, per l'anteprima del componente da posare.
+  const [anteprima, setAnteprima] = useState<Punto | null>(null);
   const contenitore = useRef<HTMLDivElement>(null);
   const { larghezza, altezza } = useDimensioni(contenitore);
 
@@ -68,6 +112,10 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
   const [rettangolo, setRettangolo] = useState<{ inizio: Punto; fine: Punto } | null>(null);
   const [spazioPremuto, setSpazioPremuto] = useState(false);
   const [spostandoVista, setSpostandoVista] = useState(false);
+
+  // Riferimento sempre aggiornato alla callback, usato dal gestore dei tasti.
+  const onFinePosaRif = useRef(onFinePosa);
+  onFinePosaRif.current = onFinePosa;
 
   // Dati del trascinamento in corso (non servono al disegno, quindi in un ref).
   const trascinamento = useRef<{ schemaIniziale: Schema; id: string; da: Punto; selezione: Selezione } | null>(null);
@@ -80,7 +128,10 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
         setSpazioPremuto(true);
         e.preventDefault();
       }
-      if (e.key === "Escape") setSelezione([]);
+      if (e.key === "Escape") {
+        setSelezione([]);
+        onFinePosaRif.current?.();
+      }
     };
     const su = (e: KeyboardEvent) => {
       if (e.code === "Space") setSpazioPremuto(false);
@@ -104,6 +155,29 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
   const puntatore = (e: Konva.KonvaEventObject<MouseEvent | WheelEvent>): Punto | null =>
     e.target.getStage()?.getPointerPosition() ?? null;
 
+  /** Posa una voce della libreria centrata nel punto del foglio indicato e la seleziona. */
+  const posa = (voce: VoceLibreria, centro: Punto) => {
+    const nuovo = componenteDaVoce(schema, voce, centro);
+    onCambiaSchema(aggiungiComponente(schema, nuovo));
+    setSelezione([nuovo.id]);
+  };
+
+  // Rilascio di un componente trascinato dalla libreria laterale.
+  const suTrascinaSopra = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes(MIME_COMPONENTE)) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    }
+  };
+  const suRilascioLibreria = (e: React.DragEvent) => {
+    const voce = trovaVoce(libreria, e.dataTransfer.getData(MIME_COMPONENTE));
+    const el = contenitore.current;
+    if (!voce || !el) return;
+    e.preventDefault();
+    const r = el.getBoundingClientRect();
+    posa(voce, schermoAFoglio(vista, { x: e.clientX - r.left, y: e.clientY - r.top }));
+  };
+
   const suRotellina = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
     const p = puntatore(e);
@@ -120,6 +194,13 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
       ultimoPuntatore.current = p;
       return;
     }
+    // Sinistro con un componente scelto nella libreria: lo posa dove si clicca.
+    if (e.evt.button === 0 && voceDaPosare) {
+      e.cancelBubble = true;
+      posa(voceDaPosare, schermoAFoglio(vista, p));
+      onFinePosa?.();
+      return;
+    }
     // Sinistro sul vuoto: inizia il rettangolo di selezione.
     if (e.evt.button === 0 && e.target === e.target.getStage()) {
       const f = schermoAFoglio(vista, p);
@@ -130,6 +211,7 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
   const suMovimento = (e: Konva.KonvaEventObject<MouseEvent>) => {
     const p = puntatore(e);
     if (!p) return;
+    if (voceDaPosare) setAnteprima(schermoAFoglio(vista, p));
     if (spostandoVista && ultimoPuntatore.current) {
       const prec = ultimoPuntatore.current;
       setVista((v) => spostaVista(v, p.x - prec.x, p.y - prec.y));
@@ -199,10 +281,17 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
     }
   }, [adatta, larghezza, altezza]);
 
+  const immagine = (tipo: string) => {
+    const voce = vociPerTipo.get(tipo);
+    return voce ? immagini.get(voce.icona) : undefined;
+  };
+
   const griglia = lineeGriglia(vista, larghezza, altezza);
   const selezionati = new Set(selezione);
   const rett = rettangolo ? rettangoloTra(rettangolo.inizio, rettangolo.fine) : null;
-  const cursore = spostandoVista ? "grabbing" : spazioPremuto ? "grab" : "default";
+  const cursore = spostandoVista ? "grabbing" : spazioPremuto ? "grab" : voceDaPosare ? "copy" : "default";
+  const posAnteprima =
+    voceDaPosare && anteprima ? componenteDaVoce(schema, voceDaPosare, anteprima) : null;
 
   return (
     <div className="area-disegno">
@@ -211,8 +300,12 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
         className="area-disegno-canvas"
         style={{ cursor: cursore, background: colori.foglio }}
         onContextMenu={(e) => e.preventDefault()}
+        onDragOver={suTrascinaSopra}
+        onDrop={suRilascioLibreria}
+        onMouseLeave={() => setAnteprima(null)}
         data-zoom={Math.round(vista.scala * 100)}
         data-selezionati={selezione.join(",")}
+        data-componenti={schema.componenti.length}
       >
         {larghezza > 0 && altezza > 0 && (
           <Stage
@@ -266,9 +359,10 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
                     key={c.id}
                     x={c.x}
                     y={c.y}
-                    draggable={!spazioPremuto}
+                    draggable={!spazioPremuto && !voceDaPosare}
                     onMouseDown={(e) => {
-                      if (e.evt.button !== 0 || spazioPremuto) return;
+                      // Con un componente da posare il clic passa al foglio (posa anche sopra un altro).
+                      if (e.evt.button !== 0 || spazioPremuto || voceDaPosare) return;
                       e.cancelBubble = true; // non far partire il rettangolo di selezione
                       const aggiuntivo = e.evt.shiftKey || e.evt.ctrlKey;
                       if (aggiuntivo) setSelezione((sel) => selezionaConClic(sel, c.id, true));
@@ -278,27 +372,29 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
                     onDragMove={(e) => durante(e.target)}
                     onDragEnd={(e) => fineTrascinamento(e.target)}
                   >
-                    <Rect
-                      width={c.larghezza}
-                      height={c.altezza}
-                      fill={colori.componente}
-                      stroke={scelto ? colori.selezione : colori.bordoComponente}
-                      strokeWidth={scelto ? 3 : 1.5}
-                      cornerRadius={4}
-                    />
-                    <Text
-                      text={c.etichetta}
-                      width={c.larghezza}
-                      height={c.altezza}
-                      align="center"
-                      verticalAlign="middle"
-                      fontSize={14}
-                      fontFamily="Segoe UI, system-ui, sans-serif"
-                      fill={colori.testo}
+                    <SimboloComponente
+                      larghezza={c.larghezza}
+                      altezza={c.altezza}
+                      etichetta={c.etichetta}
+                      immagine={immagine(c.tipo)}
+                      scelto={scelto}
+                      colori={colori}
                     />
                   </Group>
                 );
               })}
+              {posAnteprima && voceDaPosare && (
+                <Group x={posAnteprima.x} y={posAnteprima.y} opacity={0.45} listening={false}>
+                  <SimboloComponente
+                    larghezza={posAnteprima.larghezza}
+                    altezza={posAnteprima.altezza}
+                    etichetta={posAnteprima.etichetta}
+                    immagine={immagine(voceDaPosare.id)}
+                    scelto={false}
+                    colori={colori}
+                  />
+                </Group>
+              )}
               {rett && (
                 <Rect
                   x={rett.x}
@@ -334,5 +430,65 @@ export function AreaDisegno({ tema, schema, onCambiaSchema }: PropsAreaDisegno) 
         <span className="suggerimento">{t("editor.suggerimento")}</span>
       </div>
     </div>
+  );
+}
+
+interface PropsSimbolo {
+  larghezza: number;
+  altezza: number;
+  etichetta: string;
+  /** Icona della libreria; se manca si disegna un semplice riquadro. */
+  immagine: HTMLImageElement | undefined;
+  scelto: boolean;
+  colori: ReturnType<typeof coloriEditor>;
+}
+
+/** Disegno di un componente: simbolo, sigla a sinistra e contorno di selezione. */
+function SimboloComponente({ larghezza, altezza, etichetta, immagine, scelto, colori }: PropsSimbolo) {
+  return (
+    <>
+      {/* Area cliccabile trasparente: si seleziona cliccando anche fra le linee del simbolo. */}
+      <Rect width={larghezza} height={altezza} fill="rgba(0,0,0,0)" />
+      {immagine ? (
+        <ImmagineKonva image={immagine} width={larghezza} height={altezza} listening={false} />
+      ) : (
+        <Rect
+          width={larghezza}
+          height={altezza}
+          fill={colori.componente}
+          stroke={colori.bordoComponente}
+          strokeWidth={1.5}
+          cornerRadius={4}
+          listening={false}
+        />
+      )}
+      {etichetta && (
+        <Text
+          text={etichetta}
+          x={-64}
+          y={altezza / 2 - 8}
+          width={58}
+          align="right"
+          fontSize={14}
+          fontStyle="bold"
+          fontFamily="Segoe UI, system-ui, sans-serif"
+          fill={colori.testo}
+          listening={false}
+        />
+      )}
+      {scelto && (
+        <Rect
+          x={-4}
+          y={-4}
+          width={larghezza + 8}
+          height={altezza + 8}
+          stroke={colori.selezione}
+          strokeWidth={2}
+          dash={[6, 3]}
+          cornerRadius={4}
+          listening={false}
+        />
+      )}
+    </>
   );
 }

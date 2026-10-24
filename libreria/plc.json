@@ -1,0 +1,116 @@
+{
+  "versione": 1,
+  "modulo": "plc",
+  "categorie": [
+    { "id": "contatti", "nome": "Contatti" },
+    { "id": "bobine", "nome": "Bobine" },
+    { "id": "funzioni", "nome": "Temporizzatori e contatori" }
+  ],
+  "componenti": [
+    {
+      "id": "ladder-contatto-na",
+      "nome": "Contatto NA",
+      "categoria": "contatti",
+      "sigla": "I",
+      "descrizione": "Lascia passare il segnale quando l'ingresso (o il merker) associato vale 1.",
+      "paroleChiave": ["normalmente aperto", "ingresso", "XIC"],
+      "icona": "ladder-contatto-na.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "in", "x": 0, "y": 20 },
+        { "id": "out", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "ladder-contatto-nc",
+      "nome": "Contatto NC",
+      "categoria": "contatti",
+      "sigla": "I",
+      "descrizione": "Lascia passare il segnale quando l'ingresso associato vale 0: è il contatto \"negato\".",
+      "paroleChiave": ["normalmente chiuso", "negato", "ingresso"],
+      "icona": "ladder-contatto-nc.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "in", "x": 0, "y": 20 },
+        { "id": "out", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "ladder-bobina",
+      "nome": "Bobina",
+      "categoria": "bobine",
+      "sigla": "Q",
+      "descrizione": "Mette a 1 l'uscita associata finché il segnale arriva da sinistra; quando il segnale manca torna a 0.",
+      "paroleChiave": ["uscita", "coil"],
+      "icona": "ladder-bobina.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "in", "x": 0, "y": 20 },
+        { "id": "out", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "ladder-bobina-set",
+      "nome": "Bobina SET",
+      "categoria": "bobine",
+      "sigla": "Q",
+      "descrizione": "Mette a 1 l'uscita e la lascia a 1 anche quando il segnale manca, finché una bobina RESET non la azzera.",
+      "paroleChiave": ["set", "memoria", "aggancio"],
+      "icona": "ladder-bobina-set.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "in", "x": 0, "y": 20 },
+        { "id": "out", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "ladder-bobina-reset",
+      "nome": "Bobina RESET",
+      "categoria": "bobine",
+      "sigla": "Q",
+      "descrizione": "Riporta a 0 un'uscita che era stata messa a 1 da una bobina SET.",
+      "paroleChiave": ["reset", "azzera", "sgancio"],
+      "icona": "ladder-bobina-reset.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "in", "x": 0, "y": 20 },
+        { "id": "out", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "ladder-ton",
+      "nome": "Temporizzatore TON",
+      "categoria": "funzioni",
+      "sigla": "T",
+      "descrizione": "Ritardo all'eccitazione: l'uscita va a 1 solo dopo che l'ingresso è rimasto a 1 per il tempo impostato (PT).",
+      "paroleChiave": ["timer", "ritardo", "tempo"],
+      "icona": "ladder-ton.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "IN", "x": 0, "y": 20 },
+        { "id": "Q", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "ladder-ctu",
+      "nome": "Contatore CTU",
+      "categoria": "funzioni",
+      "sigla": "C",
+      "descrizione": "Conta in avanti: ogni fronte di salita sull'ingresso aumenta il conteggio (CV) di 1; l'uscita va a 1 quando si raggiunge il valore PV.",
+      "paroleChiave": ["counter", "conta", "conteggio"],
+      "icona": "ladder-ctu.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "CU", "x": 0, "y": 20 },
+        { "id": "Q", "x": 80, "y": 20 }
+      ]
+    }
+  ]
+}

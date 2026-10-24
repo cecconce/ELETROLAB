@@ -1,0 +1,193 @@
+{
+  "versione": 1,
+  "modulo": "elettronica",
+  "categorie": [
+    { "id": "sorgenti", "nome": "Sorgenti" },
+    { "id": "passivi", "nome": "Componenti passivi" },
+    { "id": "semiconduttori", "nome": "Semiconduttori" },
+    { "id": "integrati", "nome": "Integrati e porte logiche" }
+  ],
+  "componenti": [
+    {
+      "id": "generatore-dc",
+      "nome": "Generatore di tensione continua",
+      "categoria": "sorgenti",
+      "sigla": "V",
+      "descrizione": "Fornisce una tensione costante fra i morsetti + e −, come una pila o un alimentatore.",
+      "paroleChiave": ["pila", "batteria", "alimentatore", "DC", "tensione"],
+      "icona": "generatore-dc.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "+", "x": 20, "y": 0 },
+        { "id": "-", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "massa",
+      "nome": "Massa (0 V)",
+      "categoria": "sorgenti",
+      "sigla": "",
+      "descrizione": "Il punto di riferimento a 0 V: tutte le tensioni del circuito si misurano rispetto alla massa. Ogni circuito ne ha bisogno.",
+      "paroleChiave": ["GND", "terra", "riferimento", "zero"],
+      "icona": "massa.svg",
+      "larghezza": 40,
+      "altezza": 40,
+      "morsetti": [{ "id": "0", "x": 20, "y": 0 }]
+    },
+    {
+      "id": "resistenza",
+      "nome": "Resistenza",
+      "categoria": "passivi",
+      "sigla": "R",
+      "descrizione": "Si oppone al passaggio della corrente. Legge di Ohm: V = R · I.",
+      "paroleChiave": ["resistore", "ohm"],
+      "icona": "resistenza.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "1", "x": 0, "y": 20 },
+        { "id": "2", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "condensatore",
+      "nome": "Condensatore",
+      "categoria": "passivi",
+      "sigla": "C",
+      "descrizione": "Accumula carica elettrica fra due armature. Blocca la corrente continua e lascia passare quella alternata. Si misura in farad (F).",
+      "paroleChiave": ["capacità", "farad"],
+      "icona": "condensatore.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "1", "x": 0, "y": 20 },
+        { "id": "2", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "induttore",
+      "nome": "Induttore",
+      "categoria": "passivi",
+      "sigla": "L",
+      "descrizione": "Bobina di filo che si oppone alle variazioni di corrente. Si misura in henry (H).",
+      "paroleChiave": ["bobina", "induttanza", "henry"],
+      "icona": "induttore.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "1", "x": 0, "y": 20 },
+        { "id": "2", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "diodo",
+      "nome": "Diodo",
+      "categoria": "semiconduttori",
+      "sigla": "D",
+      "descrizione": "Lascia passare la corrente in un solo verso, dall'anodo al catodo (quello con la barra).",
+      "paroleChiave": ["raddrizzatore", "anodo", "catodo"],
+      "icona": "diodo.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "A", "x": 0, "y": 20 },
+        { "id": "K", "x": 80, "y": 20 }
+      ]
+    },
+    {
+      "id": "led",
+      "nome": "LED",
+      "categoria": "semiconduttori",
+      "sigla": "D",
+      "descrizione": "Diodo che emette luce quando è attraversato da corrente nel verso giusto. Va protetto con una resistenza in serie.",
+      "paroleChiave": ["luce", "diodo"],
+      "icona": "led.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A", "x": 20, "y": 0 },
+        { "id": "K", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "transistor-npn",
+      "nome": "Transistor BJT NPN",
+      "categoria": "semiconduttori",
+      "sigla": "Q",
+      "descrizione": "Una piccola corrente nella base (B) comanda una corrente molto più grande fra collettore (C) ed emettitore (E). Fa da interruttore o da amplificatore.",
+      "paroleChiave": ["BJT", "transistore", "amplificatore", "interruttore"],
+      "icona": "transistor-npn.svg",
+      "larghezza": 60,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "B", "x": 0, "y": 40 },
+        { "id": "C", "x": 40, "y": 0 },
+        { "id": "E", "x": 40, "y": 80 }
+      ]
+    },
+    {
+      "id": "operazionale",
+      "nome": "Amplificatore operazionale",
+      "categoria": "integrati",
+      "sigla": "U",
+      "descrizione": "Amplifica la differenza di tensione fra l'ingresso + e l'ingresso −. Con poche resistenze diventa un amplificatore, un comparatore o un sommatore.",
+      "paroleChiave": ["op-amp", "amplificatore", "comparatore"],
+      "icona": "operazionale.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "-", "x": 0, "y": 20 },
+        { "id": "+", "x": 0, "y": 60 },
+        { "id": "out", "x": 80, "y": 40 }
+      ]
+    },
+    {
+      "id": "porta-and",
+      "nome": "Porta AND",
+      "categoria": "integrati",
+      "sigla": "U",
+      "descrizione": "L'uscita è 1 solo se tutti gli ingressi sono 1.",
+      "paroleChiave": ["logica", "digitale", "e"],
+      "icona": "porta-and.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A", "x": 0, "y": 20 },
+        { "id": "B", "x": 0, "y": 60 },
+        { "id": "Y", "x": 80, "y": 40 }
+      ]
+    },
+    {
+      "id": "porta-or",
+      "nome": "Porta OR",
+      "categoria": "integrati",
+      "sigla": "U",
+      "descrizione": "L'uscita è 1 se almeno un ingresso è 1.",
+      "paroleChiave": ["logica", "digitale", "o"],
+      "icona": "porta-or.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A", "x": 0, "y": 20 },
+        { "id": "B", "x": 0, "y": 60 },
+        { "id": "Y", "x": 80, "y": 40 }
+      ]
+    },
+    {
+      "id": "porta-not",
+      "nome": "Porta NOT",
+      "categoria": "integrati",
+      "sigla": "U",
+      "descrizione": "Inverte il segnale: se l'ingresso è 1 l'uscita è 0, e viceversa.",
+      "paroleChiave": ["logica", "digitale", "invertitore", "negazione"],
+      "icona": "porta-not.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "A", "x": 0, "y": 20 },
+        { "id": "Y", "x": 80, "y": 20 }
+      ]
+    }
+  ]
+}

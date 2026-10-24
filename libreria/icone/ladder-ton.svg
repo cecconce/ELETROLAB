@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M0 20H12M68 20H80"/>
+<rect x="12" y="4" width="56" height="72" rx="2"/>
+<text x="40" y="24" font-size="12" text-anchor="middle" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">TON</text>
+<text x="18" y="62" font-size="9" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">PT</text>
+<text x="62" y="62" font-size="9" text-anchor="end" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">ET</text>
+</svg>

@@ -1,0 +1,180 @@
+{
+  "versione": 1,
+  "modulo": "impianti",
+  "categorie": [
+    { "id": "alimentazione", "nome": "Alimentazione" },
+    { "id": "protezioni", "nome": "Protezioni" },
+    { "id": "comandi", "nome": "Comandi" },
+    { "id": "contattori", "nome": "Contattori e relè" },
+    { "id": "utilizzatori", "nome": "Utilizzatori" }
+  ],
+  "componenti": [
+    {
+      "id": "rete-trifase",
+      "nome": "Rete trifase",
+      "categoria": "alimentazione",
+      "sigla": "",
+      "descrizione": "Alimentazione trifase con le tre fasi L1, L2, L3 (400 V fra le fasi). Da qui parte il circuito di potenza.",
+      "paroleChiave": ["linea", "400 V", "fasi", "L1", "L2", "L3"],
+      "icona": "rete-trifase.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "L1", "x": 20, "y": 40 },
+        { "id": "L2", "x": 40, "y": 40 },
+        { "id": "L3", "x": 60, "y": 40 }
+      ]
+    },
+    {
+      "id": "rete-monofase",
+      "nome": "Rete monofase",
+      "categoria": "alimentazione",
+      "sigla": "",
+      "descrizione": "Alimentazione monofase con fase L e neutro N (230 V). Si usa spesso per il circuito di comando.",
+      "paroleChiave": ["linea", "230 V", "fase", "neutro"],
+      "icona": "rete-monofase.svg",
+      "larghezza": 60,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "L", "x": 20, "y": 40 },
+        { "id": "N", "x": 40, "y": 40 }
+      ]
+    },
+    {
+      "id": "fusibile",
+      "nome": "Fusibile",
+      "categoria": "protezioni",
+      "sigla": "F",
+      "descrizione": "Protegge la linea dai cortocircuiti: se passa troppa corrente il filamento interno fonde e apre il circuito.",
+      "paroleChiave": ["protezione", "cortocircuito"],
+      "icona": "fusibile.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "1", "x": 20, "y": 0 },
+        { "id": "2", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "magnetotermico",
+      "nome": "Interruttore magnetotermico",
+      "categoria": "protezioni",
+      "sigla": "Q",
+      "descrizione": "Interruttore automatico: scatta da solo per sovraccarico (parte termica) o cortocircuito (parte magnetica). Si riarma a mano.",
+      "paroleChiave": ["interruttore", "automatico", "protezione", "sovraccarico"],
+      "icona": "magnetotermico.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "1", "x": 20, "y": 0 },
+        { "id": "2", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "pulsante-na",
+      "nome": "Pulsante NA (marcia)",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Pulsante normalmente aperto: chiude il circuito solo mentre lo tieni premuto. Si usa per la MARCIA.",
+      "paroleChiave": ["normalmente aperto", "marcia", "avvio", "start"],
+      "icona": "pulsante-na.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "13", "x": 20, "y": 0 },
+        { "id": "14", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "pulsante-nc",
+      "nome": "Pulsante NC (arresto)",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Pulsante normalmente chiuso: lascia passare la corrente e la interrompe quando lo premi. Si usa per l'ARRESTO.",
+      "paroleChiave": ["normalmente chiuso", "arresto", "stop"],
+      "icona": "pulsante-nc.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "11", "x": 20, "y": 0 },
+        { "id": "12", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "bobina-contattore",
+      "nome": "Bobina del contattore",
+      "categoria": "contattori",
+      "sigla": "K",
+      "descrizione": "Quando arriva tensione ai morsetti A1-A2 la bobina si eccita e fa commutare tutti i contatti del contattore con la stessa sigla.",
+      "paroleChiave": ["contattore", "relè", "eccitazione", "A1", "A2"],
+      "icona": "bobina.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A1", "x": 20, "y": 0 },
+        { "id": "A2", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "contatto-na",
+      "nome": "Contatto ausiliario NA",
+      "categoria": "contattori",
+      "sigla": "K",
+      "descrizione": "Contatto normalmente aperto del contattore: si chiude quando la bobina è eccitata. Serve, per esempio, per l'autoritenuta.",
+      "paroleChiave": ["normalmente aperto", "autoritenuta", "ausiliario", "13-14"],
+      "icona": "contatto-na.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "13", "x": 20, "y": 0 },
+        { "id": "14", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "contatto-nc",
+      "nome": "Contatto ausiliario NC",
+      "categoria": "contattori",
+      "sigla": "K",
+      "descrizione": "Contatto normalmente chiuso del contattore: si apre quando la bobina è eccitata. Serve, per esempio, per l'interblocco.",
+      "paroleChiave": ["normalmente chiuso", "interblocco", "ausiliario", "21-22"],
+      "icona": "contatto-nc.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "21", "x": 20, "y": 0 },
+        { "id": "22", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "lampada",
+      "nome": "Lampada di segnalazione",
+      "categoria": "utilizzatori",
+      "sigla": "H",
+      "descrizione": "Si accende quando riceve tensione: indica, per esempio, che un motore è in marcia o che è scattata una protezione.",
+      "paroleChiave": ["spia", "segnalazione", "luce"],
+      "icona": "lampada.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "X1", "x": 20, "y": 0 },
+        { "id": "X2", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "motore-trifase",
+      "nome": "Motore asincrono trifase",
+      "categoria": "utilizzatori",
+      "sigla": "M",
+      "descrizione": "Motore alimentato dalle tre fasi U, V, W. Scambiando due fasi fra loro si inverte il verso di rotazione.",
+      "paroleChiave": ["motore", "asincrono", "3~", "rotazione"],
+      "icona": "motore-trifase.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "U", "x": 20, "y": 0 },
+        { "id": "V", "x": 40, "y": 0 },
+        { "id": "W", "x": 60, "y": 0 }
+      ]
+    }
+  ]
+}
