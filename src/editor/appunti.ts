@@ -10,7 +10,11 @@
 //   viene lasciato perché resterebbe "appeso";
 // - incollando, ogni componente riceve un nuovo id e una nuova sigla
 //   automatica (S1 copiato diventa S2, o il primo numero libero) e la copia
-//   compare spostata di qualche passo di griglia, così si vede subito.
+//   compare spostata di qualche passo di griglia, così si vede subito;
+// - i contatti di un contattore (attività 2.2) non ricevono una sigla nuova:
+//   se nella copia c'è anche la loro bobina seguono la sua nuova sigla (K1 e
+//   il suo contatto copiati diventano K2 e un contatto di K2), altrimenti
+//   restano legati alla bobina di prima (un contatto in più di K1).
 import { PASSO_GRIGLIA } from "./geometria";
 import { nuovoIdFilo } from "./fili";
 import { nuovoId, prossimaSigla } from "./libreria";
@@ -57,24 +61,34 @@ export function incolla(
   appunti: Appunti,
   lettereDi: LettereDelTipo,
   volta = 0,
+  /** Tipi che sono contatti azionati da bobina (vedi libreria.tipiContatto). */
+  tipiContatto: ReadonlySet<string> = new Set(),
 ): { schema: Schema; incollati: string[] } {
   const d = SCOSTAMENTO_INCOLLA * (volta + 1);
   const nuoviId = new Map<string, string>();
+  // Sigla vecchia → sigla nuova dei componenti copiati (per i contatti delle bobine copiate).
+  const nuoveSigle = new Map<string, string>();
   let risultato = schema;
   // Uno alla volta: ogni nuovo id e ogni sigla tengono conto di quelli appena aggiunti.
   for (const c of appunti.componenti) {
     const base = c.id.replace(/-\d+$/, "");
-    const lettere = lettereSigla(c, lettereDi);
-    const nuovo: ComponenteSchema = {
-      ...c,
-      id: nuovoId(risultato, base),
-      etichetta: prossimaSigla(risultato, lettere),
-      x: c.x + d,
-      y: c.y + d,
-    };
+    const contatto = tipiContatto.has(c.tipo);
+    const etichetta = contatto ? c.etichetta : prossimaSigla(risultato, lettereSigla(c, lettereDi), tipiContatto);
+    if (!contatto && c.etichetta !== "") nuoveSigle.set(c.etichetta, etichetta);
+    const nuovo: ComponenteSchema = { ...c, id: nuovoId(risultato, base), etichetta, x: c.x + d, y: c.y + d };
     nuoviId.set(c.id, nuovo.id);
     risultato = { ...risultato, componenti: [...risultato.componenti, nuovo] };
   }
+  // I contatti incollati seguono la loro bobina se è stata copiata insieme a loro.
+  const incollati = new Set(nuoviId.values());
+  risultato = {
+    ...risultato,
+    componenti: risultato.componenti.map((c) =>
+      incollati.has(c.id) && tipiContatto.has(c.tipo) && nuoveSigle.has(c.etichetta)
+        ? { ...c, etichetta: nuoveSigle.get(c.etichetta)! }
+        : c,
+    ),
+  };
   const idFili: string[] = [];
   for (const f of appunti.fili) {
     const da = nuoviId.get(f.da.componente);

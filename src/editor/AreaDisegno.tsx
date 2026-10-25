@@ -15,8 +15,11 @@
 //   Canc per eliminare, Ctrl+C / Ctrl+X / Ctrl+V per copiare, tagliare e
 //   incollare, Ctrl+A per selezionare tutto; gli stessi comandi sono anche
 //   pulsanti nella barra in basso (comodi alla LIM)
+// - accanto ai contatti dei contattori compaiono i numeri dei morsetti
+//   (13-14, 21-22…) e la sigla della bobina; "K?" se il contatto non è legato
+//   a nessuna bobina
 // La logica (calcoli e modifiche allo schema) sta in geometria.ts, schema.ts,
-// fili.ts, appunti.ts e cronologia.ts.
+// fili.ts, appunti.ts, associazioni.ts e cronologia.ts.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Circle, Group, Image as ImmagineKonva, Layer, Line, Rect, Shape, Stage, Text } from "react-konva";
 import type Konva from "konva";
@@ -24,7 +27,8 @@ import { t } from "../testi";
 import type { Tema } from "../interfaccia/tema";
 import { coloriEditor } from "./colori";
 import { ICONE, trovaVoce } from "./caricaLibreria";
-import { componenteDaVoce, svgComeDataUrl, type Libreria, type VoceLibreria } from "./libreria";
+import { componenteDaVoce, svgComeDataUrl, tipiContatto, type Libreria, type VoceLibreria } from "./libreria";
+import { numeroMorsetto } from "./associazioni";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
 import { copiaSelezione, incolla, type Appunti } from "./appunti";
 import {
@@ -61,6 +65,7 @@ import {
   selezionaConClic,
   selezionePerTrascinamento,
   spostaSelezione,
+  type ComponenteSchema,
   type Schema,
   type Selezione,
 } from "./schema";
@@ -84,6 +89,8 @@ export interface PropsAreaDisegno {
   daPosare?: string | null;
   /** Chiamata quando la posa con clic è conclusa o annullata (Esc). */
   onFinePosa?: () => void;
+  /** Avvisa chi usa l'editor quando cambia la selezione (pannello Proprietà). */
+  onSelezione?: (selezione: Selezione) => void;
 }
 
 /**
@@ -150,6 +157,7 @@ export function AreaDisegno({
   onRipeti,
   puoAnnullare = false,
   puoRipetere = false,
+  onSelezione,
 }: PropsAreaDisegno) {
   const colori = coloriEditor(tema);
   const immagini = useImmaginiIcone(libreria, colori.testo);
@@ -163,6 +171,8 @@ export function AreaDisegno({
 
   const [vista, setVista] = useState<Vista>(VISTA_INIZIALE);
   const [selezione, setSelezione] = useState<Selezione>([]);
+  const contatti = useMemo(() => tipiContatto(libreria), [libreria]);
+  useEffect(() => onSelezione?.(selezione), [selezione, onSelezione]);
   const [rettangolo, setRettangolo] = useState<{ inizio: Punto; fine: Punto } | null>(null);
   const [spazioPremuto, setSpazioPremuto] = useState(false);
   const [spostandoVista, setSpostandoVista] = useState(false);
@@ -209,7 +219,7 @@ export function AreaDisegno({
       setAvviso(t("modifica.appuntiVuoti"));
       return;
     }
-    const esito = incolla(schema, appuntiEditor.appunti, (tipo) => vociPerTipo.get(tipo)?.sigla, appuntiEditor.volte);
+    const esito = incolla(schema, appuntiEditor.appunti, (tipo) => vociPerTipo.get(tipo)?.sigla, appuntiEditor.volte, contatti);
     appuntiEditor.volte++;
     onCambiaSchema(esito.schema);
     setSelezione(esito.incollati);
@@ -306,7 +316,7 @@ export function AreaDisegno({
 
   /** Posa una voce della libreria centrata nel punto del foglio indicato e la seleziona. */
   const posa = (voce: VoceLibreria, centro: Punto) => {
-    const nuovo = componenteDaVoce(schema, voce, centro);
+    const nuovo = componenteDaVoce(schema, voce, centro, libreria);
     onCambiaSchema(aggiungiComponente(schema, nuovo));
     setSelezione([nuovo.id]);
   };
@@ -453,6 +463,18 @@ export function AreaDisegno({
     const voce = vociPerTipo.get(tipo);
     return voce ? immagini.get(voce.icona) : undefined;
   };
+  /** Sigla da disegnare: un contatto senza bobina mostra "K?" (lettera della libreria + "?"). */
+  const siglaMostrata = (c: { tipo: string; etichetta: string }) => {
+    const voce = vociPerTipo.get(c.tipo);
+    return voce?.contatto && c.etichetta === "" ? `${voce.sigla}?` : c.etichetta;
+  };
+  /** Numeri dei morsetti dei contatti, scritti a destra di ciascun morsetto. */
+  const numeriDa = (c: ComponenteSchema) => {
+    const voce = vociPerTipo.get(c.tipo);
+    if (!voce?.contatto) return undefined;
+    return voce.morsetti.map((m) => ({ x: m.x, y: m.y, testo: numeroMorsetto(c, m.id), inAlto: m.y < c.altezza / 2 }));
+  };
+  const componentePerId = new Map(schema.componenti.map((c) => [c.id, c]));
 
   const griglia = lineeGriglia(vista, larghezza, altezza);
   const selezionati = new Set(selezione);
@@ -478,7 +500,7 @@ export function AreaDisegno({
       : null;
   const raggioMorsetto = 3.5;
   const posAnteprima =
-    voceDaPosare && anteprima ? componenteDaVoce(schema, voceDaPosare, anteprima) : null;
+    voceDaPosare && anteprima ? componenteDaVoce(schema, voceDaPosare, anteprima, libreria) : null;
 
   return (
     <div className="area-disegno">
@@ -564,7 +586,9 @@ export function AreaDisegno({
                     <SimboloComponente
                       larghezza={c.larghezza}
                       altezza={c.altezza}
-                      etichetta={c.etichetta}
+                      etichetta={siglaMostrata(c)}
+                      nonAssociato={siglaMostrata(c) !== c.etichetta}
+                      numeri={numeriDa(c)}
                       immagine={immagine(c.tipo)}
                       scelto={scelto}
                       colori={colori}
@@ -632,7 +656,10 @@ export function AreaDisegno({
                     />
                     {attivo && (
                       <Text
-                        text={m.morsetto}
+                        text={(() => {
+                          const comp = componentePerId.get(m.componente);
+                          return comp ? numeroMorsetto(comp, m.morsetto) : m.morsetto;
+                        })()}
                         x={6}
                         y={-16}
                         fontSize={11}
@@ -650,7 +677,7 @@ export function AreaDisegno({
                   <SimboloComponente
                     larghezza={posAnteprima.larghezza}
                     altezza={posAnteprima.altezza}
-                    etichetta={posAnteprima.etichetta}
+                    etichetta={siglaMostrata(posAnteprima)}
                     immagine={immagine(voceDaPosare.id)}
                     scelto={false}
                     colori={colori}
@@ -711,6 +738,10 @@ interface PropsSimbolo {
   larghezza: number;
   altezza: number;
   etichetta: string;
+  /** true per un contatto senza bobina: la sigla "K?" è scritta in rosso. */
+  nonAssociato?: boolean;
+  /** Numeri dei morsetti da scrivere accanto al simbolo (contatti dei contattori). */
+  numeri?: { x: number; y: number; testo: string; inAlto: boolean }[];
   /** Icona della libreria; se manca si disegna un semplice riquadro. */
   immagine: HTMLImageElement | undefined;
   scelto: boolean;
@@ -718,7 +749,7 @@ interface PropsSimbolo {
 }
 
 /** Disegno di un componente: simbolo, sigla a sinistra e contorno di selezione. */
-function SimboloComponente({ larghezza, altezza, etichetta, immagine, scelto, colori }: PropsSimbolo) {
+function SimboloComponente({ larghezza, altezza, etichetta, nonAssociato, numeri, immagine, scelto, colori }: PropsSimbolo) {
   return (
     <>
       {/* Area cliccabile trasparente: si seleziona cliccando anche fra le linee del simbolo. */}
@@ -746,10 +777,22 @@ function SimboloComponente({ larghezza, altezza, etichetta, immagine, scelto, co
           fontSize={14}
           fontStyle="bold"
           fontFamily="Segoe UI, system-ui, sans-serif"
-          fill={colori.testo}
+          fill={nonAssociato ? colori.morsettoAttivo : colori.testo}
           listening={false}
         />
       )}
+      {numeri?.map((n) => (
+        <Text
+          key={`${n.x},${n.y}`}
+          text={n.testo}
+          x={n.x + 6}
+          y={n.inAlto ? n.y + 4 : n.y - 15}
+          fontSize={11}
+          fontFamily="Segoe UI, system-ui, sans-serif"
+          fill={colori.morsetto}
+          listening={false}
+        />
+      ))}
       {scelto && (
         <Rect
           x={-4}

@@ -26,6 +26,24 @@ describe("file .elab", () => {
     expect(esito).toEqual({ ok: true, progetto, avvisi: [] });
   });
 
+  it("salva e rilegge la numerazione dei contatti; scarta i numeri non validi", () => {
+    const conContatto: Progetto = {
+      modulo: "impianti",
+      schema: {
+        componenti: [
+          { id: "k", tipo: "bobina-contattore", etichetta: "K1", x: 0, y: 0, larghezza: 40, altezza: 80 },
+          { id: "c", tipo: "contatto-na", etichetta: "K1", x: 80, y: 0, larghezza: 40, altezza: 80, numeriMorsetti: { "13": "23", "14": "24" } },
+        ],
+        fili: [],
+      },
+    };
+    expect(leggiProgetto(serializzaProgetto(conContatto, "0.1.0"))).toEqual({ ok: true, progetto: conContatto, avvisi: [] });
+    const dati = JSON.parse(serializzaProgetto(conContatto, "0.1.0"));
+    dati.schema.componenti[1].numeriMorsetti = { "13": 23, "14": "" };
+    const esito = leggiProgetto(JSON.stringify(dati));
+    expect(esito.ok && esito.progetto.schema.componenti[1].numeriMorsetti).toBeUndefined();
+  });
+
   it("scrive formato, versione, modulo, versione del programma e data", () => {
     const dati = JSON.parse(serializzaProgetto(progetto, "0.1.0", new Date("2026-10-25T21:00:00Z")));
     expect(dati).toMatchObject({ formato: "elettrolab", versione: VERSIONE_FORMATO, modulo: "impianti", programma: "0.1.0" });

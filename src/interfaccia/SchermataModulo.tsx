@@ -1,13 +1,15 @@
 // Schermata di un modulo: intestazione con ritorno alla schermata iniziale e
 // comandi dei file (Nuovo, Apri, Salva, Salva con nome), libreria dei
-// componenti a sinistra e area di disegno comune.
+// componenti a sinistra, area di disegno comune e pannello Proprietà a destra.
 // Gli strumenti di simulazione si aggiungeranno nelle fasi successive.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { t } from "../testi";
 import { AreaDisegno } from "../editor/AreaDisegno";
 import { LibreriaLaterale } from "../editor/LibreriaLaterale";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
-import type { Schema } from "../editor/schema";
+import { PannelloProprieta } from "../editor/PannelloProprieta";
+import { rinumeraContatti } from "../editor/associazioni";
+import type { Schema, Selezione } from "../editor/schema";
 import { annulla, modifica, nuovaCronologia, puoAnnullare, puoRipetere, ripeti, schemiUguali } from "../editor/cronologia";
 import type { Archivio } from "../progetto/archivio";
 import { nomeDaPercorso, serializzaProgetto } from "../progetto/formato";
@@ -44,15 +46,19 @@ export interface PropsSchermataModulo {
 export function SchermataModulo(props: PropsSchermataModulo) {
   const { modulo, tema, documento, archivio, versione, onErrore } = props;
   // Lo schema vive dentro la cronologia, che permette Annulla/Ripeti illimitati.
+  const libreria = useMemo(() => libreriaDelModulo(modulo.id), [modulo.id]);
   const [cronologia, setCronologia] = useState(() => nuovaCronologia(documento.schema));
+  // Ogni modifica (posa, incolla, eliminazione…) passa da qui: la numerazione
+  // dei contatti dei contattori resta così sempre coerente con la norma.
   const cambiaSchema = useCallback(
-    (schema: Schema, provvisoria?: boolean) => setCronologia((c) => modifica(c, schema, provvisoria)),
-    [],
+    (schema: Schema, provvisoria?: boolean) =>
+      setCronologia((c) => modifica(c, rinumeraContatti(schema, libreria), provvisoria)),
+    [libreria],
   );
+  const [selezione, setSelezione] = useState<Selezione>([]);
   const suAnnulla = useCallback(() => setCronologia(annulla), []);
   const suRipeti = useCallback(() => setCronologia(ripeti), []);
   const [daPosare, setDaPosare] = useState<string | null>(null);
-  const libreria = useMemo(() => libreriaDelModulo(modulo.id), [modulo.id]);
 
   // --- File e modifiche non salvate -------------------------------------
   const [percorso, setPercorso] = useState(documento.percorso);
@@ -189,7 +195,9 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           libreria={libreria}
           daPosare={daPosare}
           onFinePosa={() => setDaPosare(null)}
+          onSelezione={setSelezione}
         />
+        <PannelloProprieta schema={schema} selezione={selezione} libreria={libreria} onCambiaSchema={cambiaSchema} />
       </div>
     </div>
   );

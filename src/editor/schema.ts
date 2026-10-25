@@ -15,6 +15,12 @@ export interface ComponenteSchema {
   y: number;
   larghezza: number;
   altezza: number;
+  /**
+   * Numeri mostrati accanto ai morsetti al posto dell'id della libreria
+   * (es. il secondo contatto NA di K1 ha i morsetti "13"/"14" numerati
+   * "33"/"34"). Calcolati in automatico da associazioni.ts e salvati nel file.
+   */
+  numeriMorsetti?: Record<string, string>;
 }
 
 /** Un capo di un filo: il morsetto `morsetto` (es. "14") del componente `componente`. */

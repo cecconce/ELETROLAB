@@ -58,7 +58,13 @@ function leggiComponente(v: unknown): ComponenteSchema | undefined {
   if (!eTesto(id) || id === "" || !eTesto(tipo) || !eNumero(x) || !eNumero(y) || !eNumero(larghezza) || !eNumero(altezza)) {
     return undefined;
   }
-  return { id, tipo, etichetta: eTesto(etichetta) ? etichetta : "", x, y, larghezza, altezza };
+  const c: ComponenteSchema = { id, tipo, etichetta: eTesto(etichetta) ? etichetta : "", x, y, larghezza, altezza };
+  // Numerazione dei morsetti (facoltativa): si tengono solo le coppie testo → testo.
+  if (eOggetto(v.numeriMorsetti)) {
+    const numeri = Object.fromEntries(Object.entries(v.numeriMorsetti).filter(([, n]) => eTesto(n) && n !== ""));
+    if (Object.keys(numeri).length > 0) c.numeriMorsetti = numeri as Record<string, string>;
+  }
+  return c;
 }
 
 function leggiEstremo(v: unknown): EstremoFilo | undefined {

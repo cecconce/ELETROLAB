@@ -448,3 +448,80 @@ button {
 .tabella-librerie .senza-a-capo {
   white-space: nowrap;
 }
+
+/* --- Pannello Proprietà (a destra dell'area di disegno) --- */
+.proprieta {
+  width: 220px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  background: var(--superficie);
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+}
+.proprieta h2 {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+.proprieta h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--testo-tenue);
+  margin: 12px 0 4px;
+}
+.proprieta-campi {
+  margin: 0 0 8px;
+}
+.proprieta-campi dt {
+  color: var(--testo-tenue);
+  font-size: 0.8rem;
+}
+.proprieta-campi dd {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+.proprieta-numeri {
+  font-size: 1.1rem;
+}
+.proprieta-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+.proprieta-campo span {
+  color: var(--testo-tenue);
+  font-size: 0.8rem;
+}
+.proprieta-campo input,
+.proprieta-campo select {
+  font: inherit;
+  font-size: 1rem;
+  padding: 6px 8px;
+  border: 1px solid var(--bordo);
+  border-radius: 6px;
+  background: var(--sfondo);
+  color: var(--testo);
+}
+.proprieta-campo input[aria-invalid="true"] {
+  border-color: var(--accento-impianti);
+}
+.proprieta-nota,
+.proprieta-descrizione {
+  color: var(--testo-tenue);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+.proprieta-avviso {
+  color: var(--accento-impianti);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.proprieta-contatti ul {
+  margin: 0;
+  padding-left: 18px;
+}

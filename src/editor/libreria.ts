@@ -14,6 +14,12 @@
 //     "morsetti": [{ "id": "13", "x": 20, "y": 0 }]
 //   }]
 // }
+// Campi facoltativi per gli Impianti elettrici (attività 2.2):
+//   "comandaContatti": true          → bobina di contattore/relè: i contatti
+//                                       con la sua sigla commutano con lei;
+//   "contatto": { "tipo": "ausiliario" | "principale", "stato": "NA" | "NC" }
+//                                     → contatto azionato da una bobina: prende
+//                                       la sua sigla e la numerazione normativa.
 // Larghezza, altezza e coordinate dei morsetti sono multipli del passo di griglia.
 import { PASSO_GRIGLIA, agganciaPunto, type Punto } from "./geometria";
 import type { ComponenteSchema, Schema } from "./schema";
@@ -39,6 +45,18 @@ export interface VoceLibreria {
   larghezza: number;
   altezza: number;
   morsetti: MorsettoLibreria[];
+  /** true per le bobine (contattori, relè): comandano i contatti con la stessa sigla. */
+  comandaContatti?: boolean;
+  /** Presente nei contatti azionati da una bobina (numerazione automatica). */
+  contatto?: DatiContatto;
+}
+
+/** Tipo di contatto, per la numerazione dei morsetti secondo la norma. */
+export interface DatiContatto {
+  /** ausiliario: 13-14, 21-22…; principale (di potenza): 1-2, 3-4, 5-6. */
+  tipo: "ausiliario" | "principale";
+  /** NA = normalmente aperto, NC = normalmente chiuso. */
+  stato: "NA" | "NC";
 }
 
 export interface CategoriaLibreria {
@@ -137,6 +155,20 @@ export function leggiLibreria(dati: unknown, nomeFile: string, icone?: ReadonlyS
       morsetti.push({ id: m.id as string, x: m.x as number, y: m.y as number });
     }
     if (!morsettiValidi) continue;
+    let contatto: DatiContatto | undefined;
+    if (v.contatto !== undefined) {
+      const c = v.contatto;
+      if (
+        !eOggetto(c) ||
+        (c.tipo !== "ausiliario" && c.tipo !== "principale") ||
+        (c.stato !== "NA" && c.stato !== "NC") ||
+        morsetti.length !== 2
+      ) {
+        problema('il campo "contatto" deve essere { "tipo": "ausiliario" o "principale", "stato": "NA" o "NC" } e il contatto deve avere 2 morsetti.');
+        continue;
+      }
+      contatto = { tipo: c.tipo, stato: c.stato };
+    }
     componenti.push({
       id: v.id,
       nome: v.nome,
@@ -148,6 +180,8 @@ export function leggiLibreria(dati: unknown, nomeFile: string, icone?: ReadonlyS
       larghezza,
       altezza,
       morsetti,
+      ...(v.comandaContatti === true ? { comandaContatti: true } : {}),
+      ...(contatto ? { contatto } : {}),
     });
   }
   return { libreria: { modulo, categorie, componenti }, errori };
@@ -209,11 +243,14 @@ export function nuovoId(schema: Schema, base: string): string {
  * Riempire i "buchi" lasciati da un componente eliminato tiene la
  * numerazione compatta, come si fa a mano sugli schemi.
  * Una sigla vuota (reti, masse) resta vuota.
+ * @param ignora tipi da non contare (i contatti, che ripetono la sigla della bobina)
  */
-export function prossimaSigla(schema: Schema, lettere: string): string {
+export function prossimaSigla(schema: Schema, lettere: string, ignora?: ReadonlySet<string>): string {
   if (!lettere) return "";
   const usati = new Set<number>();
   for (const c of schema.componenti) {
+    // I contatti portano la sigla della loro bobina: non "occupano" numeri.
+    if (ignora?.has(c.tipo)) continue;
     if (!c.etichetta.startsWith(lettere)) continue;
     const resto = c.etichetta.slice(lettere.length);
     // Solo cifre dopo le lettere: "KA1" non deve occupare il numero di "K1".
@@ -228,18 +265,45 @@ export function prossimaSigla(schema: Schema, lettere: string): string {
  * Crea il componente da posare con il centro nel punto indicato (coordinate
  * del foglio, per esempio dove lo studente rilascia il mouse); l'angolo in
  * alto a sinistra viene agganciato alla griglia, quindi anche i morsetti.
+ *
+ * Un contatto azionato da bobina prende la sigla dell'ultima bobina posata
+ * (di solito si disegna la bobina e poi i suoi contatti); se non ci sono
+ * bobine resta senza sigla ("non associato") finché lo studente non sceglie
+ * la bobina nelle Proprietà.
  */
-export function componenteDaVoce(schema: Schema, voce: VoceLibreria, centro: Punto): ComponenteSchema {
+export function componenteDaVoce(
+  schema: Schema,
+  voce: VoceLibreria,
+  centro: Punto,
+  libreria?: Libreria,
+): ComponenteSchema {
   const angolo = agganciaPunto({ x: centro.x - voce.larghezza / 2, y: centro.y - voce.altezza / 2 });
+  let etichetta: string;
+  if (voce.contatto) {
+    const bobine = libreria ? schema.componenti.filter((c) => vocePerTipo(libreria, c.tipo)?.comandaContatti) : [];
+    etichetta = bobine.length > 0 ? bobine[bobine.length - 1].etichetta : "";
+  } else {
+    etichetta = prossimaSigla(schema, voce.sigla, libreria ? tipiContatto(libreria) : undefined);
+  }
   return {
     id: nuovoId(schema, voce.id),
     tipo: voce.id,
-    etichetta: prossimaSigla(schema, voce.sigla),
+    etichetta,
     x: angolo.x,
     y: angolo.y,
     larghezza: voce.larghezza,
     altezza: voce.altezza,
   };
+}
+
+/** Voce della libreria corrispondente a un tipo di componente. */
+export function vocePerTipo(libreria: Libreria, tipo: string): VoceLibreria | undefined {
+  return libreria.componenti.find((v) => v.id === tipo);
+}
+
+/** Tipi della libreria che sono contatti azionati da bobina. */
+export function tipiContatto(libreria: Libreria): Set<string> {
+  return new Set(libreria.componenti.filter((v) => v.contatto).map((v) => v.id));
 }
 
 /** Sostituisce currentColor nell'SVG con il colore del tema e restituisce un data URL per <img> o Konva. */

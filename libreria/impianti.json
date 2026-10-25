@@ -113,7 +113,8 @@
       "morsetti": [
         { "id": "A1", "x": 20, "y": 0 },
         { "id": "A2", "x": 20, "y": 80 }
-      ]
+      ],
+      "comandaContatti": true
     },
     {
       "id": "contatto-na",
@@ -128,7 +129,8 @@
       "morsetti": [
         { "id": "13", "x": 20, "y": 0 },
         { "id": "14", "x": 20, "y": 80 }
-      ]
+      ],
+      "contatto": { "tipo": "ausiliario", "stato": "NA" }
     },
     {
       "id": "contatto-nc",
@@ -143,7 +145,8 @@
       "morsetti": [
         { "id": "21", "x": 20, "y": 0 },
         { "id": "22", "x": 20, "y": 80 }
-      ]
+      ],
+      "contatto": { "tipo": "ausiliario", "stato": "NC" }
     },
     {
       "id": "lampada",
