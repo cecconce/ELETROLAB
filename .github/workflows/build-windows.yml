@@ -58,6 +58,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $dest | Out-Null
           Copy-Item "src-tauri/target/release/elettrolab.exe" "$dest/ElettroLab.exe"
           Copy-Item "LICENSE" "$dest/LICENSE.txt"
+          Copy-Item "LICENZE.txt" "$dest/LICENZE.txt"
           # La presenza di portable.txt attiva la modalità portable:
           # impostazioni e progetti vengono salvati in .\dati\ accanto all'exe.
           Set-Content -Encoding utf8 -Path "$dest/portable.txt" -Value @(

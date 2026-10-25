@@ -19,6 +19,7 @@ function disegna(sovrascrivi: Partial<PropsSchermataIniziale> = {}) {
       onApriFile={nulla}
       onApriEsempi={nulla}
       onAlternaTema={nulla}
+      onApriInformazioni={nulla}
       {...sovrascrivi}
     />,
   );
@@ -56,6 +57,10 @@ describe("schermata iniziale", () => {
   it("il pulsante del tema propone il tema opposto", () => {
     expect(disegna({ tema: "chiaro" })).toContain(t("tema.passaScuro"));
     expect(disegna({ tema: "scuro" })).toContain(t("tema.passaChiaro"));
+  });
+
+  it("ha il pulsante della finestra Informazioni", () => {
+    expect(disegna()).toContain(t("info.pulsante"));
   });
 
   it("ogni modulo ha titolo e descrizione tradotti", () => {

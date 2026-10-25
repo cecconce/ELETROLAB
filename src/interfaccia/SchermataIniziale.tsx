@@ -20,6 +20,8 @@ export interface PropsSchermataIniziale {
   onApriFile: () => void;
   onApriEsempi: () => void;
   onAlternaTema: () => void;
+  /** Apre la finestra "Informazioni" (autore, licenza, librerie). */
+  onApriInformazioni: () => void;
 }
 
 export function SchermataIniziale(props: PropsSchermataIniziale) {
@@ -33,9 +35,14 @@ export function SchermataIniziale(props: PropsSchermataIniziale) {
           <h1>{t("app.titolo")}</h1>
           <p className="sottotitolo">{t("app.sottotitolo")}</p>
         </div>
-        <button type="button" className="pulsante-tema" onClick={props.onAlternaTema} title={etichettaTema}>
-          {tema === "chiaro" ? "☾" : "☀"} {etichettaTema}
-        </button>
+        <div className="pulsanti-intestazione">
+          <button type="button" className="pulsante-tema" onClick={props.onApriInformazioni} data-azione="informazioni">
+            ⓘ {t("info.pulsante")}
+          </button>
+          <button type="button" className="pulsante-tema" onClick={props.onAlternaTema} title={etichettaTema}>
+            {tema === "chiaro" ? "☾" : "☀"} {etichettaTema}
+          </button>
+        </div>
       </header>
 
       <nav className="griglia-tessere" aria-label={t("home.moduli")}>

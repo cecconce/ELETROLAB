@@ -7,8 +7,9 @@ import { SchermataIniziale } from "./interfaccia/SchermataIniziale";
 import { SchermataModulo, type Documento } from "./interfaccia/SchermataModulo";
 import { trovaModulo, type IdModulo } from "./interfaccia/moduli";
 import { alternaTema, leggiTemaSalvato, salvaTema, temaIniziale, type Tema } from "./interfaccia/tema";
+import { FinestraInformazioni } from "./informazioni/FinestraInformazioni";
 import { SCHEMA_VUOTO } from "./editor/schema";
-import { creaArchivio } from "./progetto/archivio";
+import { creaArchivio, type InfoCartellaDati } from "./progetto/archivio";
 import { leggiProgetto } from "./progetto/formato";
 import { leggiAutosalvataggio } from "./progetto/autosalvataggio";
 import {
@@ -49,6 +50,9 @@ export default function App() {
   const [impostazioniLette, setImpostazioniLette] = useState(false);
   const [aperto, setAperto] = useState<Aperto | null>(null);
   const [avviso, setAvviso] = useState<string | null>(null);
+  const [cartellaDati, setCartellaDati] = useState<InfoCartellaDati | null>(null);
+  const [informazioniAperte, setInformazioniAperte] = useState(false);
+  const chiudiInformazioni = useCallback(() => setInformazioniAperte(false), []);
   const prossimoId = useRef(1);
 
   // Il tema è applicato all'elemento <html>, così vale per tutta l'app.
@@ -67,6 +71,7 @@ export default function App() {
         setImpostazioni(lette);
         if (lette.tema) setTema(lette.tema);
         setImpostazioniLette(true);
+        setCartellaDati(info);
         if (info?.avviso) setAvviso(info.avviso);
       },
     );
@@ -176,7 +181,11 @@ export default function App() {
         onApriFile={() => void apriConDialogo()}
         onApriEsempi={() => setAvviso(t("home.esempiInArrivo"))}
         onAlternaTema={() => setTema((x) => alternaTema(x))}
+        onApriInformazioni={() => setInformazioniAperte(true)}
       />
+      {informazioniAperte && (
+        <FinestraInformazioni versione={pacchetto.version} cartellaDati={cartellaDati} onChiudi={chiudiInformazioni} />
+      )}
       {finestraAvviso}
     </>
   );

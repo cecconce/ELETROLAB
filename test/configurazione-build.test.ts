@@ -21,8 +21,10 @@ describe("workflow di build Windows", () => {
     expect(posCargo).toBeLessThan(workflow.indexOf("npx tauri build"));
   });
 
-  it("produce lo zip portable con portable.txt", () => {
+  it("produce lo zip portable con portable.txt, LICENSE e LICENZE.txt", () => {
     expect(workflow).toContain("portable.txt");
+    expect(workflow).toContain('"$dest/LICENSE.txt"');
+    expect(workflow).toContain('"$dest/LICENZE.txt"');
     expect(workflow).toContain("ElettroLab-portable.zip");
   });
 
@@ -36,6 +38,11 @@ describe("configurazione Tauri", () => {
     expect(tauriConf.bundle.targets).toContain("nsis");
   });
 
+  it("l'installer mostra la licenza e installa anche LICENZE.txt", () => {
+    expect(tauriConf.bundle.licenseFile).toBe("../LICENSE");
+    expect(Object.values(tauriConf.bundle.resources)).toContain("LICENZE.txt");
+  });
+
   it("installa per l'utente corrente, senza permessi di amministratore", () => {
     expect(tauriConf.bundle.windows.nsis.installMode).toBe("currentUser");
   });
@@ -43,7 +50,9 @@ describe("configurazione Tauri", () => {
   it("non consente connessioni di rete dall'interfaccia (CSP)", () => {
     const csp = tauriConf.app.security.csp;
     expect(csp).toContain("default-src 'self'");
-    expect(csp).not.toMatch(/https?:/);
+    // L'unico indirizzo ammesso è il canale interno di Tauri (non è Internet):
+    // i controlli completi sono in nessuna-rete.test.ts.
+    expect(csp.replace("http://ipc.localhost", "")).not.toMatch(/https?:/);
   });
 });
 

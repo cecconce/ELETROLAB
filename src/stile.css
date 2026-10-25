@@ -373,3 +373,78 @@ button {
 .vuoto + .pulsante {
   margin-top: 8px;
 }
+
+/* --- Finestra "Informazioni" (e future finestre a comparsa) --- */
+.pulsanti-intestazione {
+  display: flex;
+  gap: 8px;
+}
+.sfondo-finestra {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 10;
+}
+.finestra {
+  background: var(--superficie);
+  color: var(--testo);
+  border: 1px solid var(--bordo);
+  border-radius: 14px;
+  box-shadow: var(--ombra);
+  padding: 20px 24px;
+  max-width: 860px;
+  width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  box-sizing: border-box;
+}
+.finestra h2 {
+  margin: 0 0 12px;
+}
+.finestra h3 {
+  margin: 20px 0 4px;
+  font-size: 1.05rem;
+}
+.info-dati {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+.info-dati dt {
+  font-weight: 600;
+}
+.info-dati dd {
+  margin: 0;
+}
+.info-dati code {
+  word-break: break-all;
+}
+.tenue {
+  color: var(--testo-tenue);
+  font-size: 0.9rem;
+}
+.tabella-librerie {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.tabella-librerie th,
+.tabella-librerie td {
+  text-align: left;
+  vertical-align: top;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--bordo);
+}
+.finestra-pulsanti {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.tabella-librerie .senza-a-capo {
+  white-space: nowrap;
+}
