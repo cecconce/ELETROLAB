@@ -346,3 +346,30 @@ button {
 .pulsante:disabled:hover {
   border-color: var(--bordo);
 }
+
+/* --- Comandi dei file nell'intestazione del modulo --- */
+.nome-file {
+  color: var(--testo-tenue);
+  font-size: 1.05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.segno-modificato {
+  color: var(--accento-impianti);
+}
+.comandi-file {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.recente-modulo {
+  color: var(--testo-tenue);
+  font-size: 0.9em;
+}
+.elenco-recenti + .pulsante,
+.vuoto + .pulsante {
+  margin-top: 8px;
+}

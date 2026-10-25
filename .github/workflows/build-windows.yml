@@ -44,6 +44,10 @@ jobs:
       - name: Test dei motori e dell'interfaccia
         run: npm test
 
+      - name: Test della parte nativa (cartella dati, file)
+        working-directory: src-tauri
+        run: cargo test
+
       - name: Compila l'app (Tauri + NSIS)
         run: npx tauri build
 

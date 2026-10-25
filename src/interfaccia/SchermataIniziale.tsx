@@ -5,19 +5,19 @@ import { t } from "../testi";
 import { MODULI, type IdModulo } from "./moduli";
 import { IconaModulo } from "./IconeModuli";
 import type { Tema } from "./tema";
+import type { FileRecente } from "../progetto/impostazioni";
 
-export interface FileRecente {
-  nome: string;
-  percorso: string;
-}
+export type { FileRecente };
 
 export interface PropsSchermataIniziale {
   tema: Tema;
   versione: string;
-  /** Elenco dei file recenti (verrà popolato con l'attività 1.8). */
+  /** Elenco dei file recenti (dal file delle impostazioni), il più recente per primo. */
   recenti: FileRecente[];
   onApriModulo: (id: IdModulo) => void;
   onApriRecente: (file: FileRecente) => void;
+  /** Finestra "Apri" per scegliere un file .elab qualsiasi. */
+  onApriFile: () => void;
   onApriEsempi: () => void;
   onAlternaTema: () => void;
 }
@@ -68,11 +68,15 @@ export function SchermataIniziale(props: PropsSchermataIniziale) {
                 <li key={f.percorso}>
                   <button type="button" onClick={() => props.onApriRecente(f)} title={f.percorso}>
                     {f.nome}
+                    {f.modulo && <span className="recente-modulo"> · {t(`modulo.${f.modulo}.titolo`)}</span>}
                   </button>
                 </li>
               ))}
             </ul>
           )}
+          <button type="button" className="pulsante" onClick={props.onApriFile}>
+            {t("home.apriFile")}
+          </button>
         </div>
         <div className="pannello">
           <h2>{t("home.esempi")}</h2>

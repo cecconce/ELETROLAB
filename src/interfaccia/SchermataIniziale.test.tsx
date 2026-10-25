@@ -16,6 +16,7 @@ function disegna(sovrascrivi: Partial<PropsSchermataIniziale> = {}) {
       recenti={[]}
       onApriModulo={nulla}
       onApriRecente={nulla}
+      onApriFile={nulla}
       onApriEsempi={nulla}
       onAlternaTema={nulla}
       {...sovrascrivi}

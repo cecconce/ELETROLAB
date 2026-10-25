@@ -12,3 +12,5 @@ Tauri 2             MIT/Apache-2.0  Guscio dell'applicazione desktop
 React, React DOM    MIT          Interfaccia
 Konva               MIT          Area di disegno su canvas
 react-konva         MIT          Collegamento fra Konva e React
+tauri-plugin-dialog MIT/Apache-2.0  Finestre Apri/Salva e conferme di Windows
+  (+ @tauri-apps/plugin-dialog)
