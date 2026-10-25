@@ -7,6 +7,7 @@ import { PASSO_GRIGLIA } from "./geometria";
 import {
   cercaComponenti,
   componenteDaVoce,
+  prossimaSigla,
   leggiLibreria,
   normalizza,
   nuovoId,
@@ -145,7 +146,7 @@ describe("posa di un componente dalla libreria", () => {
 
   it("centra il componente sul punto di rilascio, agganciato alla griglia", () => {
     const c = componenteDaVoce(SCHEMA_VUOTO, voce, { x: 107, y: 133 });
-    expect(c).toMatchObject({ tipo: "bobina-contattore", etichetta: "K", larghezza: 40, altezza: 80 });
+    expect(c).toMatchObject({ tipo: "bobina-contattore", etichetta: "K1", larghezza: 40, altezza: 80 });
     expect(c.x % PASSO_GRIGLIA).toBe(0);
     expect(c.y % PASSO_GRIGLIA).toBe(0);
     expect(Math.abs(c.x + 20 - 107)).toBeLessThanOrEqual(PASSO_GRIGLIA / 2);
@@ -156,8 +157,24 @@ describe("posa di un componente dalla libreria", () => {
     let s = SCHEMA_VUOTO;
     for (let i = 0; i < 3; i++) s = aggiungiComponente(s, componenteDaVoce(s, voce, { x: 0, y: 0 }));
     expect(s.componenti.map((c) => c.id)).toEqual(["bobina-contattore-1", "bobina-contattore-2", "bobina-contattore-3"]);
-    const senzaSecondo = { componenti: s.componenti.filter((c) => c.id !== "bobina-contattore-2") };
+    const senzaSecondo = { ...s, componenti: s.componenti.filter((c) => c.id !== "bobina-contattore-2") };
     expect(nuovoId(senzaSecondo, "bobina-contattore")).toBe("bobina-contattore-2");
+  });
+
+  it("numera le sigle in automatico: K1, K2, K3…", () => {
+    let s = SCHEMA_VUOTO;
+    for (let i = 0; i < 3; i++) s = aggiungiComponente(s, componenteDaVoce(s, voce, { x: 0, y: 0 }));
+    expect(s.componenti.map((c) => c.etichetta)).toEqual(["K1", "K2", "K3"]);
+  });
+
+  it("riusa il primo numero libero dopo un'eliminazione e tiene separate le lettere", () => {
+    const comp = (etichetta: string) => ({ id: etichetta, tipo: "x", etichetta, x: 0, y: 0, larghezza: 20, altezza: 20 });
+    const s = { componenti: ["K1", "K3", "KA1", "S1"].map(comp), fili: [] };
+    expect(prossimaSigla(s, "K")).toBe("K2");
+    expect(prossimaSigla(s, "KA")).toBe("KA2");
+    expect(prossimaSigla(s, "S")).toBe("S2");
+    expect(prossimaSigla(s, "H")).toBe("H1");
+    expect(prossimaSigla(s, "")).toBe("");
   });
 
   it("colora l'icona secondo il tema", () => {

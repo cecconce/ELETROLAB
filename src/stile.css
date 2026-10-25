@@ -216,6 +216,11 @@ button {
   font-size: 0.85rem;
   margin-left: 8px;
 }
+/* Messaggio di collegamento non valido: ben visibile ma non bloccante. */
+.suggerimento.avviso {
+  color: var(--accento-impianti);
+  font-weight: 600;
+}
 
 /* --- Libreria laterale dei componenti --- */
 .corpo-modulo {

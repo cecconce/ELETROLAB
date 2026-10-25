@@ -11,6 +11,11 @@ export interface ColoriEditor {
   testo: string;
   selezione: string;
   rettangoloSelezione: string;
+  /** Fili e pallini di giunzione. */
+  filo: string;
+  /** Morsetto libero (cerchietto vuoto) e morsetto sotto il mouse. */
+  morsetto: string;
+  morsettoAttivo: string;
 }
 
 const CHIARO: ColoriEditor = {
@@ -22,6 +27,9 @@ const CHIARO: ColoriEditor = {
   testo: "#1d2733",
   selezione: "#2563eb",
   rettangoloSelezione: "rgba(37, 99, 235, 0.12)",
+  filo: "#1d2733",
+  morsetto: "#64748b",
+  morsettoAttivo: "#dc2626",
 };
 
 const SCURO: ColoriEditor = {
@@ -33,6 +41,9 @@ const SCURO: ColoriEditor = {
   testo: "#e6ebf0",
   selezione: "#60a5fa",
   rettangoloSelezione: "rgba(96, 165, 250, 0.18)",
+  filo: "#e6ebf0",
+  morsetto: "#94a3b8",
+  morsettoAttivo: "#f87171",
 };
 
 export function coloriEditor(tema: Tema): ColoriEditor {

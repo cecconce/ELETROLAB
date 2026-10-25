@@ -1,5 +1,5 @@
 // Modello dei dati dello schema mostrato nell'editor: i componenti posati sul
-// foglio e la selezione corrente. Tutte le funzioni restituiscono un nuovo
+// foglio, i fili che collegano i loro morsetti e la selezione corrente. Tutte le funzioni restituiscono un nuovo
 // oggetto senza modificare quello ricevuto: servirà ad Annulla/Ripeti (1.7).
 import { agganciaPunto, type Punto } from "./geometria";
 
@@ -8,7 +8,7 @@ export interface ComponenteSchema {
   id: string;
   /** Tipo di componente: con la 1.5 corrisponderà a una voce della libreria. */
   tipo: string;
-  /** Testo mostrato sul componente (con la 1.6 diventerà la sigla, es. K1). */
+  /** Sigla mostrata accanto al componente (K1, S2, H1…); vuota per reti e masse. */
   etichetta: string;
   /** Angolo in alto a sinistra, in unità del foglio, sempre sulla griglia. */
   x: number;
@@ -17,11 +17,32 @@ export interface ComponenteSchema {
   altezza: number;
 }
 
-export interface Schema {
-  componenti: ComponenteSchema[];
+/** Un capo di un filo: il morsetto `morsetto` (es. "14") del componente `componente`. */
+export interface EstremoFilo {
+  componente: string;
+  morsetto: string;
 }
 
-export const SCHEMA_VUOTO: Schema = { componenti: [] };
+/**
+ * Filo fra due morsetti. Il percorso non viene salvato punto per punto ma
+ * ricalcolato (vedi fili.ts), così segue i componenti quando si spostano.
+ * `medio` è la posizione del tratto centrale scelta dallo studente
+ * trascinando il filo (y per i fili verticali, x per quelli orizzontali);
+ * se manca il tratto centrale sta a metà strada.
+ */
+export interface Filo {
+  id: string;
+  da: EstremoFilo;
+  a: EstremoFilo;
+  medio?: number;
+}
+
+export interface Schema {
+  componenti: ComponenteSchema[];
+  fili: Filo[];
+}
+
+export const SCHEMA_VUOTO: Schema = { componenti: [], fili: [] };
 
 /** Insieme degli id selezionati (array senza doppioni, per semplicità di confronto). */
 export type Selezione = readonly string[];
@@ -29,7 +50,7 @@ export type Selezione = readonly string[];
 /** Aggiunge un componente, già agganciato alla griglia. */
 export function aggiungiComponente(schema: Schema, c: ComponenteSchema): Schema {
   const p = agganciaPunto(c);
-  return { componenti: [...schema.componenti, { ...c, x: p.x, y: p.y }] };
+  return { ...schema, componenti: [...schema.componenti, { ...c, x: p.x, y: p.y }] };
 }
 
 /** Porta il componente nella posizione indicata (agganciata alla griglia). */
@@ -42,7 +63,7 @@ export function spostaComponente(schema: Schema, id: string, posizione: Punto): 
     return { ...c, x: p.x, y: p.y };
   });
   // Se nulla cambia restituiamo lo stesso oggetto: React non ridisegna inutilmente.
-  return cambiato ? { componenti } : schema;
+  return cambiato ? { ...schema, componenti } : schema;
 }
 
 /**
@@ -54,6 +75,7 @@ export function spostaSelezione(schema: Schema, selezione: Selezione, dx: number
   if (d.x === 0 && d.y === 0) return schema;
   const scelti = new Set(selezione);
   return {
+    ...schema,
     componenti: schema.componenti.map((c) => (scelti.has(c.id) ? { ...c, x: c.x + d.x, y: c.y + d.y } : c)),
   };
 }

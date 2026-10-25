@@ -203,6 +203,28 @@ export function nuovoId(schema: Schema, base: string): string {
 }
 
 /**
+ * Sigla automatica per un nuovo componente: lettera (o lettere) della libreria
+ * seguita dal primo numero libero fra quelli già usati nello schema.
+ * Esempio: con K1 e K3 sul foglio il prossimo contattore è K2, poi K4.
+ * Riempire i "buchi" lasciati da un componente eliminato tiene la
+ * numerazione compatta, come si fa a mano sugli schemi.
+ * Una sigla vuota (reti, masse) resta vuota.
+ */
+export function prossimaSigla(schema: Schema, lettere: string): string {
+  if (!lettere) return "";
+  const usati = new Set<number>();
+  for (const c of schema.componenti) {
+    if (!c.etichetta.startsWith(lettere)) continue;
+    const resto = c.etichetta.slice(lettere.length);
+    // Solo cifre dopo le lettere: "KA1" non deve occupare il numero di "K1".
+    if (/^\d+$/.test(resto)) usati.add(Number(resto));
+  }
+  let n = 1;
+  while (usati.has(n)) n++;
+  return `${lettere}${n}`;
+}
+
+/**
  * Crea il componente da posare con il centro nel punto indicato (coordinate
  * del foglio, per esempio dove lo studente rilascia il mouse); l'angolo in
  * alto a sinistra viene agganciato alla griglia, quindi anche i morsetti.
@@ -212,8 +234,7 @@ export function componenteDaVoce(schema: Schema, voce: VoceLibreria, centro: Pun
   return {
     id: nuovoId(schema, voce.id),
     tipo: voce.id,
-    // Per ora la sola lettera della sigla: la numerazione (K1, K2…) arriva con l'attività 1.6.
-    etichetta: voce.sigla,
+    etichetta: prossimaSigla(schema, voce.sigla),
     x: angolo.x,
     y: angolo.y,
     larghezza: voce.larghezza,

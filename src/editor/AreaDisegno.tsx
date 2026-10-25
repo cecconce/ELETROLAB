@@ -8,9 +8,12 @@
 // - trascinamento dei componenti (il gruppo selezionato si muove insieme)
 // - posa dei componenti della libreria: rilasciandoli sul foglio (drag & drop)
 //   oppure, dopo averli scelti con un clic, cliccando sul foglio
-// La logica (calcoli e modifiche allo schema) sta in geometria.ts e schema.ts.
+// - collegamenti: clic su un morsetto e poi su un altro; il filo si instrada da
+//   solo con tratti ortogonali, si sposta trascinandolo e torna automatico con
+//   un doppio clic
+// La logica (calcoli e modifiche allo schema) sta in geometria.ts, schema.ts e fili.ts.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Group, Image as ImmagineKonva, Layer, Rect, Shape, Stage, Text } from "react-konva";
+import { Circle, Group, Image as ImmagineKonva, Layer, Line, Rect, Shape, Stage, Text } from "react-konva";
 import type Konva from "konva";
 import { t } from "../testi";
 import type { Tema } from "../interfaccia/tema";
@@ -18,6 +21,17 @@ import { coloriEditor } from "./colori";
 import { ICONE, trovaVoce } from "./caricaLibreria";
 import { componenteDaVoce, svgComeDataUrl, type Libreria, type VoceLibreria } from "./libreria";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
+import {
+  collega,
+  filiSulMorsetto,
+  instrada,
+  morsettiDelComponente,
+  percorsoFilo,
+  ripristinaPercorso,
+  spostaTrattoFilo,
+  type MorsettiDelTipo,
+  type MorsettoPosato,
+} from "./fili";
 import {
   FATTORE_ZOOM,
   VISTA_INIZIALE,
@@ -101,6 +115,7 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
   const colori = coloriEditor(tema);
   const immagini = useImmaginiIcone(libreria, colori.testo);
   const vociPerTipo = useMemo(() => new Map(libreria.componenti.map((v) => [v.id, v])), [libreria]);
+  const morsettiDi = useCallback<MorsettiDelTipo>((tipo) => vociPerTipo.get(tipo)?.morsetti, [vociPerTipo]);
   const voceDaPosare = daPosare ? trovaVoce(libreria, daPosare) : undefined;
   // Posizione del mouse sul foglio, per l'anteprima del componente da posare.
   const [anteprima, setAnteprima] = useState<Punto | null>(null);
@@ -112,6 +127,16 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
   const [rettangolo, setRettangolo] = useState<{ inizio: Punto; fine: Punto } | null>(null);
   const [spazioPremuto, setSpazioPremuto] = useState(false);
   const [spostandoVista, setSpostandoVista] = useState(false);
+  // Collegamento iniziato: morsetto di partenza, in attesa del clic sul morsetto di arrivo.
+  const [filoInCorso, setFiloInCorso] = useState<MorsettoPosato | null>(null);
+  // Punto del foglio sotto il mouse (anteprima del filo in corso).
+  const [mouseFoglio, setMouseFoglio] = useState<Punto | null>(null);
+  // Morsetto sotto il mouse, evidenziato con il suo numero (chiave "componente/morsetto").
+  const [morsettoSotto, setMorsettoSotto] = useState<string | null>(null);
+  // Messaggio breve per lo studente (es. collegamento non valido).
+  const [avviso, setAvviso] = useState<string | null>(null);
+  // Filo di cui si sta trascinando il tratto centrale.
+  const filoTrascinato = useRef<string | null>(null);
 
   // Riferimento sempre aggiornato alla callback, usato dal gestore dei tasti.
   const onFinePosaRif = useRef(onFinePosa);
@@ -130,6 +155,7 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
       }
       if (e.key === "Escape") {
         setSelezione([]);
+        setFiloInCorso(null);
         onFinePosaRif.current?.();
       }
     };
@@ -147,10 +173,36 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
   // Se un componente sparisce dallo schema lo togliamo anche dalla selezione.
   useEffect(() => {
     setSelezione((sel) => {
-      const filtrata = sel.filter((id) => schema.componenti.some((c) => c.id === id));
+      const filtrata = sel.filter((id) => schema.componenti.some((c) => c.id === id) || schema.fili.some((f) => f.id === id));
       return filtrata.length === sel.length ? sel : filtrata;
     });
   }, [schema]);
+
+  // L'avviso sparisce da solo dopo qualche secondo.
+  useEffect(() => {
+    if (!avviso) return;
+    const timer = window.setTimeout(() => setAvviso(null), 3500);
+    return () => window.clearTimeout(timer);
+  }, [avviso]);
+
+  /** Clic su un morsetto: inizia il filo oppure lo conclude sul morsetto di arrivo. */
+  const clicMorsetto = (m: MorsettoPosato) => {
+    if (!filoInCorso) {
+      setFiloInCorso(m);
+      setAvviso(null);
+      return;
+    }
+    const esito = collega(schema, filoInCorso, m, morsettiDi);
+    if (!esito.ok) {
+      setAvviso(t(esito.errore));
+      // Sullo stesso morsetto il clic annulla; negli altri casi si può riprovare.
+      if (esito.errore === "fili.stessoMorsetto") setFiloInCorso(null);
+      return;
+    }
+    onCambiaSchema(esito.schema);
+    setSelezione([esito.filo.id]);
+    setFiloInCorso(null);
+  };
 
   const puntatore = (e: Konva.KonvaEventObject<MouseEvent | WheelEvent>): Punto | null =>
     e.target.getStage()?.getPointerPosition() ?? null;
@@ -194,6 +246,11 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
       ultimoPuntatore.current = p;
       return;
     }
+    // Sinistro sul vuoto con un filo in corso: annulla il collegamento.
+    if (e.evt.button === 0 && filoInCorso) {
+      setFiloInCorso(null);
+      return;
+    }
     // Sinistro con un componente scelto nella libreria: lo posa dove si clicca.
     if (e.evt.button === 0 && voceDaPosare) {
       e.cancelBubble = true;
@@ -212,6 +269,11 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
     const p = puntatore(e);
     if (!p) return;
     if (voceDaPosare) setAnteprima(schermoAFoglio(vista, p));
+    if (filoInCorso) setMouseFoglio(schermoAFoglio(vista, p));
+    if (filoTrascinato.current) {
+      onCambiaSchema(spostaTrattoFilo(schema, filoTrascinato.current, schermoAFoglio(vista, p), morsettiDi));
+      return;
+    }
     if (spostandoVista && ultimoPuntatore.current) {
       const prec = ultimoPuntatore.current;
       setVista((v) => spostaVista(v, p.x - prec.x, p.y - prec.y));
@@ -222,6 +284,7 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
   };
 
   const suRilascio = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    filoTrascinato.current = null;
     if (spostandoVista) {
       setSpostandoVista(false);
       ultimoPuntatore.current = null;
@@ -289,7 +352,26 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
   const griglia = lineeGriglia(vista, larghezza, altezza);
   const selezionati = new Set(selezione);
   const rett = rettangolo ? rettangoloTra(rettangolo.inizio, rettangolo.fine) : null;
-  const cursore = spostandoVista ? "grabbing" : spazioPremuto ? "grab" : voceDaPosare ? "copy" : "default";
+  const cursore = spostandoVista
+    ? "grabbing"
+    : spazioPremuto
+      ? "grab"
+      : voceDaPosare
+        ? "copy"
+        : filoInCorso || morsettoSotto
+          ? "crosshair"
+          : "default";
+  // Tutti i morsetti visibili, disegnati sopra i componenti.
+  const morsetti = schema.componenti.flatMap((c) => morsettiDelComponente(c, morsettiDi));
+  // Anteprima del filo in corso: dal morsetto di partenza al mouse (o al morsetto sotto il mouse).
+  const arrivoAnteprima = morsettoSotto ? morsetti.find((m) => `${m.componente}/${m.morsetto}` === morsettoSotto) : undefined;
+  const anteprimaFilo =
+    filoInCorso && (arrivoAnteprima || mouseFoglio)
+      ? arrivoAnteprima
+        ? instrada(filoInCorso, arrivoAnteprima)
+        : [filoInCorso.posizione, mouseFoglio as Punto]
+      : null;
+  const raggioMorsetto = 3.5;
   const posAnteprima =
     voceDaPosare && anteprima ? componenteDaVoce(schema, voceDaPosare, anteprima) : null;
 
@@ -306,6 +388,8 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
         data-zoom={Math.round(vista.scala * 100)}
         data-selezionati={selezione.join(",")}
         data-componenti={schema.componenti.length}
+        data-fili={schema.fili.length}
+        data-filo-in-corso={filoInCorso ? `${filoInCorso.componente}/${filoInCorso.morsetto}` : ""}
       >
         {larghezza > 0 && altezza > 0 && (
           <Stage
@@ -383,6 +467,79 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
                   </Group>
                 );
               })}
+              {/* Fili: sopra i simboli, così si vedono e si afferrano facilmente. */}
+              {schema.fili.map((f) => {
+                const punti = percorsoFilo(schema, f, morsettiDi);
+                if (!punti) return null;
+                const scelto = selezionati.has(f.id);
+                return (
+                  <Line
+                    key={f.id}
+                    points={punti.flatMap((p) => [p.x, p.y])}
+                    stroke={scelto ? colori.selezione : colori.filo}
+                    strokeWidth={scelto ? 3 : 2}
+                    hitStrokeWidth={12}
+                    lineCap="round"
+                    lineJoin="round"
+                    listening={!voceDaPosare && !filoInCorso}
+                    onMouseDown={(e) => {
+                      if (e.evt.button !== 0 || spazioPremuto) return;
+                      e.cancelBubble = true;
+                      const aggiuntivo = e.evt.shiftKey || e.evt.ctrlKey;
+                      setSelezione((sel) => (aggiuntivo ? selezionaConClic(sel, f.id, true) : [f.id]));
+                      filoTrascinato.current = f.id;
+                    }}
+                    onDblClick={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
+                  />
+                );
+              })}
+              {anteprimaFilo && (
+                <Line
+                  points={anteprimaFilo.flatMap((p) => [p.x, p.y])}
+                  stroke={colori.morsettoAttivo}
+                  strokeWidth={2}
+                  dash={[6, 4]}
+                  listening={false}
+                />
+              )}
+              {/* Morsetti: cerchietto vuoto se libero, pallino pieno se ci arrivano due o più fili (giunzione). */}
+              {morsetti.map((m) => {
+                const chiave = `${m.componente}/${m.morsetto}`;
+                const attivo =
+                  morsettoSotto === chiave ||
+                  (filoInCorso?.componente === m.componente && filoInCorso.morsetto === m.morsetto);
+                const nFili = filiSulMorsetto(schema, m);
+                return (
+                  <Group key={chiave} x={m.posizione.x} y={m.posizione.y} listening={!voceDaPosare && !spazioPremuto}>
+                    <Circle
+                      radius={attivo ? raggioMorsetto + 1.5 : raggioMorsetto}
+                      fill={nFili >= 2 ? colori.filo : attivo ? colori.morsettoAttivo : colori.foglio}
+                      stroke={attivo ? colori.morsettoAttivo : nFili > 0 ? colori.filo : colori.morsetto}
+                      strokeWidth={1.5}
+                      hitStrokeWidth={14}
+                      onMouseEnter={() => setMorsettoSotto(chiave)}
+                      onMouseLeave={() => setMorsettoSotto((x) => (x === chiave ? null : x))}
+                      onMouseDown={(e) => {
+                        if (e.evt.button !== 0) return;
+                        e.cancelBubble = true; // né rettangolo di selezione né trascinamento
+                        clicMorsetto(m);
+                      }}
+                    />
+                    {attivo && (
+                      <Text
+                        text={m.morsetto}
+                        x={6}
+                        y={-16}
+                        fontSize={11}
+                        fontStyle="bold"
+                        fontFamily="Segoe UI, system-ui, sans-serif"
+                        fill={colori.morsettoAttivo}
+                        listening={false}
+                      />
+                    )}
+                  </Group>
+                );
+              })}
               {posAnteprima && voceDaPosare && (
                 <Group x={posAnteprima.x} y={posAnteprima.y} opacity={0.45} listening={false}>
                   <SimboloComponente
@@ -427,7 +584,9 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
         <button type="button" className="pulsante" onClick={adatta}>
           {t("editor.adatta")}
         </button>
-        <span className="suggerimento">{t("editor.suggerimento")}</span>
+        <span className={avviso ? "suggerimento avviso" : "suggerimento"} role="status" aria-live="polite">
+          {avviso ?? (filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
+        </span>
       </div>
     </div>
   );
