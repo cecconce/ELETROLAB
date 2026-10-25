@@ -331,3 +331,18 @@ button {
   color: var(--testo-tenue);
   font-weight: normal;
 }
+
+/* Separatore fra i comandi di modifica e quelli dello zoom nella barra in basso. */
+.separatore-barra {
+  width: 1px;
+  align-self: stretch;
+  background: var(--bordo);
+  margin: 2px 4px;
+}
+.pulsante:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.pulsante:disabled:hover {
+  border-color: var(--bordo);
+}

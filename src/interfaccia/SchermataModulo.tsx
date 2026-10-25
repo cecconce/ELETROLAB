@@ -1,12 +1,13 @@
 // Schermata di un modulo: intestazione con ritorno alla schermata iniziale,
 // libreria dei componenti a sinistra e area di disegno comune.
 // Gli strumenti di simulazione si aggiungeranno nelle fasi successive.
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { t } from "../testi";
 import { AreaDisegno } from "../editor/AreaDisegno";
 import { LibreriaLaterale } from "../editor/LibreriaLaterale";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { SCHEMA_VUOTO, type Schema } from "../editor/schema";
+import { annulla, modifica, nuovaCronologia, puoAnnullare, puoRipetere, ripeti } from "../editor/cronologia";
 import type { DefinizioneModulo } from "./moduli";
 import type { Tema } from "./tema";
 
@@ -18,7 +19,14 @@ export interface PropsSchermataModulo {
 
 export function SchermataModulo({ modulo, tema, onIndietro }: PropsSchermataModulo) {
   // Per ora ogni apertura del modulo parte da un foglio vuoto (salvataggio con la 1.8).
-  const [schema, setSchema] = useState<Schema>(SCHEMA_VUOTO);
+  // Lo schema vive dentro la cronologia, che permette Annulla/Ripeti illimitati.
+  const [cronologia, setCronologia] = useState(() => nuovaCronologia(SCHEMA_VUOTO));
+  const cambiaSchema = useCallback(
+    (schema: Schema, provvisoria?: boolean) => setCronologia((c) => modifica(c, schema, provvisoria)),
+    [],
+  );
+  const suAnnulla = useCallback(() => setCronologia(annulla), []);
+  const suRipeti = useCallback(() => setCronologia(ripeti), []);
   const [daPosare, setDaPosare] = useState<string | null>(null);
   const libreria = useMemo(() => libreriaDelModulo(modulo.id), [modulo.id]);
   return (
@@ -33,8 +41,12 @@ export function SchermataModulo({ modulo, tema, onIndietro }: PropsSchermataModu
         <LibreriaLaterale libreria={libreria} tema={tema} daPosare={daPosare} onScegli={setDaPosare} />
         <AreaDisegno
           tema={tema}
-          schema={schema}
-          onCambiaSchema={setSchema}
+          schema={cronologia.presente}
+          onCambiaSchema={cambiaSchema}
+          onAnnulla={suAnnulla}
+          onRipeti={suRipeti}
+          puoAnnullare={puoAnnullare(cronologia)}
+          puoRipetere={puoRipetere(cronologia)}
           libreria={libreria}
           daPosare={daPosare}
           onFinePosa={() => setDaPosare(null)}

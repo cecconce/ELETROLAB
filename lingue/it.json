@@ -26,7 +26,7 @@
   "editor.ingrandisci": "Ingrandisci",
   "editor.rimpicciolisci": "Rimpicciolisci",
   "editor.adatta": "Adatta alla finestra",
-  "editor.suggerimento": "Rotellina: zoom · Tasto destro o centrale (o Spazio) + trascina: sposta la vista · Trascina sul vuoto: seleziona · Clic su un morsetto e poi su un altro: collega",
+  "editor.suggerimento": "Rotellina: zoom · Tasto destro o centrale (o Spazio) + trascina: sposta la vista · Trascina sul vuoto: seleziona · Clic su un morsetto e poi su un altro: collega · Canc: elimina · Ctrl+Z / Ctrl+Y: annulla / ripeti · Ctrl+C / Ctrl+V: copia / incolla",
   "fili.inCorso": "Ora fai clic sul morsetto di arrivo. Esc o clic sul vuoto per annullare.",
   "fili.morsetto": "Morsetto",
   "fili.stessoMorsetto": "Il filo deve arrivare a un morsetto diverso da quello di partenza.",
@@ -36,5 +36,14 @@
   "libreria.cerca": "Cerca un componente…",
   "libreria.nessunRisultato": "Nessun componente trovato. Prova con un'altra parola.",
   "libreria.aiuto": "Trascina un componente sul foglio, oppure cliccalo e poi clicca sul foglio.",
-  "libreria.aiutoPosa": "Clicca sul foglio per posare il componente. Esc per annullare."
+  "libreria.aiutoPosa": "Clicca sul foglio per posare il componente. Esc per annullare.",
+  "modifica.annulla": "Annulla",
+  "modifica.ripeti": "Ripeti",
+  "modifica.elimina": "Elimina",
+  "modifica.annullaTasti": "Annulla l'ultima modifica (Ctrl+Z)",
+  "modifica.ripetiTasti": "Ripeti la modifica annullata (Ctrl+Y)",
+  "modifica.eliminaTasti": "Elimina gli elementi selezionati (Canc)",
+  "modifica.copiato": "Copiato. Premi Ctrl+V per incollare.",
+  "modifica.niente": "Per copiare seleziona almeno un componente: i fili si copiano insieme ai componenti che collegano.",
+  "modifica.appuntiVuoti": "Non c'è niente da incollare: prima seleziona e copia qualcosa (Ctrl+C) in questo modulo."
 }

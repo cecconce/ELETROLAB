@@ -11,7 +11,12 @@
 // - collegamenti: clic su un morsetto e poi su un altro; il filo si instrada da
 //   solo con tratti ortogonali, si sposta trascinandolo e torna automatico con
 //   un doppio clic
-// La logica (calcoli e modifiche allo schema) sta in geometria.ts, schema.ts e fili.ts.
+// - modifica: Annulla/Ripeti illimitati (Ctrl+Z, Ctrl+Y o Ctrl+Maiusc+Z),
+//   Canc per eliminare, Ctrl+C / Ctrl+X / Ctrl+V per copiare, tagliare e
+//   incollare, Ctrl+A per selezionare tutto; gli stessi comandi sono anche
+//   pulsanti nella barra in basso (comodi alla LIM)
+// La logica (calcoli e modifiche allo schema) sta in geometria.ts, schema.ts,
+// fili.ts, appunti.ts e cronologia.ts.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Circle, Group, Image as ImmagineKonva, Layer, Line, Rect, Shape, Stage, Text } from "react-konva";
 import type Konva from "konva";
@@ -21,6 +26,7 @@ import { coloriEditor } from "./colori";
 import { ICONE, trovaVoce } from "./caricaLibreria";
 import { componenteDaVoce, svgComeDataUrl, type Libreria, type VoceLibreria } from "./libreria";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
+import { copiaSelezione, incolla, type Appunti } from "./appunti";
 import {
   collega,
   filiSulMorsetto,
@@ -48,6 +54,8 @@ import {
 import {
   aggiungiComponente,
   componentiNelRettangolo,
+  eliminaSelezione,
+  tuttiGliId,
   ingombroSchema,
   rettangoloTra,
   selezionaConClic,
@@ -60,7 +68,16 @@ import {
 export interface PropsAreaDisegno {
   tema: Tema;
   schema: Schema;
-  onCambiaSchema: (schema: Schema) => void;
+  /**
+   * Nuovo schema dopo una modifica. `provvisoria` è true durante un
+   * trascinamento: la cronologia crea un solo passo al rilascio del mouse.
+   */
+  onCambiaSchema: (schema: Schema, provvisoria?: boolean) => void;
+  /** Annulla/Ripeti: la cronologia è tenuta da chi usa l'editor. */
+  onAnnulla?: () => void;
+  onRipeti?: () => void;
+  puoAnnullare?: boolean;
+  puoRipetere?: boolean;
   /** Libreria del modulo: dà icona e dimensioni ai componenti. */
   libreria: Libreria;
   /** Voce della libreria scelta con un clic, da posare al prossimo clic sul foglio. */
@@ -96,6 +113,17 @@ function useImmaginiIcone(libreria: Libreria, colore: string): ReadonlyMap<strin
   return pronte;
 }
 
+/**
+ * Appunti di Copia/Incolla, condivisi fra tutte le aree di disegno aperte
+ * finché l'app resta aperta. Si incolla solo nello stesso modulo da cui si è
+ * copiato: un contattore non ha senso sulla breadboard di Arduino.
+ */
+let appuntiEditor: { modulo: string; appunti: Appunti; volte: number } | null = null;
+
+/** Il tasto è stato premuto mentre si scrive in un campo di testo (es. la ricerca della libreria)? */
+const staScrivendo = (e: KeyboardEvent) =>
+  e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement | null)?.isContentEditable === true;
+
 /** Dimensioni in pixel del riquadro che contiene il canvas (seguono la finestra). */
 function useDimensioni(rif: React.RefObject<HTMLDivElement>) {
   const [dim, setDim] = useState({ larghezza: 0, altezza: 0 });
@@ -111,7 +139,18 @@ function useDimensioni(rif: React.RefObject<HTMLDivElement>) {
   return dim;
 }
 
-export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare = null, onFinePosa }: PropsAreaDisegno) {
+export function AreaDisegno({
+  tema,
+  schema,
+  onCambiaSchema,
+  libreria,
+  daPosare = null,
+  onFinePosa,
+  onAnnulla,
+  onRipeti,
+  puoAnnullare = false,
+  puoRipetere = false,
+}: PropsAreaDisegno) {
   const colori = coloriEditor(tema);
   const immagini = useImmaginiIcone(libreria, colori.testo);
   const vociPerTipo = useMemo(() => new Map(libreria.componenti.map((v) => [v.id, v])), [libreria]);
@@ -146,17 +185,75 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
   const trascinamento = useRef<{ schemaIniziale: Schema; id: string; da: Punto; selezione: Selezione } | null>(null);
   const ultimoPuntatore = useRef<Punto | null>(null);
 
-  // Barra spaziatrice = modalità "mano" per spostare la vista; Esc = deseleziona.
+  // --- Comandi di modifica (tastiera e pulsanti) ---
+  const elimina = () => {
+    if (selezione.length === 0) return;
+    onCambiaSchema(eliminaSelezione(schema, selezione));
+    setSelezione([]);
+  };
+  const copia = () => {
+    const appunti = copiaSelezione(schema, selezione);
+    if (!appunti) {
+      if (selezione.length > 0) setAvviso(t("modifica.niente"));
+      return false;
+    }
+    appuntiEditor = { modulo: libreria.modulo, appunti, volte: 0 };
+    setAvviso(t("modifica.copiato"));
+    return true;
+  };
+  const taglia = () => {
+    if (copia()) elimina();
+  };
+  const incollaAppunti = () => {
+    if (!appuntiEditor || appuntiEditor.modulo !== libreria.modulo) {
+      setAvviso(t("modifica.appuntiVuoti"));
+      return;
+    }
+    const esito = incolla(schema, appuntiEditor.appunti, (tipo) => vociPerTipo.get(tipo)?.sigla, appuntiEditor.volte);
+    appuntiEditor.volte++;
+    onCambiaSchema(esito.schema);
+    setSelezione(esito.incollati);
+  };
+
+  // Il gestore dei tasti è registrato una volta sola: legge i comandi aggiornati da qui.
+  const comandiRif = useRef({ elimina, copia, taglia, incollaAppunti, onAnnulla, onRipeti, tutto: () => setSelezione(tuttiGliId(schema)) });
+  comandiRif.current = { elimina, copia, taglia, incollaAppunti, onAnnulla, onRipeti, tutto: () => setSelezione(tuttiGliId(schema)) };
+
+  // Barra spaziatrice = modalità "mano" per spostare la vista; Esc = deseleziona;
+  // scorciatoie di modifica come nei programmi più comuni.
   useEffect(() => {
     const giu = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !(e.target instanceof HTMLInputElement)) {
-        setSpazioPremuto(true);
-        e.preventDefault();
-      }
       if (e.key === "Escape") {
         setSelezione([]);
         setFiloInCorso(null);
         onFinePosaRif.current?.();
+      }
+      // Mentre si scrive nella ricerca i tasti servono al testo, non all'editor.
+      if (staScrivendo(e)) return;
+      if (e.code === "Space") {
+        setSpazioPremuto(true);
+        e.preventDefault();
+      }
+      const cmd = comandiRif.current;
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        cmd.elimina();
+        return;
+      }
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const tasto = e.key.toLowerCase();
+      const azioni: Record<string, (() => unknown) | undefined> = {
+        z: e.shiftKey ? cmd.onRipeti : cmd.onAnnulla,
+        y: cmd.onRipeti,
+        c: cmd.copia,
+        x: cmd.taglia,
+        v: cmd.incollaAppunti,
+        a: cmd.tutto,
+      };
+      const azione = azioni[tasto];
+      if (tasto in azioni) {
+        e.preventDefault(); // niente comandi della WebView (es. Ctrl+A seleziona la pagina)
+        azione?.();
       }
     };
     const su = (e: KeyboardEvent) => {
@@ -271,7 +368,7 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
     if (voceDaPosare) setAnteprima(schermoAFoglio(vista, p));
     if (filoInCorso) setMouseFoglio(schermoAFoglio(vista, p));
     if (filoTrascinato.current) {
-      onCambiaSchema(spostaTrattoFilo(schema, filoTrascinato.current, schermoAFoglio(vista, p), morsettiDi));
+      onCambiaSchema(spostaTrattoFilo(schema, filoTrascinato.current, schermoAFoglio(vista, p), morsettiDi), true);
       return;
     }
     if (spostandoVista && ultimoPuntatore.current) {
@@ -284,7 +381,11 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
   };
 
   const suRilascio = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    filoTrascinato.current = null;
+    if (filoTrascinato.current) {
+      // Fine dello spostamento del filo: un solo passo nella cronologia.
+      filoTrascinato.current = null;
+      onCambiaSchema(schema);
+    }
     if (spostandoVista) {
       setSpostandoVista(false);
       ultimoPuntatore.current = null;
@@ -311,17 +412,21 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
     trascinamento.current = { schemaIniziale: schema, id, da: nodo.position(), selezione: sel };
   };
 
-  const durante = (nodo: Konva.Node) => {
+  /** @param definitivo true al rilascio: la cronologia registra lo spostamento come un passo solo */
+  const durante = (nodo: Konva.Node, definitivo = false) => {
     const tr = trascinamento.current;
     if (!tr) return;
     // Il componente "salta" da un incrocio di griglia all'altro.
     const agganciato = agganciaPunto(nodo.position());
     nodo.position(agganciato);
-    onCambiaSchema(spostaSelezione(tr.schemaIniziale, tr.selezione, agganciato.x - tr.da.x, agganciato.y - tr.da.y));
+    onCambiaSchema(
+      spostaSelezione(tr.schemaIniziale, tr.selezione, agganciato.x - tr.da.x, agganciato.y - tr.da.y),
+      !definitivo,
+    );
   };
 
   const fineTrascinamento = (nodo: Konva.Node) => {
-    durante(nodo);
+    durante(nodo, true);
     trascinamento.current = null;
   };
 
@@ -571,6 +676,16 @@ export function AreaDisegno({ tema, schema, onCambiaSchema, libreria, daPosare =
       </div>
 
       <div className="barra-zoom" role="toolbar" aria-label={t("editor.zoom")}>
+        <button type="button" className="pulsante" onClick={onAnnulla} disabled={!puoAnnullare} title={t("modifica.annullaTasti")}>
+          ↶ {t("modifica.annulla")}
+        </button>
+        <button type="button" className="pulsante" onClick={onRipeti} disabled={!puoRipetere} title={t("modifica.ripetiTasti")}>
+          ↷ {t("modifica.ripeti")}
+        </button>
+        <button type="button" className="pulsante" onClick={elimina} disabled={selezione.length === 0} title={t("modifica.eliminaTasti")}>
+          {t("modifica.elimina")}
+        </button>
+        <span className="separatore-barra" aria-hidden="true" />
         <button type="button" className="pulsante" onClick={rimpicciolisci} title={t("editor.rimpicciolisci")}>
           −
         </button>

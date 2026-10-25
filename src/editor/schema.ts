@@ -135,3 +135,23 @@ export function ingombroSchema(schema: Schema): Rettangolo | undefined {
   const y = Math.min(...ys);
   return { x, y, larghezza: Math.max(...x2) - x, altezza: Math.max(...y2) - y };
 }
+
+/**
+ * Elimina gli elementi selezionati (componenti e fili). Insieme a un
+ * componente spariscono anche i fili collegati ai suoi morsetti: un filo con
+ * un capo "nel vuoto" non avrebbe senso nello schema.
+ */
+export function eliminaSelezione(schema: Schema, selezione: Selezione): Schema {
+  if (selezione.length === 0) return schema;
+  const scelti = new Set(selezione);
+  const componenti = schema.componenti.filter((c) => !scelti.has(c.id));
+  const rimasti = new Set(componenti.map((c) => c.id));
+  const fili = schema.fili.filter((f) => !scelti.has(f.id) && rimasti.has(f.da.componente) && rimasti.has(f.a.componente));
+  if (componenti.length === schema.componenti.length && fili.length === schema.fili.length) return schema;
+  return { componenti, fili };
+}
+
+/** Id di tutti gli elementi dello schema (Ctrl+A). */
+export function tuttiGliId(schema: Schema): string[] {
+  return [...schema.componenti.map((c) => c.id), ...schema.fili.map((f) => f.id)];
+}
