@@ -18,11 +18,17 @@
 // - accanto ai contatti dei contattori compaiono i numeri dei morsetti
 //   (13-14, 21-22…) e la sigla della bobina; "K?" se il contatto non è legato
 //   a nessuna bobina
+// - simulazione (prop `simulazione`): lo schema è bloccato (niente
+//   spostamenti, fili, eliminazioni), i fili si colorano secondo il polo che
+//   li raggiunge, i contatti chiusi mostrano un tratto verde fra i morsetti,
+//   bobine eccitate, lampade accese e motori che girano con il loro verso;
+//   il clic sui pulsanti (tenuti premuti), selettori, finecorsa, sensori,
+//   sezionatori, protezioni e motori viene passato a chi gestisce la simulazione
 // La logica (calcoli e modifiche allo schema) sta in geometria.ts, schema.ts,
-// fili.ts, appunti.ts, associazioni.ts e cronologia.ts.
+// fili.ts, appunti.ts, associazioni.ts, cronologia.ts e vistaSimulazione.ts.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Circle, Group, Image as ImmagineKonva, Layer, Line, Rect, Shape, Stage, Text } from "react-konva";
-import type Konva from "konva";
+import { Arc, Circle, Group, Image as ImmagineKonva, Layer, Line, Rect, Shape, Stage, Text } from "react-konva";
+import Konva from "konva";
 import { t } from "../testi";
 import type { Tema } from "../interfaccia/tema";
 import { coloriEditor } from "./colori";
@@ -31,6 +37,14 @@ import { componenteDaVoce, svgComeDataUrl, tipiContatto, type Libreria, type Voc
 import { numeroMorsetto } from "./associazioni";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
 import { copiaSelezione, incolla, type Appunti } from "./appunti";
+import {
+  coloreFilo,
+  tipoUtilizzatore,
+  trattiDelContatto,
+  type AspettoComponente,
+  type VistaSimulazione,
+} from "./vistaSimulazione";
+import type { ColoriEditor } from "./colori";
 import {
   collega,
   filiSulMorsetto,
@@ -91,6 +105,15 @@ export interface PropsAreaDisegno {
   onFinePosa?: () => void;
   /** Avvisa chi usa l'editor quando cambia la selezione (pannello Proprietà). */
   onSelezione?: (selezione: Selezione) => void;
+  /**
+   * Simulazione avviata: aspetto da disegnare e clic dello studente sui
+   * componenti (pressione e rilascio del mouse). null/assente = modifica.
+   */
+  simulazione?: {
+    vista: VistaSimulazione;
+    onGiu: (id: string) => void;
+    onSu: (id: string) => void;
+  } | null;
 }
 
 /**
@@ -158,7 +181,14 @@ export function AreaDisegno({
   puoAnnullare = false,
   puoRipetere = false,
   onSelezione,
+  simulazione = null,
 }: PropsAreaDisegno) {
+  const inSimulazione = simulazione !== null;
+  // Letto dal gestore dei tasti, registrato una volta sola.
+  const inSimulazioneRif = useRef(inSimulazione);
+  inSimulazioneRif.current = inSimulazione;
+  // Componente cliccabile sotto il mouse durante la simulazione (cursore a manina).
+  const [cliccabileSotto, setCliccabileSotto] = useState<string | null>(null);
   const colori = coloriEditor(tema);
   const immagini = useImmaginiIcone(libreria, colori.testo);
   const vociPerTipo = useMemo(() => new Map(libreria.componenti.map((v) => [v.id, v])), [libreria]);
@@ -244,6 +274,8 @@ export function AreaDisegno({
         setSpazioPremuto(true);
         e.preventDefault();
       }
+      // In simulazione lo schema è bloccato: niente eliminazioni né modifiche.
+      if (inSimulazioneRif.current) return;
       const cmd = comandiRif.current;
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
@@ -284,6 +316,20 @@ export function AreaDisegno({
       return filtrata.length === sel.length ? sel : filtrata;
     });
   }, [schema]);
+
+  // All'avvio della simulazione si abbandona quello che si stava facendo.
+  useEffect(() => {
+    if (!inSimulazione) return;
+    setSelezione([]);
+    setFiloInCorso(null);
+    setRettangolo(null);
+    setAvviso(null);
+    filoTrascinato.current = null;
+    trascinamento.current = null;
+  }, [inSimulazione]);
+  useEffect(() => {
+    if (!inSimulazione) setCliccabileSotto(null);
+  }, [inSimulazione]);
 
   // L'avviso sparisce da solo dopo qualche secondo.
   useEffect(() => {
@@ -353,6 +399,8 @@ export function AreaDisegno({
       ultimoPuntatore.current = p;
       return;
     }
+    // In simulazione il foglio serve solo a guardare (zoom e spostamento).
+    if (inSimulazione) return;
     // Sinistro sul vuoto con un filo in corso: annulla il collegamento.
     if (e.evt.button === 0 && filoInCorso) {
       setFiloInCorso(null);
@@ -483,7 +531,11 @@ export function AreaDisegno({
     ? "grabbing"
     : spazioPremuto
       ? "grab"
-      : voceDaPosare
+      : inSimulazione
+        ? cliccabileSotto
+          ? "pointer"
+          : "default"
+        : voceDaPosare
         ? "copy"
         : filoInCorso || morsettoSotto
           ? "crosshair"
@@ -517,6 +569,7 @@ export function AreaDisegno({
         data-componenti={schema.componenti.length}
         data-fili={schema.fili.length}
         data-filo-in-corso={filoInCorso ? `${filoInCorso.componente}/${filoInCorso.morsetto}` : ""}
+        data-simulazione={inSimulazione}
       >
         {larghezza > 0 && altezza > 0 && (
           <Stage
@@ -565,13 +618,24 @@ export function AreaDisegno({
             <Layer>
               {schema.componenti.map((c) => {
                 const scelto = selezionati.has(c.id);
+                const aspetto = simulazione?.vista.componenti[c.id];
                 return (
                   <Group
                     key={c.id}
                     x={c.x}
                     y={c.y}
-                    draggable={!spazioPremuto && !voceDaPosare}
+                    draggable={!spazioPremuto && !voceDaPosare && !inSimulazione}
+                    onMouseEnter={() => aspetto?.clic && setCliccabileSotto(c.id)}
+                    onMouseLeave={() => setCliccabileSotto((x) => (x === c.id ? null : x))}
+                    onMouseUp={() => simulazione?.onSu(c.id)}
                     onMouseDown={(e) => {
+                      if (simulazione) {
+                        // In simulazione il clic aziona il componente (se si può).
+                        if (e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
+                        e.cancelBubble = true;
+                        simulazione.onGiu(c.id);
+                        return;
+                      }
                       // Con un componente da posare il clic passa al foglio (posa anche sopra un altro).
                       if (e.evt.button !== 0 || spazioPremuto || voceDaPosare) return;
                       e.cancelBubble = true; // non far partire il rettangolo di selezione
@@ -593,6 +657,14 @@ export function AreaDisegno({
                       scelto={scelto}
                       colori={colori}
                     />
+                    {aspetto && (
+                      <AspettoInSimulazione
+                        componente={c}
+                        voce={vociPerTipo.get(c.tipo)}
+                        aspetto={aspetto}
+                        colori={colori}
+                      />
+                    )}
                   </Group>
                 );
               })}
@@ -601,16 +673,20 @@ export function AreaDisegno({
                 const punti = percorsoFilo(schema, f, morsettiDi);
                 if (!punti) return null;
                 const scelto = selezionati.has(f.id);
+                // In simulazione: colore del polo che raggiunge il filo (più spesso se in tensione).
+                const poli = simulazione?.vista.poliDeiFili[f.id] ?? [];
+                const coloreTensione = coloreFilo(poli, colori);
                 return (
                   <Line
                     key={f.id}
                     points={punti.flatMap((p) => [p.x, p.y])}
-                    stroke={scelto ? colori.selezione : colori.filo}
-                    strokeWidth={scelto ? 3 : 2}
+                    stroke={coloreTensione ?? (scelto ? colori.selezione : colori.filo)}
+                    strokeWidth={coloreTensione ? 3 : scelto ? 3 : 2}
+                    dash={poli.length > 1 ? [8, 4] : undefined}
                     hitStrokeWidth={12}
                     lineCap="round"
                     lineJoin="round"
-                    listening={!voceDaPosare && !filoInCorso}
+                    listening={!voceDaPosare && !filoInCorso && !inSimulazione}
                     onMouseDown={(e) => {
                       if (e.evt.button !== 0 || spazioPremuto) return;
                       e.cancelBubble = true;
@@ -638,8 +714,15 @@ export function AreaDisegno({
                   morsettoSotto === chiave ||
                   (filoInCorso?.componente === m.componente && filoInCorso.morsetto === m.morsetto);
                 const nFili = filiSulMorsetto(schema, m);
+                const inCorto = simulazione?.vista.morsettiInCorto.has(`${m.componente}:${m.morsetto}`) ?? false;
                 return (
-                  <Group key={chiave} x={m.posizione.x} y={m.posizione.y} listening={!voceDaPosare && !spazioPremuto}>
+                  <Group
+                    key={chiave}
+                    x={m.posizione.x}
+                    y={m.posizione.y}
+                    listening={!voceDaPosare && !spazioPremuto && !inSimulazione}
+                  >
+                    {inCorto && <Circle radius={9} stroke={colori.corto} strokeWidth={3} listening={false} />}
                     <Circle
                       radius={attivo ? raggioMorsetto + 1.5 : raggioMorsetto}
                       fill={nFili >= 2 ? colori.filo : attivo ? colori.morsettoAttivo : colori.foglio}
@@ -703,13 +786,25 @@ export function AreaDisegno({
       </div>
 
       <div className="barra-zoom" role="toolbar" aria-label={t("editor.zoom")}>
-        <button type="button" className="pulsante" onClick={onAnnulla} disabled={!puoAnnullare} title={t("modifica.annullaTasti")}>
+        <button
+          type="button"
+          className="pulsante"
+          onClick={onAnnulla}
+          disabled={!puoAnnullare || inSimulazione}
+          title={t("modifica.annullaTasti")}
+        >
           ↶ {t("modifica.annulla")}
         </button>
-        <button type="button" className="pulsante" onClick={onRipeti} disabled={!puoRipetere} title={t("modifica.ripetiTasti")}>
+        <button
+          type="button"
+          className="pulsante"
+          onClick={onRipeti}
+          disabled={!puoRipetere || inSimulazione}
+          title={t("modifica.ripetiTasti")}
+        >
           ↷ {t("modifica.ripeti")}
         </button>
-        <button type="button" className="pulsante" onClick={elimina} disabled={selezione.length === 0} title={t("modifica.eliminaTasti")}>
+        <button type="button" className="pulsante" onClick={elimina} disabled={selezione.length === 0 || inSimulazione} title={t("modifica.eliminaTasti")}>
           {t("modifica.elimina")}
         </button>
         <span className="separatore-barra" aria-hidden="true" />
@@ -727,7 +822,7 @@ export function AreaDisegno({
           {t("editor.adatta")}
         </button>
         <span className={avviso ? "suggerimento avviso" : "suggerimento"} role="status" aria-live="polite">
-          {avviso ?? (filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
+          {avviso ?? (inSimulazione ? t("simulazione.suggerimento") : filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
         </span>
       </div>
     </div>
@@ -807,5 +902,143 @@ function SimboloComponente({ larghezza, altezza, etichetta, nonAssociato, numeri
         />
       )}
     </>
+  );
+}
+
+interface PropsAspetto {
+  componente: ComponenteSchema;
+  voce: VoceLibreria | undefined;
+  aspetto: AspettoComponente;
+  colori: ColoriEditor;
+}
+
+/**
+ * Disegno sovrapposto al simbolo durante la simulazione. I simboli SVG della
+ * libreria sono fissi, quindi lo stato si mostra con segni aggiunti:
+ * - contatto chiuso: tratto verde fra i due morsetti di ogni polo;
+ * - comando azionato dallo studente: riquadro azzurro;
+ * - bobina eccitata: riempimento verde; lampada accesa / sirena: alone giallo;
+ * - motore che gira: freccia che ruota nel verso di rotazione (con Y/Δ);
+ * - protezione intervenuta o motore in sovraccarico: segni rossi.
+ */
+function AspettoInSimulazione({ componente: c, voce, aspetto, colori }: PropsAspetto) {
+  const w = c.larghezza;
+  const h = c.altezza;
+  const posMorsetto = (id: string) => voce?.morsetti.find((m) => m.id === id);
+  const utilizzatore = tipoUtilizzatore(c.tipo);
+  const testo = (contenuto: string, y: number, colore: string) => (
+    <Text
+      text={contenuto}
+      x={-30}
+      y={y}
+      width={w + 60}
+      align="center"
+      fontSize={11}
+      fontStyle="bold"
+      fontFamily="Segoe UI, system-ui, sans-serif"
+      fill={colore}
+      listening={false}
+    />
+  );
+  return (
+    <Group listening={false}>
+      {utilizzatore === "bobina" && aspetto.alimentato && (
+        <Rect width={w} height={h} fill={colori.attivo} opacity={0.3} cornerRadius={4} />
+      )}
+      {(utilizzatore === "luce" || utilizzatore === "suono") && aspetto.alimentato && (
+        <Circle
+          x={w / 2}
+          y={h / 2}
+          radius={Math.min(w, h) / 2}
+          fill={colori.luce}
+          opacity={0.55}
+          shadowColor={colori.luce}
+          shadowBlur={18}
+          shadowOpacity={0.9}
+        />
+      )}
+      {utilizzatore === "suono" && aspetto.alimentato && testo("♪ ♪", -16, colori.luce)}
+      {aspetto.chiuso &&
+        trattiDelContatto(c.tipo).map(([a, b]) => {
+          const pa = posMorsetto(a);
+          const pb = posMorsetto(b);
+          if (!pa || !pb) return null;
+          return (
+            <Line
+              key={`${a}-${b}`}
+              points={[pa.x, pa.y, pb.x, pb.y]}
+              stroke={colori.attivo}
+              strokeWidth={4}
+              opacity={0.7}
+              lineCap="round"
+            />
+          );
+        })}
+      {aspetto.azionato && (
+        <Rect x={-3} y={-3} width={w + 6} height={h + 6} stroke={colori.azionato} strokeWidth={2.5} cornerRadius={5} />
+      )}
+      {aspetto.motore && (
+        <>
+          <FrecciaRotante x={w / 2} y={h / 2} raggio={Math.min(w, h) / 2 + 3} verso={aspetto.motore.verso} colore={colori.attivo} />
+          {aspetto.motore.collegamento &&
+            testo(aspetto.motore.collegamento === "stella" ? "Y" : "Δ", h + 6, colori.attivo)}
+        </>
+      )}
+      {aspetto.intervenuta && (
+        <>
+          <Rect x={-4} y={-4} width={w + 8} height={h + 8} stroke={colori.guasto} strokeWidth={2.5} dash={[5, 3]} cornerRadius={5} />
+          {testo(t("simulazione.intervenuto"), -18, colori.guasto)}
+        </>
+      )}
+      {aspetto.sovraccarico && testo(t("simulazione.sovraccarico"), aspetto.motore?.collegamento ? h + 20 : h + 6, colori.guasto)}
+    </Group>
+  );
+}
+
+/** Freccia circolare che ruota finché il motore gira (animazione di Konva, senza ridisegnare React). */
+function FrecciaRotante({
+  x,
+  y,
+  raggio,
+  verso,
+  colore,
+}: {
+  x: number;
+  y: number;
+  raggio: number;
+  verso: "orario" | "antiorario";
+  colore: string;
+}) {
+  const rif = useRef<Konva.Group>(null);
+  const segno = verso === "orario" ? 1 : -1;
+  useEffect(() => {
+    const gruppo = rif.current;
+    if (!gruppo) return;
+    // Circa un giro al secondo: 360 gradi / 1000 ms.
+    const animazione = new Konva.Animation((frame) => {
+      if (frame) gruppo.rotation(gruppo.rotation() + segno * frame.timeDiff * 0.36);
+    }, gruppo.getLayer());
+    animazione.start();
+    return () => {
+      animazione.stop();
+    };
+  }, [segno]);
+  // Punta della freccia alla fine dell'arco (300°), orientata in senso orario;
+  // per il verso antiorario il disegno è specchiato.
+  const angolo = (300 * Math.PI) / 180;
+  const px = raggio * Math.cos(angolo);
+  const py = raggio * Math.sin(angolo);
+  const tx = -Math.sin(angolo);
+  const ty = Math.cos(angolo);
+  const nx = Math.cos(angolo);
+  const ny = Math.sin(angolo);
+  const punta = [px + tx * 8, py + ty * 8, px + nx * 5, py + ny * 5, px - nx * 5, py - ny * 5];
+  return (
+    <Group ref={rif} x={x} y={y} listening={false}>
+      <Group scaleX={segno}>
+        <Arc innerRadius={raggio - 1.5} outerRadius={raggio + 1.5} angle={300} fill={colore} opacity={0.9} />
+        <Line points={punta} closed fill={colore} opacity={0.9} />
+      </Group>
+    </Group>
   );
 }

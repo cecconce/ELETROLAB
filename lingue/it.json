@@ -120,5 +120,13 @@
   "proprieta.contattoNc": "NC",
   "proprieta.tempo": "Tempo di ritardo (secondi)",
   "proprieta.tempoSuggerimento": "Quanti secondi aspetta il temporizzatore prima di far commutare i suoi contatti. Premi Invio per confermare.",
-  "proprieta.tempoNonValido": "Il tempo «{tempo}» non va bene: scrivi un numero di secondi da {minimo} a {massimo}, per esempio 5 oppure 2,5."
+  "proprieta.tempoNonValido": "Il tempo «{tempo}» non va bene: scrivi un numero di secondi da {minimo} a {massimo}, per esempio 5 oppure 2,5.",
+  "simulazione.avvia": "AVVIA",
+  "simulazione.ferma": "FERMA",
+  "simulazione.tasti": "Avvia o ferma la simulazione (F5)",
+  "simulazione.nonDisponibile": "La simulazione di questo modulo arriverà nelle prossime fasi",
+  "simulazione.tempo": "Tempo trascorso dall'avvio della simulazione",
+  "simulazione.suggerimento": "Simulazione in corso · Clic sui pulsanti (tieni premuto), selettori, finecorsa, sensori e sezionatori · Clic su un motore: sovraccarico · Clic su una protezione intervenuta: riarmo",
+  "simulazione.intervenuto": "INTERVENUTO · clic per riarmare",
+  "simulazione.sovraccarico": "SOVRACCARICO"
 }

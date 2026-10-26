@@ -525,3 +525,41 @@ button {
   margin: 0;
   padding-left: 18px;
 }
+
+/* --- Simulazione (attività 2.5) --- */
+/* Un unico grande pulsante, sempre nello stesso punto dell'intestazione. */
+.pulsante-simulazione {
+  font-size: 1.15rem;
+  font-weight: 700;
+  min-width: 150px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: 2px solid #15803d;
+  background: #16a34a;
+  color: #ffffff;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.pulsante-simulazione:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.pulsante-simulazione[data-attiva="true"] {
+  background: #dc2626;
+  border-color: #b91c1c;
+}
+.pulsante-simulazione:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.orologio-simulazione {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 80px;
+}
+/* Durante la simulazione libreria e Proprietà non si usano: lo schema è bloccato. */
+.corpo-modulo.in-simulazione .libreria,
+.corpo-modulo.in-simulazione .proprieta {
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}

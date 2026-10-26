@@ -1,7 +1,11 @@
 // Schermata di un modulo: intestazione con ritorno alla schermata iniziale e
 // comandi dei file (Nuovo, Apri, Salva, Salva con nome), libreria dei
 // componenti a sinistra, area di disegno comune e pannello Proprietà a destra.
-// Gli strumenti di simulazione si aggiungeranno nelle fasi successive.
+// Un unico grande pulsante ▶ AVVIA / ■ FERMA (anche con F5), sempre nello
+// stesso punto dell'intestazione, avvia la simulazione: lo schema si blocca,
+// libreria e Proprietà si disattivano e lo studente interagisce cliccando i
+// componenti. Per ora simula solo il modulo Impianti elettrici; negli altri
+// il pulsante c'è (stessa posizione) ma è disattivato.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { t } from "../testi";
 import { AreaDisegno } from "../editor/AreaDisegno";
@@ -14,6 +18,8 @@ import { annulla, modifica, nuovaCronologia, puoAnnullare, puoRipetere, ripeti, 
 import type { Archivio } from "../progetto/archivio";
 import { nomeDaPercorso, serializzaProgetto } from "../progetto/formato";
 import { RITARDO_AUTOSALVATAGGIO_MS, serializzaAutosalvataggio } from "../progetto/autosalvataggio";
+import { avviaSessione, clicGiu, clicSu, passo, rilasciaTutti, type SessioneImpianto } from "../motori/impianti";
+import { firmaVista, formattaTempo, vistaDaSessione, type VistaSimulazione } from "../editor/vistaSimulazione";
 import type { DefinizioneModulo } from "./moduli";
 import type { Tema } from "./tema";
 
@@ -41,6 +47,25 @@ export interface PropsSchermataModulo {
   /** Il documento è stato salvato in `percorso` (per l'elenco dei recenti). */
   onSalvato: (percorso: string) => void;
   onErrore: (messaggio: string) => void;
+}
+
+/** Intervallo con cui scorre il tempo della simulazione, in millisecondi. */
+const INTERVALLO_SIMULAZIONE_MS = 50;
+/** Oltre questo intervallo (es. computer sospeso) il tempo non viene recuperato tutto. */
+const PASSO_MASSIMO_S = 60;
+
+/** Orologio della simulazione: si aggiorna da solo senza ridisegnare lo schema. */
+function OrologioSimulazione({ sessione }: { sessione: React.MutableRefObject<SessioneImpianto | null> }) {
+  const [tempo, setTempo] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setTempo(sessione.current?.stato.tempo ?? 0), 100);
+    return () => window.clearInterval(timer);
+  }, [sessione]);
+  return (
+    <span className="orologio-simulazione" title={t("simulazione.tempo")}>
+      ⏱ {formattaTempo(tempo)}
+    </span>
+  );
 }
 
 export function SchermataModulo(props: PropsSchermataModulo) {
@@ -151,6 +176,91 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     return () => window.removeEventListener("keydown", giu);
   }, []);
 
+  // --- Simulazione --------------------------------------------------------
+  // La sessione cambia a ogni scatto dell'orologio: vive in un ref e lo
+  // schema viene ridisegnato solo quando cambia qualcosa di visibile.
+  const simulabile = modulo.id === "impianti";
+  const sessioneRif = useRef<SessioneImpianto | null>(null);
+  const firmaRif = useRef("");
+  const [vista, setVista] = useState<VistaSimulazione | null>(null);
+  const inSimulazione = vista !== null;
+  const aggiornaSessione = useCallback(
+    (s: SessioneImpianto) => {
+      sessioneRif.current = s;
+      const v = vistaDaSessione(s, schema.fili);
+      const firma = firmaVista(v);
+      if (firma !== firmaRif.current) {
+        firmaRif.current = firma;
+        setVista(v);
+      }
+    },
+    [schema.fili],
+  );
+  const avvia = useCallback(() => {
+    if (!simulabile) return;
+    setDaPosare(null);
+    firmaRif.current = "";
+    aggiornaSessione(avviaSessione(schema));
+  }, [aggiornaSessione, schema, simulabile]);
+  const ferma = useCallback(() => {
+    sessioneRif.current = null;
+    setVista(null);
+  }, []);
+  const avviaOFerma = useCallback(() => (sessioneRif.current ? ferma() : avvia()), [avvia, ferma]);
+
+  // Il tempo scorre finché la simulazione è avviata.
+  useEffect(() => {
+    if (!inSimulazione) return;
+    let ultimo = performance.now();
+    const timer = window.setInterval(() => {
+      const adesso = performance.now();
+      const dt = Math.min((adesso - ultimo) / 1000, PASSO_MASSIMO_S);
+      ultimo = adesso;
+      if (sessioneRif.current) aggiornaSessione(passo(sessioneRif.current, dt));
+    }, INTERVALLO_SIMULAZIONE_MS);
+    return () => window.clearInterval(timer);
+  }, [inSimulazione, aggiornaSessione]);
+
+  // Un pulsante resta premuto solo finché si tiene premuto il mouse: se lo si
+  // rilascia fuori dal componente (o la finestra perde il fuoco) torna a riposo.
+  useEffect(() => {
+    if (!inSimulazione) return;
+    const rilascia = () => {
+      if (sessioneRif.current) aggiornaSessione(rilasciaTutti(sessioneRif.current));
+    };
+    window.addEventListener("mouseup", rilascia);
+    window.addEventListener("blur", rilascia);
+    return () => {
+      window.removeEventListener("mouseup", rilascia);
+      window.removeEventListener("blur", rilascia);
+    };
+  }, [inSimulazione, aggiornaSessione]);
+
+  const simulazione = useMemo(
+    () =>
+      vista
+        ? {
+            vista,
+            onGiu: (id: string) => sessioneRif.current && aggiornaSessione(clicGiu(sessioneRif.current, id)),
+            onSu: (id: string) => sessioneRif.current && aggiornaSessione(clicSu(sessioneRif.current, id)),
+          }
+        : null,
+    [vista, aggiornaSessione],
+  );
+
+  // F5 avvia e ferma la simulazione (e non ricarica la pagina della WebView).
+  const avviaOFermaRif = useRef(avviaOFerma);
+  avviaOFermaRif.current = avviaOFerma;
+  useEffect(() => {
+    const giu = (e: KeyboardEvent) => {
+      if (e.key !== "F5") return;
+      e.preventDefault();
+      avviaOFermaRif.current();
+    };
+    window.addEventListener("keydown", giu);
+    return () => window.removeEventListener("keydown", giu);
+  }, []);
+
   const nomeFile = percorso ? nomeDaPercorso(percorso) : t("file.senzaNome");
   return (
     <div className="schermata-modulo" data-modulo={modulo.id}>
@@ -159,6 +269,17 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           ← {t("comune.home")}
         </button>
         <h1>{t(modulo.chiaveTitolo)}</h1>
+        <button
+          type="button"
+          className="pulsante-simulazione"
+          data-attiva={inSimulazione}
+          onClick={avviaOFerma}
+          disabled={!simulabile}
+          title={simulabile ? t("simulazione.tasti") : t("simulazione.nonDisponibile")}
+        >
+          {inSimulazione ? `■ ${t("simulazione.ferma")}` : `▶ ${t("simulazione.avvia")}`}
+        </button>
+        {inSimulazione && <OrologioSimulazione sessione={sessioneRif} />}
         <span className="nome-file" title={percorso ?? undefined} data-modificato={modificato}>
           {nomeFile}
           {modificato && (
@@ -182,20 +303,21 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           </button>
         </nav>
       </header>
-      <div className="corpo-modulo">
+      <div className={inSimulazione ? "corpo-modulo in-simulazione" : "corpo-modulo"}>
         <LibreriaLaterale libreria={libreria} tema={tema} daPosare={daPosare} onScegli={setDaPosare} />
         <AreaDisegno
           tema={tema}
           schema={schema}
           onCambiaSchema={cambiaSchema}
-          onAnnulla={suAnnulla}
-          onRipeti={suRipeti}
+          onAnnulla={inSimulazione ? undefined : suAnnulla}
+          onRipeti={inSimulazione ? undefined : suRipeti}
           puoAnnullare={puoAnnullare(cronologia)}
           puoRipetere={puoRipetere(cronologia)}
           libreria={libreria}
           daPosare={daPosare}
           onFinePosa={() => setDaPosare(null)}
           onSelezione={setSelezione}
+          simulazione={simulazione}
         />
         <PannelloProprieta schema={schema} selezione={selezione} libreria={libreria} onCambiaSchema={cambiaSchema} />
       </div>
