@@ -117,5 +117,8 @@
   "proprieta.contattiDellaBobina": "Contatti di questa bobina",
   "proprieta.nessunContatto": "Nessun contatto è ancora legato a questa bobina.",
   "proprieta.contattoNa": "NA",
-  "proprieta.contattoNc": "NC"
+  "proprieta.contattoNc": "NC",
+  "proprieta.tempo": "Tempo di ritardo (secondi)",
+  "proprieta.tempoSuggerimento": "Quanti secondi aspetta il temporizzatore prima di far commutare i suoi contatti. Premi Invio per confermare.",
+  "proprieta.tempoNonValido": "Il tempo «{tempo}» non va bene: scrivi un numero di secondi da {minimo} a {massimo}, per esempio 5 oppure 2,5."
 }

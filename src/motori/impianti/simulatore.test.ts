@@ -238,6 +238,11 @@ describe("modelli e libreria", () => {
     for (const v of voci) expect(MODELLI_IMPIANTI[v.id], v.id).toBeDefined();
   });
 
+  it("ogni modello elettrico corrisponde a un componente della libreria", () => {
+    const ids = voci.map((v) => v.id);
+    for (const tipo of Object.keys(MODELLI_IMPIANTI)) expect(ids, tipo).toContain(tipo);
+  });
+
   it("i morsetti dei modelli esistono nella libreria", () => {
     for (const v of voci) {
       const m = MODELLI_IMPIANTI[v.id];

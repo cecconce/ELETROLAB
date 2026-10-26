@@ -64,6 +64,8 @@ function leggiComponente(v: unknown): ComponenteSchema | undefined {
     const numeri = Object.fromEntries(Object.entries(v.numeriMorsetti).filter(([, n]) => eTesto(n) && n !== ""));
     if (Object.keys(numeri).length > 0) c.numeriMorsetti = numeri as Record<string, string>;
   }
+  // Tempo dei temporizzatori (facoltativo, in secondi, mai negativo).
+  if (eNumero(v.tempo) && v.tempo >= 0) c.tempo = v.tempo;
   return c;
 }
 

@@ -41,6 +41,21 @@
       ]
     },
     {
+      "id": "alimentatore-cc",
+      "nome": "Alimentatore in corrente continua",
+      "categoria": "alimentazione",
+      "sigla": "",
+      "descrizione": "Alimentazione in corrente continua con polo positivo (+) e negativo (−), per esempio 24 V. Serve per i motori in CC e per i circuiti di comando in continua.",
+      "paroleChiave": ["continua", "CC", "DC", "24 V", "positivo", "negativo", "batteria"],
+      "icona": "alimentatore-cc.svg",
+      "larghezza": 60,
+      "altezza": 40,
+      "morsetti": [
+        { "id": "+", "x": 20, "y": 40 },
+        { "id": "-", "x": 40, "y": 40 }
+      ]
+    },
+    {
       "id": "fusibile",
       "nome": "Fusibile",
       "categoria": "protezioni",
@@ -428,6 +443,25 @@
         { "id": "U", "x": 20, "y": 0 },
         { "id": "V", "x": 40, "y": 0 },
         { "id": "W", "x": 60, "y": 0 }
+      ]
+    },
+    {
+      "id": "motore-trifase-6",
+      "nome": "Motore asincrono trifase a 6 morsetti",
+      "categoria": "utilizzatori",
+      "sigla": "M",
+      "descrizione": "Motore trifase con i due capi di ogni avvolgimento (U1-U2, V1-V2, W1-W2): unendo U2, V2, W2 si collega a stella, collegando U1-W2, V1-U2, W1-V2 si collega a triangolo. Si usa nell'avviamento stella-triangolo.",
+      "paroleChiave": ["motore", "asincrono", "3~", "stella", "triangolo", "avvolgimenti"],
+      "icona": "motore-trifase-6.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "U1", "x": 20, "y": 0 },
+        { "id": "V1", "x": 40, "y": 0 },
+        { "id": "W1", "x": 60, "y": 0 },
+        { "id": "U2", "x": 20, "y": 80 },
+        { "id": "V2", "x": 40, "y": 80 },
+        { "id": "W2", "x": 60, "y": 80 }
       ]
     },
     {

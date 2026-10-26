@@ -160,21 +160,25 @@ describe("relè ausiliari, temporizzatori e nuovi utilizzatori", () => {
     expect(simula(c, { premuti: ["S1"] }).carichiAlimentati).toEqual(["KX", "M1"]);
   });
 
-  it("i contatti temporizzati seguono il temporizzatore (ritardo dall'attività 2.4)", () => {
+  it("i contatti temporizzati seguono il temporizzatore (con tempo zero commutano subito)", () => {
     for (const bobina of ["bobina-ritardata-eccitazione", "bobina-ritardata-diseccitazione"]) {
-      const na = comandoCon(bobina, "contatto-temporizzato-na", "17", "18");
+      const conTempo = (c: Circuito): Circuito => ({
+        ...c,
+        componenti: c.componenti.map((x) => (x.tipo === bobina ? { ...x, tempo: 0 } : x)),
+      });
+      const na = conTempo(comandoCon(bobina, "contatto-temporizzato-na", "17", "18"));
       expect(simula(na, { premuti: ["S1"] }).carichiAlimentati, bobina).toEqual(["KX", "M1"]);
-      const nc = comandoCon(bobina, "contatto-temporizzato-nc", "15", "16");
+      const nc = conTempo(comandoCon(bobina, "contatto-temporizzato-nc", "15", "16"));
       expect(simula(nc).carichiAlimentati, bobina).toEqual(["M1"]);
       expect(simula(nc, { premuti: ["S1"] }).carichiAlimentati, bobina).toEqual(["KX"]);
     }
   });
 
-  it("motore in CC e sirena si alimentano con due poli diversi", () => {
+  it("la sirena si alimenta con due poli diversi, il motore in CC solo in continua", () => {
     const c: Circuito = {
       componenti: [comp("RETE", "rete-monofase", ""), comp("M1", "motore-cc"), comp("H1", "sirena")],
       fili: [filo("RETE:L", "M1:A1"), filo("M1:A2", "RETE:N"), filo("RETE:L", "H1:X1"), filo("H1:X2", "RETE:N")],
     };
-    expect(simula(c).carichiAlimentati).toEqual(["M1", "H1"]);
+    expect(simula(c).carichiAlimentati).toEqual(["H1"]);
   });
 });

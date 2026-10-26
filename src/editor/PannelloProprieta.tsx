@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { t } from "../testi";
 import { associaContatto, cambiaSigla, contattoAssociato, numeroMorsetto, proprietariPer } from "./associazioni";
 import { vocePerTipo, type Libreria } from "./libreria";
+import { eTemporizzatore, impostaTempo, tempoDaMostrare } from "./parametri";
 import type { Schema, Selezione } from "./schema";
 
 export interface PropsPannelloProprieta {
@@ -28,6 +29,13 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
     setBozza(componente?.etichetta ?? "");
     setErrore(null);
   }, [componente?.id, componente?.etichetta]);
+  // Tempo dei temporizzatori, con lo stesso meccanismo della sigla.
+  const [bozzaTempo, setBozzaTempo] = useState("");
+  const [erroreTempo, setErroreTempo] = useState<string | null>(null);
+  useEffect(() => {
+    setBozzaTempo(tempoDaMostrare(componente?.tempo));
+    setErroreTempo(null);
+  }, [componente?.id, componente?.tempo]);
 
   if (!componente) {
     return (
@@ -46,6 +54,15 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
       setErrore(null);
       if (esito.schema !== schema) onCambiaSchema(esito.schema);
     } else setErrore(esito.errore);
+  };
+
+  const applicaTempo = () => {
+    const esito = impostaTempo(schema, componente.id, bozzaTempo);
+    if (esito.ok) {
+      setErroreTempo(null);
+      setBozzaTempo(tempoDaMostrare(esito.schema.componenti.find((c) => c.id === componente.id)?.tempo));
+      if (esito.schema !== schema) onCambiaSchema(esito.schema);
+    } else setErroreTempo(esito.errore);
   };
 
   const contatto = voce?.contatto;
@@ -122,6 +139,34 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
         <p className="proprieta-avviso" role="alert">
           {errore}
         </p>
+      )}
+
+      {eTemporizzatore(componente.tipo) && (
+        <>
+          <label className="proprieta-campo">
+            <span>{t("proprieta.tempo")}</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={bozzaTempo}
+              maxLength={8}
+              spellCheck={false}
+              title={t("proprieta.tempoSuggerimento")}
+              aria-invalid={erroreTempo !== null}
+              onChange={(e) => setBozzaTempo(e.target.value)}
+              onBlur={applicaTempo}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applicaTempo();
+                if (e.key === "Escape") setBozzaTempo(tempoDaMostrare(componente.tempo));
+              }}
+            />
+          </label>
+          {erroreTempo && (
+            <p className="proprieta-avviso" role="alert">
+              {erroreTempo}
+            </p>
+          )}
+        </>
       )}
 
       {voce?.comandaContatti && (

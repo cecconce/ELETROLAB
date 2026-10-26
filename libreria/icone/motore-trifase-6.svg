@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M40 0V18M20 0V10L27 23M60 0V10L53 23"/>
+<path d="M40 80V62M20 80V70L27 57M60 80V70L53 57"/>
+<circle cx="40" cy="40" r="22"/>
+<text x="40" y="40" font-size="15" text-anchor="middle" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">M</text>
+<text x="40" y="54" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">3~</text>
+</svg>

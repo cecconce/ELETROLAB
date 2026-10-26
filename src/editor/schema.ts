@@ -21,6 +21,11 @@ export interface ComponenteSchema {
    * "33"/"34"). Calcolati in automatico da associazioni.ts e salvati nel file.
    */
   numeriMorsetti?: Record<string, string>;
+  /**
+   * Solo per i temporizzatori: tempo di ritardo in secondi (se manca vale il
+   * tempo predefinito del motore di simulazione). Salvato nel file.
+   */
+  tempo?: number;
 }
 
 /** Un capo di un filo: il morsetto `morsetto` (es. "14") del componente `componente`. */

@@ -9,8 +9,42 @@
  * Poli della rete. Le fasi della rete monofase (L) e trifase (L1) sono
  * considerate la stessa fase: semplificazione didattica, come nei quadri
  * reali dove il comando è spesso derivato da L1 e N.
+ * "+" e "-" sono i poli dell'alimentatore in corrente continua.
  */
-export type Polo = "L1" | "L2" | "L3" | "N";
+export type Polo = "L1" | "L2" | "L3" | "N" | "+" | "-";
+
+/** Poli della corrente alternata e della continua: non si possono mescolare su un carico. */
+export const POLI_ALTERNATA: readonly Polo[] = ["L1", "L2", "L3", "N"];
+export const POLI_CONTINUA: readonly Polo[] = ["+", "-"];
+
+/** Tempo predefinito di un temporizzatore appena posato, in secondi. */
+export const TEMPO_PREDEFINITO = 3;
+/** Limiti del tempo impostabile di un temporizzatore, in secondi. */
+export const TEMPO_MINIMO = 0;
+export const TEMPO_MASSIMO = 600;
+/**
+ * Tempo dopo cui il relè termico (o il salvamotore) interviene se il motore
+ * che protegge resta in sovraccarico, in secondi. Nella realtà dipende da
+ * quanto è grande il sovraccarico (curva di intervento): qui è fisso.
+ */
+export const TEMPO_INTERVENTO_TERMICO = 3;
+
+/**
+ * Tipo di motore, per calcolare se gira e in che verso:
+ * - trifase: morsetti U, V, W (collegamento interno a stella);
+ * - trifase6: morsetti U1, V1, W1, U2, V2, W2 da collegare a stella o a triangolo;
+ * - monofase: fase e neutro, verso fisso;
+ * - cc: corrente continua, il verso dipende dalla polarità.
+ */
+export type TipoMotore = "trifase" | "trifase6" | "monofase" | "cc";
+
+/** Protezioni: che cosa le fa intervenire. */
+export interface Protezione {
+  /** Interviene (si apre) quando passa una corrente di cortocircuito. */
+  cortocircuito: boolean;
+  /** Interviene dopo un po' se il motore che alimenta è in sovraccarico. */
+  sovraccarico: boolean;
+}
 
 /** Uscita di una sorgente: il morsetto `morsetto` porta il polo `polo`. */
 export interface UscitaSorgente {
@@ -58,10 +92,12 @@ export type ModelloComponente =
       bobina: boolean;
       /**
        * Solo per le bobine dei temporizzatori: ritardo all'eccitazione o alla
-       * diseccitazione. Il tempo vero e proprio arriva con l'attività 2.4; per
-       * ora i contatti commutano subito, come quelli di una bobina normale.
+       * diseccitazione. Il tempo si imposta nel componente (campo `tempo`);
+       * il conteggio del tempo è fatto da tempo.ts.
        */
       temporizzata?: "eccitazione" | "diseccitazione";
+      /** Solo per i motori: come calcolare rotazione e verso. */
+      motore?: TipoMotore;
     };
 
 /** I tre poli di un componente tripolare con morsetti 1-2, 3-4, 5-6. */
@@ -80,6 +116,13 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
       { morsetto: "N", polo: "N" },
     ],
   },
+  "alimentatore-cc": {
+    tipo: "sorgente",
+    uscite: [
+      { morsetto: "+", polo: "+" },
+      { morsetto: "-", polo: "-" },
+    ],
+  },
   "rete-trifase": {
     tipo: "sorgente",
     uscite: [
@@ -88,8 +131,8 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
       { morsetto: "L3", polo: "L3" },
     ],
   },
-  // Le protezioni per ora sono sempre chiuse: l'intervento in caso di
-  // cortocircuito o sovraccarico arriva con l'attività 2.4.
+  // Le protezioni conducono finché non intervengono: l'intervento (vedi
+  // PROTEZIONI qui sotto) è gestito dal simulatore e da tempo.ts.
   fusibile: { tipo: "conduttore", tratti: [["1", "2"]] },
   magnetotermico: { tipo: "conduttore", tratti: [["1", "2"]] },
   "rele-termico": { tipo: "conduttore", tratti: TRIPOLARE },
@@ -118,9 +161,27 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
   // Utilizzatori.
   lampada: { tipo: "carico", morsetti: ["X1", "X2"], bobina: false },
   sirena: { tipo: "carico", morsetti: ["X1", "X2"], bobina: false },
-  "motore-trifase": { tipo: "carico", morsetti: ["U", "V", "W"], bobina: false },
-  "motore-monofase": { tipo: "carico", morsetti: ["U1", "U2"], bobina: false },
-  // Semplificazione: nel modulo non c'è ancora un'alimentazione in continua,
-  // quindi il motore in CC gira quando riceve due poli diversi (vedi limiti).
-  "motore-cc": { tipo: "carico", morsetti: ["A1", "A2"], bobina: false },
+  "motore-trifase": { tipo: "carico", morsetti: ["U", "V", "W"], bobina: false, motore: "trifase" },
+  "motore-trifase-6": {
+    tipo: "carico",
+    morsetti: ["U1", "V1", "W1", "U2", "V2", "W2"],
+    bobina: false,
+    motore: "trifase6",
+  },
+  "motore-monofase": { tipo: "carico", morsetti: ["U1", "U2"], bobina: false, motore: "monofase" },
+  "motore-cc": { tipo: "carico", morsetti: ["A1", "A2"], bobina: false, motore: "cc" },
+};
+
+/**
+ * Componenti che proteggono il circuito. Semplificazioni:
+ * - il magnetotermico interviene solo in cortocircuito (la parte termica
+ *   per i sovraccarichi delle linee non è simulata);
+ * - il relè termico non apre i propri poli: apre il contatto 95-96 (e chiude
+ *   97-98), che nello schema toglie tensione alla bobina del contattore.
+ */
+export const PROTEZIONI: Readonly<Record<string, Protezione>> = {
+  fusibile: { cortocircuito: true, sovraccarico: false },
+  magnetotermico: { cortocircuito: true, sovraccarico: false },
+  salvamotore: { cortocircuito: true, sovraccarico: true },
+  "rele-termico": { cortocircuito: false, sovraccarico: true },
 };
