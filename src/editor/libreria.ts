@@ -20,6 +20,13 @@
 //   "contatto": { "tipo": "ausiliario" | "principale", "stato": "NA" | "NC" }
 //                                     → contatto azionato da una bobina: prende
 //                                       la sua sigla e la numerazione normativa.
+// Aggiunte dell'attività 2.3:
+//   "contatto.tipo": "temporizzato"  → contatto di un temporizzatore (15-16 NC, 17-18 NA);
+//   "contatto.tipo": "termico"       → contatto del relè termico (95-96 NC, 97-98 NA);
+//   "protezioneTermica": true        → insieme a "comandaContatti": il componente
+//                                       (relè termico) comanda solo i contatti "termico";
+//   un contatto "principale" può avere più poli: 2, 4 o 6 morsetti a coppie
+//   (1-2, 3-4, 5-6 per il tripolare).
 // Larghezza, altezza e coordinate dei morsetti sono multipli del passo di griglia.
 import { PASSO_GRIGLIA, agganciaPunto, type Punto } from "./geometria";
 import type { ComponenteSchema, Schema } from "./schema";
@@ -47,14 +54,19 @@ export interface VoceLibreria {
   morsetti: MorsettoLibreria[];
   /** true per le bobine (contattori, relè): comandano i contatti con la stessa sigla. */
   comandaContatti?: boolean;
+  /** true per il relè termico: comanda i contatti di tipo "termico" (95-96, 97-98). */
+  protezioneTermica?: boolean;
   /** Presente nei contatti azionati da una bobina (numerazione automatica). */
   contatto?: DatiContatto;
 }
 
 /** Tipo di contatto, per la numerazione dei morsetti secondo la norma. */
 export interface DatiContatto {
-  /** ausiliario: 13-14, 21-22…; principale (di potenza): 1-2, 3-4, 5-6. */
-  tipo: "ausiliario" | "principale";
+  /**
+   * ausiliario: 13-14, 21-22…; principale (di potenza): 1-2, 3-4, 5-6;
+   * temporizzato: 15-16 (NC), 17-18 (NA)…; termico: 95-96 (NC), 97-98 (NA).
+   */
+  tipo: "ausiliario" | "principale" | "temporizzato" | "termico";
   /** NA = normalmente aperto, NC = normalmente chiuso. */
   stato: "NA" | "NC";
 }
@@ -158,16 +170,24 @@ export function leggiLibreria(dati: unknown, nomeFile: string, icone?: ReadonlyS
     let contatto: DatiContatto | undefined;
     if (v.contatto !== undefined) {
       const c = v.contatto;
+      const tipiValidi = ["ausiliario", "principale", "temporizzato", "termico"];
+      // I contatti principali possono avere più poli (morsetti a coppie), gli altri uno solo.
+      const morsettiGiusti =
+        eOggetto(c) && c.tipo === "principale"
+          ? morsetti.length >= 2 && morsetti.length % 2 === 0
+          : morsetti.length === 2;
       if (
         !eOggetto(c) ||
-        (c.tipo !== "ausiliario" && c.tipo !== "principale") ||
+        !tipiValidi.includes(c.tipo as string) ||
         (c.stato !== "NA" && c.stato !== "NC") ||
-        morsetti.length !== 2
+        !morsettiGiusti
       ) {
-        problema('il campo "contatto" deve essere { "tipo": "ausiliario" o "principale", "stato": "NA" o "NC" } e il contatto deve avere 2 morsetti.');
+        problema(
+          'il campo "contatto" deve essere { "tipo": "ausiliario", "principale", "temporizzato" o "termico", "stato": "NA" o "NC" }; il contatto deve avere 2 morsetti (i principali anche 4 o 6, a coppie).',
+        );
         continue;
       }
-      contatto = { tipo: c.tipo, stato: c.stato };
+      contatto = { tipo: c.tipo as DatiContatto["tipo"], stato: c.stato };
     }
     componenti.push({
       id: v.id,
@@ -181,6 +201,7 @@ export function leggiLibreria(dati: unknown, nomeFile: string, icone?: ReadonlyS
       altezza,
       morsetti,
       ...(v.comandaContatti === true ? { comandaContatti: true } : {}),
+      ...(v.comandaContatti === true && v.protezioneTermica === true ? { protezioneTermica: true } : {}),
       ...(contatto ? { contatto } : {}),
     });
   }
@@ -280,7 +301,13 @@ export function componenteDaVoce(
   const angolo = agganciaPunto({ x: centro.x - voce.larghezza / 2, y: centro.y - voce.altezza / 2 });
   let etichetta: string;
   if (voce.contatto) {
-    const bobine = libreria ? schema.componenti.filter((c) => vocePerTipo(libreria, c.tipo)?.comandaContatti) : [];
+    const dati = voce.contatto;
+    const bobine = libreria
+      ? schema.componenti.filter((c) => {
+          const v = vocePerTipo(libreria, c.tipo);
+          return v !== undefined && puoComandare(v, dati);
+        })
+      : [];
     etichetta = bobine.length > 0 ? bobine[bobine.length - 1].etichetta : "";
   } else {
     etichetta = prossimaSigla(schema, voce.sigla, libreria ? tipiContatto(libreria) : undefined);
@@ -299,6 +326,16 @@ export function componenteDaVoce(
 /** Voce della libreria corrispondente a un tipo di componente. */
 export function vocePerTipo(libreria: Libreria, tipo: string): VoceLibreria | undefined {
   return libreria.componenti.find((v) => v.id === tipo);
+}
+
+/**
+ * true se il componente `proprietario` può comandare un contatto di quel tipo:
+ * il relè termico comanda solo i contatti "termico" (95-96, 97-98), le bobine
+ * di contattori, relè e temporizzatori tutti gli altri.
+ */
+export function puoComandare(proprietario: VoceLibreria, contatto: DatiContatto): boolean {
+  if (proprietario.comandaContatti !== true) return false;
+  return (contatto.tipo === "termico") === (proprietario.protezioneTermica === true);
 }
 
 /** Tipi della libreria che sono contatti azionati da bobina. */

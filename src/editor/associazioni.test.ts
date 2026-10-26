@@ -11,6 +11,7 @@ import {
   contattoAssociato,
   numeriContatto,
   numeroMorsetto,
+  proprietariPer,
   rinumeraContatti,
 } from "./associazioni";
 import { componenteDaVoce, leggiLibreria, prossimaSigla, tipiContatto, vocePerTipo } from "./libreria";
@@ -53,7 +54,17 @@ describe("libreria degli impianti", () => {
     expect(vocePerTipo(lib, "bobina-contattore")?.comandaContatti).toBe(true);
     expect(vocePerTipo(lib, "contatto-na")?.contatto).toEqual({ tipo: "ausiliario", stato: "NA" });
     expect(vocePerTipo(lib, "contatto-nc")?.contatto).toEqual({ tipo: "ausiliario", stato: "NC" });
-    expect(tipiContatto(lib)).toEqual(new Set(["contatto-na", "contatto-nc"]));
+    expect(tipiContatto(lib)).toEqual(
+      new Set([
+        "contatto-na",
+        "contatto-nc",
+        "contatti-principali",
+        "contatto-temporizzato-na",
+        "contatto-temporizzato-nc",
+        "contatto-termico-nc",
+        "contatto-termico-na",
+      ]),
+    );
     // I pulsanti non sono comandati da bobina.
     expect(vocePerTipo(lib, "pulsante-na")?.contatto).toBeUndefined();
   });
@@ -197,3 +208,129 @@ describe("legame con il motore di simulazione", () => {
     expect(simula(staccato, {}, premuto.bobineEccitate).bobineEccitate).toEqual([]);
   });
 });
+
+describe("libreria completa degli impianti (attività 2.3)", () => {
+  const morsetti = (tipo: string) => vocePerTipo(lib, tipo)?.morsetti.map((m) => m.id);
+
+  it("contiene tutti i componenti richiesti", () => {
+    for (const tipo of [
+      "sezionatore",
+      "salvamotore",
+      "rele-termico",
+      "contatto-termico-nc",
+      "contatto-termico-na",
+      "contatti-principali",
+      "bobina-rele",
+      "bobina-ritardata-eccitazione",
+      "bobina-ritardata-diseccitazione",
+      "contatto-temporizzato-na",
+      "contatto-temporizzato-nc",
+      "selettore",
+      "finecorsa-na",
+      "finecorsa-nc",
+      "sensore-prossimita",
+      "sirena",
+      "motore-monofase",
+      "motore-cc",
+    ])
+      expect(vocePerTipo(lib, tipo), tipo).toBeDefined();
+  });
+
+  it("morsetti secondo la norma", () => {
+    expect(morsetti("sezionatore")).toEqual(["1", "2", "3", "4", "5", "6"]);
+    expect(morsetti("rele-termico")).toEqual(["1", "2", "3", "4", "5", "6"]);
+    expect(morsetti("contatto-termico-nc")).toEqual(["95", "96"]);
+    expect(morsetti("contatto-termico-na")).toEqual(["97", "98"]);
+    expect(morsetti("contatto-temporizzato-nc")).toEqual(["15", "16"]);
+    expect(morsetti("contatto-temporizzato-na")).toEqual(["17", "18"]);
+    expect(morsetti("bobina-ritardata-eccitazione")).toEqual(["A1", "A2"]);
+    expect(morsetti("motore-cc")).toEqual(["A1", "A2"]);
+    expect(vocePerTipo(lib, "rele-termico")).toMatchObject({ comandaContatti: true, protezioneTermica: true });
+    expect(vocePerTipo(lib, "bobina-rele")).toMatchObject({ sigla: "KA", comandaContatti: true });
+    expect(vocePerTipo(lib, "bobina-ritardata-diseccitazione")).toMatchObject({ sigla: "KT", comandaContatti: true });
+  });
+
+  it("numeri dei contatti temporizzati e termici", () => {
+    expect(numeriContatto({ tipo: "temporizzato", stato: "NA" }, 1)).toEqual(["17", "18"]);
+    expect(numeriContatto({ tipo: "temporizzato", stato: "NC" }, 2)).toEqual(["25", "26"]);
+    expect(numeriContatto({ tipo: "termico", stato: "NC" }, 3)).toEqual(["95", "96"]);
+    expect(numeriContatto({ tipo: "termico", stato: "NA" }, 1)).toEqual(["97", "98"]);
+  });
+
+  it("i contatti principali tripolari occupano tre coppie: 1…6, poi 7…12", () => {
+    const s = posa(["bobina-contattore", "contatti-principali", "contatti-principali"]);
+    expect(numeri(s, "contatti-principali-1")).toBe("1-2-3-4-5-6");
+    expect(numeri(s, "contatti-principali-2")).toBe("7-8-9-10-11-12");
+  });
+
+  it("ausiliari e temporizzati dello stesso temporizzatore condividono il numero d'ordine", () => {
+    const s = posa(["bobina-ritardata-eccitazione", "contatto-na", "contatto-temporizzato-na", "contatto-temporizzato-nc"]);
+    expect(s.componenti.map((c) => c.etichetta)).toEqual(["KT1", "KT1", "KT1", "KT1"]);
+    expect(numeri(s, "contatto-na-1")).toBe("13-14");
+    expect(numeri(s, "contatto-temporizzato-na-1")).toBe("27-28");
+    expect(numeri(s, "contatto-temporizzato-nc-1")).toBe("35-36");
+  });
+
+  it("i contatti del relè termico vanno al relè termico, gli altri alla bobina", () => {
+    // Relè termico posato per ultimo: il contatto NA del contattore resta a K1.
+    const s = posa(["bobina-contattore", "rele-termico", "contatto-na", "contatto-termico-nc", "contatto-termico-na"]);
+    const sigla = (id: string) => s.componenti.find((c) => c.id === id)!.etichetta;
+    expect(sigla("rele-termico-1")).toBe("F1");
+    expect(sigla("contatto-na-1")).toBe("K1");
+    expect(sigla("contatto-termico-nc-1")).toBe("F1");
+    expect(numeri(s, "contatto-termico-nc-1")).toBe("95-96");
+    expect(numeri(s, "contatto-termico-na-1")).toBe("97-98");
+    for (const c of s.componenti) if (eContattoTipo(c.tipo)) expect(contattoAssociato(s, c, lib), c.id).toBe(true);
+    // Un contatto termico con la sigla di una bobina non è associato (e viceversa).
+    const sbagliato = associaContatto(s, "contatto-termico-nc-1", "K1", lib);
+    expect(contattoAssociato(sbagliato, sbagliato.componenti.find((c) => c.id === "contatto-termico-nc-1")!, lib)).toBe(false);
+    expect(proprietariPer(s, { tipo: "termico", stato: "NC" }, lib).map((c) => c.etichetta)).toEqual(["F1"]);
+    expect(proprietariPer(s, { tipo: "ausiliario", stato: "NA" }, lib).map((c) => c.etichetta)).toEqual(["K1"]);
+  });
+
+  it("contatto termico senza relè termico: resta senza sigla", () => {
+    const s = posa(["bobina-contattore", "contatto-termico-nc"]);
+    expect(s.componenti[1].etichetta).toBe("");
+  });
+
+  it("rinominando il relè termico i suoi contatti lo seguono", () => {
+    const s = posa(["rele-termico", "contatto-termico-nc"]);
+    const esito = cambiaSigla(s, "rele-termico-1", "F5", lib);
+    expect(esito.ok && esito.schema.componenti.map((c) => c.etichetta)).toEqual(["F5", "F5"]);
+  });
+
+  it("il file letto rifiuta contatti con tipo o numero di morsetti sbagliati", () => {
+    const voce = {
+      id: "x",
+      nome: "Prova",
+      categoria: "c",
+      sigla: "K",
+      descrizione: "",
+      icona: "x.svg",
+      larghezza: 80,
+      altezza: 80,
+      morsetti: [
+        { id: "1", x: 20, y: 0 },
+        { id: "2", x: 20, y: 80 },
+        { id: "3", x: 40, y: 0 },
+      ],
+    };
+    const file = (componenti: unknown[]) => ({ versione: 1, modulo: "impianti", categorie: [{ id: "c", nome: "C" }], componenti });
+    const icone = new Set(["x.svg"]);
+    const dispari = leggiLibreria(file([{ ...voce, contatto: { tipo: "principale", stato: "NA" } }]), "p.json", icone);
+    expect(dispari.libreria.componenti).toEqual([]);
+    const strano = leggiLibreria(file([{ ...voce, morsetti: voce.morsetti.slice(0, 2), contatto: { tipo: "boh", stato: "NA" } }]), "p.json", icone);
+    expect(strano.libreria.componenti).toEqual([]);
+    const quattro = leggiLibreria(
+      file([{ ...voce, morsetti: [...voce.morsetti, { id: "4", x: 40, y: 80 }], contatto: { tipo: "principale", stato: "NA" } }]),
+      "p.json",
+      icone,
+    );
+    expect(quattro.errori).toEqual([]);
+    expect(quattro.libreria.componenti[0].contatto).toEqual({ tipo: "principale", stato: "NA" });
+  });
+});
+
+function eContattoTipo(tipo: string): boolean {
+  return vocePerTipo(lib, tipo)?.contatto !== undefined;
+}

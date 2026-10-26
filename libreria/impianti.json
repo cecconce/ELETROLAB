@@ -3,8 +3,8 @@
   "modulo": "impianti",
   "categorie": [
     { "id": "alimentazione", "nome": "Alimentazione" },
-    { "id": "protezioni", "nome": "Protezioni" },
-    { "id": "comandi", "nome": "Comandi" },
+    { "id": "protezioni", "nome": "Protezioni e manovra" },
+    { "id": "comandi", "nome": "Comandi e sensori" },
     { "id": "contattori", "nome": "Contattori e relè" },
     { "id": "utilizzatori", "nome": "Utilizzatori" }
   ],
@@ -71,6 +71,97 @@
       ]
     },
     {
+      "id": "sezionatore",
+      "nome": "Sezionatore tripolare",
+      "categoria": "protezioni",
+      "sigla": "Q",
+      "descrizione": "Separa l'impianto dalla rete per lavorare in sicurezza. Si manovra a mano e solo senza carico. In simulazione: clic per chiuderlo o aprirlo.",
+      "paroleChiave": ["sezionatore", "separatore", "manovra", "tripolare"],
+      "icona": "sezionatore.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "1", "x": 20, "y": 0 },
+        { "id": "2", "x": 20, "y": 80 },
+        { "id": "3", "x": 40, "y": 0 },
+        { "id": "4", "x": 40, "y": 80 },
+        { "id": "5", "x": 60, "y": 0 },
+        { "id": "6", "x": 60, "y": 80 }
+      ]
+    },
+    {
+      "id": "salvamotore",
+      "nome": "Interruttore salvamotore",
+      "categoria": "protezioni",
+      "sigla": "Q",
+      "descrizione": "Interruttore automatico per motori: unisce sganciatore magnetico (cortocircuito) e termico regolabile (sovraccarico). Si chiude e si riarma a mano con un clic.",
+      "paroleChiave": ["salvamotore", "magnetotermico", "motore", "protezione", "sovraccarico"],
+      "icona": "salvamotore.svg",
+      "larghezza": 100,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "1", "x": 20, "y": 0 },
+        { "id": "2", "x": 20, "y": 80 },
+        { "id": "3", "x": 40, "y": 0 },
+        { "id": "4", "x": 40, "y": 80 },
+        { "id": "5", "x": 60, "y": 0 },
+        { "id": "6", "x": 60, "y": 80 }
+      ]
+    },
+    {
+      "id": "rele-termico",
+      "nome": "Relè termico",
+      "categoria": "protezioni",
+      "sigla": "F",
+      "descrizione": "Protegge il motore dal sovraccarico: le lamine bimetalliche si scaldano con la corrente e, se è troppa, fanno commutare i contatti 95-96 (si apre) e 97-98 (si chiude).",
+      "paroleChiave": ["termico", "sovraccarico", "protezione motore", "bimetallo", "95-96"],
+      "icona": "rele-termico.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "1", "x": 20, "y": 0 },
+        { "id": "2", "x": 20, "y": 80 },
+        { "id": "3", "x": 40, "y": 0 },
+        { "id": "4", "x": 40, "y": 80 },
+        { "id": "5", "x": 60, "y": 0 },
+        { "id": "6", "x": 60, "y": 80 }
+      ],
+      "comandaContatti": true,
+      "protezioneTermica": true
+    },
+    {
+      "id": "contatto-termico-nc",
+      "nome": "Contatto del relè termico NC (95-96)",
+      "categoria": "protezioni",
+      "sigla": "F",
+      "descrizione": "Contatto normalmente chiuso del relè termico: si apre quando il relè interviene. Va in serie alla bobina del contattore per fermare il motore in sovraccarico.",
+      "paroleChiave": ["termico", "95-96", "normalmente chiuso", "sovraccarico"],
+      "icona": "contatto-termico-nc.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "95", "x": 20, "y": 0 },
+        { "id": "96", "x": 20, "y": 80 }
+      ],
+      "contatto": { "tipo": "termico", "stato": "NC" }
+    },
+    {
+      "id": "contatto-termico-na",
+      "nome": "Contatto del relè termico NA (97-98)",
+      "categoria": "protezioni",
+      "sigla": "F",
+      "descrizione": "Contatto normalmente aperto del relè termico: si chiude quando il relè interviene. Si usa per accendere una spia o una sirena di allarme.",
+      "paroleChiave": ["termico", "97-98", "normalmente aperto", "allarme"],
+      "icona": "contatto-termico-na.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "97", "x": 20, "y": 0 },
+        { "id": "98", "x": 20, "y": 80 }
+      ],
+      "contatto": { "tipo": "termico", "stato": "NA" }
+    },
+    {
       "id": "pulsante-na",
       "nome": "Pulsante NA (marcia)",
       "categoria": "comandi",
@@ -98,6 +189,66 @@
       "morsetti": [
         { "id": "11", "x": 20, "y": 0 },
         { "id": "12", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "selettore",
+      "nome": "Selettore a due posizioni",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Interruttore a manopola che resta nella posizione scelta (0 / 1). In simulazione: un clic lo gira, un altro clic lo riporta indietro.",
+      "paroleChiave": ["selettore", "manopola", "interruttore", "commutatore"],
+      "icona": "selettore.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "13", "x": 20, "y": 0 },
+        { "id": "14", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "finecorsa-na",
+      "nome": "Finecorsa NA",
+      "categoria": "comandi",
+      "sigla": "SQ",
+      "descrizione": "Interruttore di posizione azionato da una parte in movimento (cancello, carrello): il contatto si chiude quando viene toccato. In simulazione: clic per azionarlo o rilasciarlo.",
+      "paroleChiave": ["finecorsa", "fine corsa", "posizione", "normalmente aperto"],
+      "icona": "finecorsa-na.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "13", "x": 20, "y": 0 },
+        { "id": "14", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "finecorsa-nc",
+      "nome": "Finecorsa NC",
+      "categoria": "comandi",
+      "sigla": "SQ",
+      "descrizione": "Interruttore di posizione normalmente chiuso: si apre quando la parte in movimento lo raggiunge, per esempio per fermare un motore a fine corsa.",
+      "paroleChiave": ["finecorsa", "fine corsa", "posizione", "normalmente chiuso"],
+      "icona": "finecorsa-nc.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "11", "x": 20, "y": 0 },
+        { "id": "12", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "sensore-prossimita",
+      "nome": "Sensore di prossimità",
+      "categoria": "comandi",
+      "sigla": "B",
+      "descrizione": "Sensore che chiude il contatto quando un oggetto si avvicina, senza toccarlo (induttivo, capacitivo o fotocellula). In simulazione: clic per simulare l'oggetto davanti al sensore.",
+      "paroleChiave": ["sensore", "prossimità", "induttivo", "fotocellula", "presenza"],
+      "icona": "sensore-prossimita.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "13", "x": 20, "y": 0 },
+        { "id": "14", "x": 20, "y": 80 }
       ]
     },
     {
@@ -149,6 +300,106 @@
       "contatto": { "tipo": "ausiliario", "stato": "NC" }
     },
     {
+      "id": "contatti-principali",
+      "nome": "Contatti principali del contattore",
+      "categoria": "contattori",
+      "sigla": "K",
+      "descrizione": "I tre contatti di potenza del contattore (1-2, 3-4, 5-6): si chiudono insieme quando la bobina con la stessa sigla è eccitata e portano la corrente al motore.",
+      "paroleChiave": ["contattore", "potenza", "principali", "tripolare", "1-2"],
+      "icona": "contatti-principali.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "1", "x": 20, "y": 0 },
+        { "id": "2", "x": 20, "y": 80 },
+        { "id": "3", "x": 40, "y": 0 },
+        { "id": "4", "x": 40, "y": 80 },
+        { "id": "5", "x": 60, "y": 0 },
+        { "id": "6", "x": 60, "y": 80 }
+      ],
+      "contatto": { "tipo": "principale", "stato": "NA" }
+    },
+    {
+      "id": "bobina-rele",
+      "nome": "Bobina del relè ausiliario",
+      "categoria": "contattori",
+      "sigla": "KA",
+      "descrizione": "Relè ausiliario: come un piccolo contattore, ma con soli contatti ausiliari. Si usa nei circuiti di comando per moltiplicare i contatti o separare due circuiti.",
+      "paroleChiave": ["relè", "ausiliario", "rele", "A1", "A2"],
+      "icona": "bobina.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A1", "x": 20, "y": 0 },
+        { "id": "A2", "x": 20, "y": 80 }
+      ],
+      "comandaContatti": true
+    },
+    {
+      "id": "bobina-ritardata-eccitazione",
+      "nome": "Temporizzatore ritardato all'eccitazione",
+      "categoria": "contattori",
+      "sigla": "KT",
+      "descrizione": "Temporizzatore: quando arriva tensione aspetta il tempo impostato e poi fa commutare i suoi contatti; togliendo tensione tornano subito a riposo.",
+      "paroleChiave": ["temporizzatore", "timer", "ritardo", "eccitazione", "TON"],
+      "icona": "bobina-ritardata-eccitazione.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A1", "x": 20, "y": 0 },
+        { "id": "A2", "x": 20, "y": 80 }
+      ],
+      "comandaContatti": true
+    },
+    {
+      "id": "bobina-ritardata-diseccitazione",
+      "nome": "Temporizzatore ritardato alla diseccitazione",
+      "categoria": "contattori",
+      "sigla": "KT",
+      "descrizione": "Temporizzatore: i contatti commutano subito quando arriva tensione; quando la tensione viene tolta aspettano il tempo impostato prima di tornare a riposo.",
+      "paroleChiave": ["temporizzatore", "timer", "ritardo", "diseccitazione", "TOF"],
+      "icona": "bobina-ritardata-diseccitazione.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A1", "x": 20, "y": 0 },
+        { "id": "A2", "x": 20, "y": 80 }
+      ],
+      "comandaContatti": true
+    },
+    {
+      "id": "contatto-temporizzato-na",
+      "nome": "Contatto temporizzato NA",
+      "categoria": "contattori",
+      "sigla": "KT",
+      "descrizione": "Contatto normalmente aperto di un temporizzatore (17-18): commuta con il ritardo impostato nella bobina del temporizzatore con la stessa sigla.",
+      "paroleChiave": ["temporizzato", "ritardato", "17-18", "timer"],
+      "icona": "contatto-temporizzato-na.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "17", "x": 20, "y": 0 },
+        { "id": "18", "x": 20, "y": 80 }
+      ],
+      "contatto": { "tipo": "temporizzato", "stato": "NA" }
+    },
+    {
+      "id": "contatto-temporizzato-nc",
+      "nome": "Contatto temporizzato NC",
+      "categoria": "contattori",
+      "sigla": "KT",
+      "descrizione": "Contatto normalmente chiuso di un temporizzatore (15-16): si apre con il ritardo impostato nella bobina del temporizzatore con la stessa sigla.",
+      "paroleChiave": ["temporizzato", "ritardato", "15-16", "timer"],
+      "icona": "contatto-temporizzato-nc.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "15", "x": 20, "y": 0 },
+        { "id": "16", "x": 20, "y": 80 }
+      ],
+      "contatto": { "tipo": "temporizzato", "stato": "NC" }
+    },
+    {
       "id": "lampada",
       "nome": "Lampada di segnalazione",
       "categoria": "utilizzatori",
@@ -177,6 +428,51 @@
         { "id": "U", "x": 20, "y": 0 },
         { "id": "V", "x": 40, "y": 0 },
         { "id": "W", "x": 60, "y": 0 }
+      ]
+    },
+    {
+      "id": "sirena",
+      "nome": "Sirena",
+      "categoria": "utilizzatori",
+      "sigla": "H",
+      "descrizione": "Segnalatore acustico: suona quando riceve tensione. Si usa per gli allarmi, per esempio quando interviene il relè termico.",
+      "paroleChiave": ["sirena", "allarme", "acustico", "suoneria"],
+      "icona": "sirena.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "X1", "x": 20, "y": 0 },
+        { "id": "X2", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "motore-monofase",
+      "nome": "Motore asincrono monofase",
+      "categoria": "utilizzatori",
+      "sigla": "M",
+      "descrizione": "Motore alimentato da fase e neutro (230 V), con condensatore di avviamento interno. Si usa per piccole macchine: ventilatori, pompe, trapani.",
+      "paroleChiave": ["motore", "monofase", "1~", "230 V"],
+      "icona": "motore-monofase.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "U1", "x": 20, "y": 0 },
+        { "id": "U2", "x": 60, "y": 0 }
+      ]
+    },
+    {
+      "id": "motore-cc",
+      "nome": "Motore in corrente continua",
+      "categoria": "utilizzatori",
+      "sigla": "M",
+      "descrizione": "Motore a corrente continua con morsetti di armatura A1-A2: invertendo la polarità si inverte il verso di rotazione.",
+      "paroleChiave": ["motore", "continua", "CC", "DC", "armatura"],
+      "icona": "motore-cc.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "A1", "x": 20, "y": 0 },
+        { "id": "A2", "x": 60, "y": 0 }
       ]
     }
   ]

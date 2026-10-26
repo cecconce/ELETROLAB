@@ -7,7 +7,7 @@
 // Le regole stanno in associazioni.ts: qui c'è solo l'interfaccia.
 import { useEffect, useState } from "react";
 import { t } from "../testi";
-import { associaContatto, bobineDelloSchema, cambiaSigla, contattoAssociato, numeroMorsetto } from "./associazioni";
+import { associaContatto, cambiaSigla, contattoAssociato, numeroMorsetto, proprietariPer } from "./associazioni";
 import { vocePerTipo, type Libreria } from "./libreria";
 import type { Schema, Selezione } from "./schema";
 
@@ -48,8 +48,10 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
     } else setErrore(esito.errore);
   };
 
-  const bobine = bobineDelloSchema(schema, libreria);
   const contatto = voce?.contatto;
+  // Solo i componenti che possono comandare questo tipo di contatto (il relè
+  // termico per 95-96 / 97-98, le bobine per gli altri).
+  const bobine = contatto ? proprietariPer(schema, contatto, libreria) : [];
   // Una bobina mostra i propri contatti con i numeri dei morsetti.
   const contattiDellaBobina = voce?.comandaContatti
     ? schema.componenti.filter((c) => vocePerTipo(libreria, c.tipo)?.contatto && c.etichetta === componente.etichetta)
@@ -66,7 +68,7 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
       {contatto ? (
         <>
           <label className="proprieta-campo">
-            <span>{t("proprieta.comandatoDa")}</span>
+            <span>{contatto.tipo === "termico" ? t("proprieta.comandatoDaTermico") : t("proprieta.comandatoDa")}</span>
             <select
               value={componente.etichetta}
               onChange={(e) => onCambiaSchema(associaContatto(schema, componente.id, e.target.value, libreria))}
@@ -83,7 +85,11 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
               )}
             </select>
           </label>
-          {bobine.length === 0 && <p className="proprieta-nota">{t("proprieta.senzaBobine")}</p>}
+          {bobine.length === 0 && (
+            <p className="proprieta-nota">
+              {contatto.tipo === "termico" ? t("proprieta.senzaReleTermico") : t("proprieta.senzaBobine")}
+            </p>
+          )}
           {!contattoAssociato(schema, componente, libreria) && <p className="proprieta-avviso">{t("proprieta.nonAssociato")}</p>}
           <dl className="proprieta-campi">
             <dt>{t("proprieta.morsetti")}</dt>

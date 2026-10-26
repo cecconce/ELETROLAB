@@ -42,6 +42,13 @@ export interface Circuito {
 export interface Ingressi {
   /** Id dei pulsanti tenuti premuti in questo momento. */
   premuti?: Iterable<string>;
+  /**
+   * Id dei comandi a posizione mantenuta azionati (selettori, finecorsa,
+   * sensori, sezionatori e salvamotori chiusi).
+   */
+  azionati?: Iterable<string>;
+  /** Sigle dei relè termici intervenuti (F1…): i loro contatti 95-96 / 97-98 commutano. */
+  termiciIntervenuti?: Iterable<string>;
 }
 
 export interface Cortocircuito {
@@ -111,8 +118,10 @@ interface ComponenteNoto {
 }
 
 /** Morsetti di un modello (quelli che il motore considera). */
-function morsettiDi(m: ModelloComponente): string[] {
-  return m.tipo === "sorgente" ? m.uscite.map((u) => u.morsetto) : [...m.morsetti];
+export function morsettiDelModello(m: ModelloComponente): string[] {
+  if (m.tipo === "sorgente") return m.uscite.map((u) => u.morsetto);
+  if (m.tipo === "carico") return [...m.morsetti];
+  return m.tratti.flatMap((t) => [...t]);
 }
 
 /** Prepara le strutture che non cambiano durante la simulazione. */
@@ -126,7 +135,7 @@ function preparaCircuito(circuito: Circuito) {
   }
   // Nodi: morsetti uniti dai fili.
   const nodi = new Insiemi();
-  for (const { c, m } of noti) for (const t of morsettiDi(m)) nodi.aggiungi(chiaveMorsetto(c.id, t));
+  for (const { c, m } of noti) for (const t of morsettiDelModello(m)) nodi.aggiungi(chiaveMorsetto(c.id, t));
   for (const f of circuito.fili) {
     nodi.unisci(chiaveMorsetto(f.da.componente, f.da.morsetto), chiaveMorsetto(f.a.componente, f.a.morsetto));
   }
@@ -138,23 +147,38 @@ function preparaCircuito(circuito: Circuito) {
 
 type Preparato = ReturnType<typeof preparaCircuito>;
 
-/** Dice se un contatto è chiuso, dati i pulsanti premuti e le bobine eccitate. */
-function contattoChiuso(
-  n: ComponenteNoto,
-  premuti: ReadonlySet<string>,
-  sigleEccitate: ReadonlySet<string>,
-): boolean {
+/** Azioni dello studente e protezioni intervenute, già pronte per la ricerca. */
+interface StatoComandi {
+  premuti: ReadonlySet<string>;
+  azionati: ReadonlySet<string>;
+  termici: ReadonlySet<string>;
+}
+
+/** Dice se un contatto è chiuso, dati i comandi dello studente e le bobine eccitate. */
+function contattoChiuso(n: ComponenteNoto, comandi: StatoComandi, sigleEccitate: ReadonlySet<string>): boolean {
   if (n.m.tipo !== "contatto") return false;
-  const azionato =
-    n.m.comando.tipo === "pulsante"
-      ? premuti.has(n.c.id)
-      : n.c.etichetta.trim() !== "" && sigleEccitate.has(n.c.etichetta.trim());
+  const sigla = n.c.etichetta.trim();
+  let azionato: boolean;
+  switch (n.m.comando.tipo) {
+    case "pulsante":
+      azionato = comandi.premuti.has(n.c.id);
+      break;
+    case "manuale":
+      azionato = comandi.azionati.has(n.c.id);
+      break;
+    case "bobina":
+      azionato = sigla !== "" && sigleEccitate.has(sigla);
+      break;
+    case "termico":
+      azionato = sigla !== "" && comandi.termici.has(sigla);
+      break;
+  }
   // Contatto NC: chiuso a riposo, si apre se azionato. NA: il contrario.
   return n.m.normalmenteChiuso ? !azionato : azionato;
 }
 
 /** Calcola tensioni e carichi alimentati per un dato stato delle bobine. */
-function valuta(p: Preparato, premuti: ReadonlySet<string>, eccitate: ReadonlySet<string>) {
+function valuta(p: Preparato, comandi: StatoComandi, eccitate: ReadonlySet<string>) {
   const sigleEccitate = new Set(
     p.bobine.filter((b) => eccitate.has(b.c.id)).map((b) => b.c.etichetta.trim()).filter((s) => s !== ""),
   );
@@ -163,10 +187,11 @@ function valuta(p: Preparato, premuti: ReadonlySet<string>, eccitate: ReadonlySe
   const contattiChiusi: string[] = [];
   for (const n of p.noti) {
     if (n.m.tipo === "conduttore") {
-      gruppi.unisci(p.nodoDi(n.c.id, n.m.morsetti[0]), p.nodoDi(n.c.id, n.m.morsetti[1]));
-    } else if (n.m.tipo === "contatto" && contattoChiuso(n, premuti, sigleEccitate)) {
+      for (const [a, b] of n.m.tratti) gruppi.unisci(p.nodoDi(n.c.id, a), p.nodoDi(n.c.id, b));
+    } else if (n.m.tipo === "contatto" && contattoChiuso(n, comandi, sigleEccitate)) {
+      // Tutti i poli dello stesso componente si muovono insieme.
       contattiChiusi.push(n.c.id);
-      gruppi.unisci(p.nodoDi(n.c.id, n.m.morsetti[0]), p.nodoDi(n.c.id, n.m.morsetti[1]));
+      for (const [a, b] of n.m.tratti) gruppi.unisci(p.nodoDi(n.c.id, a), p.nodoDi(n.c.id, b));
     }
   }
   const gruppoDi = (id: string, t: string) => gruppi.radice(p.nodoDi(id, t));
@@ -186,7 +211,7 @@ function valuta(p: Preparato, premuti: ReadonlySet<string>, eccitate: ReadonlySe
   const poliDeiMorsetti: Record<string, Polo[]> = {};
   const morsettiDelGruppo = new Map<string, string[]>();
   for (const n of p.noti) {
-    for (const t of morsettiDi(n.m)) {
+    for (const t of morsettiDelModello(n.m)) {
       const k = chiaveMorsetto(n.c.id, t);
       poliDeiMorsetti[k] = poliDi(n.c.id, t);
       const g = gruppoDi(n.c.id, t);
@@ -224,7 +249,11 @@ export function simula(
   bobinePrecedenti: Iterable<string> = [],
 ): RisultatoSimulazione {
   const p = preparaCircuito(circuito);
-  const premuti = new Set(ingressi.premuti ?? []);
+  const comandi: StatoComandi = {
+    premuti: new Set(ingressi.premuti ?? []),
+    azionati: new Set(ingressi.azionati ?? []),
+    termici: new Set(ingressi.termiciIntervenuti ?? []),
+  };
   const idBobine = new Set(p.bobine.map((b) => b.c.id));
   const eccitate = new Set([...bobinePrecedenti].filter((id) => idBobine.has(id)));
 
@@ -232,7 +261,7 @@ export function simula(
   const statiStoria: Set<string>[] = [new Set(eccitate)];
   let passi = 0;
   let oscillazione: RisultatoSimulazione["oscillazione"] = null;
-  let v = valuta(p, premuti, eccitate);
+  let v = valuta(p, comandi, eccitate);
 
   while (passi < LIMITE_PASSI) {
     const alimentati = new Set(v.carichiAlimentati);
@@ -251,12 +280,12 @@ export function simula(
         .map((b) => b.c.id)
         .filter((id) => ciclo.some((s) => s.has(id)) && ciclo.some((s) => !s.has(id)));
       oscillazione = { bobine: coinvolte };
-      v = valuta(p, premuti, eccitate);
+      v = valuta(p, comandi, eccitate);
       break;
     }
     storia.push(chiave);
     statiStoria.push(new Set(eccitate));
-    v = valuta(p, premuti, eccitate);
+    v = valuta(p, comandi, eccitate);
   }
   if (!oscillazione && passi >= LIMITE_PASSI) oscillazione = { bobine: [...eccitate] };
 

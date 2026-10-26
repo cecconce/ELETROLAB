@@ -130,7 +130,10 @@ describe("ricerca per nome", () => {
   it("tutte le parole devono corrispondere; prima i nomi che iniziano col testo", () => {
     expect(cercaComponenti(imp, "pulsante arresto").map((v) => v.id)).toEqual(["pulsante-nc"]);
     const risultato = cercaComponenti(imp, "contatto").map((v) => v.id);
-    expect(risultato.slice(0, 2)).toEqual(["contatto-na", "contatto-nc"]);
+    // Prima tutti i nomi che iniziano con "Contatto…" (ausiliari, termici, temporizzati, principali).
+    const iniziano = imp.componenti.filter((v) => normalizza(v.nome).startsWith("contatto")).map((v) => v.id);
+    expect(iniziano).toEqual(expect.arrayContaining(["contatto-na", "contatto-nc"]));
+    expect(risultato.slice(0, iniziano.length).sort()).toEqual([...iniziano].sort());
     expect(cercaComponenti(imp, "xyz")).toEqual([]);
   });
 

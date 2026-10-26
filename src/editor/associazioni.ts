@@ -10,21 +10,38 @@
 // - contatti AUSILIARI: due cifre. La prima è il numero d'ordine del contatto
 //   nel contattore (1, 2, 3…), la seconda dice la funzione: 3-4 per i NA,
 //   1-2 per i NC. Esempio K1 con NA, NC, NA, NC → 13-14, 21-22, 33-34, 41-42.
-// - contatti PRINCIPALI (di potenza): 1-2, 3-4, 5-6 (poi 7-8…).
+// - contatti PRINCIPALI (di potenza): 1-2, 3-4, 5-6 (poi 7-8…); un blocco
+//   tripolare occupa da solo tre coppie (1-2, 3-4, 5-6).
+// - contatti TEMPORIZZATI: come gli ausiliari (stesso numero d'ordine), ma con
+//   seconda cifra 5-6 per i NC e 7-8 per i NA → 15-16, 27-28…
+// - contatti del RELÈ TERMICO: numeri fissi 95-96 (NC) e 97-98 (NA).
 // L'ordine è quello di posa sul foglio: il primo contatto disegnato è il n. 1.
 import { t } from "../testi";
-import { tipiContatto, vocePerTipo, type DatiContatto, type Libreria } from "./libreria";
+import { puoComandare, tipiContatto, vocePerTipo, type DatiContatto, type Libreria } from "./libreria";
 import type { ComponenteSchema, Schema } from "./schema";
 
 /** Numeri dei due morsetti del contatto `ordine` (1 = primo) di un contattore. */
 export function numeriContatto(dati: DatiContatto, ordine: number): [string, string] {
   if (dati.tipo === "principale") return [String(2 * ordine - 1), String(2 * ordine)];
+  if (dati.tipo === "termico") return dati.stato === "NC" ? ["95", "96"] : ["97", "98"];
+  if (dati.tipo === "temporizzato") return dati.stato === "NA" ? [`${ordine}7`, `${ordine}8`] : [`${ordine}5`, `${ordine}6`];
   return dati.stato === "NA" ? [`${ordine}3`, `${ordine}4`] : [`${ordine}1`, `${ordine}2`];
 }
 
 /** Le bobine (contattori, relè) presenti nello schema, nell'ordine di posa. */
 export function bobineDelloSchema(schema: Schema, libreria: Libreria): ComponenteSchema[] {
   return schema.componenti.filter((c) => vocePerTipo(libreria, c.tipo)?.comandaContatti === true);
+}
+
+/**
+ * I componenti dello schema che possono comandare quel tipo di contatto:
+ * bobine per i contatti normali, relè termici per i contatti 95-96 / 97-98.
+ */
+export function proprietariPer(schema: Schema, dati: DatiContatto, libreria: Libreria): ComponenteSchema[] {
+  return schema.componenti.filter((c) => {
+    const v = vocePerTipo(libreria, c.tipo);
+    return v !== undefined && puoComandare(v, dati);
+  });
 }
 
 /** true se il componente è un contatto azionato da bobina. */
@@ -34,7 +51,9 @@ export function eContatto(c: ComponenteSchema, libreria: Libreria): boolean {
 
 /** true se il contatto ha una bobina con la sua sigla nello schema. */
 export function contattoAssociato(schema: Schema, contatto: ComponenteSchema, libreria: Libreria): boolean {
-  return contatto.etichetta !== "" && bobineDelloSchema(schema, libreria).some((b) => b.etichetta === contatto.etichetta);
+  const dati = vocePerTipo(libreria, contatto.tipo)?.contatto;
+  if (!dati || contatto.etichetta === "") return false;
+  return proprietariPer(schema, dati, libreria).some((b) => b.etichetta === contatto.etichetta);
 }
 
 function numeriUguali(a: Record<string, string> | undefined, b: Record<string, string> | undefined): boolean {
@@ -58,11 +77,19 @@ export function rinumeraContatti(schema: Schema, libreria: Libreria): Schema {
     if (!voce?.contatto) return c;
     let numeri: Record<string, string> | undefined;
     if (c.etichetta !== "") {
-      const chiave = `${c.etichetta}|${voce.contatto.tipo}`;
-      const ordine = (contatori.get(chiave) ?? 0) + 1;
-      contatori.set(chiave, ordine);
-      const [n1, n2] = numeriContatto(voce.contatto, ordine);
-      numeri = { [voce.morsetti[0].id]: n1, [voce.morsetti[1].id]: n2 };
+      // Gli ausiliari e i temporizzati condividono il numero d'ordine; i
+      // principali contano le coppie di morsetti (un tripolare ne usa 3).
+      const famiglia = voce.contatto.tipo === "temporizzato" ? "ausiliario" : voce.contatto.tipo;
+      const chiave = `${c.etichetta}|${famiglia}`;
+      const coppie = voce.morsetti.length / 2;
+      const giaUsati = contatori.get(chiave) ?? 0;
+      contatori.set(chiave, giaUsati + coppie);
+      numeri = {};
+      for (let i = 0; i < coppie; i++) {
+        const [n1, n2] = numeriContatto(voce.contatto, giaUsati + i + 1);
+        numeri[voce.morsetti[2 * i].id] = n1;
+        numeri[voce.morsetti[2 * i + 1].id] = n2;
+      }
     }
     if (numeriUguali(numeri, c.numeriMorsetti)) return c;
     cambiato = true;

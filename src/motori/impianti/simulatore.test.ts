@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import libreriaImpianti from "../../../libreria/impianti.json";
 import { MODELLI_IMPIANTI } from "./modelli";
-import { simula, type Circuito, type ComponenteCircuito, type FiloCircuito } from "./simulatore";
+import { morsettiDelModello, simula, type Circuito, type ComponenteCircuito, type FiloCircuito } from "./simulatore";
 
 /** Aiuto per scrivere i circuiti: filo("S1:14", "K1:A1"). */
 function filo(da: string, a: string): FiloCircuito {
@@ -241,7 +241,7 @@ describe("modelli e libreria", () => {
   it("i morsetti dei modelli esistono nella libreria", () => {
     for (const v of voci) {
       const m = MODELLI_IMPIANTI[v.id];
-      const usati = m.tipo === "sorgente" ? m.uscite.map((u) => u.morsetto) : m.morsetti;
+      const usati = morsettiDelModello(m);
       const definiti = v.morsetti.map((t) => t.id);
       for (const t of usati) expect(definiti, `${v.id}:${t}`).toContain(t);
     }
