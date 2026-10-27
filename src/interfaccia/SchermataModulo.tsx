@@ -36,6 +36,8 @@ export interface Documento {
   percorso: string | null;
   /** true se lo schema contiene modifiche non salvate nel file (es. ripreso dal salvataggio automatico). */
   modificato: boolean;
+  /** Nome da mostrare finché il documento non ha un file (es. il titolo di un esempio aperto). */
+  titolo?: string;
 }
 
 export interface PropsSchermataModulo {
@@ -286,7 +288,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     return () => window.removeEventListener("keydown", giu);
   }, []);
 
-  const nomeFile = percorso ? nomeDaPercorso(percorso) : t("file.senzaNome");
+  const nomeFile = percorso ? nomeDaPercorso(percorso) : (documento.titolo ?? t("file.senzaNome"));
   return (
     <div className="schermata-modulo" data-modulo={modulo.id}>
       <header className="intestazione intestazione-modulo" style={{ borderColor: modulo.coloreAccento }}>

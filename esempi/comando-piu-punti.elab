@@ -1,0 +1,451 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "impianti",
+  "programma": "0.1.0",
+  "salvato": "2026-10-27T00:00:00.000Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "rete-3f",
+        "tipo": "rete-trifase",
+        "etichetta": "",
+        "x": 40,
+        "y": 40,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "Q1",
+        "tipo": "sezionatore",
+        "etichetta": "Q1",
+        "x": 40,
+        "y": 140,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "K1-potenza",
+        "tipo": "contatti-principali",
+        "etichetta": "K1",
+        "x": 40,
+        "y": 280,
+        "larghezza": 80,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4",
+          "5": "5",
+          "6": "6"
+        }
+      },
+      {
+        "id": "F1",
+        "tipo": "rele-termico",
+        "etichetta": "F1",
+        "x": 40,
+        "y": 420,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "M1",
+        "tipo": "motore-trifase",
+        "etichetta": "M1",
+        "x": 40,
+        "y": 560,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "rete-1f",
+        "tipo": "rete-monofase",
+        "etichetta": "",
+        "x": 720,
+        "y": 40,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "F1-95",
+        "tipo": "contatto-termico-nc",
+        "etichetta": "F1",
+        "x": 300,
+        "y": 120,
+        "larghezza": 40,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "95": "95",
+          "96": "96"
+        }
+      },
+      {
+        "id": "S0",
+        "tipo": "pulsante-nc",
+        "etichetta": "S0",
+        "x": 300,
+        "y": 240,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "S2",
+        "tipo": "pulsante-nc",
+        "etichetta": "S2",
+        "x": 300,
+        "y": 360,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "S1",
+        "tipo": "pulsante-na",
+        "etichetta": "S1",
+        "x": 300,
+        "y": 480,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "S3",
+        "tipo": "pulsante-na",
+        "etichetta": "S3",
+        "x": 380,
+        "y": 480,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "K1-autoritenuta",
+        "tipo": "contatto-na",
+        "etichetta": "K1",
+        "x": 460,
+        "y": 480,
+        "larghezza": 40,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "13": "13",
+          "14": "14"
+        }
+      },
+      {
+        "id": "K1",
+        "tipo": "bobina-contattore",
+        "etichetta": "K1",
+        "x": 300,
+        "y": 620,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "K1-spia",
+        "tipo": "contatto-na",
+        "etichetta": "K1",
+        "x": 580,
+        "y": 480,
+        "larghezza": 40,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "13": "23",
+          "14": "24"
+        }
+      },
+      {
+        "id": "H1",
+        "tipo": "lampada",
+        "etichetta": "H1",
+        "x": 580,
+        "y": 620,
+        "larghezza": 40,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "rete-3f",
+          "morsetto": "L1"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "rete-3f",
+          "morsetto": "L2"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "3"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "rete-3f",
+          "morsetto": "L3"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "5"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "K1-potenza",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "4"
+        },
+        "a": {
+          "componente": "K1-potenza",
+          "morsetto": "3"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "6"
+        },
+        "a": {
+          "componente": "K1-potenza",
+          "morsetto": "5"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "K1-potenza",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "F1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "K1-potenza",
+          "morsetto": "4"
+        },
+        "a": {
+          "componente": "F1",
+          "morsetto": "3"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "K1-potenza",
+          "morsetto": "6"
+        },
+        "a": {
+          "componente": "F1",
+          "morsetto": "5"
+        }
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "F1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "M1",
+          "morsetto": "U"
+        }
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "F1",
+          "morsetto": "4"
+        },
+        "a": {
+          "componente": "M1",
+          "morsetto": "V"
+        }
+      },
+      {
+        "id": "filo-12",
+        "da": {
+          "componente": "F1",
+          "morsetto": "6"
+        },
+        "a": {
+          "componente": "M1",
+          "morsetto": "W"
+        }
+      },
+      {
+        "id": "filo-13",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "F1-95",
+          "morsetto": "95"
+        },
+        "medio": 100
+      },
+      {
+        "id": "filo-14",
+        "da": {
+          "componente": "F1-95",
+          "morsetto": "96"
+        },
+        "a": {
+          "componente": "S0",
+          "morsetto": "11"
+        }
+      },
+      {
+        "id": "filo-15",
+        "da": {
+          "componente": "S0",
+          "morsetto": "12"
+        },
+        "a": {
+          "componente": "S2",
+          "morsetto": "11"
+        }
+      },
+      {
+        "id": "filo-16",
+        "da": {
+          "componente": "S2",
+          "morsetto": "12"
+        },
+        "a": {
+          "componente": "S1",
+          "morsetto": "13"
+        }
+      },
+      {
+        "id": "filo-17",
+        "da": {
+          "componente": "S2",
+          "morsetto": "12"
+        },
+        "a": {
+          "componente": "S3",
+          "morsetto": "13"
+        },
+        "medio": 460
+      },
+      {
+        "id": "filo-18",
+        "da": {
+          "componente": "S2",
+          "morsetto": "12"
+        },
+        "a": {
+          "componente": "K1-autoritenuta",
+          "morsetto": "13"
+        },
+        "medio": 460
+      },
+      {
+        "id": "filo-19",
+        "da": {
+          "componente": "S1",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "K1",
+          "morsetto": "A1"
+        }
+      },
+      {
+        "id": "filo-20",
+        "da": {
+          "componente": "S3",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "K1",
+          "morsetto": "A1"
+        },
+        "medio": 580
+      },
+      {
+        "id": "filo-21",
+        "da": {
+          "componente": "K1-autoritenuta",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "K1",
+          "morsetto": "A1"
+        },
+        "medio": 580
+      },
+      {
+        "id": "filo-22",
+        "da": {
+          "componente": "K1",
+          "morsetto": "A2"
+        },
+        "a": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "medio": 740
+      },
+      {
+        "id": "filo-23",
+        "da": {
+          "componente": "F1-95",
+          "morsetto": "96"
+        },
+        "a": {
+          "componente": "K1-spia",
+          "morsetto": "13"
+        },
+        "medio": 220
+      },
+      {
+        "id": "filo-24",
+        "da": {
+          "componente": "K1-spia",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "H1",
+          "morsetto": "X1"
+        }
+      },
+      {
+        "id": "filo-25",
+        "da": {
+          "componente": "H1",
+          "morsetto": "X2"
+        },
+        "a": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "medio": 740
+      }
+    ]
+  }
+}

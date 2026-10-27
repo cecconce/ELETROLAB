@@ -1,0 +1,19 @@
+{
+  "versione": 1,
+  "esempi": [
+    {
+      "file": "marcia-arresto.elab",
+      "modulo": "impianti",
+      "titolo": "Marcia/arresto con autoritenuta",
+      "descrizione": "Avviamento diretto di un motore trifase: il contatto 13-14 di K1 in parallelo al pulsante di marcia tiene eccitata la bobina anche dopo aver rilasciato il pulsante. La lampada H1 segnala il motore in marcia.",
+      "prova": "Premi ▶ AVVIA. Clic su Q1 per chiudere il sezionatore, poi tieni premuto S1 (marcia) e rilascialo: K1 resta eccitato e M1 gira. Premi S0 (arresto) per fermarlo. Clic su M1 per simulare un sovraccarico: dopo qualche secondo interviene il relè termico F1 (clic su F1 per riarmarlo)."
+    },
+    {
+      "file": "comando-piu-punti.elab",
+      "modulo": "impianti",
+      "titolo": "Comando da più punti",
+      "descrizione": "Lo stesso motore comandato da due posti diversi: i pulsanti di arresto S0 e S2 sono in serie (basta premerne uno per fermare), i pulsanti di marcia S1 e S3 sono in parallelo fra loro e con il contatto di autoritenuta (basta premerne uno per avviare).",
+      "prova": "Premi ▶ AVVIA e clic su Q1. Avvia il motore con S1 oppure con S3; fermalo con S0 oppure con S2. Prova ad aggiungere un terzo punto di comando."
+    }
+  ]
+}

@@ -449,6 +449,31 @@ button {
   white-space: nowrap;
 }
 
+/* --- Finestra Esempi --- */
+.gruppo-esempi h3 {
+  border-left: 4px solid var(--accento);
+  padding-left: 8px;
+}
+.elenco-esempi {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.voce-esempio {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--bordo);
+}
+.voce-esempio p {
+  margin: 4px 0 0;
+}
+.voce-esempio .pulsante {
+  flex-shrink: 0;
+}
+
 /* --- Pannello Proprietà (a destra dell'area di disegno) --- */
 .proprieta {
   width: 220px;

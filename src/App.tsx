@@ -8,6 +8,9 @@ import { SchermataModulo, type Documento } from "./interfaccia/SchermataModulo";
 import { trovaModulo, type IdModulo } from "./interfaccia/moduli";
 import { alternaTema, leggiTemaSalvato, salvaTema, temaIniziale, type Tema } from "./interfaccia/tema";
 import { FinestraInformazioni } from "./informazioni/FinestraInformazioni";
+import { FinestraEsempi } from "./interfaccia/FinestraEsempi";
+import { ESEMPI } from "./progetto/caricaEsempi";
+import { apriEsempio, type Esempio } from "./progetto/esempi";
 import { SCHEMA_VUOTO } from "./editor/schema";
 import { creaArchivio, type InfoCartellaDati } from "./progetto/archivio";
 import { leggiProgetto } from "./progetto/formato";
@@ -53,6 +56,8 @@ export default function App() {
   const [cartellaDati, setCartellaDati] = useState<InfoCartellaDati | null>(null);
   const [informazioniAperte, setInformazioniAperte] = useState(false);
   const chiudiInformazioni = useCallback(() => setInformazioniAperte(false), []);
+  const [esempiAperti, setEsempiAperti] = useState(false);
+  const chiudiEsempi = useCallback(() => setEsempiAperti(false), []);
   const prossimoId = useRef(1);
 
   // Il tema è applicato all'elemento <html>, così vale per tutta l'app.
@@ -134,6 +139,29 @@ export default function App() {
     [archivio, nuovoDocumento, ricordaRecente],
   );
 
+  /**
+   * Apre un esempio pronto come documento "senza file": lo studente può
+   * modificarlo e, con Salva, sceglie dove salvarne una copia sua.
+   */
+  const apriUnEsempio = useCallback(
+    (esempio: Esempio) => {
+      const esito = apriEsempio(esempio);
+      setEsempiAperti(false);
+      if (!esito.ok) {
+        setAvviso(esito.errore);
+        return;
+      }
+      nuovoDocumento(esito.progetto.modulo, {
+        schema: esito.progetto.schema,
+        percorso: null,
+        modificato: false,
+        titolo: esempio.titolo,
+      });
+      if (esempio.prova) setAvviso(t("esempi.aperto", { titolo: esempio.titolo, prova: esempio.prova }));
+    },
+    [nuovoDocumento],
+  );
+
   const apriConDialogo = useCallback(async () => {
     const scelto = await archivio.scegliFileDaAprire();
     if (scelto) await apriPercorso(scelto);
@@ -179,13 +207,14 @@ export default function App() {
         onApriModulo={(id) => void apriModulo(id)}
         onApriRecente={(f: FileRecente) => void apriPercorso(f.percorso)}
         onApriFile={() => void apriConDialogo()}
-        onApriEsempi={() => setAvviso(t("home.esempiInArrivo"))}
+        onApriEsempi={() => setEsempiAperti(true)}
         onAlternaTema={() => setTema((x) => alternaTema(x))}
         onApriInformazioni={() => setInformazioniAperte(true)}
       />
       {informazioniAperte && (
         <FinestraInformazioni versione={pacchetto.version} cartellaDati={cartellaDati} onChiudi={chiudiInformazioni} />
       )}
+      {esempiAperti && <FinestraEsempi esempi={ESEMPI} onApri={apriUnEsempio} onChiudi={chiudiEsempi} />}
       {finestraAvviso}
     </>
   );
