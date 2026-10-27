@@ -93,7 +93,13 @@ describe("esempi della cartella esempi/", () => {
   it("il catalogo è valido e contiene gli esempi degli impianti", () => {
     expect(ERRORI_ESEMPI).toEqual([]);
     expect(esempiDelModulo(ESEMPI, "impianti").map((e) => e.file)).toEqual(
-      expect.arrayContaining(["marcia-arresto.elab", "comando-piu-punti.elab"]),
+      expect.arrayContaining([
+        "marcia-arresto.elab",
+        "comando-piu-punti.elab",
+        "teleinvertitore.elab",
+        "stella-triangolo.elab",
+        "comando-temporizzato.elab",
+      ]),
     );
     for (const e of ESEMPI) {
       expect(e.descrizione, e.file).not.toBe("");
@@ -173,5 +179,96 @@ describe("esempi della cartella esempi/", () => {
     let s = clicGiu(avviato, "S2");
     s = clicGiu(s, "S3");
     expect(k1Eccitato(s)).toBe(false);
+  });
+});
+
+// --- Attività 2.8: teleinvertitore, stella-triangolo, comando temporizzato ---
+
+const eccitate = (s: SessioneImpianto) => [...s.risultato.bobineEccitate].sort();
+const collegamento = (s: SessioneImpianto) => s.risultato.motori["M1"]?.collegamento;
+
+describe("esempi pronti (2)", () => {
+  it("teleinvertitore: S1 avanti, S2 indietro, l'interblocco impedisce K1 e K2 insieme", () => {
+    const schema = schemaDi("teleinvertitore.elab");
+    const numeri = Object.fromEntries(schema.componenti.map((c) => [c.id, c.numeriMorsetti]));
+    // Ogni contattore: 13-14 autoritenuta, 21-22 interblocco, 33-34 spia.
+    expect(numeri["K1-autoritenuta"]).toEqual({ "13": "13", "14": "14" });
+    expect(numeri["K2-autoritenuta"]).toEqual({ "13": "13", "14": "14" });
+    expect(Object.values(numeri["K1-interblocco"] ?? {})).toEqual(["21", "22"]);
+    expect(Object.values(numeri["K2-interblocco"] ?? {})).toEqual(["21", "22"]);
+    expect(Object.values(numeri["K1-spia"] ?? {})).toEqual(["33", "34"]);
+
+    const avviato = clicGiu(avviaSessione(schema), "Q1");
+    let s = premiERilascia(avviato, "S1");
+    expect(eccitate(s)).toEqual(["K1"]);
+    expect(motoreGira(s)).toBe("orario");
+    expect(spiaAccesa(s)).toBe(true);
+    // Con K1 eccitato S2 non ha effetto: niente cortocircuito, niente fusibili.
+    s = clicGiu(s, "S2");
+    expect(eccitate(s)).toEqual(["K1"]);
+    expect(s.risultato.cortocircuiti).toEqual([]);
+    s = clicSu(s, "S2");
+    s = premiERilascia(s, "S0");
+    expect(eccitate(s)).toEqual([]);
+    expect(motoreGira(s)).toBeUndefined();
+    s = premiERilascia(s, "S2");
+    expect(eccitate(s)).toEqual(["K2"]);
+    expect(motoreGira(s)).toBe("antiorario");
+    expect(s.risultato.carichiAlimentati).toContain("H2");
+    expect(s.risultato.carichiAlimentati).not.toContain("H1");
+    // Anche premendo S1 e S2 insieme da fermo si eccita al più un contattore.
+    s = clicGiu(clicGiu(premiERilascia(s, "S0"), "S1"), "S2");
+    expect(eccitate(s).length).toBeLessThanOrEqual(1);
+    expect(s.risultato.cortocircuiti).toEqual([]);
+    expect(problemiSessione(s).filter((p) => p.gravita === "errore")).toEqual([]);
+  });
+
+  it("stella-triangolo: parte a stella, dopo il tempo di KT1 passa a triangolo, S0 ferma tutto", () => {
+    const schema = schemaDi("stella-triangolo.elab");
+    expect(schema.componenti.find((c) => c.id === "KT1")?.tempo).toBe(4);
+
+    let s = clicGiu(avviaSessione(schema), "Q1");
+    s = premiERilascia(s, "S1");
+    expect(eccitate(s)).toEqual(["K1", "K2", "KT1"]);
+    expect(motoreGira(s)).toBe("orario");
+    expect(collegamento(s)).toBe("stella");
+    s = passo(s, 3.9);
+    expect(collegamento(s)).toBe("stella");
+    s = passo(s, 0.2);
+    expect(eccitate(s)).toEqual(["K1", "K3", "KT1"]);
+    expect(motoreGira(s)).toBe("orario");
+    expect(collegamento(s)).toBe("triangolo");
+    expect(s.risultato.cortocircuiti).toEqual([]);
+    expect(s.stato.protezioniIntervenute).toEqual([]);
+    s = premiERilascia(s, "S0");
+    expect(eccitate(s)).toEqual([]);
+    expect(motoreGira(s)).toBeUndefined();
+    // Una nuova marcia riparte da stella (il temporizzatore si è azzerato).
+    s = premiERilascia(s, "S1");
+    expect(collegamento(s)).toBe("stella");
+  });
+
+  it("comando temporizzato: il motore si ferma da solo dopo il tempo di KT1", () => {
+    const schema = schemaDi("comando-temporizzato.elab");
+    expect(schema.componenti.find((c) => c.id === "KT1")?.tempo).toBe(8);
+
+    let s = clicGiu(avviaSessione(schema), "Q1");
+    s = premiERilascia(s, "S1");
+    expect(eccitate(s)).toEqual(["K1", "KT1"]);
+    expect(motoreGira(s)).toBe("orario");
+    expect(spiaAccesa(s)).toBe(true);
+    s = passo(s, 7.9);
+    expect(motoreGira(s)).toBe("orario");
+    s = passo(s, 0.2);
+    expect(eccitate(s)).toEqual([]);
+    expect(motoreGira(s)).toBeUndefined();
+    expect(spiaAccesa(s)).toBe(false);
+    expect(problemiSessione(s)).toEqual([]); // fermata regolare, nessuna oscillazione
+    // Si può ripartire e fermare prima del tempo con S0.
+    s = premiERilascia(s, "S1");
+    expect(k1Eccitato(s)).toBe(true);
+    s = passo(s, 2);
+    s = premiERilascia(s, "S0");
+    expect(eccitate(s)).toEqual([]);
   });
 });

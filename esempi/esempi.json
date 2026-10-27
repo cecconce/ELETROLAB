@@ -14,6 +14,27 @@
       "titolo": "Comando da più punti",
       "descrizione": "Lo stesso motore comandato da due posti diversi: i pulsanti di arresto S0 e S2 sono in serie (basta premerne uno per fermare), i pulsanti di marcia S1 e S3 sono in parallelo fra loro e con il contatto di autoritenuta (basta premerne uno per avviare).",
       "prova": "Premi ▶ AVVIA e clic su Q1. Avvia il motore con S1 oppure con S3; fermalo con S0 oppure con S2. Prova ad aggiungere un terzo punto di comando."
+    },
+    {
+      "file": "teleinvertitore.elab",
+      "modulo": "impianti",
+      "titolo": "Teleinvertitore con interblocco",
+      "descrizione": "Inversione del verso di rotazione di un motore trifase: K1 lo fa girare in avanti, K2 scambia le fasi L1 e L3 e lo fa girare all'indietro. Il contatto NC di ciascun contattore in serie alla bobina dell'altro (interblocco elettrico) impedisce che K1 e K2 si chiudano insieme, cosa che metterebbe in cortocircuito due fasi. Le spie H1 e H2 indicano il verso.",
+      "prova": "Premi ▶ AVVIA e clic su Q1. Premi S1: il motore gira in senso orario e si accende H1. Ora premi S2: non succede nulla, perché l'interblocco lo impedisce. Premi S0 per fermare, poi S2: il motore gira in senso antiorario e si accende H2."
+    },
+    {
+      "file": "stella-triangolo.elab",
+      "modulo": "impianti",
+      "titolo": "Avviamento stella-triangolo",
+      "descrizione": "Avviamento a tensione ridotta di un motore trifase a 6 morsetti: alla marcia si chiudono K1 (linea) e K2 (stella), dopo 4 secondi il temporizzatore KT1 apre K2 e chiude K3 (triangolo). I contatti NC di K2 e K3 fanno da interblocco fra stella e triangolo.",
+      "prova": "Premi ▶ AVVIA e clic su Q1. Premi S1: il motore parte a stella (Y vicino a M1). Guarda l'orologio ⏱: dopo 4 secondi passa a triangolo (Δ). Premi S0 per fermare. Seleziona KT1 prima di avviare e cambia il tempo nel pannello Proprietà."
+    },
+    {
+      "file": "comando-temporizzato.elab",
+      "modulo": "impianti",
+      "titolo": "Comando temporizzato (marcia a tempo)",
+      "descrizione": "Il motore, avviato con S1, si ferma da solo dopo 8 secondi: il temporizzatore KT1 al ritardo all'eccitazione si alimenta insieme a K1 e, trascorso il tempo, apre il suo contatto NC temporizzato in serie al pulsante di arresto.",
+      "prova": "Premi ▶ AVVIA e clic su Q1. Premi S1: il motore gira e la spia H1 si accende. Guarda l'orologio ⏱: dopo 8 secondi il motore si ferma da solo. Puoi fermarlo prima con S0. Prova a cambiare il tempo di KT1 nel pannello Proprietà."
     }
   ]
 }
