@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "prova-interfaccia": "node strumenti/prova-interfaccia.cjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.4",
