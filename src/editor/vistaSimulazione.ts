@@ -7,8 +7,10 @@ import {
   MODELLI_IMPIANTI,
   azioneClic,
   chiaveMorsetto,
+  problemiSessione,
   type AzioneClic,
   type Polo,
+  type Problema,
   type SessioneImpianto,
   type StatoMotore,
   type Tratto,
@@ -42,6 +44,8 @@ export interface VistaSimulazione {
   morsettiInCorto: ReadonlySet<string>;
   /** Secondi dall'avvio. */
   tempo: number;
+  /** Problemi da spiegare allo studente (errori prima degli avvisi). */
+  problemi: Problema[];
 }
 
 /** Calcola l'aspetto di tutto lo schema dallo stato della sessione. */
@@ -76,6 +80,7 @@ export function vistaDaSessione(sessione: SessioneImpianto, fili: readonly Filo[
     componenti,
     morsettiInCorto: new Set(r.cortocircuiti.flatMap((c) => c.morsetti)),
     tempo: sessione.stato.tempo,
+    problemi: problemiSessione(sessione),
   };
 }
 
@@ -120,5 +125,5 @@ export function formattaTempo(secondi: number): string {
  * ridisegna lo schema solo allora, non a ogni scatto dell'orologio.
  */
 export function firmaVista(v: VistaSimulazione): string {
-  return JSON.stringify([v.poliDeiFili, v.componenti, [...v.morsettiInCorto]]);
+  return JSON.stringify([v.poliDeiFili, v.componenti, [...v.morsettiInCorto], v.problemi]);
 }

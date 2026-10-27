@@ -6,6 +6,9 @@
 // libreria e Proprietà si disattivano e lo studente interagisce cliccando i
 // componenti. Per ora simula solo il modulo Impianti elettrici; negli altri
 // il pulsante c'è (stessa posizione) ma è disattivato.
+// Durante la simulazione, sotto il foglio, il pannello "Problemi nello schema"
+// spiega in italiano gli errori trovati (circuito aperto, cortocircuito,
+// contatti non associati, oscillazioni…) ed evidenzia sul foglio il punto.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { t } from "../testi";
 import { AreaDisegno } from "../editor/AreaDisegno";
@@ -20,6 +23,8 @@ import { nomeDaPercorso, serializzaProgetto } from "../progetto/formato";
 import { RITARDO_AUTOSALVATAGGIO_MS, serializzaAutosalvataggio } from "../progetto/autosalvataggio";
 import { avviaSessione, clicGiu, clicSu, passo, rilasciaTutti, type SessioneImpianto } from "../motori/impianti";
 import { firmaVista, formattaTempo, vistaDaSessione, type VistaSimulazione } from "../editor/vistaSimulazione";
+import { problemiDaMostrare } from "../editor/messaggiProblemi";
+import { PannelloProblemi } from "../editor/PannelloProblemi";
 import type { DefinizioneModulo } from "./moduli";
 import type { Tema } from "./tema";
 
@@ -184,6 +189,9 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const firmaRif = useRef("");
   const [vista, setVista] = useState<VistaSimulazione | null>(null);
   const inSimulazione = vista !== null;
+  // Pannello dei problemi: riga scelta e pannello aperto o ridotto.
+  const [problemaScelto, setProblemaScelto] = useState<string | null>(null);
+  const [problemiAperti, setProblemiAperti] = useState(true);
   const aggiornaSessione = useCallback(
     (s: SessioneImpianto) => {
       sessioneRif.current = s;
@@ -199,6 +207,8 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const avvia = useCallback(() => {
     if (!simulabile) return;
     setDaPosare(null);
+    setProblemaScelto(null);
+    setProblemiAperti(true);
     firmaRif.current = "";
     aggiornaSessione(avviaSessione(schema));
   }, [aggiornaSessione, schema, simulabile]);
@@ -247,6 +257,21 @@ export function SchermataModulo(props: PropsSchermataModulo) {
         : null,
     [vista, aggiornaSessione],
   );
+
+  // Problemi da spiegare: riga scelta (evidenziata da sola) o, se nessuna, tutti i punti.
+  const problemi = useMemo(
+    () => (vista ? problemiDaMostrare(vista.problemi, schema, libreria) : []),
+    [vista, schema, libreria],
+  );
+  const evidenzia = useMemo(() => {
+    if (!vista) return null;
+    const scelti = problemi.filter((p) => p.chiave === problemaScelto);
+    const daMostrare = scelti.length > 0 ? scelti : problemiAperti ? problemi : [];
+    return {
+      componenti: [...new Set(daMostrare.flatMap((p) => p.componenti))],
+      morsetti: [...new Set(daMostrare.flatMap((p) => p.morsetti))],
+    };
+  }, [vista, problemi, problemaScelto, problemiAperti]);
 
   // F5 avvia e ferma la simulazione (e non ricarica la pagina della WebView).
   const avviaOFermaRif = useRef(avviaOFerma);
@@ -318,6 +343,18 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           onFinePosa={() => setDaPosare(null)}
           onSelezione={setSelezione}
           simulazione={simulazione}
+          evidenzia={evidenzia}
+          sopraBarra={
+            inSimulazione ? (
+              <PannelloProblemi
+                problemi={problemi}
+                scelto={problemaScelto}
+                onScegli={setProblemaScelto}
+                aperto={problemiAperti}
+                onApri={setProblemiAperti}
+              />
+            ) : null
+          }
         />
         <PannelloProprieta schema={schema} selezione={selezione} libreria={libreria} onCambiaSchema={cambiaSchema} />
       </div>

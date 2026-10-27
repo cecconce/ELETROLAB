@@ -12,6 +12,7 @@
 import { MODELLI_IMPIANTI, PROTEZIONI } from "./modelli";
 import { avanza, prossimoEvento, riarma, statoIniziale, type StatoImpianto } from "./tempo";
 import type { Circuito, RisultatoConProtezioni } from "./simulatore";
+import { diagnosiRisultato, diagnosiSchema, ordinaProblemi, type MotivoIntervento, type Problema } from "./diagnosi";
 
 export interface SessioneImpianto {
   circuito: Circuito;
@@ -23,6 +24,10 @@ export interface SessioneImpianto {
   /** Motori frenati dallo studente (sovraccarico simulato). */
   sovraccarichi: readonly string[];
   risultato: RisultatoConProtezioni;
+  /** Perché è intervenuta ogni protezione ancora da riarmare (per spiegarlo allo studente). */
+  motivi: Readonly<Record<string, MotivoIntervento>>;
+  /** Problemi dello schema trovati all'avvio (circuito aperto, contatti non associati…). */
+  problemiSchema: readonly Problema[];
 }
 
 /**
@@ -48,19 +53,42 @@ export function azioneClic(tipo: string): AzioneClic {
 }
 
 /** Ricalcola il circuito nell'istante attuale (dt = 0) dopo un'azione dello studente. */
-function ricalcola(s: Omit<SessioneImpianto, "risultato"> & { risultato?: RisultatoConProtezioni }, dt = 0): SessioneImpianto {
+function ricalcola(
+  s: Omit<SessioneImpianto, "risultato" | "motivi"> & { risultato?: RisultatoConProtezioni; motivi?: SessioneImpianto["motivi"] },
+  dt = 0,
+): SessioneImpianto {
   const { stato, risultato } = avanza(
     s.circuito,
     s.stato,
     { premuti: s.premuti, azionati: s.azionati, sovraccarichi: s.sovraccarichi },
     dt,
   );
-  return { ...s, stato, risultato };
+  // Motivo degli interventi: un cortocircuito se compare negli interventi di
+  // questo calcolo, altrimenti (protezione termica scaduta) un sovraccarico.
+  // Il motivo resta finché la protezione non viene riarmata.
+  const motivi: Record<string, MotivoIntervento> = {};
+  for (const id of stato.protezioniIntervenute) {
+    const corto = risultato.interventi.find((x) => x.protezione === id);
+    motivi[id] = corto ? { motivo: "cortocircuito", poli: corto.poli } : (s.motivi?.[id] ?? { motivo: "sovraccarico" });
+  }
+  return { ...s, stato, risultato, motivi };
+}
+
+/** Tutti i problemi da mostrare in questo istante: prima gli errori, poi gli avvisi. */
+export function problemiSessione(s: SessioneImpianto): Problema[] {
+  return ordinaProblemi([...diagnosiRisultato(s.risultato, s.motivi), ...s.problemiSchema]);
 }
 
 /** Avvio della simulazione: tutto a riposo, tempo zero. */
 export function avviaSessione(circuito: Circuito): SessioneImpianto {
-  return ricalcola({ circuito, stato: statoIniziale(), premuti: [], azionati: [], sovraccarichi: [] });
+  return ricalcola({
+    circuito,
+    stato: statoIniziale(),
+    premuti: [],
+    azionati: [],
+    sovraccarichi: [],
+    problemiSchema: diagnosiSchema(circuito),
+  });
 }
 
 const senza = (elenco: readonly string[], id: string) => elenco.filter((x) => x !== id);

@@ -100,3 +100,15 @@ describe("colori e simboli", () => {
     expect(formattaTempo(3)).toBe("3,0 s");
   });
 });
+
+describe("problemi nella vista (attività 2.6)", () => {
+  it("la vista porta i problemi e la firma cambia quando compaiono", () => {
+    // Senza il filo verso il neutro la lampada non potrà mai accendersi.
+    const aperto: Schema = { ...schema, fili: schema.fili.slice(0, 2) };
+    const v = vistaDaSessione(avviaSessione(aperto), aperto.fili);
+    expect(v.problemi.map((p) => p.codice)).toEqual(["circuitoAperto"]);
+    const ok = vistaDaSessione(avviaSessione(schema), schema.fili);
+    expect(ok.problemi).toEqual([]);
+    expect(firmaVista(v)).not.toBe(firmaVista({ ...v, problemi: [] }));
+  });
+});

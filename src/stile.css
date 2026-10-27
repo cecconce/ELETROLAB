@@ -563,3 +563,88 @@ button {
   pointer-events: none;
   user-select: none;
 }
+
+/* Pannello "Problemi nello schema" (attività 2.6): sotto il foglio durante la simulazione. */
+.pannello-problemi {
+  --problema-errore: #dc2626;
+  --problema-avviso: #b45309;
+  background: var(--superficie);
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  max-height: 32vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+[data-tema="scuro"] .pannello-problemi {
+  --problema-errore: #f87171;
+  --problema-avviso: #fbbf24;
+}
+.pannello-problemi[data-errori]:not([data-errori="0"]) {
+  border-color: var(--problema-errore);
+}
+.pannello-problemi header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pannello-problemi header strong {
+  white-space: nowrap;
+}
+.pannello-problemi header .pulsante {
+  margin-left: auto;
+  padding: 2px 10px;
+}
+.pannello-problemi-aiuto,
+.pannello-problemi-vuoto {
+  color: var(--testo-tenue);
+  font-size: 0.82rem;
+  margin: 0;
+}
+.pannello-problemi ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.riga-problema {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  text-align: left;
+  font: inherit;
+  color: var(--testo);
+  background: transparent;
+  border: 1px solid transparent;
+  border-left: 4px solid var(--problema-avviso);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+.riga-problema[data-gravita="errore"] {
+  border-left-color: var(--problema-errore);
+}
+.riga-problema:hover,
+.riga-problema[aria-pressed="true"] {
+  border-color: var(--bordo);
+  background: var(--sfondo);
+}
+.riga-problema[aria-pressed="true"] {
+  border-left-width: 6px;
+}
+.etichetta-gravita {
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--problema-avviso);
+  min-width: 128px;
+}
+.riga-problema[data-gravita="errore"] .etichetta-gravita {
+  color: var(--problema-errore);
+}

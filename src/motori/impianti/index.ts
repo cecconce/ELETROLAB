@@ -3,3 +3,4 @@ export * from "./modelli";
 export * from "./simulatore";
 export * from "./tempo";
 export * from "./sessione";
+export * from "./diagnosi";

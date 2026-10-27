@@ -24,6 +24,9 @@
 //   bobine eccitate, lampade accese e motori che girano con il loro verso;
 //   il clic sui pulsanti (tenuti premuti), selettori, finecorsa, sensori,
 //   sezionatori, protezioni e motori viene passato a chi gestisce la simulazione
+// - evidenziazione (prop `evidenzia`): riquadri rossi tratteggiati attorno ai
+//   componenti e cerchi rossi sui morsetti dove c'è un problema (attività 2.6);
+//   la prop `sopraBarra` mostra un pannello (es. "Problemi") fra il foglio e la barra
 // La logica (calcoli e modifiche allo schema) sta in geometria.ts, schema.ts,
 // fili.ts, appunti.ts, associazioni.ts, cronologia.ts e vistaSimulazione.ts.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -114,6 +117,10 @@ export interface PropsAreaDisegno {
     onGiu: (id: string) => void;
     onSu: (id: string) => void;
   } | null;
+  /** Componenti e morsetti ("id:morsetto") da evidenziare in rosso (punti di un problema). */
+  evidenzia?: { componenti: readonly string[]; morsetti: readonly string[] } | null;
+  /** Contenuto mostrato fra il foglio e la barra in basso (es. il pannello dei problemi). */
+  sopraBarra?: React.ReactNode;
 }
 
 /**
@@ -182,6 +189,8 @@ export function AreaDisegno({
   puoRipetere = false,
   onSelezione,
   simulazione = null,
+  evidenzia = null,
+  sopraBarra = null,
 }: PropsAreaDisegno) {
   const inSimulazione = simulazione !== null;
   // Letto dal gestore dei tasti, registrato una volta sola.
@@ -570,6 +579,7 @@ export function AreaDisegno({
         data-fili={schema.fili.length}
         data-filo-in-corso={filoInCorso ? `${filoInCorso.componente}/${filoInCorso.morsetto}` : ""}
         data-simulazione={inSimulazione}
+        data-evidenziati={evidenzia ? evidenzia.componenti.join(",") : ""}
       >
         {larghezza > 0 && altezza > 0 && (
           <Stage
@@ -755,6 +765,40 @@ export function AreaDisegno({
                   </Group>
                 );
               })}
+              {/* Punti di un problema: riquadro rosso tratteggiato e cerchi sui morsetti. */}
+              {evidenzia &&
+                evidenzia.componenti.map((id) => {
+                  const c = componentePerId.get(id);
+                  if (!c) return null;
+                  return (
+                    <Rect
+                      key={`evidenzia-${id}`}
+                      x={c.x - 8}
+                      y={c.y - 8}
+                      width={c.larghezza + 16}
+                      height={c.altezza + 16}
+                      stroke={colori.guasto}
+                      strokeWidth={2.5}
+                      dash={[8, 5]}
+                      cornerRadius={6}
+                      listening={false}
+                    />
+                  );
+                })}
+              {evidenzia &&
+                morsetti
+                  .filter((m) => evidenzia.morsetti.includes(`${m.componente}:${m.morsetto}`))
+                  .map((m) => (
+                    <Circle
+                      key={`evidenzia-${m.componente}:${m.morsetto}`}
+                      x={m.posizione.x}
+                      y={m.posizione.y}
+                      radius={11}
+                      stroke={colori.guasto}
+                      strokeWidth={3}
+                      listening={false}
+                    />
+                  ))}
               {posAnteprima && voceDaPosare && (
                 <Group x={posAnteprima.x} y={posAnteprima.y} opacity={0.45} listening={false}>
                   <SimboloComponente
@@ -785,6 +829,7 @@ export function AreaDisegno({
         )}
       </div>
 
+      {sopraBarra}
       <div className="barra-zoom" role="toolbar" aria-label={t("editor.zoom")}>
         <button
           type="button"
