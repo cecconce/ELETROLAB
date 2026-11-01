@@ -111,3 +111,79 @@ describe("nodi sotto tensione", () => {
     expect(nodiAlimentati({ nodoAlimentato: null, ponti: [] }, new Set()).size).toBe(0);
   });
 });
+
+describe("comandi del quadro virtuale", () => {
+  // Marcia (pulsante NA su I0.0) e arresto (pulsante NC su I0.1) dal quadro;
+  // nel Ladder: [I0.0 ∥ Q0.0] → I0.1 (contatto NA, perché il pulsante è NC) → Q0.0.
+  const el2 = (id: string, tipo: string, operando: string, y = 0): ElementoLadder => ({ id, tipo, operando, x: 0, y });
+  const elementiQ = [
+    el2("B", "ladder-barra-sinistra", ""),
+    el2("C0", "ladder-contatto-na", "I0.0"),
+    el2("C1", "ladder-contatto-na", "Q0.0", 40),
+    el2("C2", "ladder-contatto-na", "I0.1"),
+    el2("K", "ladder-bobina", "Q0.0"),
+    el2("PM", "quadro-pulsante-na", "I0.0", 300),
+    el2("PA", "quadro-pulsante-nc", "I0.1", 300),
+    el2("SEL", "quadro-selettore", "I0.2", 300),
+    el2("H", "quadro-lampada", "Q0.0", 300),
+  ];
+  const filiQ = [
+    filo("B/p1", "C0/in"),
+    filo("B/p2", "C1/in"),
+    filo("C0/out", "C2/in"),
+    filo("C1/out", "C2/in"),
+    filo("C2/out", "K/in"),
+  ];
+  const avviaQ = () =>
+    avviaSessionePlc(
+      convertiLadder(elementiQ, filiQ),
+      Object.fromEntries(elementiQ.map((e) => [e.id, e.operando])),
+      undefined,
+      Object.fromEntries(elementiQ.map((e) => [e.id, e.tipo])),
+    );
+
+  it("il pulsante NC dà 1 a riposo; marcia e arresto dal quadro funzionano", () => {
+    let s = avviaQ();
+    expect(s.risultato.stato.bit["I0.1"]).toBe(true);
+    expect(s.risultato.usciteAttive).toEqual([]);
+    s = clicSuPlc(clicGiuPlc(s, "PM"), "PM");
+    expect(s.risultato.usciteAttive).toEqual(["Q0.0"]);
+    s = clicGiuPlc(s, "PA"); // premo arresto: I0.1 va a 0
+    expect(s.risultato.usciteAttive).toEqual([]);
+    s = clicSuPlc(s, "PA");
+    expect(s.risultato.usciteAttive).toEqual([]);
+  });
+
+  it("il selettore cambia stato a ogni clic e non si rilascia da solo", () => {
+    let s = clicGiuPlc(avviaQ(), "SEL");
+    expect(s.risultato.stato.bit["I0.2"]).toBe(true);
+    s = rilasciaTuttiPlc(clicSuPlc(s, "SEL"));
+    expect(s.risultato.stato.bit["I0.2"]).toBe(true);
+    s = clicGiuPlc(s, "SEL");
+    expect(s.risultato.stato.bit["I0.2"]).toBeUndefined();
+  });
+
+  it("rilascio generale: i pulsanti del quadro tornano a riposo", () => {
+    let s = clicGiuPlc(avviaQ(), "PM");
+    expect(s.comandiAzionati).toEqual(["PM"]);
+    s = rilasciaTuttiPlc(s);
+    expect(s.comandiAzionati).toEqual([]);
+  });
+
+  it("i comandi del quadro non sono contatti del Ladder", () => {
+    const s = avviaQ();
+    expect(s.ingressoDi.PM).toBeUndefined();
+    expect(s.ingressoDi.C0).toBe("I0.0");
+  });
+
+  it("comandi e attuatori con l'operando sbagliato sono segnalati", () => {
+    const r = convertiLadder(
+      [el2("B", "ladder-barra-sinistra", ""), el2("P", "quadro-pulsante-na", "Q0.0"), el2("H", "quadro-lampada", "I0.0"), el2("M", "quadro-motore", "M0.0")],
+      [],
+    );
+    expect(r.problemi).toEqual([
+      { codice: "comandoSenzaIngresso", componenti: ["P"] },
+      { codice: "attuatoreSenzaUscita", componenti: ["H"] },
+    ]);
+  });
+});

@@ -222,3 +222,53 @@ describe("commenti del Ladder", () => {
     expect(r.problemi.map((p) => p.codice)).toEqual(["senzaBarra"]);
   });
 });
+
+describe("quadro virtuale", () => {
+  it("i comandi del quadro propongono I0.0, I0.1…, gli attuatori Q0.0…", () => {
+    let s = SCHEMA_VUOTO;
+    const etichette: string[] = [];
+    for (const tipo of ["quadro-pulsante-na", "quadro-pulsante-nc", "quadro-lampada", "quadro-motore", "ladder-contatto-na"]) {
+      const r = posa(s, tipo, 0, 0);
+      s = r.schema;
+      etichette.push(s.componenti.find((c) => c.id === r.id)!.etichetta);
+    }
+    // Il primo contatto del Ladder parte comunque da I0.0: legge il primo pulsante.
+    expect(etichette).toEqual(["I0.0", "I0.1", "Q0.0", "Q0.1", "I0.0"]);
+  });
+
+  it("in simulazione lampade e motori seguono le uscite, i pulsanti si azionano", async () => {
+    const { avviaSessionePlc, clicGiuPlc } = await import("../motori/plc");
+    const { vistaDaSessionePlc } = await import("./vistaSimulazione");
+    let s = SCHEMA_VUOTO;
+    const barra = posa(s, "ladder-barra-sinistra", 0, 0);
+    s = barra.schema;
+    const c = posa(s, "ladder-contatto-na", 60, 0);
+    s = c.schema;
+    const k = posa(s, "ladder-bobina", 200, 0);
+    s = k.schema;
+    const p = posa(s, "quadro-pulsante-na", 400, 0);
+    s = p.schema;
+    const h = posa(s, "quadro-lampada", 400, 100);
+    s = h.schema;
+    const m = posa(s, "quadro-motore", 500, 100);
+    s = m.schema;
+    const r = cambiaSigla(s, m.id, "Q0.0", lib);
+    if (!r.ok) throw new Error(r.errore);
+    s = filo(filo(r.schema, `${barra.id}/p1`, `${c.id}/in`), `${c.id}/out`, `${k.id}/in`);
+    let sess = avviaSessionePlc(
+      programmaDaSchema(s),
+      Object.fromEntries(s.componenti.map((x) => [x.id, x.etichetta])),
+      undefined,
+      Object.fromEntries(s.componenti.map((x) => [x.id, x.tipo])),
+    );
+    let v = vistaDaSessionePlc(sess, s);
+    expect(v.componenti[p.id].clic).toBe("pulsante");
+    expect(v.componenti[h.id].alimentato).toBe(false);
+    sess = clicGiuPlc(sess, p.id);
+    v = vistaDaSessionePlc(sess, s);
+    expect(v.componenti[p.id].azionato).toBe(true);
+    expect(v.componenti[h.id].alimentato).toBe(true);
+    expect(v.componenti[m.id].motore).toEqual({ verso: "orario" });
+    expect(v.problemiPlc).toEqual([]);
+  });
+});

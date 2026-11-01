@@ -19,6 +19,10 @@
       "nome": "Temporizzatori e contatori"
     },
     {
+      "id": "quadro",
+      "nome": "Quadro di comando"
+    },
+    {
       "id": "note",
       "nome": "Note"
     }
@@ -527,6 +531,166 @@
       "icona": "ladder-commento.svg",
       "larghezza": 240,
       "altezza": 40,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-pulsante-na",
+      "nome": "Pulsante di marcia (NA)",
+      "categoria": "quadro",
+      "sigla": "I",
+      "descrizione": "Pulsante del quadro collegato a un ingresso: l'ingresso vale 1 solo finché lo tieni premuto. Scrivi nelle Proprietà a quale ingresso è collegato (es. I0.0).",
+      "paroleChiave": [
+        "pulsante",
+        "marcia",
+        "start",
+        "quadro",
+        "ingresso"
+      ],
+      "icona": "quadro-pulsante-na.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-pulsante-nc",
+      "nome": "Pulsante di arresto (NC)",
+      "categoria": "quadro",
+      "sigla": "I",
+      "descrizione": "Pulsante del quadro cablato normalmente chiuso: l'ingresso vale 1 a riposo e va a 0 quando lo premi. Nel Ladder si usa di solito con un contatto NA.",
+      "paroleChiave": [
+        "pulsante",
+        "arresto",
+        "stop",
+        "quadro",
+        "ingresso"
+      ],
+      "icona": "quadro-pulsante-nc.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-interruttore",
+      "nome": "Interruttore",
+      "categoria": "quadro",
+      "sigla": "I",
+      "descrizione": "Interruttore del quadro: ogni clic lo accende o lo spegne e l'ingresso resta così.",
+      "paroleChiave": [
+        "interruttore",
+        "levetta",
+        "quadro",
+        "ingresso"
+      ],
+      "icona": "quadro-interruttore.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-selettore",
+      "nome": "Selettore 0-1",
+      "categoria": "quadro",
+      "sigla": "I",
+      "descrizione": "Selettore a due posizioni: in posizione 1 l'ingresso vale 1. Ogni clic cambia posizione.",
+      "paroleChiave": [
+        "selettore",
+        "manopola",
+        "automatico",
+        "manuale",
+        "quadro"
+      ],
+      "icona": "quadro-selettore.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-finecorsa",
+      "nome": "Finecorsa",
+      "categoria": "quadro",
+      "sigla": "I",
+      "descrizione": "Finecorsa del quadro: clic per azionarlo (ingresso a 1), di nuovo clic per liberarlo. Negli impianti animati lo comanderà la macchina.",
+      "paroleChiave": [
+        "finecorsa",
+        "fine corsa",
+        "limite",
+        "quadro"
+      ],
+      "icona": "quadro-finecorsa.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-sensore",
+      "nome": "Sensore",
+      "categoria": "quadro",
+      "sigla": "I",
+      "descrizione": "Sensore di presenza (es. fotocellula): clic per simulare un oggetto davanti (ingresso a 1), di nuovo clic per toglierlo.",
+      "paroleChiave": [
+        "sensore",
+        "fotocellula",
+        "presenza",
+        "prossimità",
+        "quadro"
+      ],
+      "icona": "quadro-sensore.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-lampada",
+      "nome": "Lampada",
+      "categoria": "quadro",
+      "sigla": "Q",
+      "descrizione": "Lampada di segnalazione del quadro: si accende quando l'uscita a cui è collegata vale 1 (es. Q0.0).",
+      "paroleChiave": [
+        "lampada",
+        "spia",
+        "luce",
+        "uscita",
+        "quadro"
+      ],
+      "icona": "quadro-lampada.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-motore",
+      "nome": "Motore",
+      "categoria": "quadro",
+      "sigla": "Q",
+      "descrizione": "Motore comandato da un'uscita del PLC: gira quando l'uscita vale 1.",
+      "paroleChiave": [
+        "motore",
+        "pompa",
+        "nastro",
+        "uscita",
+        "quadro"
+      ],
+      "icona": "quadro-motore.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "quadro-sirena",
+      "nome": "Sirena",
+      "categoria": "quadro",
+      "sigla": "Q",
+      "descrizione": "Sirena o cicalino: suona quando l'uscita vale 1.",
+      "paroleChiave": [
+        "sirena",
+        "allarme",
+        "cicalino",
+        "uscita",
+        "quadro"
+      ],
+      "icona": "quadro-sirena.svg",
+      "larghezza": 80,
+      "altezza": 80,
       "morsetti": []
     }
   ]

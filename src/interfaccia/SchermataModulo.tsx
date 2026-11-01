@@ -231,7 +231,12 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     firmaRif.current = "";
     aggiornaSessione(
       modulo.id === "plc"
-        ? avviaSessionePlc(programmaDaSchema(schema), Object.fromEntries(schema.componenti.map((c) => [c.id, c.etichetta])))
+        ? avviaSessionePlc(
+            programmaDaSchema(schema),
+            Object.fromEntries(schema.componenti.map((c) => [c.id, c.etichetta])),
+            undefined,
+            Object.fromEntries(schema.componenti.map((c) => [c.id, c.tipo])),
+          )
         : avviaSessione(schema),
     );
   }, [aggiornaSessione, schema, simulabile, modulo.id]);

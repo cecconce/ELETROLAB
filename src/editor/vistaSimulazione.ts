@@ -15,7 +15,7 @@ import {
   type StatoMotore,
   type Tratto,
 } from "../motori/impianti";
-import { MODELLI_LADDER, nodiAlimentati, normalizzaOperando, type ProblemaLadder, type SessionePlc } from "../motori/plc";
+import { MODELLI_LADDER, nodiAlimentati, normalizzaOperando, valoreBit, type ProblemaLadder, type SessionePlc } from "../motori/plc";
 import { t } from "../testi";
 import type { ColoriEditor } from "./colori";
 import type { ProblemaMostrato } from "./messaggiProblemi";
@@ -116,8 +116,11 @@ export function trattiDelContatto(tipo: string): readonly Tratto[] {
 
 /** Tipo di utilizzatore, per scegliere l'animazione. */
 export function tipoUtilizzatore(tipo: string): "bobina" | "luce" | "suono" | "motore" | null {
-  // Nel Ladder bobine e blocchi alimentati si mostrano come una bobina eccitata.
-  if (MODELLI_LADDER[tipo]?.ruolo === "uscita") return "bobina";
+  // Nel Ladder bobine e blocchi alimentati si mostrano come una bobina eccitata;
+  // gli attuatori del quadro come lampade, motori e sirene.
+  const l = MODELLI_LADDER[tipo];
+  if (l?.ruolo === "uscita") return "bobina";
+  if (l?.ruolo === "attuatore") return l.attuatore;
   const m = MODELLI_IMPIANTI[tipo];
   if (m?.tipo !== "carico") return null;
   if (m.bobina) return "bobina";
@@ -187,6 +190,30 @@ export function vistaDaSessionePlc(s: SessionePlc, schema: Schema): VistaSimulaz
       valore = `${numero(tmp.trascorso)} / ${numero(tmp.preset)} s`;
     }
     if (m.ruolo === "uscita" && (m.uscita === "CTU" || m.uscita === "CTD") && cnt) valore = `${cnt.conteggio} / ${cnt.preset}`;
+    if (m.ruolo === "comando") {
+      componenti[c.id] = {
+        clic: m.modo === "pulsante" ? "pulsante" : "manuale",
+        chiuso: false,
+        alimentato: false,
+        azionato: s.comandiAzionati.includes(c.id),
+        intervenuta: false,
+        sovraccarico: false,
+      };
+      continue;
+    }
+    if (m.ruolo === "attuatore") {
+      const acceso = valoreBit(s.stato, operando);
+      componenti[c.id] = {
+        clic: null,
+        chiuso: false,
+        alimentato: acceso,
+        azionato: false,
+        intervenuta: false,
+        sovraccarico: false,
+        ...(acceso && m.attuatore === "motore" ? { motore: { verso: "orario" as const } } : {}),
+      };
+      continue;
+    }
     componenti[c.id] = {
       clic: s.ingressoDi[c.id] ? "pulsante" : null,
       chiuso: chiusi.has(c.id),

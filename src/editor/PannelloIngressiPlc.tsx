@@ -5,7 +5,7 @@
 // - Uscite e merker: spia accesa/spenta per ogni Q e M scritti dalle bobine.
 // Finché non c'è il quadro virtuale (attività 3.5) è il modo più semplice per
 // provare un programma.
-import { confrontaOperandi, leggiOperando, normalizzaOperando, valoreBit, type SessionePlc } from "../motori/plc";
+import { confrontaOperandi, ingressiAttivi, leggiOperando, normalizzaOperando, valoreBit, type SessionePlc } from "../motori/plc";
 import { t } from "../testi";
 import type { Schema } from "./schema";
 
@@ -28,7 +28,8 @@ export function operandiUsati(schema: Schema, area: "I" | "Q" | "M"): string[] {
 export function PannelloIngressiPlc({ sessione, schema, onCommuta }: PropsPannelloIngressiPlc) {
   const ingressi = operandiUsati(schema, "I");
   const uscite = [...operandiUsati(schema, "Q"), ...operandiUsati(schema, "M")];
-  const attivi = new Set([...sessione.premuti, ...sessione.fissi]);
+  // Valore reale dell'ingresso (comprende i comandi del quadro e i pulsanti NC).
+  const attivi = new Set(Object.keys(ingressiAttivi(sessione)));
   return (
     <section className="pannello-io-plc" aria-label={t("plc.io.titolo")}>
       <div className="pannello-io-gruppo">

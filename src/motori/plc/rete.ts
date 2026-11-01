@@ -21,7 +21,7 @@
 // Semplificazione: la corrente può attraversare un contatto in entrambi i
 // versi (in un PLC vero il Ladder si legge solo da sinistra a destra); nei
 // disegni normali non fa differenza.
-import { leggiBlocco, normalizzaOperando, operandoContattoValido, operandoScrivibile } from "./operandi";
+import { leggiBlocco, leggiOperando, normalizzaOperando, operandoContattoValido, operandoScrivibile } from "./operandi";
 import type { Logica, ProgrammaLadder, Segmento, TipoContatto, Uscita } from "./programma";
 
 /** Ruolo di un tipo di componente della libreria PLC. */
@@ -30,6 +30,15 @@ export type ModelloLadder =
   | { ruolo: "barraDestra" }
   /** Nota di testo sul foglio: non partecipa alla logica. */
   | { ruolo: "commento" }
+  /**
+   * Comando del quadro virtuale, legato a un ingresso I (senza fili):
+   * "pulsante" = a 1 finché lo si tiene premuto; "mantenuto" = cambia stato a
+   * ogni clic (interruttore, selettore, finecorsa, sensore). `nc` = cablato
+   * normalmente chiuso: l'ingresso vale 1 a riposo e 0 quando è azionato.
+   */
+  | { ruolo: "comando"; modo: "pulsante" | "mantenuto"; nc: boolean }
+  /** Attuatore del quadro virtuale, legato a un'uscita Q: si accende quando l'uscita vale 1. */
+  | { ruolo: "attuatore"; attuatore: "luce" | "motore" | "suono" }
   | { ruolo: "contatto"; contatto: TipoContatto; morsetti: [string, string] }
   | { ruolo: "uscita"; uscita: Uscita["tipo"]; ingresso: string };
 
@@ -38,6 +47,15 @@ export const MODELLI_LADDER: Record<string, ModelloLadder> = {
   "ladder-barra-sinistra": { ruolo: "barraSinistra" },
   "ladder-barra-destra": { ruolo: "barraDestra" },
   "ladder-commento": { ruolo: "commento" },
+  "quadro-pulsante-na": { ruolo: "comando", modo: "pulsante", nc: false },
+  "quadro-pulsante-nc": { ruolo: "comando", modo: "pulsante", nc: true },
+  "quadro-interruttore": { ruolo: "comando", modo: "mantenuto", nc: false },
+  "quadro-selettore": { ruolo: "comando", modo: "mantenuto", nc: false },
+  "quadro-finecorsa": { ruolo: "comando", modo: "mantenuto", nc: false },
+  "quadro-sensore": { ruolo: "comando", modo: "mantenuto", nc: false },
+  "quadro-lampada": { ruolo: "attuatore", attuatore: "luce" },
+  "quadro-motore": { ruolo: "attuatore", attuatore: "motore" },
+  "quadro-sirena": { ruolo: "attuatore", attuatore: "suono" },
   "ladder-contatto-na": { ruolo: "contatto", contatto: "NA", morsetti: ["in", "out"] },
   "ladder-contatto-nc": { ruolo: "contatto", contatto: "NC", morsetti: ["in", "out"] },
   "ladder-contatto-p": { ruolo: "contatto", contatto: "P", morsetti: ["in", "out"] },
@@ -79,7 +97,9 @@ export type CodiceProblemaLadder =
   | "bobinaSuIngresso" //      una bobina non può scrivere un ingresso I
   | "operandoBloccoErrato" //  un temporizzatore deve usare T…, un contatore C…
   | "troppiPercorsi" //        disegno troppo intricato da convertire
-  | "bobinaDoppia"; //         due bobine normali sullo stesso operando (avviso: vale l'ultima)
+  | "bobinaDoppia" //          due bobine normali sullo stesso operando (avviso: vale l'ultima)
+  | "comandoSenzaIngresso" //  un comando del quadro deve essere collegato a un ingresso I
+  | "attuatoreSenzaUscita"; // un attuatore del quadro deve essere collegato a un'uscita Q (o a un merker M)
 
 export interface ProblemaLadder {
   codice: CodiceProblemaLadder;
@@ -209,6 +229,17 @@ export function convertiLadder(elementi: readonly ElementoLadder[], fili: readon
     segmenti.push({ logica: logicaDaPercorsi(trovati), uscite: uscite.map(uscitaDa) });
     usciteDeiSegmenti.push(ids);
   }
+  // Quadro virtuale: i comandi leggono ingressi I, gli attuatori uscite Q o merker M.
+  for (const e of elementi) {
+    const m = MODELLI_LADDER[e.tipo];
+    if (m?.ruolo === "comando" && leggiOperando(e.operando)?.area !== "I") {
+      problemi.push({ codice: "comandoSenzaIngresso", componenti: [e.id] });
+    }
+    if (m?.ruolo === "attuatore" && !operandoScrivibile(e.operando)) {
+      problemi.push({ codice: "attuatoreSenzaUscita", componenti: [e.id] });
+    }
+  }
+
   // Avviso: due bobine normali (non set/reset) che scrivono lo stesso
   // operando. Il PLC esegue lo stesso il programma, ma vale l'ultima.
   const perOperando = new Map<string, string[]>();
