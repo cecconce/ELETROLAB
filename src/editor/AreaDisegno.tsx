@@ -55,7 +55,9 @@ import {
   morsettiDelComponente,
   percorsoFilo,
   ripristinaPercorso,
-  spostaTrattoFilo,
+  spostaTrattoDelFilo,
+  trattoPiuVicino,
+  anteprimaConPieghe,
   type MorsettiDelTipo,
   type MorsettoPosato,
 } from "./fili";
@@ -63,6 +65,7 @@ import {
   FATTORE_ZOOM,
   VISTA_INIZIALE,
   agganciaPunto,
+  agganciaValore,
   lineeGriglia,
   schermoAFoglio,
   spostaVista,
@@ -216,15 +219,26 @@ export function AreaDisegno({
   const [spazioPremuto, setSpazioPremuto] = useState(false);
   const [spostandoVista, setSpostandoVista] = useState(false);
   // Collegamento iniziato: morsetto di partenza, in attesa del clic sul morsetto di arrivo.
-  const [filoInCorso, setFiloInCorso] = useState<MorsettoPosato | null>(null);
+  const [filoInCorso, setFiloInCorsoStato] = useState<MorsettoPosato | null>(null);
+  // Pieghe aggiunte con un clic sul foglio vuoto mentre si disegna il filo.
+  const [pieghe, setPieghe] = useState<Punto[]>([]);
+  // Per il gestore dei tasti (registrato una volta sola): c'è un filo in corso?
+  const filoInCorsoRif = useRef(false);
+  filoInCorsoRif.current = filoInCorso !== null;
+  // Iniziare o abbandonare un filo azzera sempre le pieghe.
+  const setFiloInCorso = (m: MorsettoPosato | null) => {
+    setFiloInCorsoStato(m);
+    setPieghe([]);
+  };
   // Punto del foglio sotto il mouse (anteprima del filo in corso).
   const [mouseFoglio, setMouseFoglio] = useState<Punto | null>(null);
   // Morsetto sotto il mouse, evidenziato con il suo numero (chiave "componente/morsetto").
   const [morsettoSotto, setMorsettoSotto] = useState<string | null>(null);
   // Messaggio breve per lo studente (es. collegamento non valido).
   const [avviso, setAvviso] = useState<string | null>(null);
-  // Filo di cui si sta trascinando il tratto centrale.
-  const filoTrascinato = useRef<string | null>(null);
+  // Filo di cui si sta trascinando un tratto: quale filo, quale tratto e il
+  // percorso che aveva quando è stato afferrato.
+  const filoTrascinato = useRef<{ id: string; tratto: number; percorso: Punto[] } | null>(null);
 
   // Riferimento sempre aggiornato alla callback, usato dal gestore dei tasti.
   const onFinePosaRif = useRef(onFinePosa);
@@ -288,6 +302,11 @@ export function AreaDisegno({
       const cmd = comandiRif.current;
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
+        // Mentre si disegna un filo il tasto toglie l'ultima piega.
+        if (filoInCorsoRif.current) {
+          setPieghe((pp) => pp.slice(0, -1));
+          return;
+        }
         cmd.elimina();
         return;
       }
@@ -354,7 +373,7 @@ export function AreaDisegno({
       setAvviso(null);
       return;
     }
-    const esito = collega(schema, filoInCorso, m, morsettiDi);
+    const esito = collega(schema, filoInCorso, m, morsettiDi, pieghe);
     if (!esito.ok) {
       setAvviso(t(esito.errore));
       // Sullo stesso morsetto il clic annulla; negli altri casi si può riprovare.
@@ -410,9 +429,11 @@ export function AreaDisegno({
     }
     // In simulazione il foglio serve solo a guardare (zoom e spostamento).
     if (inSimulazione) return;
-    // Sinistro sul vuoto con un filo in corso: annulla il collegamento.
+    // Sinistro sul vuoto con un filo in corso: aggiunge una piega (il filo
+    // gira in quel punto). Esc annulla il collegamento.
     if (e.evt.button === 0 && filoInCorso) {
-      setFiloInCorso(null);
+      const f = schermoAFoglio(vista, p);
+      setPieghe((pp) => [...pp, { x: agganciaValore(f.x), y: agganciaValore(f.y) }]);
       return;
     }
     // Sinistro con un componente scelto nella libreria: lo posa dove si clicca.
@@ -435,7 +456,8 @@ export function AreaDisegno({
     if (voceDaPosare) setAnteprima(schermoAFoglio(vista, p));
     if (filoInCorso) setMouseFoglio(schermoAFoglio(vista, p));
     if (filoTrascinato.current) {
-      onCambiaSchema(spostaTrattoFilo(schema, filoTrascinato.current, schermoAFoglio(vista, p), morsettiDi), true);
+      const { id, tratto, percorso } = filoTrascinato.current;
+      onCambiaSchema(spostaTrattoDelFilo(schema, id, percorso, tratto, schermoAFoglio(vista, p)), true);
       return;
     }
     if (spostandoVista && ultimoPuntatore.current) {
@@ -556,8 +578,13 @@ export function AreaDisegno({
   const anteprimaFilo =
     filoInCorso && (arrivoAnteprima || mouseFoglio)
       ? arrivoAnteprima
-        ? instrada(filoInCorso, arrivoAnteprima)
-        : [filoInCorso.posizione, mouseFoglio as Punto]
+        ? pieghe.length > 0
+          ? anteprimaConPieghe(filoInCorso.posizione, pieghe, arrivoAnteprima.posizione)
+          : instrada(filoInCorso, arrivoAnteprima)
+        : anteprimaConPieghe(filoInCorso.posizione, pieghe, {
+            x: agganciaValore((mouseFoglio as Punto).x),
+            y: agganciaValore((mouseFoglio as Punto).y),
+          })
       : null;
   const raggioMorsetto = 3.5;
   const posAnteprima =
@@ -702,7 +729,13 @@ export function AreaDisegno({
                       e.cancelBubble = true;
                       const aggiuntivo = e.evt.shiftKey || e.evt.ctrlKey;
                       setSelezione((sel) => (aggiuntivo ? selezionaConClic(sel, f.id, true) : [f.id]));
-                      filoTrascinato.current = f.id;
+                      // Si afferra il tratto più vicino al mouse: si sposterà
+                      // perpendicolarmente a se stesso (in su/giù o di lato).
+                      const pos = e.target.getStage()?.getPointerPosition();
+                      if (pos) {
+                        const tratto = trattoPiuVicino(punti, schermoAFoglio(vista, pos));
+                        filoTrascinato.current = { id: f.id, tratto, percorso: punti };
+                      }
                     }}
                     onDblClick={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
                   />

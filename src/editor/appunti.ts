@@ -36,7 +36,7 @@ export function copiaSelezione(schema: Schema, selezione: Selezione): Appunti | 
   const copiati = new Set(componenti.map((c) => c.id));
   const fili = schema.fili.filter((f) => copiati.has(f.da.componente) && copiati.has(f.a.componente));
   // Copie indipendenti: modifiche successive allo schema non toccano gli appunti.
-  return { componenti: componenti.map((c) => ({ ...c })), fili: fili.map((f) => ({ ...f, da: { ...f.da }, a: { ...f.a } })) };
+  return { componenti: componenti.map((c) => ({ ...c })), fili: fili.map((f) => ({ ...f, da: { ...f.da }, a: { ...f.a }, ...(f.punti ? { punti: f.punti.map((p) => ({ ...p })) } : {}) })) };
 }
 
 /** Da dove si ricavano le lettere della sigla di un tipo (di solito la voce della libreria). */
@@ -100,6 +100,7 @@ export function incolla(
       a: { componente: a, morsetto: f.a.morsetto },
       // Il tratto centrale spostato a mano segue la copia.
       ...(f.medio !== undefined ? { medio: f.medio + d } : {}),
+      ...(f.punti ? { punti: f.punti.map((p) => ({ x: p.x + d, y: p.y + d })) } : {}),
     };
     idFili.push(nuovo.id);
     risultato = { ...risultato, fili: [...risultato.fili, nuovo] };

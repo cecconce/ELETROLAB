@@ -40,12 +40,16 @@ export interface EstremoFilo {
  * `medio` è la posizione del tratto centrale scelta dallo studente
  * trascinando il filo (y per i fili verticali, x per quelli orizzontali);
  * se manca il tratto centrale sta a metà strada.
+ * `punti` sono i vertici interni di un filo piegato a mano dallo studente
+ * (pieghe cliccate mentre lo si disegna o tratti trascinati): se ci sono,
+ * hanno la precedenza su `medio` e il percorso automatico.
  */
 export interface Filo {
   id: string;
   da: EstremoFilo;
   a: EstremoFilo;
   medio?: number;
+  punti?: Punto[];
 }
 
 export interface Schema {
@@ -88,6 +92,12 @@ export function spostaSelezione(schema: Schema, selezione: Selezione, dx: number
   return {
     ...schema,
     componenti: schema.componenti.map((c) => (scelti.has(c.id) ? { ...c, x: c.x + d.x, y: c.y + d.y } : c)),
+    // I fili fra due componenti spostati insieme si spostano anche loro, pieghe comprese.
+    fili: schema.fili.map((f) =>
+      f.punti && scelti.has(f.da.componente) && scelti.has(f.a.componente)
+        ? { ...f, punti: f.punti.map((p) => ({ x: p.x + d.x, y: p.y + d.y })) }
+        : f,
+    ),
   };
 }
 

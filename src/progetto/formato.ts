@@ -79,7 +79,13 @@ function leggiFilo(v: unknown): Filo | undefined {
   const da = leggiEstremo(v.da);
   const a = leggiEstremo(v.a);
   if (!da || !a) return undefined;
-  return eNumero(v.medio) ? { id: v.id, da, a, medio: v.medio } : { id: v.id, da, a };
+  const filo: Filo = eNumero(v.medio) ? { id: v.id, da, a, medio: v.medio } : { id: v.id, da, a };
+  // Pieghe fatte a mano: si tengono solo i punti con coordinate numeriche.
+  if (Array.isArray(v.punti)) {
+    const punti = v.punti.filter((p): p is { x: number; y: number } => eOggetto(p) && eNumero(p.x) && eNumero(p.y));
+    if (punti.length > 0) filo.punti = punti.map((p) => ({ x: p.x, y: p.y }));
+  }
+  return filo;
 }
 
 /**

@@ -7,7 +7,16 @@
 //    componente su cui si trova (in alto → verso l'alto, a destra → verso destra…);
 // 2. i due tratti si uniscono con una "Z" di soli segmenti orizzontali e verticali;
 // 3. il tratto centrale della Z sta a metà strada oppure dove lo studente
-//    l'ha trascinato (campo `medio` del filo).
+//    l'ha trascinato (campo `medio`, usato dai file delle versioni precedenti).
+//
+// Fili piegati a mano (campo `punti`): lo studente può
+// - fare clic sul foglio vuoto mentre disegna il filo: ogni clic aggiunge
+//   una piega, come nei programmi di disegno degli schemi;
+// - trascinare QUALSIASI tratto di un filo già fatto: i tratti orizzontali
+//   si spostano in su/giù, quelli verticali a destra/sinistra; trascinando
+//   il primo o l'ultimo tratto il filo può uscire dal morsetto anche di lato.
+// In questi casi il filo memorizza i suoi vertici interni e li unisce sempre
+// con tratti solo orizzontali e verticali (vedi `ortogonalizza`).
 // Il percorso non evita gli altri componenti: è una versione semplificata,
 // lo studente sposta il filo a mano se passa sopra un simbolo.
 import { PASSO_GRIGLIA, agganciaValore, type Punto } from "./geometria";
@@ -131,7 +140,111 @@ export function instrada(p1: MorsettoPosato | { posizione: Punto; direzione: Dir
 export function percorsoFilo(schema: Schema, filo: Filo, morsettiDi: MorsettiDelTipo): Punto[] | undefined {
   const p1 = trovaMorsetto(schema, filo.da, morsettiDi);
   const p2 = trovaMorsetto(schema, filo.a, morsettiDi);
-  return p1 && p2 ? instrada(p1, p2, filo.medio) : undefined;
+  if (!p1 || !p2) return undefined;
+  if (filo.punti && filo.punti.length > 0) return ortogonalizza([p1.posizione, ...filo.punti, p2.posizione]);
+  return instrada(p1, p2, filo.medio);
+}
+
+/**
+ * Unisce una sequenza di punti con soli tratti orizzontali e verticali:
+ * fra due punti non allineati aggiunge un angolo. L'angolo è scelto in modo
+ * da "girare" rispetto al tratto precedente (dopo un tratto verticale si va
+ * prima in orizzontale e viceversa), così il filo non torna su se stesso.
+ * Il primo tratto parte in verticale, la direzione più comune negli schemi.
+ */
+export function ortogonalizza(punti: readonly Punto[]): Punto[] {
+  if (punti.length === 0) return [];
+  const out: Punto[] = [punti[0]];
+  let ultimoVerticale = false;
+  for (let i = 1; i < punti.length; i++) {
+    const q = out[out.length - 1];
+    const r = punti[i];
+    if (q.x !== r.x && q.y !== r.y) {
+      // Angolo: dopo un tratto verticale si gira in orizzontale (e viceversa).
+      out.push(ultimoVerticale ? { x: r.x, y: q.y } : { x: q.x, y: r.y });
+    }
+    out.push(r);
+    const a = out[out.length - 2];
+    if (a.x !== r.x || a.y !== r.y) ultimoVerticale = a.x === r.x;
+  }
+  return semplificaPercorso(out);
+}
+
+/** Distanza di un punto da un segmento (per capire quale tratto si è afferrato). */
+function distanzaDaSegmento(p: Punto, a: Punto, b: Punto): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const l2 = dx * dx + dy * dy;
+  const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+/** Indice del tratto del percorso più vicino al punto (tratto i = dal vertice i al vertice i+1). */
+export function trattoPiuVicino(percorso: readonly Punto[], p: Punto): number {
+  let migliore = 0;
+  let distanza = Infinity;
+  for (let i = 0; i + 1 < percorso.length; i++) {
+    const d = distanzaDaSegmento(p, percorso[i], percorso[i + 1]);
+    if (d < distanza) {
+      distanza = d;
+      migliore = i;
+    }
+  }
+  return migliore;
+}
+
+/**
+ * Sposta il tratto `indice` del percorso perpendicolarmente a se stesso fino
+ * al punto `verso` (agganciato alla griglia): un tratto orizzontale va in
+ * su/giù, uno verticale a destra/sinistra. I capi attaccati ai morsetti non
+ * si staccano: se si sposta il primo o l'ultimo tratto si aggiunge un piccolo
+ * tratto che lo ricollega al morsetto (così il filo può uscire di lato).
+ */
+export function spostaTratto(percorso: readonly Punto[], indice: number, verso: Punto): Punto[] {
+  if (indice < 0 || indice + 1 >= percorso.length) return [...percorso];
+  const a = percorso[indice];
+  const b = percorso[indice + 1];
+  const orizzontale = a.y === b.y;
+  const v = agganciaValore(orizzontale ? verso.y : verso.x);
+  const sposta = (p: Punto): Punto => (orizzontale ? { x: p.x, y: v } : { x: v, y: p.y });
+  const ultimo = percorso.length - 1;
+  const out: Punto[] = [];
+  percorso.forEach((p, j) => {
+    if (j === indice) {
+      if (j === 0) out.push(p); // il morsetto resta dov'è
+      out.push(sposta(p));
+    } else if (j === indice + 1) {
+      out.push(sposta(p));
+      if (j === ultimo) out.push(p);
+    } else out.push(p);
+  });
+  return semplificaPercorso(out);
+}
+
+/**
+ * Trascinamento di un tratto di un filo: parte sempre dal percorso che il filo
+ * aveva quando lo si è afferrato (non si accumulano errori) e salva i vertici
+ * interni nel filo, che da quel momento è "piegato a mano".
+ */
+export function spostaTrattoDelFilo(schema: Schema, id: string, percorsoIniziale: readonly Punto[], indice: number, verso: Punto): Schema {
+  const filo = schema.fili.find((f) => f.id === id);
+  if (!filo) return schema;
+  const nuovo = spostaTratto(percorsoIniziale, indice, verso);
+  const punti = nuovo.slice(1, -1);
+  if (filo.punti && stessiPunti(filo.punti, punti)) return schema;
+  return {
+    ...schema,
+    fili: schema.fili.map((f) => (f.id === id ? { id: f.id, da: f.da, a: f.a, punti } : f)),
+  };
+}
+
+function stessiPunti(a: readonly Punto[], b: readonly Punto[]): boolean {
+  return a.length === b.length && a.every((p, i) => p.x === b[i].x && p.y === b[i].y);
+}
+
+/** Anteprima del filo che si sta disegnando: dal morsetto, per le pieghe cliccate, fino al mouse. */
+export function anteprimaConPieghe(partenza: Punto, pieghe: readonly Punto[], arrivo: Punto): Punto[] {
+  return ortogonalizza([partenza, ...pieghe, arrivo]);
 }
 
 /** Primo identificativo libero del tipo "filo-3". */
@@ -153,7 +266,13 @@ export type EsitoCollegamento = { ok: true; schema: Schema; filo: Filo } | { ok:
  * morsetti che non esistono. Più fili sullo stesso morsetto sono ammessi:
  * negli schemi si fanno spesso i "ponticelli" fra contatti.
  */
-export function collega(schema: Schema, da: EstremoFilo, a: EstremoFilo, morsettiDi: MorsettiDelTipo): EsitoCollegamento {
+export function collega(
+  schema: Schema,
+  da: EstremoFilo,
+  a: EstremoFilo,
+  morsettiDi: MorsettiDelTipo,
+  pieghe: readonly Punto[] = [],
+): EsitoCollegamento {
   if (stessoEstremo(da, a)) return { ok: false, errore: "fili.stessoMorsetto" };
   if (!trovaMorsetto(schema, da, morsettiDi) || !trovaMorsetto(schema, a, morsettiDi))
     return { ok: false, errore: "fili.morsettoInesistente" };
@@ -162,6 +281,8 @@ export function collega(schema: Schema, da: EstremoFilo, a: EstremoFilo, morsett
   );
   if (doppio) return { ok: false, errore: "fili.giaCollegati" };
   const filo: Filo = { id: nuovoIdFilo(schema), da: { ...da }, a: { ...a } };
+  // Pieghe cliccate durante il disegno: il filo nasce già "piegato a mano".
+  if (pieghe.length > 0) filo.punti = pieghe.map((p) => ({ x: agganciaValore(p.x), y: agganciaValore(p.y) }));
   return { ok: true, schema: { ...schema, fili: [...schema.fili, filo] }, filo };
 }
 
@@ -184,7 +305,7 @@ export function spostaTrattoFilo(schema: Schema, id: string, verso: Punto, morse
 /** Riporta il filo al percorso automatico (doppio clic sul filo). */
 export function ripristinaPercorso(schema: Schema, id: string): Schema {
   const filo = schema.fili.find((f) => f.id === id);
-  if (!filo || filo.medio === undefined) return schema;
+  if (!filo || (filo.medio === undefined && filo.punti === undefined)) return schema;
   return { ...schema, fili: schema.fili.map((f) => (f.id === id ? { id: f.id, da: f.da, a: f.a } : f)) };
 }
 

@@ -9,9 +9,14 @@ import {
   ripristinaPercorso,
   semplificaPercorso,
   spostaTrattoFilo,
+  ortogonalizza,
+  spostaTratto,
+  spostaTrattoDelFilo,
+  trattoPiuVicino,
+  anteprimaConPieghe,
   type MorsettiDelTipo,
 } from "./fili";
-import { SCHEMA_VUOTO, spostaComponente, type ComponenteSchema, type Schema } from "./schema";
+import { SCHEMA_VUOTO, spostaComponente, spostaSelezione, type ComponenteSchema, type Schema } from "./schema";
 import type { Punto } from "./geometria";
 
 // Un pulsante (morsetti 13 in alto e 14 in basso) e una bobina (A1 in alto, A2 in basso),
@@ -239,5 +244,115 @@ describe("messaggi per lo studente", () => {
     const testi = (await import("../../lingue/it.json")).default as Record<string, string>;
     for (const chiave of ["fili.stessoMorsetto", "fili.giaCollegati", "fili.morsettoInesistente", "fili.inCorso"])
       expect(testi[chiave]).toBeTruthy();
+  });
+});
+
+describe("fili piegati a mano", () => {
+  it("ortogonalizza aggiunge gli angoli e gira rispetto al tratto precedente", () => {
+    // Primo tratto in verticale, poi si gira in orizzontale.
+    expect(ortogonalizza([{ x: 0, y: 0 }, { x: 40, y: 60 }])).toEqual([
+      { x: 0, y: 0 },
+      { x: 0, y: 60 },
+      { x: 40, y: 60 },
+    ]);
+    // Dopo un tratto orizzontale il successivo angolo va prima in verticale.
+    const p = ortogonalizza([{ x: 0, y: 0 }, { x: 40, y: 0 }, { x: 80, y: 60 }]);
+    expect(p).toEqual([
+      { x: 0, y: 0 },
+      { x: 40, y: 0 },
+      { x: 40, y: 60 },
+      { x: 80, y: 60 },
+    ]);
+  });
+
+  it("trova il tratto afferrato", () => {
+    const percorso = [{ x: 0, y: 0 }, { x: 0, y: 100 }, { x: 200, y: 100 }];
+    expect(trattoPiuVicino(percorso, { x: 3, y: 50 })).toBe(0);
+    expect(trattoPiuVicino(percorso, { x: 120, y: 96 })).toBe(1);
+  });
+
+  it("un tratto orizzontale si sposta in su/giù, uno verticale di lato", () => {
+    const percorso = [{ x: 0, y: 0 }, { x: 0, y: 100 }, { x: 200, y: 100 }, { x: 200, y: 200 }];
+    expect(spostaTratto(percorso, 1, { x: 999, y: 141 })).toEqual([
+      { x: 0, y: 0 },
+      { x: 0, y: 140 },
+      { x: 200, y: 140 },
+      { x: 200, y: 200 },
+    ]);
+  });
+
+  it("spostando il primo tratto il filo resta attaccato al morsetto ed esce di lato", () => {
+    // Filo dritto verticale fra due morsetti: lo trascino a destra di 60.
+    const dritto = [{ x: 0, y: 0 }, { x: 0, y: 100 }];
+    const p = spostaTratto(dritto, 0, { x: 60, y: 50 });
+    expect(p[0]).toEqual({ x: 0, y: 0 });
+    expect(p[p.length - 1]).toEqual({ x: 0, y: 100 });
+    expect(p).toEqual([
+      { x: 0, y: 0 },
+      { x: 60, y: 0 },
+      { x: 60, y: 100 },
+      { x: 0, y: 100 },
+    ]);
+    expect(eOrtogonale(p)).toBe(true);
+  });
+
+  it("trascinare un tratto salva le pieghe nel filo e il percorso le rispetta", () => {
+    const c = collega(schemaBase, { componente: "S1", morsetto: "14" }, { componente: "K1", morsetto: "A1" }, morsettiDi);
+    if (!c.ok) throw new Error("collegamento fallito");
+    const iniziale = percorsoFilo(c.schema, c.filo, morsettiDi)!;
+    // Il filo è dritto (morsetti uno sopra l'altro): lo porto a sinistra.
+    const s = spostaTrattoDelFilo(c.schema, c.filo.id, iniziale, 0, { x: 40, y: 140 });
+    const filo = s.fili[0];
+    expect(filo.punti).toEqual([
+      { x: 40, y: 80 },
+      { x: 40, y: 200 },
+    ]);
+    const percorso = percorsoFilo(s, filo, morsettiDi)!;
+    expect(percorso[0]).toEqual({ x: 120, y: 80 });
+    expect(percorso[percorso.length - 1]).toEqual({ x: 120, y: 200 });
+    expect(eOrtogonale(percorso)).toBe(true);
+    // Doppio clic: si torna al percorso automatico.
+    expect(ripristinaPercorso(s, filo.id).fili[0].punti).toBeUndefined();
+  });
+
+  it("le pieghe cliccate durante il disegno finiscono nel filo, agganciate alla griglia", () => {
+    const c = collega(
+      schemaBase,
+      { componente: "S1", morsetto: "14" },
+      { componente: "H1", morsetto: "X1" },
+      morsettiDi,
+      [{ x: 52, y: 158 }],
+    );
+    if (!c.ok) throw new Error("collegamento fallito");
+    expect(c.filo.punti).toEqual([{ x: 60, y: 160 }]);
+    const percorso = percorsoFilo(c.schema, c.filo, morsettiDi)!;
+    expect(eOrtogonale(percorso)).toBe(true);
+    expect(percorso).toContainEqual({ x: 60, y: 160 });
+  });
+
+  it("con un componente spostato il filo piegato resta ortogonale", () => {
+    const c = collega(schemaBase, { componente: "S1", morsetto: "14" }, { componente: "H1", morsetto: "X1" }, morsettiDi, [
+      { x: 200, y: 120 },
+    ]);
+    if (!c.ok) throw new Error("collegamento fallito");
+    const spostato = spostaComponente(c.schema, "H1", { x: 340, y: 180 });
+    expect(eOrtogonale(percorsoFilo(spostato, spostato.fili[0], morsettiDi)!)).toBe(true);
+  });
+
+  it("spostando insieme i due componenti si spostano anche le pieghe", () => {
+    const c = collega(schemaBase, { componente: "S1", morsetto: "14" }, { componente: "H1", morsetto: "X1" }, morsettiDi, [
+      { x: 200, y: 120 },
+    ]);
+    if (!c.ok) throw new Error("collegamento fallito");
+    const s = spostaSelezione(c.schema, ["S1", "H1"], 40, 20);
+    expect(s.fili[0].punti).toEqual([{ x: 240, y: 140 }]);
+    // Se se ne sposta uno solo le pieghe restano dove sono.
+    expect(spostaSelezione(c.schema, ["S1"], 40, 20).fili[0].punti).toEqual([{ x: 200, y: 120 }]);
+  });
+
+  it("l'anteprima passa per le pieghe ed è ortogonale", () => {
+    const p = anteprimaConPieghe({ x: 0, y: 0 }, [{ x: 100, y: 60 }], { x: 40, y: 200 });
+    expect(eOrtogonale(p)).toBe(true);
+    expect(p).toContainEqual({ x: 100, y: 60 });
   });
 });

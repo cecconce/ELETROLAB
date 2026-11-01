@@ -21,6 +21,20 @@ const testo = (dati: unknown) => JSON.stringify(dati);
 const base = () => JSON.parse(serializzaProgetto(progetto, "0.1.0")) as Record<string, unknown>;
 
 describe("file .elab", () => {
+  it("salva e rilegge le pieghe dei fili; scarta i punti non validi", () => {
+    const conPieghe: Progetto = {
+      ...progetto,
+      schema: {
+        ...progetto.schema,
+        fili: progetto.schema.fili.map((f, i) => (i === 0 ? { ...f, punti: [{ x: 40, y: 80 }, { x: 40, y: 200 }] } : f)),
+      },
+    };
+    expect(leggiProgetto(serializzaProgetto(conPieghe, "0.1.0"))).toEqual({ ok: true, progetto: conPieghe, avvisi: [] });
+    const testo = serializzaProgetto(conPieghe, "0.1.0").replace('"y": 200', '"y": "duecento"');
+    const esito = leggiProgetto(testo);
+    expect(esito.ok && esito.progetto.schema.fili[0].punti).toEqual([{ x: 40, y: 80 }]);
+  });
+
   it("salvataggio e riapertura restituiscono lo stesso progetto", () => {
     const esito = leggiProgetto(serializzaProgetto(progetto, "0.1.0"));
     expect(esito).toEqual({ ok: true, progetto, avvisi: [] });
