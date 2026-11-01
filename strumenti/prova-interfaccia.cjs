@@ -1,4 +1,4 @@
-// Prova dell'interfaccia compilata con Playwright (verifiche finali delle Fasi 2 e 3).
+// Prova dell'interfaccia compilata con Playwright (verifiche finali delle Fasi 2, 3 e 5).
 //
 // Uso:
 //   npm run build
@@ -13,7 +13,9 @@
 // cinque esempi pronti e li prova seguendo le istruzioni "Come provarlo".
 // Poi passa al modulo PLC: disegna un segmento Ladder da zero, lo simula e
 // prova gli 8 esempi del PLC (quadro, temporizzatori, contatori e impianti
-// animati), leggendo lo stato dal pannello "Ingressi e uscite".
+// animati), leggendo lo stato dal pannello "Ingressi e uscite". Infine il
+// modulo Arduino: Blink montato da zero sulla breadboard con i blocchi, e gli
+// esempi pronti (LED, pulsante, potenziometro, servo, display, ultrasuoni).
 // Lo stato di lampade, bobine e motori si legge dal disegno Konva (colori e
 // rotazioni delle forme), quindi la prova non dipende dai pixel dello schermo.
 // Al termine stampa l'esito di ogni controllo ed esce con codice 1 se uno fallisce.
@@ -291,6 +293,9 @@ async function collega(pagina, a, b) {
   // === Modulo PLC ===========================================================
   await provaPlc(pagina, controlla, foto, apriEsempio);
 
+  // === Modulo Arduino ========================================================
+  await provaArduino(pagina, controlla, foto, apriEsempio);
+
   controlla(errori.length === 0, `nessun errore nella console${errori.length ? ": " + errori.join(" | ") : ""}`);
   await browser.close();
   console.log(falliti === 0 ? "\nTutti i controlli superati." : `\n${falliti} controlli NON superati.`);
@@ -491,4 +496,131 @@ async function provaPlc(pagina, controlla, foto, apriEsempio) {
   controlla(testi.includes("Auto: 1 / 5") && testi.includes("1 / 5"), "un'auto entrata: parcheggio e contatore segnano 1 / 5");
   await foto("14-plc-parcheggio");
   await fermaSeServe();
+}
+
+// --- Modulo Arduino ----------------------------------------------------------
+
+/** Vero se sul banco c'è un LED acceso del colore indicato (alone con ombra). */
+async function ledAcceso(pagina, colore) {
+  return pagina.evaluate((c) => window.Konva.stages[0].find("Circle").some((k) => k.fill() === c && k.shadowBlur() > 0), colore);
+}
+const ROSSO = "#ff3b30";
+const VERDE = "#34c759";
+const GIALLO = "#ffd60a";
+
+async function provaArduino(pagina, controlla, foto, apriEsempio) {
+  const ferma = async () => {
+    const p = pagina.locator(".pulsante-simulazione");
+    if ((await p.innerText()).includes("FERMA")) await p.click();
+  };
+  const avvia = async () => {
+    await pagina.locator(".pulsante-simulazione").click();
+    await pagina.waitForTimeout(300);
+  };
+  const nessunProblema = async () => (await pagina.locator(".pannello-problemi-vuoto").count()) > 0;
+  const testiKonva = () => pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+
+  // --- Blink montato da zero con i blocchi ---
+  console.log("Arduino: Blink montato da zero");
+  await ferma();
+  await pagina.getByText("Schermata iniziale").click().catch(() => {});
+  await pagina.waitForTimeout(300);
+  await pagina.getByText("Arduino", { exact: true }).first().click();
+  await pagina.waitForTimeout(600);
+  const avviso = pagina.getByText("Ho capito");
+  if (await avviso.count()) await avviso.click();
+  await pagina.getByText("Nuovo", { exact: true }).click();
+  await pagina.waitForTimeout(1500);
+  controlla((await pagina.locator(".modo.attivo").innerText()).includes("Blocchi"), "un nuovo progetto parte in modalità Blocchi");
+  controlla((await pagina.locator(".area-blocchi .blocklyDraggable").count()) >= 6, "sull'area ci sono i blocchi del Blink");
+  const tela = await pagina.locator("canvas").first().boundingBox();
+  const posa = async (nome, x, y) => {
+    await pagina.locator(".libreria").getByPlaceholder(/Cerca/).fill(nome);
+    await pagina.waitForTimeout(100);
+    await pagina.locator(".libreria").getByText(nome, { exact: true }).first().click();
+    await pagina.mouse.click(x, y);
+    await pagina.waitForTimeout(250);
+    await pagina.keyboard.press("Escape");
+    await pagina.locator(".libreria").getByPlaceholder(/Cerca/).fill("");
+  };
+  await pagina.getByText("−", { exact: true }).click().catch(() => {});
+  await posa("Arduino Uno", tela.x + 200, tela.y + 330);
+  await posa("Breadboard", tela.x + 520, tela.y + 230);
+  const bb = await rettangoloPerMisura(pagina, 660, 380);
+  const U = await rettangoloPerMisura(pagina, 420, 300);
+  const sb = bb.w / 660;
+  const su = U.w / 420;
+  const foro = (r, c) => ({ x: bb.x + (40 + (c - 1) * 20) * sb, y: bb.y + { a: 80, b: 100, c: 120, e: 160, Am: 40 }[r] * sb });
+  const pin = (x, y) => ({ x: U.x + x * su, y: U.y + y * su });
+  const a10 = foro("a", 10);
+  await posa("Resistenza", a10.x + 40 * sb, a10.y);
+  const e14 = foro("e", 14);
+  await posa("LED rosso", e14.x + 20 * sb, e14.y - 40 * sb);
+  const cavetto = async (a, b) => {
+    await pagina.mouse.click(a.x, a.y);
+    await pagina.waitForTimeout(150);
+    await pagina.mouse.click(b.x, b.y);
+    await pagina.waitForTimeout(200);
+  };
+  await cavetto(pin(120, 20), foro("b", 10));
+  await cavetto(foro("c", 16), foro("Am", 16));
+  await cavetto(foro("Am", 2), pin(100, 20));
+  await avvia();
+  controlla(await nessunProblema(), "Blink da zero: nessun problema");
+  const acceso = await ledAcceso(pagina, ROSSO);
+  await pagina.waitForTimeout(1050);
+  const spento = !(await ledAcceso(pagina, ROSSO));
+  controlla(acceso && spento, "il LED montato sulla breadboard lampeggia");
+  await foto("15-arduino-blink");
+  await ferma();
+
+  // --- Esempi ---
+  const apri = async (file) => {
+    await ferma();
+    await apriEsempio(pagina, file);
+    await pagina.getByText("Adatta alla finestra").click();
+    await pagina.waitForTimeout(200);
+    await avvia();
+    controlla(await nessunProblema(), `${file}: nessun problema all'avvio`);
+  };
+
+  console.log("Arduino: semaforo");
+  await apri("arduino-semaforo.elab");
+  await pagina.waitForTimeout(700);
+  controlla((await ledAcceso(pagina, VERDE)) && !(await ledAcceso(pagina, ROSSO)), "parte il verde");
+
+  console.log("Arduino: pulsante");
+  await apri("arduino-pulsante.elab");
+  controlla(!(await ledAcceso(pagina, VERDE)), "a riposo il LED è spento");
+  const p = await rettangoloPerMisura(pagina, 40, 60);
+  await pagina.mouse.move(p.x + p.w / 2, p.y + p.h / 2);
+  await pagina.mouse.down();
+  await pagina.waitForTimeout(300);
+  controlla(await ledAcceso(pagina, VERDE), "tenendo premuto il pulsante il LED si accende");
+  await pagina.mouse.up();
+  await foto("16-arduino-pulsante");
+
+  console.log("Arduino: potenziometro");
+  await apri("arduino-potenziometro.elab");
+  await pagina.waitForTimeout(500);
+  controlla((await pagina.locator(".monitor-testo").innerText()).includes("Potenziometro: 511"), "il monitor seriale mostra il valore del potenziometro");
+  controlla(await ledAcceso(pagina, GIALLO), "il LED è acceso a metà luminosità");
+
+  console.log("Arduino: servo");
+  await apri("arduino-servo.elab");
+  await pagina.waitForTimeout(400);
+  controlla((await testiKonva()).some((t) => /^\d+°$/.test(t)), "il servo mostra il suo angolo");
+
+  console.log("Arduino: display LCD");
+  await apri("arduino-lcd.elab");
+  await pagina.waitForTimeout(1300);
+  const lettere = (await testiKonva()).join("");
+  controlla(lettere.includes("Ciao,classe!") || lettere.includes("Ciao, classe!"), "il display mostra il saluto");
+  await foto("17-arduino-lcd");
+
+  console.log("Arduino: ultrasuoni");
+  await apri("arduino-ultrasuoni.elab");
+  await pagina.waitForTimeout(700);
+  controlla((await pagina.locator(".monitor-testo").innerText()).includes("Distanza: 50 cm"), "il monitor seriale mostra la distanza");
+  await ferma();
 }
