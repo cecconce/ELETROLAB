@@ -209,3 +209,58 @@ describe("vista e problemi del banco", () => {
     expect(testi[1]).toMatch(/non c'è la scheda/);
   });
 });
+
+describe("display LCD e sensore a ultrasuoni", () => {
+  /** Display collegato come negli esempi: RS=12, E=11, D4–D7 = 5, 4, 3, 2. */
+  function bancoLcd(rs = "D12"): Schema {
+    let s: Schema = { componenti: [comp("U", "arduino-uno", 0, 0), comp("D", "lcd", 600, 0), comp("R", "resistenza", 600, 300, { valore: 220 })], fili: [] };
+    for (const [da, a] of [
+      ["D/VSS", "U/GND1"], ["D/RW", "U/GND2"], ["D/VDD", "U/5V"], ["D/K", "U/GND3"], ["D/A", "R/1"], ["R/2", "U/3V3"],
+      ["D/RS", `U/${rs}`], ["D/E", "U/D11"], ["D/D4", "U/D5"], ["D/D5", "U/D4"], ["D/D6", "U/D3"], ["D/D7", "U/D2"],
+    ]) s = filo(s, da, a);
+    return s;
+  }
+  const codiceLcd = `#include <LiquidCrystal.h>
+    LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+    void setup() { lcd.begin(16, 2); lcd.print("Ciao, mondo!"); }
+    void loop() { lcd.setCursor(0, 1); lcd.print(millis() / 1000); }`;
+
+  it("il display collegato bene mostra il testo, con la retroilluminazione", async () => {
+    const { vistaDaSessioneArduino, problemiArduino } = await import("./arduino");
+    const s = bancoLcd();
+    const sess = avviaSessioneArduino(codiceLcd, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    // A passi da 50 ms come l'interfaccia (un loop senza delay esegue moltissime istruzioni).
+    for (let i = 0; i < 42; i++) passoArduino(sess, 50);
+    const v = vistaDaSessioneArduino(sess, s, lib);
+    expect(v.componenti.D.arduino?.righe).toEqual(["Ciao, mondo!    ", "2               "]);
+    expect(v.componenti.D.arduino?.retro).toBeGreaterThan(0);
+    expect(problemiArduino(sess, s, lib)).toEqual([]);
+  });
+
+  it("RS collegato al pin sbagliato: display vuoto e spiegazione", async () => {
+    const { vistaDaSessioneArduino, problemiArduino } = await import("./arduino");
+    const s = bancoLcd("D10");
+    const sess = avviaSessioneArduino(codiceLcd, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    passoArduino(sess, 100);
+    expect(vistaDaSessioneArduino(sess, s, lib).componenti.D.arduino?.righe).toEqual([]);
+    expect(problemiArduino(sess, s, lib)[0].testo).toMatch(/RS sul pin 12 ed E sul pin 11/);
+  });
+
+  it("ultrasuoni: pulseIn misura la distanza scelta con il clic", () => {
+    let s: Schema = { componenti: [comp("U", "arduino-uno", 0, 0), comp("S", "ultrasuoni", 600, 0)], fili: [] };
+    s = filo(s, "S/VCC", "U/5V");
+    s = filo(s, "S/GND", "U/GND1");
+    s = filo(s, "S/TRIG", "U/D9");
+    s = filo(s, "S/ECHO", "U/D10");
+    const codice = `void setup(){ Serial.begin(9600); pinMode(9, OUTPUT); pinMode(10, INPUT); }
+      void loop(){ digitalWrite(9, HIGH); delayMicroseconds(10); digitalWrite(9, LOW);
+        long durata = pulseIn(10, HIGH); Serial.println(durata / 58); delay(200); }`;
+    const sess = avviaSessioneArduino(codice, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    passoArduino(sess, 100);
+    clicGiuArduino(sess, "S"); // 50 → 100 cm
+    passoArduino(sess, 300);
+    const valori = sess.seriale.trim().split("\n").map(Number);
+    expect(valori[0]).toBe(50);
+    expect(valori[valori.length - 1]).toBe(100);
+  });
+});

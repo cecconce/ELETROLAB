@@ -1,0 +1,120 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-01T19:05:41.619Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 600,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-verde-1",
+        "tipo": "led-verde",
+        "etichetta": "D1",
+        "x": 680,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "pulsante-1",
+        "tipo": "pulsante",
+        "etichetta": "S1",
+        "x": 900,
+        "y": 160,
+        "larghezza": 40,
+        "altezza": 60
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D13"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b5"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c11"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am11"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D2"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "a20"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a22"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am22"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND3"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am1"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Pulsante: tienilo premuto e il LED si accende.\n// Il pulsante va dal pin 2 a GND; INPUT_PULLUP tiene il pin a HIGH quando\n// il pulsante è rilasciato, quindi premuto si legge LOW.\n\nconst int PULSANTE = 2;\nconst int LED = 13;\n\nvoid setup() {\n  pinMode(PULSANTE, INPUT_PULLUP);\n  pinMode(LED, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  if (digitalRead(PULSANTE) == LOW) {\n    digitalWrite(LED, HIGH);\n  } else {\n    digitalWrite(LED, LOW);\n  }\n}\n"
+  }
+}

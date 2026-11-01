@@ -5,7 +5,16 @@
 //   cavetto, se stanno nello stesso punto (un piedino infilato in un foro
 //   della breadboard) o se sono fori collegati internamente dalla breadboard;
 // - i componenti con i loro parametri (colore del LED, valore della resistenza).
-import { gruppoForo, pinCollegato, tempoArduino, type ComponenteArduino, type NodoDi, type SessioneArduino } from "../motori/arduino";
+import {
+  DISTANZA_PREDEFINITA,
+  gruppoForo,
+  nomePin,
+  pinCollegato,
+  tempoArduino,
+  type ComponenteArduino,
+  type NodoDi,
+  type SessioneArduino,
+} from "../motori/arduino";
 import { t } from "../testi";
 import type { Libreria } from "./libreria";
 import type { ProblemaMostrato } from "./messaggiProblemi";
@@ -128,7 +137,7 @@ void loop() {
 /** Che cosa fa un clic sui componenti del banco durante la simulazione. */
 function clicArduino(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante") return "pulsante";
-  if (tipo === "potenziometro" || tipo === "fotoresistenza") return "manuale";
+  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni") return "manuale";
   return null;
 }
 
@@ -153,6 +162,12 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.suona = a.alimentato === true;
       if (pin && s.toni[pin]) arduino.frequenza = s.toni[pin];
     }
+    if (c.tipo === "lcd") {
+      const lcd = lcdDelDisplay(s, c.id);
+      arduino.righe = a.alimentato && lcd ? lcd.righe : [];
+      arduino.retro = a.luminosita ?? 0;
+    }
+    if (c.tipo === "ultrasuoni") arduino.distanza = s.distanze[c.id] ?? DISTANZA_PREDEFINITA;
     if (c.tipo === "arduino-uno") arduino.ledL = (s.pin.D13?.modo === "OUTPUT" && s.pin.D13.livello > 0) || false;
     componenti[c.id] = {
       clic: clicArduino(c.tipo),
@@ -174,6 +189,20 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
   };
 }
 
+/**
+ * Display LiquidCrystal creato dal programma che corrisponde al display sul
+ * banco: i suoi RS ed E devono essere collegati ai primi due pin scritti nel
+ * costruttore LiquidCrystal(rs, en, …).
+ */
+function lcdDelDisplay(s: SessioneArduino, id: string): { righe: string[]; pin: number[] } | null {
+  const rs = pinCollegato(s, id, "RS");
+  const en = pinCollegato(s, id, "E");
+  for (const lcd of Object.values(s.lcd)) {
+    if (rs && en && nomePin(lcd.pin[0]) === rs && nomePin(lcd.pin[1]) === en) return lcd;
+  }
+  return null;
+}
+
 /** Problemi del programma e del circuito, spiegati in italiano. */
 export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Libreria): ProblemaMostrato[] {
   const problemi: ProblemaMostrato[] = [];
@@ -189,6 +218,16 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
   if (!s.scheda) problemi.push({ chiave: "senza-scheda", gravita: "avviso", testo: t("arduino.problema.senzaScheda"), componenti: [], morsetti: [] });
   for (const c of schema.componenti) {
     const a = s.aspetto[c.id];
+    if (c.tipo === "lcd" && a?.alimentato && Object.keys(s.lcd).length > 0 && !lcdDelDisplay(s, c.id)) {
+      const pin = Object.values(s.lcd)[0].pin;
+      problemi.push({
+        chiave: `lcd-${c.id}`,
+        gravita: "avviso",
+        testo: t("arduino.problema.lcdNonCollegato", { rs: pin[0] ?? "?", en: pin[1] ?? "?" }),
+        componenti: [c.id],
+        morsetti: [],
+      });
+    }
     if (a?.bruciato) {
       const nome = libreria.componenti.find((v) => v.id === c.tipo)?.nome ?? c.tipo;
       problemi.push({

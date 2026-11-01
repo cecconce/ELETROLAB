@@ -2594,6 +2594,124 @@
         }
       ],
       "icona": "ard-servo.svg"
+    },
+    {
+      "id": "lcd",
+      "nome": "Display LCD 16x2",
+      "categoria": "uscite",
+      "sigla": "LCD",
+      "descrizione": "Display da 2 righe di 16 caratteri, con la libreria LiquidCrystal. Collega VSS e RW a GND, VDD a 5V, A (retroilluminazione) a 5V con una resistenza da 220 Ω e K a GND; RS, E, D4–D7 ai pin scritti in LiquidCrystal lcd(rs, en, d4, d5, d6, d7).",
+      "paroleChiave": [
+        "lcd",
+        "display",
+        "schermo",
+        "liquidcrystal",
+        "16x2"
+      ],
+      "larghezza": 340,
+      "altezza": 160,
+      "morsetti": [
+        {
+          "id": "VSS",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "VDD",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "V0",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "RS",
+          "x": 80,
+          "y": 0
+        },
+        {
+          "id": "RW",
+          "x": 100,
+          "y": 0
+        },
+        {
+          "id": "E",
+          "x": 120,
+          "y": 0
+        },
+        {
+          "id": "D4",
+          "x": 140,
+          "y": 0
+        },
+        {
+          "id": "D5",
+          "x": 160,
+          "y": 0
+        },
+        {
+          "id": "D6",
+          "x": 180,
+          "y": 0
+        },
+        {
+          "id": "D7",
+          "x": 200,
+          "y": 0
+        },
+        {
+          "id": "A",
+          "x": 220,
+          "y": 0
+        },
+        {
+          "id": "K",
+          "x": 240,
+          "y": 0
+        }
+      ],
+      "icona": "ard-lcd.svg"
+    },
+    {
+      "id": "ultrasuoni",
+      "nome": "Sensore a ultrasuoni",
+      "categoria": "ingressi",
+      "sigla": "US",
+      "descrizione": "Misura la distanza di un ostacolo con un impulso di ultrasuoni: VCC a 5V, GND a GND, TRIG ed ECHO a due pin. Con pulseIn(echo, HIGH) leggi la durata dell'eco: distanza in cm = durata / 58. In simulazione: clic a destra allontana l'ostacolo, a sinistra lo avvicina.",
+      "paroleChiave": [
+        "ultrasuoni",
+        "distanza",
+        "sonar",
+        "hc-sr04",
+        "sensore di distanza"
+      ],
+      "larghezza": 140,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "VCC",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "TRIG",
+          "x": 60,
+          "y": 80
+        },
+        {
+          "id": "ECHO",
+          "x": 80,
+          "y": 80
+        },
+        {
+          "id": "GND",
+          "x": 100,
+          "y": 80
+        }
+      ],
+      "icona": "ard-ultrasuoni.svg"
     }
   ]
 }

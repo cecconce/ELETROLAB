@@ -100,6 +100,52 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
+    case "lcd": {
+      // Schermo 16×2: sfondo verde chiaro con la retroilluminazione, caratteri scuri.
+      const righe = a?.righe ?? [];
+      const retro = a?.retro ?? 0;
+      const LARGHEZZA_CELLA = 276 / 16;
+      return (
+        <Group listening={false}>
+          <Rect x={32} y={67} width={276} height={58} fill={retro > 0 ? "#a8e063" : "#5f7f3c"} opacity={retro > 0 ? 0.55 + 0.45 * retro : 1} />
+          {inSimulazione &&
+            [0, 1].map((r) =>
+              Array.from({ length: 16 }, (_, k) => (
+                <Rect key={`${r}-${k}`} x={34 + k * LARGHEZZA_CELLA} y={71 + r * 27} width={LARGHEZZA_CELLA - 3} height={23} fill="#000000" opacity={0.06} />
+              )),
+            )}
+          {righe.map((riga, r) =>
+            [...riga.slice(0, 16)].map((ch, k) =>
+              ch === " " ? null : (
+                <Text
+                  key={`${r}-${k}`}
+                  x={34 + k * LARGHEZZA_CELLA}
+                  y={72 + r * 27}
+                  width={LARGHEZZA_CELLA - 3}
+                  align="center"
+                  text={ch}
+                  fontSize={19}
+                  fontFamily="Consolas, 'Courier New', monospace"
+                  fill="#17260c"
+                />
+              ),
+            ),
+          )}
+        </Group>
+      );
+    }
+    case "ultrasuoni": {
+      if (!inSimulazione) return null;
+      const d = a?.distanza ?? 50;
+      return (
+        <Group listening={false}>
+          {[0, 1, 2].map((i) => (
+            <Line key={i} points={[60 + i * 8, -6 - i * 6, 70, -14 - i * 8, 80 - i * 8, -6 - i * 6]} stroke="#1565c0" strokeWidth={2} opacity={0.5} tension={0.5} />
+          ))}
+          <Text x={0} y={-40} width={140} align="center" text={`↕ ostacolo a ${d} cm`} fontSize={11} fontStyle="bold" fill="#0d47a1" fontFamily={FONT} />
+        </Group>
+      );
+    }
     case "arduino-uno":
       if (!inSimulazione) return null;
       return (

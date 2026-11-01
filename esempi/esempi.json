@@ -91,6 +91,55 @@
       "titolo": "PLC – Parcheggio con contatore",
       "descrizione": "Lo stesso contatore C0 conta in avanti le auto che entrano (CTU) e all'indietro quelle che escono (CTD), sul fronte di discesa delle fotocellule. Con 5 auto si accende COMPLETO e la sbarra di ingresso non si alza più.",
       "prova": "Premi ▶ AVVIA. Clic sulla parte sinistra del parcheggio per far arrivare un'auto: la sbarra si alza e l'auto entra. Con 5 auto compare COMPLETO. Clic a destra per far uscire un'auto. Sotto il contatore leggi il conteggio."
+    },
+    {
+      "file": "arduino-blink.elab",
+      "modulo": "arduino",
+      "titolo": "Arduino – Blink (LED che lampeggia)",
+      "descrizione": "Il primo programma: il LED esterno sul pin 13, in serie a una resistenza da 220 Ω, si accende e si spegne ogni mezzo secondo insieme al LED «L» della scheda.",
+      "prova": "Premi ▶ AVVIA e guarda il LED. Ferma, cambia delay(500) in delay(100) nel Codice e riavvia: lampeggia più veloce. Prova a togliere la resistenza (selezionala e Canc): il LED si brucia!"
+    },
+    {
+      "file": "arduino-semaforo.elab",
+      "modulo": "arduino",
+      "titolo": "Arduino – Semaforo",
+      "descrizione": "Tre LED su tre pin e una funzione luce(pin, tempo) che accende una luce alla volta: verde 5 s, giallo 2 s, rosso 5 s.",
+      "prova": "Premi ▶ AVVIA e guarda il ciclo delle luci. Modifica i tempi nel Codice (a simulazione ferma) e riprova."
+    },
+    {
+      "file": "arduino-pulsante.elab",
+      "modulo": "arduino",
+      "titolo": "Arduino – Pulsante e LED",
+      "descrizione": "Pulsante a cavallo del solco della breadboard, fra il pin 2 e GND, con INPUT_PULLUP: premuto si legge LOW e il programma accende il LED.",
+      "prova": "Premi ▶ AVVIA e tieni premuto il pulsante con il mouse: il LED si accende finché lo tieni. Prova a trasformarlo in un interruttore (un clic accende, un clic spegne)."
+    },
+    {
+      "file": "arduino-potenziometro.elab",
+      "modulo": "arduino",
+      "titolo": "Arduino – Potenziometro e luminosità",
+      "descrizione": "analogRead legge il potenziometro (0…1023), map lo porta a 0…255 e analogWrite regola la luminosità del LED sul pin 9 (PWM). I valori compaiono sul monitor seriale.",
+      "prova": "Premi ▶ AVVIA. Clic sulla parte destra del potenziometro per girarlo in avanti, sulla sinistra per tornare indietro: il LED cambia luminosità e il monitor seriale mostra i valori."
+    },
+    {
+      "file": "arduino-servo.elab",
+      "modulo": "arduino",
+      "titolo": "Arduino – Servo comandato dal potenziometro",
+      "descrizione": "La libreria Servo porta il braccio del servomotore all'angolo calcolato con map dalla lettura del potenziometro.",
+      "prova": "Premi ▶ AVVIA e gira il potenziometro (clic a destra/sinistra): il braccio del servo ruota fra 0° e 180°."
+    },
+    {
+      "file": "arduino-lcd.elab",
+      "modulo": "arduino",
+      "titolo": "Arduino – Display LCD 16x2",
+      "descrizione": "Display collegato con 4 fili di dati (D4–D7), RS ed E come scritto in LiquidCrystal lcd(12, 11, 5, 4, 3, 2), retroilluminazione con resistenza da 220 Ω. Scrive un saluto e conta i secondi.",
+      "prova": "Premi ▶ AVVIA: sul display compaiono il saluto e i secondi. Cambia il testo di lcd.print nel Codice. Prova a spostare il filo di RS su un altro pin: il display resta vuoto e il pannello Problemi spiega perché."
+    },
+    {
+      "file": "arduino-ultrasuoni.elab",
+      "modulo": "arduino",
+      "titolo": "Arduino – Sensore a ultrasuoni",
+      "descrizione": "Il programma manda un impulso su TRIG, misura con pulseIn la durata dell'eco su ECHO e calcola la distanza in centimetri (durata / 58); sotto i 20 cm accende il LED.",
+      "prova": "Premi ▶ AVVIA e guarda il monitor seriale. Clic sulla parte sinistra del sensore per avvicinare l'ostacolo, sulla destra per allontanarlo: sotto i 20 cm il LED si accende."
     }
   ]
 }

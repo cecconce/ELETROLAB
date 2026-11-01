@@ -716,8 +716,12 @@ export interface Hardware {
   serialLeggi(): number;
   serialDisponibili(): number;
   servo(pin: string, angolo: number): void;
-  /** Il contenuto di un display LCD è cambiato. */
-  lcd(nome: string, righe: string[], colonne: number): void;
+  /**
+   * Il contenuto di un display LCD è cambiato. `pin` sono i numeri scritti nel
+   * costruttore LiquidCrystal(rs, en, d4, d5, d6, d7): servono a capire a quale
+   * display del banco si riferisce.
+   */
+  lcd(nome: string, righe: string[], colonne: number, pin: number[]): void;
   /** Durata in microsecondi dell'impulso sul pin (sensore a ultrasuoni), 0 se nessuno. */
   pulseIn(pin: string, livello: number): number;
 }
@@ -1392,8 +1396,8 @@ export class Esecutore {
       throw new ErroreArduino(riga, `Servo non ha la funzione ${e.nome}().`);
     }
     if (ogg.classe === "LiquidCrystal") {
-      const d = ogg.dati as { colonne: number; righe: number; cx: number; cy: number; testo: string[] };
-      const aggiorna = () => this.hw.lcd(ogg.nome, d.testo.slice(0, d.righe).map((r) => r.padEnd(d.colonne, " ").slice(0, d.colonne)), d.colonne);
+      const d = ogg.dati as { colonne: number; righe: number; cx: number; cy: number; testo: string[]; pin: number[] };
+      const aggiorna = () => this.hw.lcd(ogg.nome, d.testo.slice(0, d.righe).map((r) => r.padEnd(d.colonne, " ").slice(0, d.colonne)), d.colonne, d.pin);
       const vuoto = () => Array.from({ length: d.righe }, () => " ".repeat(d.colonne));
       switch (e.nome) {
         case "begin":

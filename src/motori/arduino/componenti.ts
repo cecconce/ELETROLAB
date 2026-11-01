@@ -127,6 +127,14 @@ export function elementiCircuito(
       case "servo":
         R(c.id, n("5V"), n("GND"), 500);
         break;
+      case "lcd":
+        // Logica del display (carico da 10 kΩ) e retroilluminazione (LED fra A e K).
+        R(`${c.id}:logica`, n("VDD"), n("VSS"), 10000);
+        el.push({ tipo: "diodo", id: `${c.id}:luce`, anodo: n("A"), catodo: n("K"), vf: 3.0, ron: 60 });
+        break;
+      case "ultrasuoni":
+        R(c.id, n("VCC"), n("GND"), 2000);
+        break;
       default:
         break;
     }
@@ -162,6 +170,11 @@ export function aspettoComponenti(componenti: readonly ComponenteArduino[], nodo
       aspetto[c.id] = { alimentato: v(nodoDi(c.id, "+")) - v(nodoDi(c.id, "-")) > 1 };
     } else if (c.tipo === "servo") {
       aspetto[c.id] = { alimentato: v(nodoDi(c.id, "5V")) - v(nodoDi(c.id, "GND")) > 4 };
+    } else if (c.tipo === "lcd") {
+      const luce = r.correnti[`${c.id}:luce`] ?? 0;
+      aspetto[c.id] = { alimentato: v(nodoDi(c.id, "VDD")) - v(nodoDi(c.id, "VSS")) > 4, luminosita: luce >= CORRENTE_LED_MINIMA ? Math.min(1, luce / 0.01) : 0 };
+    } else if (c.tipo === "ultrasuoni") {
+      aspetto[c.id] = { alimentato: v(nodoDi(c.id, "VCC")) - v(nodoDi(c.id, "GND")) > 4 };
     }
   }
   return aspetto;

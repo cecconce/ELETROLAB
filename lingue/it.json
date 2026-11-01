@@ -183,6 +183,7 @@
   "simulazione.suggerimentoArduino": "Simulazione in corso · Tieni premuti i pulsanti · Clic a destra o a sinistra di potenziometro e fotoresistenza per girarli · Il monitor seriale è sotto il codice · Per cambiare il programma ferma la simulazione",
   "arduino.problema.codice": "Riga {riga} del programma: {messaggio}",
   "arduino.problema.senzaScheda": "Sul banco non c'è la scheda Arduino Uno: posala dalla libreria (Scheda e breadboard) e collega i componenti ai suoi pin.",
+  "arduino.problema.lcdNonCollegato": "Il display è acceso ma non mostra niente: nel programma c'è LiquidCrystal(…) con RS sul pin {rs} ed E sul pin {en}, collega lì i piedini RS ed E del display (e D4–D7 ai pin seguenti).",
   "arduino.problema.ledBruciato": "Il {nome} si è bruciato: ci passano {corrente} mA. Metti in serie una resistenza da 220 Ω.",
   "proprieta.collegamentiImpianto": "Collegamenti al PLC",
   "proprieta.sensore": "sensore → ingresso",

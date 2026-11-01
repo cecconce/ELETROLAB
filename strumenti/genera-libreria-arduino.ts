@@ -367,6 +367,64 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------------- Display LCD 16x2
+{
+  // Piedini in alto, come sui moduli 1602: i cavetti non passano sopra lo schermo.
+  const PIN_LCD = ["VSS", "VDD", "V0", "RS", "RW", "E", "D4", "D5", "D6", "D7", "A", "K"];
+  const corpo = [
+    ...PIN_LCD.map((id, i) => `<line x1="${20 + i * 20}" y1="0" x2="${20 + i * 20}" y2="26" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+    `<rect x="1" y="20" width="338" height="138" rx="6" fill="#1f6f3a" stroke="#14532d" stroke-width="2"/>`,
+    ...[[12, 30], [328, 30], [12, 148], [328, 148]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#e8e8e8"/>`),
+    ...PIN_LCD.map((id, i) => `<circle cx="${20 + i * 20}" cy="28" r="3" fill="#c9a227"/><text x="${20 + i * 20}" y="42" font-size="6.5" text-anchor="middle" fill="#fff" ${FONT}>${id}</text>`),
+    `<rect x="22" y="56" width="296" height="80" rx="4" fill="#202020"/>`,
+    `<rect x="32" y="67" width="276" height="58" fill="#5f7f3c"/>`,
+    testo(300, 152, "LCD 16x2", 8),
+  ].join("\n");
+  voce(
+    {
+      id: "lcd",
+      nome: "Display LCD 16x2",
+      categoria: "uscite",
+      sigla: "LCD",
+      descrizione: "Display da 2 righe di 16 caratteri, con la libreria LiquidCrystal. Collega VSS e RW a GND, VDD a 5V, A (retroilluminazione) a 5V con una resistenza da 220 Ω e K a GND; RS, E, D4–D7 ai pin scritti in LiquidCrystal lcd(rs, en, d4, d5, d6, d7).",
+      paroleChiave: ["lcd", "display", "schermo", "liquidcrystal", "16x2"],
+      larghezza: 340,
+      altezza: 160,
+      morsetti: PIN_LCD.map((id, i) => ({ id, x: 20 + i * 20, y: 0 })),
+    },
+    svg(340, 160, corpo),
+  );
+}
+
+// ---------------------------------------------------------------- Sensore a ultrasuoni
+voce(
+  {
+    id: "ultrasuoni",
+    nome: "Sensore a ultrasuoni",
+    categoria: "ingressi",
+    sigla: "US",
+    descrizione: "Misura la distanza di un ostacolo con un impulso di ultrasuoni: VCC a 5V, GND a GND, TRIG ed ECHO a due pin. Con pulseIn(echo, HIGH) leggi la durata dell'eco: distanza in cm = durata / 58. In simulazione: clic a destra allontana l'ostacolo, a sinistra lo avvicina.",
+    paroleChiave: ["ultrasuoni", "distanza", "sonar", "hc-sr04", "sensore di distanza"],
+    larghezza: 140,
+    altezza: 80,
+    morsetti: [
+      { id: "VCC", x: 40, y: 80 },
+      { id: "TRIG", x: 60, y: 80 },
+      { id: "ECHO", x: 80, y: 80 },
+      { id: "GND", x: 100, y: 80 },
+    ],
+  },
+  svg(
+    140,
+    80,
+    [
+      `<rect x="2" y="2" width="136" height="62" rx="5" fill="#1565c0" stroke="#0d47a1" stroke-width="2"/>`,
+      ...[38, 102].map((x) => `<circle cx="${x}" cy="32" r="24" fill="#cfd8dc" stroke="#90a4ae" stroke-width="2"/><circle cx="${x}" cy="32" r="17" fill="#37474f"/><circle cx="${x}" cy="32" r="13" fill="none" stroke="#546e7a" stroke-width="1" stroke-dasharray="2 2"/>`),
+      ...["VCC", "TRIG", "ECHO", "GND"].map((id, i) => `<line x1="${40 + i * 20}" y1="62" x2="${40 + i * 20}" y2="80" stroke="${PIEDINO}" stroke-width="2.5"/><text x="${40 + i * 20}" y="60" font-size="6" text-anchor="middle" fill="#fff" ${FONT}>${id}</text>`),
+    ].join("\n"),
+  ),
+);
+
 const libreria = {
   versione: 1,
   modulo: "arduino",

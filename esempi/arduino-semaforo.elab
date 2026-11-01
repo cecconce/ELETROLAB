@@ -1,0 +1,173 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-01T19:05:41.618Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 600,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-1",
+        "tipo": "led-rosso",
+        "etichetta": "D1",
+        "x": 680,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-2",
+        "tipo": "resistenza",
+        "etichetta": "R2",
+        "x": 760,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-giallo-1",
+        "tipo": "led-giallo",
+        "etichetta": "D1",
+        "x": 840,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-3",
+        "tipo": "resistenza",
+        "etichetta": "R3",
+        "x": 920,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-verde-1",
+        "tipo": "led-verde",
+        "etichetta": "D1",
+        "x": 1000,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D12"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b5"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c11"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am11"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D11"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b13"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c19"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am19"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D10"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b21"
+        },
+        "colore": "#2e7d32"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c27"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am27"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND3"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am1"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Semaforo: verde 5 s, giallo 2 s, rosso 5 s, e si ricomincia.\n\nconst int ROSSO = 12;\nconst int GIALLO = 11;\nconst int VERDE = 10;\n\nvoid setup() {\n  pinMode(ROSSO, OUTPUT);\n  pinMode(GIALLO, OUTPUT);\n  pinMode(VERDE, OUTPUT);\n}\n\n// Accende solo la luce indicata e aspetta.\nvoid luce(int pin, int millisecondi) {\n  digitalWrite(ROSSO, LOW);\n  digitalWrite(GIALLO, LOW);\n  digitalWrite(VERDE, LOW);\n  digitalWrite(pin, HIGH);\n  delay(millisecondi);\n}\n\nvoid loop() {\n  luce(VERDE, 5000);\n  luce(GIALLO, 2000);\n  luce(ROSSO, 5000);\n}\n"
+  }
+}

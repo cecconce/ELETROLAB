@@ -51,6 +51,11 @@ export interface AspettoComponente {
     frequenza?: number;
     suona?: boolean;
     ledL?: boolean;
+    /** Display LCD: righe di testo (vuote se il display non è comandato) e retroilluminazione 0…1. */
+    righe?: string[];
+    retro?: number;
+    /** Sensore a ultrasuoni: distanza dell'ostacolo (cm). */
+    distanza?: number;
   };
 }
 

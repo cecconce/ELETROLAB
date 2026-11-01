@@ -22,6 +22,11 @@ import {
 } from "./componenti";
 import { ErroreArduino, preparaSketch, type Esecutore, type Hardware } from "./linguaggio";
 
+/** Distanza iniziale dell'ostacolo davanti al sensore a ultrasuoni (cm). */
+export const DISTANZA_PREDEFINITA = 50;
+/** Distanze proposte cliccando sul sensore (cm). */
+export const DISTANZE = [2, 5, 10, 20, 30, 50, 100, 200, 400];
+
 /** Caratteri massimi tenuti nel monitor seriale. */
 export const SERIALE_MASSIMA = 20000;
 
@@ -36,9 +41,12 @@ export interface SessioneArduino {
   pin: Record<string, StatoPin>;
   toni: Record<string, number>;
   servi: Record<string, number>;
-  lcd: Record<string, string[]>;
+  /** Contenuto dei display creati dal programma, con i pin del costruttore. */
+  lcd: Record<string, { righe: string[]; pin: number[] }>;
+  /** Distanza dell'ostacolo davanti a ogni sensore a ultrasuoni (cm). */
   seriale: string;
   ingressoSeriale: number[];
+  distanze: Record<string, number>;
   interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number> };
   risultato: RisultatoCircuito;
   aspetto: Record<string, AspettoArduino>;
@@ -71,6 +79,7 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     toni: {},
     servi: {},
     lcd: {},
+    distanze: {},
     seriale: "",
     ingressoSeriale: [],
     interazioni: { premuti: new Set(), posizioni: {}, luce: {} },
@@ -129,11 +138,20 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
       s.servi[pin] = angolo;
       s.versione++;
     },
-    lcd(nome, righe) {
-      s.lcd[nome] = righe;
+    lcd(nome, righe, _colonne, pin) {
+      s.lcd[nome] = { righe, pin };
       s.versione++;
     },
-    pulseIn: () => 0,
+    pulseIn(pin) {
+      // Il sensore a ultrasuoni alimentato con ECHO su questo pin risponde con
+      // un impulso di 58 µs per ogni centimetro di distanza (andata e ritorno).
+      if (s.sporco) ricalcola(s);
+      for (const c of s.componenti) {
+        if (c.tipo !== "ultrasuoni" || !s.aspetto[c.id]?.alimentato) continue;
+        if (pinCollegato(s, c.id, "ECHO") === pin) return Math.round(58 * (s.distanze[c.id] ?? DISTANZA_PREDEFINITA));
+      }
+      return 0;
+    },
   };
   try {
     s.esecutore = preparaSketch(codice, hw);
@@ -166,6 +184,12 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false)
   else if (c.tipo === "potenziometro") {
     const pos = s.interazioni.posizioni[id] ?? 0.5;
     s.interazioni.posizioni[id] = Math.round(Math.min(1, Math.max(0, pos + (indietro ? -0.1 : 0.1))) * 10) / 10;
+  } else if (c.tipo === "ultrasuoni") {
+    const ora = s.distanze[id] ?? DISTANZA_PREDEFINITA;
+    const i = Math.max(0, DISTANZE.indexOf(ora));
+    s.distanze[id] = DISTANZE[Math.min(DISTANZE.length - 1, Math.max(0, i + (indietro ? -1 : 1)))];
+    s.versione++;
+    return;
   } else if (c.tipo === "fotoresistenza") {
     const livelli = [0, 0.25, 0.5, 0.75, 1];
     const ora = s.interazioni.luce[id] ?? 0.5;
