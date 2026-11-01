@@ -735,7 +735,7 @@ button.io-plc {
 
 /* Modulo Arduino: colonna di destra con le schede Codice / Proprietà */
 .colonna-arduino {
-  width: 400px;
+  width: 460px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -891,4 +891,50 @@ button.io-plc {
 .colore-filo.scelto {
   outline: 3px solid #0e7c7b;
   outline-offset: 2px;
+}
+
+/* Editor a blocchi del modulo Arduino */
+.modo-codice {
+  display: flex;
+  gap: 4px;
+}
+.modo-codice .modo {
+  flex: 1;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 5px 8px;
+  border: 1px solid var(--bordo);
+  border-radius: 999px;
+  background: var(--sfondo);
+  color: var(--testo-tenue);
+  cursor: pointer;
+}
+.modo-codice .modo.attivo {
+  background: #0e7c7b;
+  border-color: #0e7c7b;
+  color: #fff;
+}
+.modo-codice .modo:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.editor-blocchi {
+  position: relative;
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.area-blocchi {
+  flex: 1;
+  min-height: 0;
+}
+.blocchi-bloccati {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: not-allowed;
 }

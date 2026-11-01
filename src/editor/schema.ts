@@ -72,6 +72,10 @@ export interface Schema {
    * lo trattano come il resto del progetto.
    */
   codice?: string;
+  /** Solo nel modulo Arduino: programma a blocchi (JSON di Blockly), se c'è. */
+  blocchi?: string;
+  /** Solo nel modulo Arduino: si programma con i blocchi o con il testo. */
+  modoCodice?: "blocchi" | "testo";
 }
 
 export const SCHEMA_VUOTO: Schema = { componenti: [], fili: [] };

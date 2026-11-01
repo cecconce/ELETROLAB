@@ -6,6 +6,7 @@
 //   con la casella per inviare testo al programma.
 import { useEffect, useRef, useState } from "react";
 import { t } from "../testi";
+import { EditorBlocchi } from "./EditorBlocchi";
 
 export interface PropsPannelloCodice {
   codice: string;
@@ -17,11 +18,17 @@ export interface PropsPannelloCodice {
   seriale: string;
   onInviaSeriale: (testo: string) => void;
   onPulisciSeriale: () => void;
+  /** Si programma con i blocchi (che generano il codice) o con il testo. */
+  modo: "blocchi" | "testo";
+  blocchi: string | undefined;
+  onCambiaBlocchi: (blocchi: string, codice: string, definitivo: boolean) => void;
+  onCambiaModo: (modo: "blocchi" | "testo") => void;
 }
 
 const ALTEZZA_RIGA = 19;
 
-export function PannelloCodice({ codice, onCambia, inSimulazione, errore, seriale, onInviaSeriale, onPulisciSeriale }: PropsPannelloCodice) {
+export function PannelloCodice(props: PropsPannelloCodice) {
+  const { codice, onCambia, inSimulazione, errore, seriale, onInviaSeriale, onPulisciSeriale, modo } = props;
   const testo = useRef<HTMLTextAreaElement>(null);
   const numeri = useRef<HTMLDivElement>(null);
   const monitor = useRef<HTMLPreElement>(null);
@@ -46,8 +53,35 @@ export function PannelloCodice({ codice, onCambia, inSimulazione, errore, serial
     });
   };
 
+  // Cambio di modo: dai blocchi al testo il programma resta (ma le modifiche
+  // al testo non tornano nei blocchi); dal testo ai blocchi il codice scritto
+  // a mano viene sostituito da quello dei blocchi.
+  const cambiaModo = (nuovo: "blocchi" | "testo") => {
+    if (nuovo === modo || inSimulazione) return;
+    const avviso = nuovo === "testo" ? t("arduino.modo.versoTesto") : t("arduino.modo.versoBlocchi");
+    if (window.confirm(avviso)) props.onCambiaModo(nuovo);
+  };
+
   return (
     <div className="pannello-codice">
+      <div className="modo-codice" role="radiogroup" aria-label={t("arduino.modo.titolo")}>
+        {(["blocchi", "testo"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            role="radio"
+            aria-checked={modo === m}
+            className={modo === m ? "modo attivo" : "modo"}
+            disabled={inSimulazione}
+            onClick={() => cambiaModo(m)}
+          >
+            {m === "blocchi" ? `🧩 ${t("arduino.modo.blocchi")}` : `⌨ ${t("arduino.modo.testo")}`}
+          </button>
+        ))}
+      </div>
+      {modo === "blocchi" ? (
+        <EditorBlocchi blocchi={props.blocchi} inSimulazione={inSimulazione} onCambia={props.onCambiaBlocchi} />
+      ) : (
       <div className="codice-editor" data-errore={errore ? errore.riga : undefined}>
         <div className="codice-numeri" ref={numeri} aria-hidden="true">
           {Array.from({ length: righe }, (_, i) => (
@@ -74,6 +108,7 @@ export function PannelloCodice({ codice, onCambia, inSimulazione, errore, serial
           }}
         />
       </div>
+      )}
       {errore && (
         <p className="codice-errore" role="alert">
           ⛔ {t("arduino.problema.codice", { riga: errore.riga, messaggio: errore.messaggio })}

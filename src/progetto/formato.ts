@@ -162,6 +162,8 @@ export function leggiProgetto(testo: string): EsitoLettura {
 
   // Programma Arduino (facoltativo).
   const schema: Schema = eTesto(schemaGrezzo.codice) ? { componenti, fili, codice: schemaGrezzo.codice } : { componenti, fili };
+  if (eTesto(schemaGrezzo.blocchi)) schema.blocchi = schemaGrezzo.blocchi;
+  if (schemaGrezzo.modoCodice === "blocchi" || schemaGrezzo.modoCodice === "testo") schema.modoCodice = schemaGrezzo.modoCodice;
   return { ok: true, progetto: { modulo: modulo.id, schema }, avvisi };
 }
 

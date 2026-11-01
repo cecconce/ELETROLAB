@@ -66,6 +66,14 @@ export const LIBRERIE: Libreria[] = [
     npm: ["konva"],
   },
   {
+    nome: "Blockly",
+    licenza: "Apache-2.0",
+    autori: "Google LLC e Raspberry Pi Foundation",
+    uso: "Editor a blocchi del modulo Arduino",
+    sito: "developers.google.com/blockly",
+    npm: ["blockly"],
+  },
+  {
     nome: "react-konva",
     licenza: "MIT",
     autori: "Anton Lavrenov",
@@ -84,7 +92,7 @@ export const LIBRERIE: Libreria[] = [
 ];
 
 /** Licenze ammesse per le librerie incluse nel programma (compatibili con la GPL-3.0). */
-export const LICENZE_COMPATIBILI = ["MIT", "Apache-2.0", "MIT/Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD"];
+export const LICENZE_COMPATIBILI = ["MIT", "Apache-2.0", "MIT/Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "0BSD", "MIT-0"];
 
 /** true se la licenza (anche espressione SPDX tipo "MIT OR Apache-2.0") è fra quelle ammesse. */
 export function licenzaCompatibile(licenza: string): boolean {

@@ -476,6 +476,10 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                   const s = sessioneRif.current;
                   if (s && eSessioneArduino(s)) inviaSeriale(s, testo);
                 }}
+                modo={schema.modoCodice ?? (schema.codice !== undefined ? "testo" : "blocchi")}
+                blocchi={schema.blocchi}
+                onCambiaBlocchi={(blocchi, codice, definitivo) => cambiaSchema({ ...schema, blocchi, codice, modoCodice: "blocchi" }, !definitivo)}
+                onCambiaModo={(modoCodice) => cambiaSchema({ ...schema, modoCodice, codice: schema.codice ?? SKETCH_PREDEFINITO })}
                 onPulisciSeriale={() => {
                   const s = sessioneRif.current;
                   if (s && eSessioneArduino(s)) s.seriale = "";
