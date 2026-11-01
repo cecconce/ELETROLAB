@@ -1,4 +1,4 @@
-// Prova dell'interfaccia compilata con Playwright (verifica finale della Fase 2).
+// Prova dell'interfaccia compilata con Playwright (verifiche finali delle Fasi 2 e 3).
 //
 // Uso:
 //   npm run build
@@ -11,6 +11,9 @@
 // Lo script fa quello che farebbe uno studente: apre la schermata iniziale,
 // disegna da zero un circuito pulsante → lampada, lo simula, poi apre i
 // cinque esempi pronti e li prova seguendo le istruzioni "Come provarlo".
+// Poi passa al modulo PLC: disegna un segmento Ladder da zero, lo simula e
+// prova gli 8 esempi del PLC (quadro, temporizzatori, contatori e impianti
+// animati), leggendo lo stato dal pannello "Ingressi e uscite".
 // Lo stato di lampade, bobine e motori si legge dal disegno Konva (colori e
 // rotazioni delle forme), quindi la prova non dipende dai pixel dello schermo.
 // Al termine stampa l'esito di ogni controllo ed esce con codice 1 se uno fallisce.
@@ -285,6 +288,9 @@ async function collega(pagina, a, b) {
   controlla(await nessunProblema(pagina), "nessuna oscillazione segnalata");
   await foto("08-temporizzato");
 
+  // === Modulo PLC ===========================================================
+  await provaPlc(pagina, controlla, foto, apriEsempio);
+
   controlla(errori.length === 0, `nessun errore nella console${errori.length ? ": " + errori.join(" | ") : ""}`);
   await browser.close();
   console.log(falliti === 0 ? "\nTutti i controlli superati." : `\n${falliti} controlli NON superati.`);
@@ -293,3 +299,196 @@ async function collega(pagina, a, b) {
   console.error(e);
   process.exit(1);
 });
+
+// --- Modulo PLC --------------------------------------------------------------
+
+/** Rettangolo (pagina) di un componente riconosciuto dalla misura della sua icona e, se serve, dalla scritta. */
+async function rettangoloPerMisura(pagina, larghezza, altezza, scritta) {
+  const r = await pagina.evaluate(
+    ([larghezza, altezza, scritta]) => {
+      const st = window.Konva.stages[0];
+      const c = st.container().getBoundingClientRect();
+      const gruppi = st
+        .find("Image")
+        .filter((im) => im.width() === larghezza && im.height() === altezza)
+        .map((im) => im.getParent())
+        .filter((g) => !scritta || g.find("Text").some((t) => t.text() === scritta));
+      const g = gruppi[0];
+      if (!g) return null;
+      const im = g.find("Image")[0];
+      const q = im.getClientRect();
+      return { x: c.left + q.x, y: c.top + q.y, w: q.width, h: q.height, scala: im.getAbsoluteScale().x };
+    },
+    [larghezza, altezza, scritta],
+  );
+  if (!r) throw new Error(`Componente ${larghezza}×${altezza} ${scritta ?? ""} non trovato`);
+  return r;
+}
+
+/** Valore 0/1 di un operando nel pannello "Ingressi e uscite". */
+async function valoreIo(pagina, operando) {
+  const el = pagina.locator(`.pannello-io-plc [data-operando="${operando}"]`);
+  if ((await el.count()) === 0) return null;
+  const testo = await el.first().innerText();
+  return testo.trim().endsWith("1");
+}
+
+async function provaPlc(pagina, controlla, foto, apriEsempio) {
+  const fermaSeServe = async () => {
+    const p = pagina.locator(".pulsante-simulazione");
+    if ((await p.innerText()).includes("FERMA")) await p.click();
+  };
+  const avvia = async () => {
+    await pagina.locator(".pulsante-simulazione").click();
+    await pagina.waitForTimeout(400);
+  };
+  const nessunProblema = async () => (await pagina.locator(".pannello-problemi-vuoto").count()) > 0;
+  /** Tiene premuto il punto (relativo al rettangolo, 0..1) per un attimo. */
+  const premiIn = async (r, fx = 0.5, fy = 0.5, durata = 300) => {
+    await pagina.mouse.move(r.x + r.w * fx, r.y + r.h * fy);
+    await pagina.mouse.down();
+    await pagina.waitForTimeout(durata);
+    await pagina.mouse.up();
+    await pagina.waitForTimeout(250);
+  };
+  const adatta = async () => {
+    await pagina.getByText("Adatta alla finestra").click();
+    await pagina.waitForTimeout(200);
+  };
+
+  // --- Segmento disegnato da zero ---
+  console.log("PLC: segmento disegnato da zero");
+  await fermaSeServe();
+  await pagina.getByText("Schermata iniziale").click().catch(() => {});
+  await pagina.waitForTimeout(300);
+  await pagina.getByText("PLC", { exact: true }).first().click();
+  await pagina.waitForTimeout(600);
+  const avviso = pagina.getByText("Ho capito");
+  if (await avviso.count()) await avviso.click();
+  await pagina.getByText("Nuovo", { exact: true }).click();
+  await pagina.waitForTimeout(300);
+  const tela = await pagina.locator("canvas").first().boundingBox();
+  const posa = async (nome, x, y) => {
+    await pagina.locator(".libreria").getByPlaceholder(/Cerca/).fill(nome);
+    await pagina.waitForTimeout(100);
+    await pagina.locator(".libreria").getByText(nome, { exact: true }).first().click();
+    await pagina.mouse.click(tela.x + x, tela.y + y);
+    await pagina.waitForTimeout(250);
+    await pagina.keyboard.press("Escape");
+    await pagina.locator(".libreria").getByPlaceholder(/Cerca/).fill("");
+  };
+  await posa("Barra di alimentazione sinistra", 80, 260);
+  await posa("Contatto NA", 200, 80);
+  await posa("Bobina", 360, 80);
+  await posa("Pulsante di marcia (NA)", 560, 80);
+  await posa("Lampada", 680, 80);
+  const scritte = await pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+  controlla(["I0.0", "Q0.0"].every((x) => scritte.includes(x)), "operandi proposti alla posa: I0.0 e Q0.0");
+  const morsetti = await pagina.evaluate(() => {
+    const st = window.Konva.stages[0];
+    const c = st.container().getBoundingClientRect();
+    return st
+      .find("Circle")
+      .filter((k) => k.hitStrokeWidth() === 14)
+      .map((k) => {
+        const q = k.getAbsolutePosition();
+        return { x: Math.round(c.left + q.x), y: Math.round(c.top + q.y) };
+      });
+  });
+  const minX = Math.min(...morsetti.map((m) => m.x));
+  const barra = morsetti.filter((m) => m.x === minX).sort((a, b) => a.y - b.y);
+  const riga = morsetti.filter((m) => m.x !== minX).sort((a, b) => a.x - b.x);
+  const vicina = barra.reduce((m, q) => (Math.abs(q.y - riga[0].y) < Math.abs(m.y - riga[0].y) ? q : m));
+  const collega2 = async (a, b) => {
+    await pagina.mouse.click(a.x, a.y);
+    await pagina.waitForTimeout(120);
+    await pagina.mouse.click(b.x, b.y);
+    await pagina.waitForTimeout(150);
+  };
+  await collega2(vicina, riga[0]);
+  await collega2(riga[1], riga[2]);
+  await avvia();
+  controlla(await nessunProblema(), "nessun problema nel segmento disegnato");
+  controlla((await valoreIo(pagina, "Q0.0")) === false, "a riposo Q0.0 = 0");
+  const pulsante = await rettangoloPerMisura(pagina, 80, 80, "I0.0");
+  await pagina.mouse.move(pulsante.x + pulsante.w / 2, pulsante.y + pulsante.h / 2);
+  await pagina.mouse.down();
+  await pagina.waitForTimeout(400);
+  controlla((await valoreIo(pagina, "Q0.0")) === true, "tenendo premuto il pulsante del quadro Q0.0 = 1");
+  await foto("09-plc-disegnato");
+  await pagina.mouse.up();
+  await pagina.waitForTimeout(300);
+  controlla((await valoreIo(pagina, "Q0.0")) === false, "rilasciando il pulsante Q0.0 torna a 0");
+  await fermaSeServe();
+
+  // --- Esempi del PLC ---
+  const apri = async (file) => {
+    await fermaSeServe();
+    await apriEsempio(pagina, file);
+    await adatta();
+    await avvia();
+    controlla(await nessunProblema(), `${file}: nessun problema all'avvio`);
+  };
+
+  console.log("PLC: marcia/arresto");
+  await apri("plc-marcia-arresto.elab");
+  await premiIn(await rettangoloPerMisura(pagina, 80, 80, "I0.0"));
+  controlla((await valoreIo(pagina, "Q0.0")) === true, "marcia: Q0.0 resta a 1 dopo il rilascio");
+  await premiIn(await rettangoloPerMisura(pagina, 80, 80, "I0.1"));
+  controlla((await valoreIo(pagina, "Q0.0")) === false, "arresto: Q0.0 torna a 0");
+
+  console.log("PLC: telerruttore");
+  await apri("plc-telerruttore.elab");
+  await premiIn(await rettangoloPerMisura(pagina, 80, 80, "I0.0"));
+  controlla((await valoreIo(pagina, "Q0.0")) === true, "prima pressione: lampada accesa");
+  await premiIn(await rettangoloPerMisura(pagina, 80, 80, "I0.0"));
+  controlla((await valoreIo(pagina, "Q0.0")) === false, "seconda pressione: lampada spenta");
+
+  console.log("PLC: nastro trasportatore");
+  await apri("plc-nastro.elab");
+  await premiIn(await rettangoloPerMisura(pagina, 80, 80, "I0.0"));
+  await premiIn(await rettangoloPerMisura(pagina, 360, 160), 0.5, 0.5, 100);
+  controlla((await valoreIo(pagina, "Q0.0")) === true, "dopo la marcia il nastro gira");
+  await pagina.waitForTimeout(6000);
+  controlla((await valoreIo(pagina, "Q0.0")) === false && (await valoreIo(pagina, "Q0.1")) === true, "pacco in fondo: nastro fermo e lampada accesa");
+  await foto("10-plc-nastro");
+
+  console.log("PLC: semaforo");
+  await apri("plc-semaforo.elab");
+  await pagina.waitForTimeout(800);
+  controlla((await valoreIo(pagina, "Q0.2")) === true, "all'avvio è verde");
+  await pagina.waitForTimeout(5200);
+  controlla((await valoreIo(pagina, "Q0.1")) === true, "dopo 5 s è giallo");
+  await foto("11-plc-semaforo");
+
+  console.log("PLC: cancello automatico");
+  await apri("plc-cancello.elab");
+  await premiIn(await rettangoloPerMisura(pagina, 80, 80, "I0.0"));
+  controlla((await valoreIo(pagina, "Q0.0")) === true && (await valoreIo(pagina, "Q0.2")) === true, "apertura con lampeggiante");
+  await pagina.waitForTimeout(5800);
+  controlla((await valoreIo(pagina, "I0.3")) === true && (await valoreIo(pagina, "Q0.0")) === false, "tutto aperto: finecorsa I0.3 e motore fermo");
+  await foto("12-plc-cancello");
+
+  console.log("PLC: serbatoio con pompa");
+  await apri("plc-serbatoio.elab");
+  controlla((await valoreIo(pagina, "Q0.0")) === true, "serbatoio vuoto: la pompa parte");
+  await pagina.waitForTimeout(9800);
+  controlla((await valoreIo(pagina, "Q0.0")) === false, "al livello massimo la pompa si ferma");
+
+  console.log("PLC: ascensore");
+  await apri("plc-ascensore.elab");
+  // Pulsante di chiamata del piano 2: in alto a destra nel disegno (x 130, y 45 su 160 × 300).
+  await premiIn(await rettangoloPerMisura(pagina, 160, 300), 130 / 160, 45 / 300);
+  await pagina.waitForTimeout(4800);
+  controlla((await valoreIo(pagina, "I0.4")) === true && (await valoreIo(pagina, "Q0.0")) === false, "la cabina arriva al piano 2 e si ferma");
+  await foto("13-plc-ascensore");
+
+  console.log("PLC: parcheggio");
+  await apri("plc-parcheggio.elab");
+  await premiIn(await rettangoloPerMisura(pagina, 360, 180), 0.1, 0.75, 100);
+  await pagina.waitForTimeout(3500);
+  const testi = await pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+  controlla(testi.includes("Auto: 1 / 5") && testi.includes("1 / 5"), "un'auto entrata: parcheggio e contatore segnano 1 / 5");
+  await foto("14-plc-parcheggio");
+  await fermaSeServe();
+}
