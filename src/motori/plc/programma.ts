@@ -30,9 +30,41 @@ export type TipoUscita =
   | "set" //           -(S)-  porta a 1 e lascia così (memoria)
   | "reset"; //        -(R)-  porta a 0 e lascia così
 
-export interface Uscita {
-  tipo: TipoUscita;
-  operando: string;
+/**
+ * Temporizzatori (norma IEC 61131-3):
+ * - TON ritardo all'inserzione: l'uscita si accende dopo `preset` secondi di
+ *   segmento alimentato e si spegne subito quando il segmento si apre;
+ * - TOF ritardo alla disinserzione: l'uscita si accende subito e si spegne
+ *   `preset` secondi dopo che il segmento si è aperto;
+ * - TP impulso: sul fronte di salita l'uscita resta accesa esattamente
+ *   `preset` secondi, qualunque cosa faccia il segmento nel frattempo.
+ */
+export type TipoTemporizzatore = "TON" | "TOF" | "TP";
+
+/**
+ * Contatori:
+ * - CTU in avanti: +1 a ogni fronte di salita del segmento; uscita accesa
+ *   quando il conteggio arriva al `preset`; il reset lo riporta a 0;
+ * - CTD all'indietro: parte dal `preset`, −1 a ogni fronte di salita;
+ *   uscita accesa quando arriva a 0; il reset lo ricarica al `preset`.
+ */
+export type TipoContatore = "CTU" | "CTD";
+
+export type Uscita =
+  | { tipo: TipoUscita; operando: string }
+  /** Temporizzatore T0…T63; `preset` in secondi. */
+  | { tipo: TipoTemporizzatore; operando: string; preset: number }
+  /** Contatore C0…C63; `preset` = numero di impulsi. */
+  | { tipo: TipoContatore; operando: string; preset: number };
+
+/** Vero se l'uscita è un temporizzatore. */
+export function eTemporizzatore(u: Uscita): u is { tipo: TipoTemporizzatore; operando: string; preset: number } {
+  return u.tipo === "TON" || u.tipo === "TOF" || u.tipo === "TP";
+}
+
+/** Vero se l'uscita è un contatore. */
+export function eContatore(u: Uscita): u is { tipo: TipoContatore; operando: string; preset: number } {
+  return u.tipo === "CTU" || u.tipo === "CTD";
 }
 
 export interface Segmento {
@@ -60,3 +92,8 @@ export const bobina = (operando: string): Uscita => ({ tipo: "bobina", operando 
 export const bobinaNegata = (operando: string): Uscita => ({ tipo: "bobinaNegata", operando });
 export const set = (operando: string): Uscita => ({ tipo: "set", operando });
 export const reset = (operando: string): Uscita => ({ tipo: "reset", operando });
+export const ton = (operando: string, preset: number): Uscita => ({ tipo: "TON", operando, preset });
+export const tof = (operando: string, preset: number): Uscita => ({ tipo: "TOF", operando, preset });
+export const tp = (operando: string, preset: number): Uscita => ({ tipo: "TP", operando, preset });
+export const ctu = (operando: string, preset: number): Uscita => ({ tipo: "CTU", operando, preset });
+export const ctd = (operando: string, preset: number): Uscita => ({ tipo: "CTD", operando, preset });
