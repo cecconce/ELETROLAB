@@ -68,6 +68,7 @@ function leggiComponente(v: unknown): ComponenteSchema | undefined {
   if (eNumero(v.tempo) && v.tempo >= 0) c.tempo = v.tempo;
   // Preset dei contatori del PLC (facoltativo, intero non negativo).
   if (eNumero(v.preset) && v.preset >= 0) c.preset = Math.round(v.preset);
+  if (eNumero(v.valore) && v.valore > 0) c.valore = v.valore;
   // Operandi dei segnali degli impianti animati (solo testi).
   if (eOggetto(v.collegamenti)) {
     const collegamenti = Object.fromEntries(Object.entries(v.collegamenti).filter((x): x is [string, string] => eTesto(x[1])));
@@ -87,6 +88,7 @@ function leggiFilo(v: unknown): Filo | undefined {
   const a = leggiEstremo(v.a);
   if (!da || !a) return undefined;
   const filo: Filo = eNumero(v.medio) ? { id: v.id, da, a, medio: v.medio } : { id: v.id, da, a };
+  if (eTesto(v.colore) && /^#[0-9a-fA-F]{6}$/.test(v.colore)) filo.colore = v.colore;
   // Pieghe fatte a mano: si tengono solo i punti con coordinate numeriche.
   if (Array.isArray(v.punti)) {
     const punti = v.punti.filter((p): p is { x: number; y: number } => eOggetto(p) && eNumero(p.x) && eNumero(p.y));
@@ -158,7 +160,9 @@ export function leggiProgetto(testo: string): EsitoLettura {
   }
   if (filiScartati > 0) avvisi.push(t("file.filiScartati", { numero: filiScartati }));
 
-  return { ok: true, progetto: { modulo: modulo.id, schema: { componenti, fili } }, avvisi };
+  // Programma Arduino (facoltativo).
+  const schema: Schema = eTesto(schemaGrezzo.codice) ? { componenti, fili, codice: schemaGrezzo.codice } : { componenti, fili };
+  return { ok: true, progetto: { modulo: modulo.id, schema }, avvisi };
 }
 
 /** Nome del file senza cartella né estensione ("C:\\Esercizi\\marcia.elab" → "marcia"). */

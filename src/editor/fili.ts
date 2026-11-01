@@ -137,10 +137,19 @@ export function instrada(p1: MorsettoPosato | { posizione: Punto; direzione: Dir
 }
 
 /** Percorso di un filo dello schema; undefined se uno dei due morsetti non esiste più. */
-export function percorsoFilo(schema: Schema, filo: Filo, morsettiDi: MorsettiDelTipo): Punto[] | undefined {
+/**
+ * Stile dei fili: "ortogonale" negli schemi elettrici (solo tratti
+ * orizzontali e verticali), "diretto" nel banco Arduino (cavetti dritti da
+ * un punto all'altro, con le pieghe scelte dallo studente, come in un
+ * simulatore di breadboard).
+ */
+export type StileFili = "ortogonale" | "diretto";
+
+export function percorsoFilo(schema: Schema, filo: Filo, morsettiDi: MorsettiDelTipo, stile: StileFili = "ortogonale"): Punto[] | undefined {
   const p1 = trovaMorsetto(schema, filo.da, morsettiDi);
   const p2 = trovaMorsetto(schema, filo.a, morsettiDi);
   if (!p1 || !p2) return undefined;
+  if (stile === "diretto") return [p1.posizione, ...(filo.punti ?? []), p2.posizione];
   if (filo.punti && filo.punti.length > 0) return ortogonalizza([p1.posizione, ...filo.punti, p2.posizione]);
   return instrada(p1, p2, filo.medio);
 }
@@ -312,4 +321,55 @@ export function ripristinaPercorso(schema: Schema, id: string): Schema {
 /** Quanti fili arrivano a un morsetto (per disegnare il pallino di giunzione). */
 export function filiSulMorsetto(schema: Schema, e: EstremoFilo): number {
   return schema.fili.filter((f) => stessoEstremo(f.da, e) || stessoEstremo(f.a, e)).length;
+}
+
+/**
+ * Filo diretto: afferrando un tratto si crea una piega nel punto del mouse
+ * (inserita fra i vertici del tratto). Restituisce lo schema e l'indice della
+ * nuova piega, da spostare poi con `spostaPiega`.
+ */
+export function inserisciPiega(schema: Schema, id: string, tratto: number, punto: Punto): { schema: Schema; indice: number } {
+  const filo = schema.fili.find((f) => f.id === id);
+  if (!filo) return { schema, indice: -1 };
+  const punti = [...(filo.punti ?? [])];
+  // Il tratto i va dal vertice i al vertice i+1 del percorso [inizio, ...punti, fine].
+  const indice = Math.max(0, Math.min(punti.length, tratto));
+  punti.splice(indice, 0, { x: agganciaValore(punto.x, 10), y: agganciaValore(punto.y, 10) });
+  return { schema: { ...schema, fili: schema.fili.map((f) => (f.id === id ? { ...f, punti } : f)) }, indice };
+}
+
+/** Sposta una piega di un filo diretto (agganciata a mezzo passo di griglia). */
+export function spostaPiega(schema: Schema, id: string, indice: number, punto: Punto): Schema {
+  const filo = schema.fili.find((f) => f.id === id);
+  if (!filo?.punti || indice < 0 || indice >= filo.punti.length) return schema;
+  const nuovo = { x: agganciaValore(punto.x, 10), y: agganciaValore(punto.y, 10) };
+  const vecchio = filo.punti[indice];
+  if (vecchio.x === nuovo.x && vecchio.y === nuovo.y) return schema;
+  const punti = filo.punti.map((p, i) => (i === indice ? nuovo : p));
+  return { ...schema, fili: schema.fili.map((f) => (f.id === id ? { ...f, punti } : f)) };
+}
+
+/** Colori dei cavetti, come nella cassetta del laboratorio. */
+export const COLORI_FILI: { nome: string; valore: string }[] = [
+  { nome: "verde", valore: "#2e7d32" },
+  { nome: "rosso", valore: "#d32f2f" },
+  { nome: "nero", valore: "#212121" },
+  { nome: "blu", valore: "#1565c0" },
+  { nome: "giallo", valore: "#f9a825" },
+  { nome: "arancione", valore: "#ef6c00" },
+  { nome: "bianco", valore: "#eeeeee" },
+  { nome: "viola", valore: "#6a1b9a" },
+];
+
+/**
+ * Colore proposto per un nuovo cavetto, secondo l'abitudine del laboratorio:
+ * rosso se tocca un'alimentazione positiva (5V, 3V3, linea + della
+ * breadboard), nero se tocca la massa (GND, linea −), verde negli altri casi.
+ */
+export function colorePropostoFilo(da: EstremoFilo, a: EstremoFilo): string {
+  const tipo = (m: string) => (/^(5V|3V3|VIN|Ap\d+|Bp\d+)$/.test(m) ? "piu" : /^(GND\d*|Am\d+|Bm\d+)$/.test(m) ? "meno" : "");
+  const t = [tipo(da.morsetto), tipo(a.morsetto)];
+  if (t.includes("meno")) return "#212121";
+  if (t.includes("piu")) return "#d32f2f";
+  return "#2e7d32";
 }

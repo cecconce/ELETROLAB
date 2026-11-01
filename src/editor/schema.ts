@@ -33,6 +33,8 @@ export interface ComponenteSchema {
    * (es. { motore: "Q1.0" }). I segnali assenti usano l'operando proposto.
    */
   collegamenti?: Record<string, string>;
+  /** Solo per le resistenze del modulo Arduino: valore in ohm (se manca 220 Ω). */
+  valore?: number;
 }
 
 /** Un capo di un filo: il morsetto `morsetto` (es. "14") del componente `componente`. */
@@ -57,11 +59,19 @@ export interface Filo {
   a: EstremoFilo;
   medio?: number;
   punti?: Punto[];
+  /** Colore del filo (modulo Arduino, come i cavetti veri): es. "#d32f2f". */
+  colore?: string;
 }
 
 export interface Schema {
   componenti: ComponenteSchema[];
   fili: Filo[];
+  /**
+   * Solo nel modulo Arduino: il programma (sketch) scritto dallo studente.
+   * Sta nello schema così Annulla/Ripeti, salvataggio automatico e file .elab
+   * lo trattano come il resto del progetto.
+   */
+  codice?: string;
 }
 
 export const SCHEMA_VUOTO: Schema = { componenti: [], fili: [] };

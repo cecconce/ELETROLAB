@@ -56,7 +56,9 @@ describe("file della libreria forniti con l'app", () => {
         expect(v.descrizione.length, v.id).toBeGreaterThan(20);
         const svg = ICONE.get(v.icona) ?? "";
         expect(svg, v.icona).toContain(`viewBox="0 0 ${v.larghezza} ${v.altezza}"`);
-        expect(svg, v.icona).toContain("currentColor");
+        // I simboli normativi seguono il colore del tema; le icone del banco
+        // Arduino sono disegni realistici a colori fissi (come i componenti veri).
+        if (m.id !== "arduino") expect(svg, v.icona).toContain("currentColor");
         // Le icone sono originali e senza script o risorse esterne.
         expect(svg).not.toMatch(/<script|href=|url\(/i);
       }

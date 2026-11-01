@@ -60,6 +60,9 @@ import {
   spostaTrattoDelFilo,
   trattoPiuVicino,
   anteprimaConPieghe,
+  inserisciPiega,
+  spostaPiega,
+  colorePropostoFilo,
   type MorsettiDelTipo,
   type MorsettoPosato,
 } from "./fili";
@@ -241,7 +244,9 @@ export function AreaDisegno({
   const [avviso, setAvviso] = useState<string | null>(null);
   // Filo di cui si sta trascinando un tratto: quale filo, quale tratto e il
   // percorso che aveva quando è stato afferrato.
-  const filoTrascinato = useRef<{ id: string; tratto: number; percorso: Punto[] } | null>(null);
+  // Nei fili diretti (banco Arduino) si trascina invece una piega: `piega` è il suo indice.
+  // `diretto`: la piega si crea solo quando il mouse si sposta davvero (un clic seleziona e basta).
+  const filoTrascinato = useRef<{ id: string; tratto: number; percorso: Punto[]; piega?: number; diretto?: { da: Punto } } | null>(null);
 
   // Riferimento sempre aggiornato alla callback, usato dal gestore dei tasti.
   const onFinePosaRif = useRef(onFinePosa);
@@ -383,7 +388,12 @@ export function AreaDisegno({
       if (esito.errore === "fili.stessoMorsetto") setFiloInCorso(null);
       return;
     }
-    onCambiaSchema(esito.schema);
+    // Nel banco Arduino il cavetto prende subito un colore (rosso +, nero GND, verde).
+    const conColore =
+      libreria.modulo === "arduino"
+        ? { ...esito.schema, fili: esito.schema.fili.map((f) => (f.id === esito.filo.id ? { ...f, colore: colorePropostoFilo(f.da, f.a) } : f)) }
+        : esito.schema;
+    onCambiaSchema(conColore);
     setSelezione([esito.filo.id]);
     setFiloInCorso(null);
   };
@@ -459,8 +469,17 @@ export function AreaDisegno({
     if (voceDaPosare) setAnteprima(schermoAFoglio(vista, p));
     if (filoInCorso) setMouseFoglio(schermoAFoglio(vista, p));
     if (filoTrascinato.current) {
-      const { id, tratto, percorso } = filoTrascinato.current;
-      onCambiaSchema(spostaTrattoDelFilo(schema, id, percorso, tratto, schermoAFoglio(vista, p)), true);
+      const { id, tratto, percorso, piega, diretto } = filoTrascinato.current;
+      const qui = schermoAFoglio(vista, p);
+      if (diretto && piega === undefined) {
+        if (Math.hypot(qui.x - diretto.da.x, qui.y - diretto.da.y) < 6 / vista.scala) return;
+        const conPiega = inserisciPiega(schema, id, tratto, qui);
+        filoTrascinato.current = { ...filoTrascinato.current, piega: conPiega.indice };
+        onCambiaSchema(conPiega.schema, true);
+        return;
+      }
+      if (piega !== undefined) onCambiaSchema(spostaPiega(schema, id, piega, qui), true);
+      else onCambiaSchema(spostaTrattoDelFilo(schema, id, percorso, tratto, schermoAFoglio(vista, p)), true);
       return;
     }
     if (spostandoVista && ultimoPuntatore.current) {
@@ -579,7 +598,9 @@ export function AreaDisegno({
   // Anteprima del filo in corso: dal morsetto di partenza al mouse (o al morsetto sotto il mouse).
   const arrivoAnteprima = morsettoSotto ? morsetti.find((m) => `${m.componente}/${m.morsetto}` === morsettoSotto) : undefined;
   const anteprimaFilo =
-    filoInCorso && (arrivoAnteprima || mouseFoglio)
+    filoInCorso && (arrivoAnteprima || mouseFoglio) && libreria.modulo === "arduino"
+      ? [filoInCorso.posizione, ...pieghe, arrivoAnteprima ? arrivoAnteprima.posizione : (mouseFoglio as Punto)]
+      : filoInCorso && (arrivoAnteprima || mouseFoglio)
       ? arrivoAnteprima
         ? pieghe.length > 0
           ? anteprimaConPieghe(filoInCorso.posizione, pieghe, arrivoAnteprima.posizione)
@@ -590,6 +611,132 @@ export function AreaDisegno({
           })
       : null;
   const raggioMorsetto = 3.5;
+
+  // Ordine di disegno: nel modulo Arduino prima le breadboard e i loro fori,
+  // poi gli altri componenti (che vi si infilano sopra), i fili e i piedini.
+  const banco = libreria.modulo === "arduino";
+  const eFondo = (tipo: string) => banco && tipo === "breadboard";
+  const componentiFondo = schema.componenti.filter((c) => eFondo(c.tipo));
+  const componentiSopra = schema.componenti.filter((c) => !eFondo(c.tipo));
+  const tipoDi = new Map(schema.componenti.map((c) => [c.id, c.tipo]));
+  const morsettiFondo = morsetti.filter((m) => eFondo(tipoDi.get(m.componente) ?? ""));
+  const morsettiSopra = morsetti.filter((m) => !eFondo(tipoDi.get(m.componente) ?? ""));
+
+  const disegnaComponente = (c: ComponenteSchema) => {
+                const scelto = selezionati.has(c.id);
+                const aspetto = simulazione?.vista.componenti[c.id];
+                return (
+                  <Group
+                    key={c.id}
+                    x={c.x}
+                    y={c.y}
+                    draggable={!spazioPremuto && !voceDaPosare && !inSimulazione}
+                    onMouseEnter={() => aspetto?.clic && setCliccabileSotto(c.id)}
+                    onMouseLeave={() => setCliccabileSotto((x) => (x === c.id ? null : x))}
+                    onMouseUp={() => simulazione?.onSu(c.id)}
+                    onMouseDown={(e) => {
+                      if (simulazione) {
+                        // In simulazione il clic aziona il componente (se si può).
+                        if (e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
+                        e.cancelBubble = true;
+                        const gruppo = e.currentTarget as Konva.Group;
+                        const locale = gruppo.getRelativePointerPosition();
+                        simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
+                        return;
+                      }
+                      // Con un componente da posare il clic passa al foglio (posa anche sopra un altro).
+                      if (e.evt.button !== 0 || spazioPremuto || voceDaPosare) return;
+                      e.cancelBubble = true; // non far partire il rettangolo di selezione
+                      const aggiuntivo = e.evt.shiftKey || e.evt.ctrlKey;
+                      if (aggiuntivo) setSelezione((sel) => selezionaConClic(sel, c.id, true));
+                      else if (!selezionati.has(c.id)) setSelezione([c.id]);
+                    }}
+                    onDragStart={(e) => inizioTrascinamento(c.id, e.target)}
+                    onDragMove={(e) => durante(e.target)}
+                    onDragEnd={(e) => fineTrascinamento(e.target)}
+                  >
+                    <SimboloComponente
+                      larghezza={c.larghezza}
+                      altezza={c.altezza}
+                      // Nel banco Arduino niente sigle sopra i componenti (come sul banco vero).
+                      etichetta={libreria.modulo === "arduino" ? "" : siglaMostrata(c)}
+                      nonAssociato={siglaMostrata(c) !== c.etichetta}
+                      numeri={numeriDa(c)}
+                      immagine={immagine(c.tipo)}
+                      scelto={scelto}
+                      colori={colori}
+                      siglaSopra={libreria.modulo === "plc" || libreria.modulo === "arduino"}
+                      siglaDentro={c.tipo === "ladder-commento"}
+                    />
+                    {MODELLI_IMPIANTI_PLC[c.tipo] && (
+                      <DisegnoImpianto
+                        tipo={c.tipo}
+                        operandi={operandiImpianto(MODELLI_IMPIANTI_PLC[c.tipo], c.collegamenti)}
+                        stato={aspetto?.impianto}
+                        colori={colori}
+                      />
+                    )}
+                    {aspetto && (
+                      <AspettoInSimulazione
+                        componente={c}
+                        voce={vociPerTipo.get(c.tipo)}
+                        aspetto={aspetto}
+                        colori={colori}
+                      />
+                    )}
+                  </Group>
+                );
+              };
+
+  const disegnaMorsetto = (m: MorsettoPosato) => {
+                const chiave = `${m.componente}/${m.morsetto}`;
+                const attivo =
+                  morsettoSotto === chiave ||
+                  (filoInCorso?.componente === m.componente && filoInCorso.morsetto === m.morsetto);
+                const nFili = filiSulMorsetto(schema, m);
+                const inCorto = simulazione?.vista.morsettiInCorto.has(`${m.componente}:${m.morsetto}`) ?? false;
+                return (
+                  <Group
+                    key={chiave}
+                    x={m.posizione.x}
+                    y={m.posizione.y}
+                    listening={!voceDaPosare && !spazioPremuto && !inSimulazione}
+                  >
+                    {inCorto && <Circle radius={9} stroke={colori.corto} strokeWidth={3} listening={false} />}
+                    <Circle
+                      radius={attivo ? raggioMorsetto + 1.5 : raggioMorsetto}
+                      // Banco Arduino: fori e piedini sono già disegnati; il cerchio
+                      // compare (verde) solo sotto il mouse, come in un simulatore di breadboard.
+                      fill={banco ? (attivo ? colori.morsettoAttivo : "rgba(0,0,0,0)") : nFili >= 2 ? colori.filo : attivo ? colori.morsettoAttivo : colori.foglio}
+                      stroke={banco ? (attivo ? colori.morsettoAttivo : "rgba(0,0,0,0)") : attivo ? colori.morsettoAttivo : nFili > 0 ? colori.filo : colori.morsetto}
+                      strokeWidth={1.5}
+                      hitStrokeWidth={14}
+                      onMouseEnter={() => setMorsettoSotto(chiave)}
+                      onMouseLeave={() => setMorsettoSotto((x) => (x === chiave ? null : x))}
+                      onMouseDown={(e) => {
+                        if (e.evt.button !== 0) return;
+                        e.cancelBubble = true; // né rettangolo di selezione né trascinamento
+                        clicMorsetto(m);
+                      }}
+                    />
+                    {attivo && (
+                      <Text
+                        text={(() => {
+                          const comp = componentePerId.get(m.componente);
+                          return comp ? numeroMorsetto(comp, m.morsetto) : m.morsetto;
+                        })()}
+                        x={6}
+                        y={-16}
+                        fontSize={11}
+                        fontStyle="bold"
+                        fontFamily="Segoe UI, system-ui, sans-serif"
+                        fill={colori.morsettoAttivo}
+                        listening={false}
+                      />
+                    )}
+                  </Group>
+                );
+              };
   const posAnteprima =
     voceDaPosare && anteprima ? componenteDaVoce(schema, voceDaPosare, anteprima, libreria) : null;
 
@@ -656,75 +803,50 @@ export function AreaDisegno({
             </Layer>
 
             <Layer>
-              {schema.componenti.map((c) => {
-                const scelto = selezionati.has(c.id);
-                const aspetto = simulazione?.vista.componenti[c.id];
-                return (
-                  <Group
-                    key={c.id}
-                    x={c.x}
-                    y={c.y}
-                    draggable={!spazioPremuto && !voceDaPosare && !inSimulazione}
-                    onMouseEnter={() => aspetto?.clic && setCliccabileSotto(c.id)}
-                    onMouseLeave={() => setCliccabileSotto((x) => (x === c.id ? null : x))}
-                    onMouseUp={() => simulazione?.onSu(c.id)}
-                    onMouseDown={(e) => {
-                      if (simulazione) {
-                        // In simulazione il clic aziona il componente (se si può).
-                        if (e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
-                        e.cancelBubble = true;
-                        const gruppo = e.currentTarget as Konva.Group;
-                        const locale = gruppo.getRelativePointerPosition();
-                        simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
-                        return;
-                      }
-                      // Con un componente da posare il clic passa al foglio (posa anche sopra un altro).
-                      if (e.evt.button !== 0 || spazioPremuto || voceDaPosare) return;
-                      e.cancelBubble = true; // non far partire il rettangolo di selezione
-                      const aggiuntivo = e.evt.shiftKey || e.evt.ctrlKey;
-                      if (aggiuntivo) setSelezione((sel) => selezionaConClic(sel, c.id, true));
-                      else if (!selezionati.has(c.id)) setSelezione([c.id]);
-                    }}
-                    onDragStart={(e) => inizioTrascinamento(c.id, e.target)}
-                    onDragMove={(e) => durante(e.target)}
-                    onDragEnd={(e) => fineTrascinamento(e.target)}
-                  >
-                    <SimboloComponente
-                      larghezza={c.larghezza}
-                      altezza={c.altezza}
-                      etichetta={siglaMostrata(c)}
-                      nonAssociato={siglaMostrata(c) !== c.etichetta}
-                      numeri={numeriDa(c)}
-                      immagine={immagine(c.tipo)}
-                      scelto={scelto}
-                      colori={colori}
-                      siglaSopra={libreria.modulo === "plc"}
-                      siglaDentro={c.tipo === "ladder-commento"}
-                    />
-                    {MODELLI_IMPIANTI_PLC[c.tipo] && (
-                      <DisegnoImpianto
-                        tipo={c.tipo}
-                        operandi={operandiImpianto(MODELLI_IMPIANTI_PLC[c.tipo], c.collegamenti)}
-                        stato={aspetto?.impianto}
-                        colori={colori}
-                      />
-                    )}
-                    {aspetto && (
-                      <AspettoInSimulazione
-                        componente={c}
-                        voce={vociPerTipo.get(c.tipo)}
-                        aspetto={aspetto}
-                        colori={colori}
-                      />
-                    )}
-                  </Group>
-                );
-              })}
+              {/* Nel modulo Arduino la breadboard e i suoi fori stanno sotto agli
+                  altri componenti: i piedini infilati restano cliccabili. */}
+              {componentiFondo.map(disegnaComponente)}
+              {morsettiFondo.map(disegnaMorsetto)}
+              {componentiSopra.map(disegnaComponente)}
               {/* Fili: sopra i simboli, così si vedono e si afferrano facilmente. */}
               {schema.fili.map((f) => {
-                const punti = percorsoFilo(schema, f, morsettiDi);
+                const punti = percorsoFilo(schema, f, morsettiDi, banco ? "diretto" : "ortogonale");
                 if (!punti) return null;
                 const scelto = selezionati.has(f.id);
+                if (banco) {
+                  // Cavetto colorato, più spesso, con il contorno quando è selezionato.
+                  const colore = f.colore ?? colorePropostoFilo(f.da, f.a);
+                  return (
+                    <Group key={f.id}>
+                      {scelto && <Line points={punti.flatMap((q) => [q.x, q.y])} stroke={colori.selezione} strokeWidth={9} lineCap="round" lineJoin="round" listening={false} />}
+                      <Line
+                        points={punti.flatMap((q) => [q.x, q.y])}
+                        stroke={colore}
+                        strokeWidth={5}
+                        shadowColor="#000000"
+                        shadowOpacity={0.25}
+                        shadowBlur={2}
+                        shadowOffsetY={1}
+                        hitStrokeWidth={12}
+                        lineCap="round"
+                        lineJoin="round"
+                        listening={!voceDaPosare && !filoInCorso && !inSimulazione}
+                        onMouseDown={(e) => {
+                          if (e.evt.button !== 0 || spazioPremuto) return;
+                          e.cancelBubble = true;
+                          const aggiuntivo = e.evt.shiftKey || e.evt.ctrlKey;
+                          setSelezione((sel) => (aggiuntivo ? selezionaConClic(sel, f.id, true) : [f.id]));
+                          const pos = e.target.getStage()?.getPointerPosition();
+                          if (!pos) return;
+                          // Trascinando il cavetto si crea una piega dove lo si è afferrato.
+                          const punto = schermoAFoglio(vista, pos);
+                          filoTrascinato.current = { id: f.id, tratto: trattoPiuVicino(punti, punto), percorso: punti, diretto: { da: punto } };
+                        }}
+                        onDblClick={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
+                      />
+                    </Group>
+                  );
+                }
                 // In simulazione: colore del polo che raggiunge il filo (più spesso se in tensione).
                 const poli = simulazione?.vista.poliDeiFili[f.id] ?? [];
                 const coloreTensione = coloreFilo(poli, colori);
@@ -766,53 +888,7 @@ export function AreaDisegno({
                 />
               )}
               {/* Morsetti: cerchietto vuoto se libero, pallino pieno se ci arrivano due o più fili (giunzione). */}
-              {morsetti.map((m) => {
-                const chiave = `${m.componente}/${m.morsetto}`;
-                const attivo =
-                  morsettoSotto === chiave ||
-                  (filoInCorso?.componente === m.componente && filoInCorso.morsetto === m.morsetto);
-                const nFili = filiSulMorsetto(schema, m);
-                const inCorto = simulazione?.vista.morsettiInCorto.has(`${m.componente}:${m.morsetto}`) ?? false;
-                return (
-                  <Group
-                    key={chiave}
-                    x={m.posizione.x}
-                    y={m.posizione.y}
-                    listening={!voceDaPosare && !spazioPremuto && !inSimulazione}
-                  >
-                    {inCorto && <Circle radius={9} stroke={colori.corto} strokeWidth={3} listening={false} />}
-                    <Circle
-                      radius={attivo ? raggioMorsetto + 1.5 : raggioMorsetto}
-                      fill={nFili >= 2 ? colori.filo : attivo ? colori.morsettoAttivo : colori.foglio}
-                      stroke={attivo ? colori.morsettoAttivo : nFili > 0 ? colori.filo : colori.morsetto}
-                      strokeWidth={1.5}
-                      hitStrokeWidth={14}
-                      onMouseEnter={() => setMorsettoSotto(chiave)}
-                      onMouseLeave={() => setMorsettoSotto((x) => (x === chiave ? null : x))}
-                      onMouseDown={(e) => {
-                        if (e.evt.button !== 0) return;
-                        e.cancelBubble = true; // né rettangolo di selezione né trascinamento
-                        clicMorsetto(m);
-                      }}
-                    />
-                    {attivo && (
-                      <Text
-                        text={(() => {
-                          const comp = componentePerId.get(m.componente);
-                          return comp ? numeroMorsetto(comp, m.morsetto) : m.morsetto;
-                        })()}
-                        x={6}
-                        y={-16}
-                        fontSize={11}
-                        fontStyle="bold"
-                        fontFamily="Segoe UI, system-ui, sans-serif"
-                        fill={colori.morsettoAttivo}
-                        listening={false}
-                      />
-                    )}
-                  </Group>
-                );
-              })}
+              {morsettiSopra.map(disegnaMorsetto)}
               {/* Punti di un problema: riquadro rosso tratteggiato e cerchi sui morsetti. */}
               {evidenzia &&
                 evidenzia.componenti.map((id) => {
