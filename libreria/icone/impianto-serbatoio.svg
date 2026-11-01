@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="260" viewBox="0 0 200 260" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M50 40V230H150V40"/>
+<circle cx="25" cy="215" r="14"/>
+<path d="M18 222L25 205L32 222"/>
+<path d="M25 201V25H80V40"/>
+<path d="M150 220H190"/>
+<path d="M163 213L177 227M163 227L177 213" />
+<path d="M100 230V246M93 246H107"/>
+<path d="M150 192H160M150 59H160" stroke-width="3"/>
+</svg>

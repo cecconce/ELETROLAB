@@ -750,6 +750,62 @@
       "larghezza": 360,
       "altezza": 200,
       "morsetti": []
+    },
+    {
+      "id": "impianto-serbatoio",
+      "nome": "Serbatoio con pompa",
+      "categoria": "impianti",
+      "sigla": "",
+      "descrizione": "La pompa (Q0.0) riempie il serbatoio, la valvola (Q0.1) lo svuota. Galleggianti: livello minimo (I0.2) e massimo (I0.3). In simulazione: clic sul serbatoio per aprire o chiudere il rubinetto dell'utenza.",
+      "paroleChiave": [
+        "serbatoio",
+        "pompa",
+        "livello",
+        "galleggiante",
+        "acqua",
+        "impianto"
+      ],
+      "icona": "impianto-serbatoio.svg",
+      "larghezza": 200,
+      "altezza": 260,
+      "morsetti": []
+    },
+    {
+      "id": "impianto-ascensore",
+      "nome": "Ascensore",
+      "categoria": "impianti",
+      "sigla": "",
+      "descrizione": "Ascensore a 3 piani: motore su (Q0.0) e giù (Q0.1), finecorsa di piano (I0.2, I0.3, I0.4), pulsanti di chiamata (I0.5, I0.6, I0.7). In simulazione: tieni premuto un pulsante di chiamata accanto al piano.",
+      "paroleChiave": [
+        "ascensore",
+        "piani",
+        "cabina",
+        "chiamata",
+        "impianto"
+      ],
+      "icona": "impianto-ascensore.svg",
+      "larghezza": 160,
+      "altezza": 300,
+      "morsetti": []
+    },
+    {
+      "id": "impianto-parcheggio",
+      "nome": "Parcheggio",
+      "categoria": "impianti",
+      "sigla": "",
+      "descrizione": "Parcheggio da 5 posti: fotocellule di ingresso (I0.2) e uscita (I0.3), sbarre di ingresso (Q0.0) e uscita (Q0.1), scritta COMPLETO (Q0.2). In simulazione: clic a sinistra = arriva un'auto, clic a destra = un'auto vuole uscire.",
+      "paroleChiave": [
+        "parcheggio",
+        "sbarra",
+        "auto",
+        "contatore",
+        "posti",
+        "impianto"
+      ],
+      "icona": "impianto-parcheggio.svg",
+      "larghezza": 360,
+      "altezza": 180,
+      "morsetti": []
     }
   ]
 }

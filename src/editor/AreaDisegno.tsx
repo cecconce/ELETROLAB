@@ -119,7 +119,8 @@ export interface PropsAreaDisegno {
    */
   simulazione?: {
     vista: VistaSimulazione;
-    onGiu: (id: string) => void;
+    /** `punto`: dove si è cliccato, in coordinate del componente (serve agli impianti animati). */
+    onGiu: (id: string, punto?: Punto) => void;
     onSu: (id: string) => void;
   } | null;
   /** Componenti e morsetti ("id:morsetto") da evidenziare in rosso (punti di un problema). */
@@ -672,7 +673,9 @@ export function AreaDisegno({
                         // In simulazione il clic aziona il componente (se si può).
                         if (e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
                         e.cancelBubble = true;
-                        simulazione.onGiu(c.id);
+                        const gruppo = e.currentTarget as Konva.Group;
+                        const locale = gruppo.getRelativePointerPosition();
+                        simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
                         return;
                       }
                       // Con un componente da posare il clic passa al foglio (posa anche sopra un altro).

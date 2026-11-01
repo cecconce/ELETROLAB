@@ -32,10 +32,19 @@ export interface ModelloImpianto<S = unknown> {
   avanza(stato: S, attuatori: Readonly<Record<string, boolean>>, dt: number): S;
   /** Valore dei sensori nello stato attuale. */
   letturaSensori(stato: S): Record<string, boolean>;
-  /** Pressione del mouse sull'impianto (facoltativa). */
-  clicGiu?(stato: S): S;
+  /**
+   * Pressione del mouse sull'impianto (facoltativa). `punto` = dove si è
+   * cliccato, in coordinate del disegno (es. quale pulsante di piano).
+   */
+  clicGiu?(stato: S, punto?: Punto): S;
   /** Rilascio del mouse sull'impianto (facoltativo). */
   clicSu?(stato: S): S;
+}
+
+/** Punto nel disegno dell'impianto (0,0 = angolo in alto a sinistra). */
+export interface Punto {
+  x: number;
+  y: number;
 }
 
 /** Limita un valore fra minimo e massimo. */

@@ -282,9 +282,9 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       vista
         ? {
             vista,
-            onGiu: (id: string) => {
+            onGiu: (id: string, punto?: { x: number; y: number }) => {
               const s = sessioneRif.current;
-              if (s) aggiornaSessione(eSessionePlc(s) ? clicGiuPlc(s, id) : clicGiu(s, id));
+              if (s) aggiornaSessione(eSessionePlc(s) ? clicGiuPlc(s, id, punto) : clicGiu(s, id));
             },
             onSu: (id: string) => {
               const s = sessioneRif.current;

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="300" viewBox="0 0 160 300" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="20" y="10" width="80" height="280"/>
+<path d="M20 270H100M20 170H100M20 70H100" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="10" y="262" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">0</text><text x="10" y="162" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">1</text><text x="10" y="62" font-size="11" text-anchor="middle" fill="currentColor" stroke="none" font-family="Segoe UI, Arial, sans-serif">2</text>
+<circle cx="130" cy="245" r="9"/>
+<circle cx="130" cy="145" r="9"/>
+<circle cx="130" cy="45" r="9"/>
+<path d="M100 245H106M100 145H106M100 45H106" stroke-width="3"/>
+</svg>

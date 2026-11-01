@@ -166,9 +166,9 @@ export function passoPlc(s: SessionePlc, dt: number): SessionePlc {
 }
 
 /** Pressione del mouse su un componente: se è un contatto su un ingresso, l'ingresso va a 1. */
-export function clicGiuPlc(s: SessionePlc, id: string): SessionePlc {
+export function clicGiuPlc(s: SessionePlc, id: string, punto?: { x: number; y: number }): SessionePlc {
   const imp = s.impianti[id];
-  if (imp) return clicImpianto(s, id, "giu");
+  if (imp) return clicImpianto(s, id, "giu", punto);
   const comando = s.comandi[id];
   if (comando) {
     const azionato = s.comandiAzionati.includes(id);
@@ -212,12 +212,12 @@ export function commutaIngresso(s: SessionePlc, operando: string): SessionePlc {
 }
 
 /** Clic dello studente su un impianto animato (posare un pacco, chiamata pedonale…). */
-function clicImpianto(s: SessionePlc, id: string, fase: "giu" | "su"): SessionePlc {
+function clicImpianto(s: SessionePlc, id: string, fase: "giu" | "su", punto?: { x: number; y: number }): SessionePlc {
   const imp = s.impianti[id];
   const modello = MODELLI_IMPIANTI_PLC[imp.tipo];
   const azione = fase === "giu" ? modello?.clicGiu : modello?.clicSu;
   if (!azione) return s;
-  const stato = azione(imp.stato);
+  const stato = azione(imp.stato, punto);
   if (stato === imp.stato) return s;
   return cicloImmediato({ ...s, impianti: { ...s.impianti, [id]: { ...imp, stato } } });
 }

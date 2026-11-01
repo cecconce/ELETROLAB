@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="180" viewBox="0 0 360 180" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M0 118H360M0 162H360"/>
+<rect x="120" y="22" width="120" height="76" rx="4"/>
+<path d="M144 22V40M168 22V40M192 22V40M216 22V40"/>
+<path d="M150 98V118M210 98V118" stroke-dasharray="3 3" stroke-width="1"/>
+<rect x="86" y="112" width="8" height="18"/>
+<rect x="266" y="112" width="8" height="18"/>
+<path d="M76 118V162M284 118V162" stroke-dasharray="3 3" stroke-width="1"/>
+</svg>
