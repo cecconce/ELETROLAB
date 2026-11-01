@@ -83,6 +83,8 @@ export interface StatoSegmento {
   risultato: boolean;
   /** Posizioni dei contatti che conducono (vedi `percorso`). */
   contattiChiusi: string[];
+  /** Id dei componenti disegnati i cui contatti conducono (se la logica li indica). */
+  idChiusi: string[];
 }
 
 export interface RisultatoScansione {
@@ -160,6 +162,7 @@ export function scansione(
   // 2. Esecuzione dei segmenti in ordine.
   const segmenti: StatoSegmento[] = programma.segmenti.map((segmento, indice) => {
     const contattiChiusi: string[] = [];
+    const idChiusi = new Set<string>();
 
     // Valuta TUTTI gli elementi (niente scorciatoie tipo "&&"): così ogni
     // contatto di fronte aggiorna la sua memoria a ogni ciclo e l'editor
@@ -177,7 +180,10 @@ export function scansione(
             memoriaFronti[chiave] = valore;
             conduce = logica.contatto === "P" ? valore && !prima : !valore && prima;
           }
-          if (conduce) contattiChiusi.push(pos);
+          if (conduce) {
+            contattiChiusi.push(pos);
+            if (logica.id) idChiusi.add(logica.id);
+          }
           return conduce;
         }
         case "serie": {
@@ -201,7 +207,7 @@ export function scansione(
         if (risultato) azzeraBlocco(uscita.operando, temporizzatori, contatori);
       } else applicaUscita(uscita, risultato, scrivi);
     }
-    return { risultato, contattiChiusi };
+    return { risultato, contattiChiusi, idChiusi: [...idChiusi] };
   });
 
   // 3. Scrittura uscite: le Q a 1 alla fine del ciclo.

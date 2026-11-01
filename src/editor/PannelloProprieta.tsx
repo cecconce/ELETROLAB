@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { t } from "../testi";
 import { associaContatto, cambiaSigla, contattoAssociato, numeroMorsetto, proprietariPer } from "./associazioni";
 import { vocePerTipo, type Libreria } from "./libreria";
-import { eTemporizzatore, impostaTempo, tempoDaMostrare } from "./parametri";
+import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
 import type { Schema, Selezione } from "./schema";
 
 export interface PropsPannelloProprieta {
@@ -36,6 +36,13 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
     setBozzaTempo(tempoDaMostrare(componente?.tempo));
     setErroreTempo(null);
   }, [componente?.id, componente?.tempo]);
+  // Preset dei contatori del PLC, con lo stesso meccanismo.
+  const [bozzaPreset, setBozzaPreset] = useState("");
+  const [errorePreset, setErrorePreset] = useState<string | null>(null);
+  useEffect(() => {
+    setBozzaPreset(presetDaMostrare(componente?.preset));
+    setErrorePreset(null);
+  }, [componente?.id, componente?.preset]);
 
   if (!componente) {
     return (
@@ -56,6 +63,13 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
     } else setErrore(esito.errore);
   };
 
+  const applicaPreset = () => {
+    const esito = impostaPreset(schema, componente.id, bozzaPreset);
+    if (esito.ok) {
+      setErrorePreset(null);
+      if (esito.schema !== schema) onCambiaSchema(esito.schema);
+    } else setErrorePreset(esito.errore);
+  };
   const applicaTempo = () => {
     const esito = impostaTempo(schema, componente.id, bozzaTempo);
     if (esito.ok) {
@@ -117,13 +131,13 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
       ) : (
         voce?.sigla !== "" && (
           <label className="proprieta-campo">
-            <span>{t("proprieta.sigla")}</span>
+            <span>{libreria.modulo === "plc" ? t("proprieta.operando") : t("proprieta.sigla")}</span>
             <input
               type="text"
               value={bozza}
               maxLength={8}
               spellCheck={false}
-              title={t("proprieta.siglaSuggerimento")}
+              title={libreria.modulo === "plc" ? t("proprieta.operandoSuggerimento") : t("proprieta.siglaSuggerimento")}
               aria-invalid={errore !== null}
               onChange={(e) => setBozza(e.target.value)}
               onBlur={applicaSigla}
@@ -164,6 +178,34 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
           {erroreTempo && (
             <p className="proprieta-avviso" role="alert">
               {erroreTempo}
+            </p>
+          )}
+        </>
+      )}
+
+      {eContatore(componente.tipo) && (
+        <>
+          <label className="proprieta-campo">
+            <span>{t("proprieta.preset")}</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={bozzaPreset}
+              maxLength={6}
+              spellCheck={false}
+              title={t("proprieta.presetSuggerimento")}
+              aria-invalid={errorePreset !== null}
+              onChange={(e) => setBozzaPreset(e.target.value)}
+              onBlur={applicaPreset}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applicaPreset();
+                if (e.key === "Escape") setBozzaPreset(presetDaMostrare(componente.preset));
+              }}
+            />
+          </label>
+          {errorePreset && (
+            <p className="proprieta-avviso" role="alert">
+              {errorePreset}
             </p>
           )}
         </>

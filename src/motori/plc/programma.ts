@@ -19,7 +19,8 @@ export type TipoContatto =
 
 /** Elemento della logica di un segmento. */
 export type Logica =
-  | { tipo: "contatto"; contatto: TipoContatto; operando: string }
+  /** `id`: componente disegnato da cui viene il contatto (per colorarlo in simulazione). */
+  | { tipo: "contatto"; contatto: TipoContatto; operando: string; id?: string }
   | { tipo: "serie"; elementi: Logica[] }
   | { tipo: "parallelo"; rami: Logica[] };
 

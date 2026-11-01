@@ -66,6 +66,8 @@ function leggiComponente(v: unknown): ComponenteSchema | undefined {
   }
   // Tempo dei temporizzatori (facoltativo, in secondi, mai negativo).
   if (eNumero(v.tempo) && v.tempo >= 0) c.tempo = v.tempo;
+  // Preset dei contatori del PLC (facoltativo, intero non negativo).
+  if (eNumero(v.preset) && v.preset >= 0) c.preset = Math.round(v.preset);
   return c;
 }
 

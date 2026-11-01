@@ -2,24 +2,184 @@
   "versione": 1,
   "modulo": "plc",
   "categorie": [
-    { "id": "contatti", "nome": "Contatti" },
-    { "id": "bobine", "nome": "Bobine" },
-    { "id": "funzioni", "nome": "Temporizzatori e contatori" }
+    {
+      "id": "alimentazione",
+      "nome": "Barre di alimentazione"
+    },
+    {
+      "id": "contatti",
+      "nome": "Contatti"
+    },
+    {
+      "id": "bobine",
+      "nome": "Bobine"
+    },
+    {
+      "id": "funzioni",
+      "nome": "Temporizzatori e contatori"
+    }
   ],
   "componenti": [
+    {
+      "id": "ladder-barra-sinistra",
+      "nome": "Barra di alimentazione sinistra",
+      "categoria": "alimentazione",
+      "sigla": "",
+      "descrizione": "La linea verticale a sinistra da cui parte il segnale: ogni segmento del Ladder inizia qui. Tutti i suoi morsetti sono collegati fra loro.",
+      "paroleChiave": [
+        "barra",
+        "alimentazione",
+        "linea",
+        "inizio"
+      ],
+      "icona": "ladder-barra-sinistra.svg",
+      "larghezza": 20,
+      "altezza": 400,
+      "morsetti": [
+        {
+          "id": "p1",
+          "x": 20,
+          "y": 20
+        },
+        {
+          "id": "p2",
+          "x": 20,
+          "y": 60
+        },
+        {
+          "id": "p3",
+          "x": 20,
+          "y": 100
+        },
+        {
+          "id": "p4",
+          "x": 20,
+          "y": 140
+        },
+        {
+          "id": "p5",
+          "x": 20,
+          "y": 180
+        },
+        {
+          "id": "p6",
+          "x": 20,
+          "y": 220
+        },
+        {
+          "id": "p7",
+          "x": 20,
+          "y": 260
+        },
+        {
+          "id": "p8",
+          "x": 20,
+          "y": 300
+        },
+        {
+          "id": "p9",
+          "x": 20,
+          "y": 340
+        },
+        {
+          "id": "p10",
+          "x": 20,
+          "y": 380
+        }
+      ]
+    },
+    {
+      "id": "ladder-barra-destra",
+      "nome": "Barra di alimentazione destra",
+      "categoria": "alimentazione",
+      "sigla": "",
+      "descrizione": "La linea verticale a destra dove finiscono le bobine. Serve a rendere il disegno ordinato, come nei Ladder stampati.",
+      "paroleChiave": [
+        "barra",
+        "fine",
+        "massa"
+      ],
+      "icona": "ladder-barra-destra.svg",
+      "larghezza": 20,
+      "altezza": 400,
+      "morsetti": [
+        {
+          "id": "p1",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "p2",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "p3",
+          "x": 0,
+          "y": 100
+        },
+        {
+          "id": "p4",
+          "x": 0,
+          "y": 140
+        },
+        {
+          "id": "p5",
+          "x": 0,
+          "y": 180
+        },
+        {
+          "id": "p6",
+          "x": 0,
+          "y": 220
+        },
+        {
+          "id": "p7",
+          "x": 0,
+          "y": 260
+        },
+        {
+          "id": "p8",
+          "x": 0,
+          "y": 300
+        },
+        {
+          "id": "p9",
+          "x": 0,
+          "y": 340
+        },
+        {
+          "id": "p10",
+          "x": 0,
+          "y": 380
+        }
+      ]
+    },
     {
       "id": "ladder-contatto-na",
       "nome": "Contatto NA",
       "categoria": "contatti",
       "sigla": "I",
       "descrizione": "Lascia passare il segnale quando l'ingresso (o il merker) associato vale 1.",
-      "paroleChiave": ["normalmente aperto", "ingresso", "XIC"],
+      "paroleChiave": [
+        "normalmente aperto",
+        "ingresso",
+        "XIC"
+      ],
       "icona": "ladder-contatto-na.svg",
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "in", "x": 0, "y": 20 },
-        { "id": "out", "x": 80, "y": 20 }
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
       ]
     },
     {
@@ -28,13 +188,81 @@
       "categoria": "contatti",
       "sigla": "I",
       "descrizione": "Lascia passare il segnale quando l'ingresso associato vale 0: è il contatto \"negato\".",
-      "paroleChiave": ["normalmente chiuso", "negato", "ingresso"],
+      "paroleChiave": [
+        "normalmente chiuso",
+        "negato",
+        "ingresso"
+      ],
       "icona": "ladder-contatto-nc.svg",
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "in", "x": 0, "y": 20 },
-        { "id": "out", "x": 80, "y": 20 }
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-contatto-p",
+      "nome": "Contatto fronte di salita (P)",
+      "categoria": "contatti",
+      "sigla": "I",
+      "descrizione": "Lascia passare il segnale per un solo ciclo, nell'istante in cui l'operando passa da 0 a 1 (quando premi il pulsante).",
+      "paroleChiave": [
+        "fronte",
+        "salita",
+        "impulso",
+        "positivo"
+      ],
+      "icona": "ladder-contatto-p.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-contatto-n",
+      "nome": "Contatto fronte di discesa (N)",
+      "categoria": "contatti",
+      "sigla": "I",
+      "descrizione": "Lascia passare il segnale per un solo ciclo, nell'istante in cui l'operando passa da 1 a 0 (quando rilasci il pulsante).",
+      "paroleChiave": [
+        "fronte",
+        "discesa",
+        "impulso",
+        "negativo"
+      ],
+      "icona": "ladder-contatto-n.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
       ]
     },
     {
@@ -43,13 +271,51 @@
       "categoria": "bobine",
       "sigla": "Q",
       "descrizione": "Mette a 1 l'uscita associata finché il segnale arriva da sinistra; quando il segnale manca torna a 0.",
-      "paroleChiave": ["uscita", "coil"],
+      "paroleChiave": [
+        "uscita",
+        "coil"
+      ],
       "icona": "ladder-bobina.svg",
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "in", "x": 0, "y": 20 },
-        { "id": "out", "x": 80, "y": 20 }
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-bobina-negata",
+      "nome": "Bobina negata",
+      "categoria": "bobine",
+      "sigla": "Q",
+      "descrizione": "Fa il contrario della bobina normale: l'uscita vale 1 quando il segnale NON arriva.",
+      "paroleChiave": [
+        "negata",
+        "inversa",
+        "not"
+      ],
+      "icona": "ladder-bobina-negata.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
       ]
     },
     {
@@ -58,13 +324,25 @@
       "categoria": "bobine",
       "sigla": "Q",
       "descrizione": "Mette a 1 l'uscita e la lascia a 1 anche quando il segnale manca, finché una bobina RESET non la azzera.",
-      "paroleChiave": ["set", "memoria", "aggancio"],
+      "paroleChiave": [
+        "set",
+        "memoria",
+        "aggancio"
+      ],
       "icona": "ladder-bobina-set.svg",
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "in", "x": 0, "y": 20 },
-        { "id": "out", "x": 80, "y": 20 }
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
       ]
     },
     {
@@ -73,13 +351,25 @@
       "categoria": "bobine",
       "sigla": "Q",
       "descrizione": "Riporta a 0 un'uscita che era stata messa a 1 da una bobina SET.",
-      "paroleChiave": ["reset", "azzera", "sgancio"],
+      "paroleChiave": [
+        "reset",
+        "azzera",
+        "sgancio"
+      ],
       "icona": "ladder-bobina-reset.svg",
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "in", "x": 0, "y": 20 },
-        { "id": "out", "x": 80, "y": 20 }
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
       ]
     },
     {
@@ -88,13 +378,80 @@
       "categoria": "funzioni",
       "sigla": "T",
       "descrizione": "Ritardo all'eccitazione: l'uscita va a 1 solo dopo che l'ingresso è rimasto a 1 per il tempo impostato (PT).",
-      "paroleChiave": ["timer", "ritardo", "tempo"],
+      "paroleChiave": [
+        "timer",
+        "ritardo",
+        "tempo"
+      ],
       "icona": "ladder-ton.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "IN", "x": 0, "y": 20 },
-        { "id": "Q", "x": 80, "y": 20 }
+        {
+          "id": "IN",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "Q",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-tof",
+      "nome": "Temporizzatore TOF",
+      "categoria": "funzioni",
+      "sigla": "T",
+      "descrizione": "Ritardo alla diseccitazione: l'uscita va a 1 subito e torna a 0 solo dopo il tempo impostato (PT) da quando l'ingresso è tornato a 0. Utile per la luce delle scale.",
+      "paroleChiave": [
+        "timer",
+        "ritardo",
+        "spegnimento",
+        "tempo"
+      ],
+      "icona": "ladder-tof.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "IN",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "Q",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-tp",
+      "nome": "Temporizzatore a impulso TP",
+      "categoria": "funzioni",
+      "sigla": "T",
+      "descrizione": "Impulso: quando l'ingresso passa a 1 l'uscita resta a 1 esattamente per il tempo impostato (PT), anche se rilasci subito.",
+      "paroleChiave": [
+        "timer",
+        "impulso",
+        "tempo"
+      ],
+      "icona": "ladder-tp.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "IN",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "Q",
+          "x": 80,
+          "y": 20
+        }
       ]
     },
     {
@@ -103,13 +460,52 @@
       "categoria": "funzioni",
       "sigla": "C",
       "descrizione": "Conta in avanti: ogni fronte di salita sull'ingresso aumenta il conteggio (CV) di 1; l'uscita va a 1 quando si raggiunge il valore PV.",
-      "paroleChiave": ["counter", "conta", "conteggio"],
+      "paroleChiave": [
+        "counter",
+        "conta",
+        "conteggio"
+      ],
       "icona": "ladder-ctu.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "CU", "x": 0, "y": 20 },
-        { "id": "Q", "x": 80, "y": 20 }
+        {
+          "id": "CU",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "Q",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-ctd",
+      "nome": "Contatore CTD",
+      "categoria": "funzioni",
+      "sigla": "C",
+      "descrizione": "Contatore all'indietro: parte dal valore impostato (PV) e scende di 1 a ogni impulso; l'uscita va a 1 quando arriva a 0. Con una bobina RESET sullo stesso contatore si ricarica.",
+      "paroleChiave": [
+        "contatore",
+        "indietro",
+        "decremento"
+      ],
+      "icona": "ladder-ctd.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "CD",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "Q",
+          "x": 80,
+          "y": 20
+        }
       ]
     }
   ]

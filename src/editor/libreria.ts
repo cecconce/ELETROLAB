@@ -30,6 +30,7 @@
 // Larghezza, altezza e coordinate dei morsetti sono multipli del passo di griglia.
 import { PASSO_GRIGLIA, agganciaPunto, type Punto } from "./geometria";
 import type { ComponenteSchema, Schema } from "./schema";
+import { prossimoOperando, tipiSimili } from "./ladder";
 
 export interface MorsettoLibreria {
   id: string;
@@ -309,6 +310,9 @@ export function componenteDaVoce(
         })
       : [];
     etichetta = bobine.length > 0 ? bobine[bobine.length - 1].etichetta : "";
+  } else if (libreria?.modulo === "plc") {
+    // Nel PLC la sigla è l'operando: I0.0, Q0.0, T0, C0…
+    etichetta = prossimoOperando(schema, voce.sigla, tipiSimili(voce.id));
   } else {
     etichetta = prossimaSigla(schema, voce.sigla, libreria ? tipiContatto(libreria) : undefined);
   }

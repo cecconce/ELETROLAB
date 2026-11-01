@@ -26,6 +26,8 @@ export interface ComponenteSchema {
    * tempo predefinito del motore di simulazione). Salvato nel file.
    */
   tempo?: number;
+  /** Solo per i contatori del PLC: valore di preset (numero di impulsi). Salvato nel file. */
+  preset?: number;
 }
 
 /** Un capo di un filo: il morsetto `morsetto` (es. "14") del componente `componente`. */

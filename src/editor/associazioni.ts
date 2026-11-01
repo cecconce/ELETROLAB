@@ -19,6 +19,8 @@
 import { t } from "../testi";
 import { puoComandare, tipiContatto, vocePerTipo, type DatiContatto, type Libreria } from "./libreria";
 import type { ComponenteSchema, Schema } from "./schema";
+import { eOperandoLadder } from "./ladder";
+import { normalizzaOperando } from "../motori/plc";
 
 /** Numeri dei due morsetti del contatto `ordine` (1 = primo) di un contattore. */
 export function numeriContatto(dati: DatiContatto, ordine: number): [string, string] {
@@ -128,6 +130,16 @@ export function cambiaSigla(schema: Schema, id: string, scritta: string, libreri
   if (!componente) return { ok: false, errore: t("proprieta.componenteSparito") };
   const nuova = scritta.trim().toUpperCase();
   if (nuova === componente.etichetta) return { ok: true, schema };
+  // Nel PLC la sigla è l'operando (I0.0, Q0.1, M2.3, T0, C1): più contatti
+  // possono leggere lo stesso operando, quindi le ripetizioni sono ammesse.
+  if (libreria.modulo === "plc") {
+    const operando = normalizzaOperando(nuova);
+    if (!eOperandoLadder(operando)) return { ok: false, errore: t("proprieta.operandoNonValido", { operando: scritta.trim() }) };
+    return {
+      ok: true,
+      schema: { ...schema, componenti: schema.componenti.map((c) => (c.id === id ? { ...c, etichetta: operando } : c)) },
+    };
+  }
   if (!FORMA_SIGLA.test(nuova)) return { ok: false, errore: t("proprieta.siglaNonValida", { sigla: scritta.trim() }) };
   const contatti = tipiContatto(libreria);
   if (schema.componenti.some((c) => c.id !== id && !contatti.has(c.tipo) && c.etichetta === nuova))
