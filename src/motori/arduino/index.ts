@@ -2,3 +2,4 @@
 export * from "./circuito";
 export * from "./componenti";
 export * from "./breadboard";
+export * from "./linguaggio";
