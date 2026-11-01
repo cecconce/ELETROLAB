@@ -8,6 +8,19 @@
 import { convertiLadder, leggiBlocco, leggiOperando, MODELLI_LADDER, type RisultatoConversione } from "../motori/plc";
 import type { Schema } from "./schema";
 
+/** Tipo della nota di testo del Ladder (il testo sta nella sigla del componente). */
+export const TIPO_COMMENTO = "ladder-commento";
+/** Lunghezza massima del testo di un commento. */
+export const COMMENTO_MASSIMO = 80;
+
+/** Scrive il testo di un commento (spazi in eccesso tolti, lunghezza limitata). */
+export function impostaCommento(schema: Schema, id: string, testo: string): Schema {
+  const pulito = testo.replace(/\s+/g, " ").trim().slice(0, COMMENTO_MASSIMO);
+  const c = schema.componenti.find((x) => x.id === id);
+  if (!c || c.tipo !== TIPO_COMMENTO || c.etichetta === pulito) return schema;
+  return { ...schema, componenti: schema.componenti.map((x) => (x.id === id ? { ...x, etichetta: pulito } : x)) };
+}
+
 /** Preset proposto per i contatori appena posati (impulsi). */
 export const PRESET_CONTATORE_PREDEFINITO = 5;
 /** Preset proposto per i temporizzatori appena posati (secondi). */

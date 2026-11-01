@@ -693,6 +693,8 @@ export function AreaDisegno({
                       immagine={immagine(c.tipo)}
                       scelto={scelto}
                       colori={colori}
+                      siglaSopra={libreria.modulo === "plc"}
+                      siglaDentro={c.tipo === "ladder-commento"}
                     />
                     {aspetto && (
                       <AspettoInSimulazione
@@ -900,7 +902,7 @@ export function AreaDisegno({
           {t("editor.adatta")}
         </button>
         <span className={avviso ? "suggerimento avviso" : "suggerimento"} role="status" aria-live="polite">
-          {avviso ?? (inSimulazione ? t("simulazione.suggerimento") : filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
+          {avviso ?? (inSimulazione ? t(libreria.modulo === "plc" ? "simulazione.suggerimentoPlc" : "simulazione.suggerimento") : filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
         </span>
       </div>
     </div>
@@ -919,10 +921,17 @@ interface PropsSimbolo {
   immagine: HTMLImageElement | undefined;
   scelto: boolean;
   colori: ReturnType<typeof coloriEditor>;
+  /**
+   * Sigla sopra il simbolo invece che a sinistra: nel Ladder i fili entrano
+   * da sinistra e l'operando si scrive sopra contatti e bobine.
+   */
+  siglaSopra?: boolean;
+  /** Sigla scritta dentro il simbolo, a capo se serve (commenti del Ladder). */
+  siglaDentro?: boolean;
 }
 
-/** Disegno di un componente: simbolo, sigla a sinistra e contorno di selezione. */
-function SimboloComponente({ larghezza, altezza, etichetta, nonAssociato, numeri, immagine, scelto, colori }: PropsSimbolo) {
+/** Disegno di un componente: simbolo, sigla a sinistra (o sopra) e contorno di selezione. */
+function SimboloComponente({ larghezza, altezza, etichetta, nonAssociato, numeri, immagine, scelto, colori, siglaSopra, siglaDentro }: PropsSimbolo) {
   return (
     <>
       {/* Area cliccabile trasparente: si seleziona cliccando anche fra le linee del simbolo. */}
@@ -940,13 +949,29 @@ function SimboloComponente({ larghezza, altezza, etichetta, nonAssociato, numeri
           listening={false}
         />
       )}
-      {etichetta && (
+      {etichetta && siglaDentro && (
         <Text
           text={etichetta}
-          x={-64}
-          y={altezza / 2 - 8}
-          width={58}
-          align="right"
+          x={8}
+          y={4}
+          width={larghezza - 16}
+          height={altezza - 8}
+          verticalAlign="middle"
+          fontSize={13}
+          fontStyle="italic"
+          fontFamily="Segoe UI, system-ui, sans-serif"
+          fill={colori.testo}
+          ellipsis
+          listening={false}
+        />
+      )}
+      {etichetta && !siglaDentro && (
+        <Text
+          text={etichetta}
+          x={siglaSopra ? -20 : -64}
+          y={siglaSopra ? -18 : altezza / 2 - 8}
+          width={siglaSopra ? larghezza + 40 : 58}
+          align={siglaSopra ? "center" : "right"}
           fontSize={14}
           fontStyle="bold"
           fontFamily="Segoe UI, system-ui, sans-serif"
@@ -1069,6 +1094,7 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori }: PropsAsp
         </>
       )}
       {aspetto.sovraccarico && testo(t("simulazione.sovraccarico"), aspetto.motore?.collegamento ? h + 20 : h + 6, colori.guasto)}
+      {aspetto.valore && testo(aspetto.valore, h + 4, colori.attivo)}
     </Group>
   );
 }

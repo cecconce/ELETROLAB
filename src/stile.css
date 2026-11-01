@@ -522,7 +522,8 @@ button {
   font-size: 0.8rem;
 }
 .proprieta-campo input,
-.proprieta-campo select {
+.proprieta-campo select,
+.proprieta-campo textarea {
   font: inherit;
   font-size: 1rem;
   padding: 6px 8px;
@@ -672,4 +673,51 @@ button {
 }
 .riga-problema[data-gravita="errore"] .etichetta-gravita {
   color: var(--problema-errore);
+}
+
+/* Pannello "Ingressi e uscite" del PLC durante la simulazione */
+.pannello-io-plc {
+  --io-acceso: #16a34a;
+  background: var(--superficie);
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+}
+[data-tema="scuro"] .pannello-io-plc {
+  --io-acceso: #4ade80;
+}
+.pannello-io-gruppo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.pannello-io-gruppo h3 {
+  font-size: 0.9rem;
+  margin: 0 4px 0 0;
+}
+.pannello-io-vuoto {
+  color: var(--testo-tenue);
+}
+.io-plc {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 2px solid var(--bordo);
+  background: var(--sfondo);
+  color: var(--testo);
+}
+button.io-plc {
+  cursor: pointer;
+}
+.io-plc.acceso,
+.io-plc.accesa {
+  border-color: var(--io-acceso);
+  background: var(--io-acceso);
+  color: #fff;
 }

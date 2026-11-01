@@ -10,4 +10,5 @@ Qui stanno i motori puri (senza interfaccia), uno per modulo, ciascuno coperto d
   - `operandi.ts`: operandi a bit I (ingressi), Q (uscite), M (merker) nella forma byte.bit (I0.0, Q1.7…).
   - `programma.ts`: struttura del programma (segmenti con logica di contatti ad albero serie/parallelo e uscite) e costruttori brevi (`na`, `nc`, `serie`, `parallelo`, `bobina`, `set`, `reset`…).
   - `rete.ts`: conversione del Ladder disegnato sul foglio (componenti + fili) nel programma (`convertiLadder`), con i problemi trovati.
+  - `sessione.ts`: sessione di simulazione guidata dallo studente (ingressi premuti o commutati, tempo a cicli fissi).
   - `scansione.ts`: ciclo di scansione (`scansione`, `avanzaPlc`), temporizzatori TON/TOF/TP e contatori CTU/CTD: lettura ingressi → esecuzione dei segmenti in ordine → uscite; contatti di fronte con memoria propria; restituisce lo stato di ogni contatto per colorare il Ladder.

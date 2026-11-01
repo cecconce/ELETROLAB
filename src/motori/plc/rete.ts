@@ -28,6 +28,8 @@ import type { Logica, ProgrammaLadder, Segmento, TipoContatto, Uscita } from "./
 export type ModelloLadder =
   | { ruolo: "barraSinistra" }
   | { ruolo: "barraDestra" }
+  /** Nota di testo sul foglio: non partecipa alla logica. */
+  | { ruolo: "commento" }
   | { ruolo: "contatto"; contatto: TipoContatto; morsetti: [string, string] }
   | { ruolo: "uscita"; uscita: Uscita["tipo"]; ingresso: string };
 
@@ -35,6 +37,7 @@ export type ModelloLadder =
 export const MODELLI_LADDER: Record<string, ModelloLadder> = {
   "ladder-barra-sinistra": { ruolo: "barraSinistra" },
   "ladder-barra-destra": { ruolo: "barraDestra" },
+  "ladder-commento": { ruolo: "commento" },
   "ladder-contatto-na": { ruolo: "contatto", contatto: "NA", morsetti: ["in", "out"] },
   "ladder-contatto-nc": { ruolo: "contatto", contatto: "NC", morsetti: ["in", "out"] },
   "ladder-contatto-p": { ruolo: "contatto", contatto: "P", morsetti: ["in", "out"] },
@@ -75,7 +78,8 @@ export type CodiceProblemaLadder =
   | "operandoNonValido" //     operando vuoto o scritto male
   | "bobinaSuIngresso" //      una bobina non può scrivere un ingresso I
   | "operandoBloccoErrato" //  un temporizzatore deve usare T…, un contatore C…
-  | "troppiPercorsi"; //       disegno troppo intricato da convertire
+  | "troppiPercorsi" //        disegno troppo intricato da convertire
+  | "bobinaDoppia"; //         due bobine normali sullo stesso operando (avviso: vale l'ultima)
 
 export interface ProblemaLadder {
   codice: CodiceProblemaLadder;
@@ -84,6 +88,12 @@ export interface ProblemaLadder {
 
 export interface RisultatoConversione {
   programma: ProgrammaLadder;
+  /** Nodo elettrico di ogni morsetto usato ("componente/morsetto" → nodo), per colorare i fili. */
+  nodi: Record<string, string>;
+  /** Nodo della barra di sinistra (null se manca). */
+  nodoAlimentato: string | null;
+  /** Contatti come ponti fra due nodi (id del componente e nodi ai suoi capi). */
+  ponti: { id: string; nodi: [string, string] }[];
   /** Per ogni segmento, gli id dei componenti di uscita che lo compongono. */
   usciteDeiSegmenti: string[][];
   problemi: ProblemaLadder[];
@@ -199,7 +209,60 @@ export function convertiLadder(elementi: readonly ElementoLadder[], fili: readon
     segmenti.push({ logica: logicaDaPercorsi(trovati), uscite: uscite.map(uscitaDa) });
     usciteDeiSegmenti.push(ids);
   }
-  return { programma: { segmenti }, usciteDeiSegmenti, problemi };
+  // Avviso: due bobine normali (non set/reset) che scrivono lo stesso
+  // operando. Il PLC esegue lo stesso il programma, ma vale l'ultima.
+  const perOperando = new Map<string, string[]>();
+  for (const e of elementi) {
+    const m = MODELLI_LADDER[e.tipo];
+    if (m?.ruolo !== "uscita" || (m.uscita !== "bobina" && m.uscita !== "bobinaNegata")) continue;
+    if (!operandoScrivibile(e.operando)) continue;
+    const op = normalizzaOperando(e.operando);
+    perOperando.set(op, [...(perOperando.get(op) ?? []), e.id]);
+  }
+  for (const ids of perOperando.values()) if (ids.length > 1) problemi.push({ codice: "bobinaDoppia", componenti: ids });
+
+  // Nodo di ogni morsetto citato da un filo o da un contatto/uscita.
+  const nodi: Record<string, string> = {};
+  for (const f of fili) {
+    for (const e of [f.da, f.a]) if (perId.has(e.componente)) nodi[`${e.componente}/${e.morsetto}`] = radice(chiave(e.componente, e.morsetto));
+  }
+  for (const p of ponti) {
+    const m = MODELLI_LADDER[p.elemento.tipo] as Extract<ModelloLadder, { ruolo: "contatto" }>;
+    nodi[`${p.elemento.id}/${m.morsetti[0]}`] = p.nodi[0];
+    nodi[`${p.elemento.id}/${m.morsetti[1]}`] = p.nodi[1];
+  }
+  return {
+    programma: { segmenti },
+    nodi,
+    nodoAlimentato: alimentato,
+    ponti: ponti.map((p) => ({ id: p.elemento.id, nodi: p.nodi })),
+    usciteDeiSegmenti,
+    problemi,
+  };
+}
+
+/**
+ * Nodi sotto tensione: quelli raggiungibili dalla barra attraversando i
+ * contatti chiusi (id in `chiusi`). Serve solo a colorare i fili.
+ */
+export function nodiAlimentati(conversione: Pick<RisultatoConversione, "nodoAlimentato" | "ponti">, chiusi: ReadonlySet<string>): Set<string> {
+  const accesi = new Set<string>();
+  if (!conversione.nodoAlimentato) return accesi;
+  const daVisitare = [conversione.nodoAlimentato];
+  accesi.add(conversione.nodoAlimentato);
+  while (daVisitare.length > 0) {
+    const n = daVisitare.pop()!;
+    for (const p of conversione.ponti) {
+      if (!chiusi.has(p.id)) continue;
+      const [a, b] = p.nodi;
+      const altro = a === n ? b : b === n ? a : null;
+      if (altro !== null && !accesi.has(altro)) {
+        accesi.add(altro);
+        daVisitare.push(altro);
+      }
+    }
+  }
+  return accesi;
 }
 
 /** Somma di prodotti: OR dei percorsi, ognuno AND dei suoi contatti. */

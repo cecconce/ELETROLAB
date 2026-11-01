@@ -231,4 +231,17 @@ describe("problemi trovati nella conversione", () => {
     expect(r.problemi.map((p) => p.codice)).toEqual(["troppiPercorsi"]);
     expect(r.programma.segmenti).toEqual([]);
   });
+
+  it("due bobine normali sullo stesso operando: avviso «bobina doppia»", () => {
+    const r = convertiLadder(
+      [
+        el("B1", "ladder-barra-sinistra", "", 0, 0),
+        el("Q1", "ladder-bobina", "Q0.0", 160, 0),
+        el("Q2", "ladder-bobina", "q0.0", 160, 60),
+        el("S", "ladder-bobina-set", "Q0.0", 160, 120),
+      ],
+      [filo("B1/a", "Q1/in"), filo("B1/b", "Q2/in"), filo("B1/c", "S/in")],
+    );
+    expect(r.problemi).toEqual([{ codice: "bobinaDoppia", componenti: ["Q1", "Q2"] }]);
+  });
 });

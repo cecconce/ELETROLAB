@@ -169,3 +169,56 @@ describe("dallo schema disegnato al programma", () => {
     expect(avanzaPlc(programma, statoInizialePlc(), { "I0.0": true }, 1.6).stato.temporizzatori.T0.uscita).toBe(true);
   });
 });
+
+describe("aspetto del Ladder in simulazione", () => {
+  it("contatti chiusi, bobine alimentate, fili in tensione e valori dei blocchi", async () => {
+    const { avviaSessionePlc, clicGiuPlc, passoPlc } = await import("../motori/plc");
+    const { vistaDaSessionePlc } = await import("./vistaSimulazione");
+    let s = SCHEMA_VUOTO;
+    const barra = posa(s, "ladder-barra-sinistra", 0, 0);
+    s = barra.schema;
+    const c = posa(s, "ladder-contatto-na", 60, 0);
+    s = c.schema;
+    const t0 = posa(s, "ladder-ton", 200, 0);
+    s = t0.schema;
+    s = filo(filo(s, `${barra.id}/p1`, `${c.id}/in`), `${c.id}/out`, `${t0.id}/IN`);
+    const operandi = Object.fromEntries(s.componenti.map((x) => [x.id, x.etichetta]));
+    let sess = avviaSessionePlc(programmaDaSchema(s), operandi);
+    let v = vistaDaSessionePlc(sess, s);
+    expect(v.componenti[c.id].clic).toBe("pulsante");
+    expect(v.componenti[c.id].chiuso).toBe(false);
+    expect(v.problemiPlc).toEqual([]);
+    sess = passoPlc(clicGiuPlc(sess, c.id), 1);
+    v = vistaDaSessionePlc(sess, s);
+    expect(v.componenti[c.id].chiuso).toBe(true);
+    expect(v.componenti[c.id].azionato).toBe(true);
+    expect(v.componenti[t0.id].alimentato).toBe(true);
+    expect(v.componenti[t0.id].valore).toBe("1 / 3 s");
+    // Entrambi i fili sono in tensione (la barra e il contatto chiuso).
+    expect(Object.values(v.poliDeiFili)).toEqual([["+"], ["+"]]);
+  });
+
+  it("i problemi della conversione diventano frasi in italiano", async () => {
+    const { problemiLadder } = await import("./vistaSimulazione");
+    const { schema, id } = posa(SCHEMA_VUOTO, "ladder-bobina", 0, 0);
+    const frasi = problemiLadder([{ codice: "uscitaNonAlimentata", componenti: [id] }, { codice: "senzaBarra", componenti: [] }], schema);
+    expect(frasi[0].testo).toMatch(/Q0\.0/);
+    expect(frasi[1].testo).toMatch(/barra di alimentazione/);
+    expect(frasi.every((f) => !f.testo.includes("{"))).toBe(true);
+  });
+});
+
+describe("commenti del Ladder", () => {
+  it("si posano con un testo da riscrivere e non cambiano il programma", async () => {
+    const { impostaCommento } = await import("./ladder");
+    const { schema, id } = posa(SCHEMA_VUOTO, "ladder-commento", 0, 0);
+    expect(schema.componenti[0].etichetta).toBe("Commento");
+    const s = impostaCommento(schema, id, "  Marcia   e arresto  del nastro ");
+    expect(s.componenti[0].etichetta).toBe("Marcia e arresto del nastro");
+    expect(impostaCommento(s, id, "Marcia e arresto del nastro")).toBe(s);
+    expect(impostaCommento(s, id, "x".repeat(200)).componenti[0].etichetta).toHaveLength(80);
+    const r = programmaDaSchema(s);
+    expect(r.programma.segmenti).toEqual([]);
+    expect(r.problemi.map((p) => p.codice)).toEqual(["senzaBarra"]);
+  });
+});

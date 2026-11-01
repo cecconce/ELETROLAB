@@ -17,6 +17,10 @@
     {
       "id": "funzioni",
       "nome": "Temporizzatori e contatori"
+    },
+    {
+      "id": "note",
+      "nome": "Note"
     }
   ],
   "componenti": [
@@ -507,6 +511,23 @@
           "y": 20
         }
       ]
+    },
+    {
+      "id": "ladder-commento",
+      "nome": "Commento",
+      "categoria": "note",
+      "sigla": "",
+      "descrizione": "Una nota da scrivere sopra un segmento per spiegare a cosa serve (es. «Marcia e arresto del nastro»). Non cambia il funzionamento del programma.",
+      "paroleChiave": [
+        "nota",
+        "testo",
+        "descrizione",
+        "commento"
+      ],
+      "icona": "ladder-commento.svg",
+      "larghezza": 240,
+      "altezza": 40,
+      "morsetti": []
     }
   ]
 }

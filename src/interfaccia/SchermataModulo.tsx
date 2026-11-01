@@ -4,8 +4,10 @@
 // Un unico grande pulsante ▶ AVVIA / ■ FERMA (anche con F5), sempre nello
 // stesso punto dell'intestazione, avvia la simulazione: lo schema si blocca,
 // libreria e Proprietà si disattivano e lo studente interagisce cliccando i
-// componenti. Per ora simula solo il modulo Impianti elettrici; negli altri
-// il pulsante c'è (stessa posizione) ma è disattivato.
+// componenti. Simulano i moduli Impianti elettrici e PLC; negli altri il
+// pulsante c'è (stessa posizione) ma è disattivato. Nel PLC, durante la
+// simulazione, il pannello "Ingressi e uscite" permette di commutare gli
+// ingressi e mostra lo stato di uscite, merker, temporizzatori e contatori.
 // Durante la simulazione, sotto il foglio, il pannello "Problemi nello schema"
 // spiega in italiano gli errori trovati (circuito aperto, cortocircuito,
 // contatti non associati, oscillazioni…) ed evidenzia sul foglio il punto.
@@ -22,7 +24,18 @@ import type { Archivio } from "../progetto/archivio";
 import { nomeDaPercorso, serializzaProgetto } from "../progetto/formato";
 import { RITARDO_AUTOSALVATAGGIO_MS, serializzaAutosalvataggio } from "../progetto/autosalvataggio";
 import { avviaSessione, clicGiu, clicSu, passo, rilasciaTutti, type SessioneImpianto } from "../motori/impianti";
-import { firmaVista, formattaTempo, vistaDaSessione, type VistaSimulazione } from "../editor/vistaSimulazione";
+import { firmaVista, formattaTempo, vistaDaSessione, vistaDaSessionePlc, type VistaSimulazione } from "../editor/vistaSimulazione";
+import {
+  avviaSessionePlc,
+  clicGiuPlc,
+  clicSuPlc,
+  commutaIngresso,
+  passoPlc,
+  rilasciaTuttiPlc,
+  type SessionePlc,
+} from "../motori/plc";
+import { programmaDaSchema } from "../editor/ladder";
+import { PannelloIngressiPlc } from "../editor/PannelloIngressiPlc";
 import { problemiDaMostrare } from "../editor/messaggiProblemi";
 import { PannelloProblemi } from "../editor/PannelloProblemi";
 import type { DefinizioneModulo } from "./moduli";
@@ -62,7 +75,11 @@ const INTERVALLO_SIMULAZIONE_MS = 50;
 const PASSO_MASSIMO_S = 60;
 
 /** Orologio della simulazione: si aggiorna da solo senza ridisegnare lo schema. */
-function OrologioSimulazione({ sessione }: { sessione: React.MutableRefObject<SessioneImpianto | null> }) {
+/** Sessione di simulazione di uno dei moduli simulabili. */
+type Sessione = SessioneImpianto | SessionePlc;
+const eSessionePlc = (s: Sessione): s is SessionePlc => "conversione" in s;
+
+function OrologioSimulazione({ sessione }: { sessione: React.MutableRefObject<Sessione | null> }) {
   const [tempo, setTempo] = useState(0);
   useEffect(() => {
     const timer = window.setInterval(() => setTempo(sessione.current?.stato.tempo ?? 0), 100);
@@ -186,8 +203,8 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   // --- Simulazione --------------------------------------------------------
   // La sessione cambia a ogni scatto dell'orologio: vive in un ref e lo
   // schema viene ridisegnato solo quando cambia qualcosa di visibile.
-  const simulabile = modulo.id === "impianti";
-  const sessioneRif = useRef<SessioneImpianto | null>(null);
+  const simulabile = modulo.id === "impianti" || modulo.id === "plc";
+  const sessioneRif = useRef<Sessione | null>(null);
   const firmaRif = useRef("");
   const [vista, setVista] = useState<VistaSimulazione | null>(null);
   const inSimulazione = vista !== null;
@@ -195,16 +212,16 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const [problemaScelto, setProblemaScelto] = useState<string | null>(null);
   const [problemiAperti, setProblemiAperti] = useState(true);
   const aggiornaSessione = useCallback(
-    (s: SessioneImpianto) => {
+    (s: Sessione) => {
       sessioneRif.current = s;
-      const v = vistaDaSessione(s, schema.fili);
+      const v = eSessionePlc(s) ? vistaDaSessionePlc(s, schema) : vistaDaSessione(s, schema.fili);
       const firma = firmaVista(v);
       if (firma !== firmaRif.current) {
         firmaRif.current = firma;
         setVista(v);
       }
     },
-    [schema.fili],
+    [schema],
   );
   const avvia = useCallback(() => {
     if (!simulabile) return;
@@ -212,8 +229,12 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     setProblemaScelto(null);
     setProblemiAperti(true);
     firmaRif.current = "";
-    aggiornaSessione(avviaSessione(schema));
-  }, [aggiornaSessione, schema, simulabile]);
+    aggiornaSessione(
+      modulo.id === "plc"
+        ? avviaSessionePlc(programmaDaSchema(schema), Object.fromEntries(schema.componenti.map((c) => [c.id, c.etichetta])))
+        : avviaSessione(schema),
+    );
+  }, [aggiornaSessione, schema, simulabile, modulo.id]);
   const ferma = useCallback(() => {
     sessioneRif.current = null;
     setVista(null);
@@ -228,7 +249,8 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       const adesso = performance.now();
       const dt = Math.min((adesso - ultimo) / 1000, PASSO_MASSIMO_S);
       ultimo = adesso;
-      if (sessioneRif.current) aggiornaSessione(passo(sessioneRif.current, dt));
+      const s = sessioneRif.current;
+      if (s) aggiornaSessione(eSessionePlc(s) ? passoPlc(s, dt) : passo(s, dt));
     }, INTERVALLO_SIMULAZIONE_MS);
     return () => window.clearInterval(timer);
   }, [inSimulazione, aggiornaSessione]);
@@ -238,7 +260,8 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   useEffect(() => {
     if (!inSimulazione) return;
     const rilascia = () => {
-      if (sessioneRif.current) aggiornaSessione(rilasciaTutti(sessioneRif.current));
+      const s = sessioneRif.current;
+      if (s) aggiornaSessione(eSessionePlc(s) ? rilasciaTuttiPlc(s) : rilasciaTutti(s));
     };
     window.addEventListener("mouseup", rilascia);
     window.addEventListener("blur", rilascia);
@@ -253,8 +276,14 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       vista
         ? {
             vista,
-            onGiu: (id: string) => sessioneRif.current && aggiornaSessione(clicGiu(sessioneRif.current, id)),
-            onSu: (id: string) => sessioneRif.current && aggiornaSessione(clicSu(sessioneRif.current, id)),
+            onGiu: (id: string) => {
+              const s = sessioneRif.current;
+              if (s) aggiornaSessione(eSessionePlc(s) ? clicGiuPlc(s, id) : clicGiu(s, id));
+            },
+            onSu: (id: string) => {
+              const s = sessioneRif.current;
+              if (s) aggiornaSessione(eSessionePlc(s) ? clicSuPlc(s, id) : clicSu(s, id));
+            },
           }
         : null,
     [vista, aggiornaSessione],
@@ -262,7 +291,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
 
   // Problemi da spiegare: riga scelta (evidenziata da sola) o, se nessuna, tutti i punti.
   const problemi = useMemo(
-    () => (vista ? problemiDaMostrare(vista.problemi, schema, libreria) : []),
+    () => (vista ? (vista.problemiPlc ?? problemiDaMostrare(vista.problemi, schema, libreria)) : []),
     [vista, schema, libreria],
   );
   const evidenzia = useMemo(() => {
@@ -348,13 +377,25 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           evidenzia={evidenzia}
           sopraBarra={
             inSimulazione ? (
-              <PannelloProblemi
-                problemi={problemi}
-                scelto={problemaScelto}
-                onScegli={setProblemaScelto}
-                aperto={problemiAperti}
-                onApri={setProblemiAperti}
-              />
+              <>
+                <PannelloProblemi
+                  problemi={problemi}
+                  scelto={problemaScelto}
+                  onScegli={setProblemaScelto}
+                  aperto={problemiAperti}
+                  onApri={setProblemiAperti}
+                />
+                {modulo.id === "plc" && sessioneRif.current && eSessionePlc(sessioneRif.current) && (
+                  <PannelloIngressiPlc
+                    sessione={sessioneRif.current}
+                    schema={schema}
+                    onCommuta={(op) => {
+                      const s = sessioneRif.current;
+                      if (s && eSessionePlc(s)) aggiornaSessione(commutaIngresso(s, op));
+                    }}
+                  />
+                )}
+              </>
             ) : null
           }
         />

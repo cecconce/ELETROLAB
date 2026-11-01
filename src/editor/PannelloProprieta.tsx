@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { t } from "../testi";
 import { associaContatto, cambiaSigla, contattoAssociato, numeroMorsetto, proprietariPer } from "./associazioni";
 import { vocePerTipo, type Libreria } from "./libreria";
+import { COMMENTO_MASSIMO, TIPO_COMMENTO, impostaCommento } from "./ladder";
 import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
 import type { Schema, Selezione } from "./schema";
 
@@ -181,6 +182,23 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
             </p>
           )}
         </>
+      )}
+
+      {componente.tipo === TIPO_COMMENTO && (
+        <label className="proprieta-campo">
+          <span>{t("proprieta.commento")}</span>
+          <textarea
+            key={componente.id}
+            defaultValue={componente.etichetta}
+            maxLength={COMMENTO_MASSIMO}
+            rows={3}
+            title={t("proprieta.commentoSuggerimento")}
+            onBlur={(e) => {
+              const nuovo = impostaCommento(schema, componente.id, e.target.value);
+              if (nuovo !== schema) onCambiaSchema(nuovo);
+            }}
+          />
+        </label>
       )}
 
       {eContatore(componente.tipo) && (

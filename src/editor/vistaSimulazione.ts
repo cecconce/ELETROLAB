@@ -15,8 +15,11 @@ import {
   type StatoMotore,
   type Tratto,
 } from "../motori/impianti";
+import { MODELLI_LADDER, nodiAlimentati, normalizzaOperando, type ProblemaLadder, type SessionePlc } from "../motori/plc";
+import { t } from "../testi";
 import type { ColoriEditor } from "./colori";
-import type { Filo } from "./schema";
+import type { ProblemaMostrato } from "./messaggiProblemi";
+import type { Filo, Schema } from "./schema";
 
 /** Stato da disegnare per un componente. */
 export interface AspettoComponente {
@@ -34,6 +37,8 @@ export interface AspettoComponente {
   sovraccarico: boolean;
   /** Motore che gira: verso ed eventuale collegamento stella/triangolo. */
   motore?: StatoMotore;
+  /** PLC: valore da scrivere sotto il blocco (tempo trascorso, conteggio). */
+  valore?: string;
 }
 
 export interface VistaSimulazione {
@@ -46,6 +51,8 @@ export interface VistaSimulazione {
   tempo: number;
   /** Problemi da spiegare allo studente (errori prima degli avvisi). */
   problemi: Problema[];
+  /** PLC: problemi già pronti da mostrare (il modulo PLC non usa `problemi`). */
+  problemiPlc?: ProblemaMostrato[];
 }
 
 /** Calcola l'aspetto di tutto lo schema dallo stato della sessione. */
@@ -101,12 +108,16 @@ export function coloreFilo(poli: readonly Polo[], colori: ColoriEditor): string 
  * vede il contatto che commuta. Vuoto per i componenti che non sono contatti.
  */
 export function trattiDelContatto(tipo: string): readonly Tratto[] {
+  const l = MODELLI_LADDER[tipo];
+  if (l?.ruolo === "contatto") return [l.morsetti];
   const m = MODELLI_IMPIANTI[tipo];
   return m?.tipo === "contatto" ? m.tratti : [];
 }
 
 /** Tipo di utilizzatore, per scegliere l'animazione. */
 export function tipoUtilizzatore(tipo: string): "bobina" | "luce" | "suono" | "motore" | null {
+  // Nel Ladder bobine e blocchi alimentati si mostrano come una bobina eccitata.
+  if (MODELLI_LADDER[tipo]?.ruolo === "uscita") return "bobina";
   const m = MODELLI_IMPIANTI[tipo];
   if (m?.tipo !== "carico") return null;
   if (m.bobina) return "bobina";
@@ -126,4 +137,72 @@ export function formattaTempo(secondi: number): string {
  */
 export function firmaVista(v: VistaSimulazione): string {
   return JSON.stringify([v.poliDeiFili, v.componenti, [...v.morsettiInCorto], v.problemi]);
+}
+
+/** Numero con la virgola e al massimo un decimale ("1,5"). */
+const numero = (v: number) => (Math.round(v * 10) / 10).toString().replace(".", ",");
+
+/** Frasi per i problemi trovati nella conversione del Ladder disegnato. */
+export function problemiLadder(problemi: readonly ProblemaLadder[], schema: Schema): ProblemaMostrato[] {
+  const sigla = (id: string) => {
+    const c = schema.componenti.find((x) => x.id === id);
+    return c?.etichetta ? c.etichetta : t("plc.senzaOperando");
+  };
+  return problemi.map((p, i) => ({
+    chiave: `${p.codice}-${i}`,
+    // La bobina doppia è solo un avviso: il programma funziona, ma vale l'ultima.
+    gravita: p.codice === "bobinaDoppia" ? ("avviso" as const) : ("errore" as const),
+    testo: t(`plc.problema.${p.codice}`, { operandi: p.componenti.map(sigla).join(", ") }),
+    componenti: p.componenti,
+    morsetti: [],
+  }));
+}
+
+/** Aspetto del Ladder durante la simulazione del PLC. */
+export function vistaDaSessionePlc(s: SessionePlc, schema: Schema): VistaSimulazione {
+  const conv = s.conversione;
+  const chiusi = new Set(s.risultato.segmenti.flatMap((seg) => seg.idChiusi));
+  const accesi = nodiAlimentati(conv, chiusi);
+  const alimentate = new Set<string>();
+  s.risultato.segmenti.forEach((seg, i) => {
+    if (seg.risultato) for (const id of conv.usciteDeiSegmenti[i] ?? []) alimentate.add(id);
+  });
+  const premuti = new Set([...s.premuti, ...s.fissi]);
+
+  const poliDeiFili: Record<string, Polo[]> = {};
+  for (const f of schema.fili) {
+    const nodo = conv.nodi[`${f.da.componente}/${f.da.morsetto}`];
+    poliDeiFili[f.id] = nodo !== undefined && accesi.has(nodo) ? ["+"] : [];
+  }
+
+  const componenti: Record<string, AspettoComponente> = {};
+  for (const c of schema.componenti) {
+    const m = MODELLI_LADDER[c.tipo];
+    if (!m) continue;
+    const operando = normalizzaOperando(c.etichetta);
+    let valore: string | undefined;
+    const tmp = s.stato.temporizzatori[operando];
+    const cnt = s.stato.contatori[operando];
+    if (m.ruolo === "uscita" && (m.uscita === "TON" || m.uscita === "TOF" || m.uscita === "TP") && tmp) {
+      valore = `${numero(tmp.trascorso)} / ${numero(tmp.preset)} s`;
+    }
+    if (m.ruolo === "uscita" && (m.uscita === "CTU" || m.uscita === "CTD") && cnt) valore = `${cnt.conteggio} / ${cnt.preset}`;
+    componenti[c.id] = {
+      clic: s.ingressoDi[c.id] ? "pulsante" : null,
+      chiuso: chiusi.has(c.id),
+      alimentato: alimentate.has(c.id),
+      azionato: s.ingressoDi[c.id] !== undefined && premuti.has(s.ingressoDi[c.id]),
+      intervenuta: false,
+      sovraccarico: false,
+      ...(valore ? { valore } : {}),
+    };
+  }
+  return {
+    poliDeiFili,
+    componenti,
+    morsettiInCorto: new Set(),
+    tempo: s.stato.tempo,
+    problemi: [],
+    problemiPlc: problemiLadder(conv.problemi, schema),
+  };
 }
