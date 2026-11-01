@@ -4,21 +4,25 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 3 – Modulo PLC Ladder + impianti virtuali animati** — completata — in attesa di conferma
+**Fase 5 – Modulo Arduino (anticipata prima della Fase 4 su richiesta di Pierluigi, 2026-11-01)** — in corso
 
-Obiettivo: programmare in Ladder (KOP) e simulare il ciclo di scansione con il flusso di lavoro di PC_SIMU (solo come riferimento funzionale: codice, grafica e nomi originali), con un quadro virtuale di ingressi/uscite e impianti animati collegabili.
+Obiettivo: lavorare come in Tinkercad Circuits (solo riferimento funzionale: codice, grafica e nomi originali): scheda Uno e breadboard disegnate in modo realistico, componenti che si infilano nei fori, fili colorati, editor di codice e a blocchi, simulazione del programma con LED, pulsanti, potenziometri, buzzer, servo, LCD e monitor seriale.
+
+Nota sulla decisione della Fase 0 (avr8js + avr-gcc): integrare il compilatore avr-gcc nell'.exe è un lavoro lungo e pesante; per avere subito un modulo usabile il codice viene eseguito da un **interprete del linguaggio Arduino scritto in TypeScript** (sottoinsieme del C++ usato a scuola: setup/loop, variabili, funzioni, if/for/while, pinMode, digitalWrite, analogRead, delay, millis, Serial, Servo, LiquidCrystal…). È una versione semplificata, annotata nei limiti; avr-gcc + avr8js restano possibili in seguito.
 
 ### Attività (una per sessione, in ordine)
 
-- [x] 3.1 Interprete Ladder puro in `src/motori/plc/`: operandi a bit I/Q/M (I0.0, Q0.0, M0.0), segmenti con logica di contatti in serie/parallelo, contatti NA/NC, fronti di salita/discesa, bobine, bobine negate, set/reset, ciclo di scansione (lettura ingressi → logica → scrittura uscite), stato di ogni contatto per la visualizzazione. Test.
-- [x] 3.2 Temporizzatori TON/TOF/TP e contatori CTU/CTD (preset, valore corrente, reset, bit T/C usabili come contatti), tempo di ciclo configurabile e scorrere del tempo. Test.
-- [x] 3.3 Editor Ladder (modulo "PLC"): segmenti con barre di alimentazione, posa di contatti, bobine e blocchi da una libreria, collegamenti in serie e rami paralleli, operandi e commenti, simboli originali IEC 61131-3; conversione disegno → logica del motore; salvato nel `.elab`. Test sulla conversione.
-- [x] 3.4 Simulazione nell'editor: ▶ AVVIA / ■ FERMA, commenti dei segmenti (rimandati dalla 3.3), stato in tempo reale (contatti chiusi e bobine eccitate evidenziati, valori di timer e contatori), tabella degli operandi; problemi spiegati in italiano (operando mancante o non valido, bobina su un ingresso, bobina doppia, segmento incompleto). Test.
-- [x] 3.5 Quadro virtuale: ingressi (pulsanti NA/NC, interruttori, selettori, sensori) e uscite (lampade, motori, sirene) disposti liberamente e associati agli operandi I/Q, usabili durante la simulazione; salvato nel `.elab`.
-- [x] 3.6 Impianti animati (1): nastro trasportatore, semaforo, cancello automatico — modelli puri in `src/motori/plc/impianti/` (sensori e attuatori collegati agli I/O) + grafica animata. Test sui modelli.
-- [x] 3.7 Impianti animati (2): serbatoio con pompa, ascensore, parcheggio. Test sui modelli.
-- [x] 3.8 Esempi pronti PLC (marcia/arresto, telerruttore, un programma per ogni impianto) nel catalogo Esempi; test che li simulano.
-- [x] 3.9 Verifica finale: build Actions verde, prova dell'interfaccia con Playwright, resoconto di fase.
+- [x] 5.1 Motore elettrico del circuito in `src/motori/arduino/`: analisi nodale (generatori di tensione dei pin, resistenze, LED con soglia, pulsanti, potenziometro, fotoresistenza, buzzer), breadboard con le sue file collegate, LED senza resistenza segnalato. Test.
+- [ ] 5.2 Interprete del linguaggio Arduino (sottoinsieme C++): analisi del testo con errori in italiano e numero di riga, tipi int a 16 bit/long/float/bool/String, funzioni, array, `delay` senza bloccare il programma, librerie Serial, Servo, LiquidCrystal, funzioni matematiche. Test.
+- [ ] 5.3 Banco di lavoro stile Tinkercad: scheda Uno e breadboard disegnate in modo realistico, componenti realistici (LED colorati, resistenze con le fasce di colore, pulsante, potenziometro, buzzer, servo…), piedini che si collegano infilandoli nei fori, fili colorati.
+- [ ] 5.4 Pannello Codice (editor di testo) e simulazione: ▶ AVVIA esegue il programma, LED accesi con la luminosità giusta, pulsanti premuti, potenziometro e fotoresistenza regolabili, buzzer, servo che ruota, monitor seriale; errori del codice e del circuito spiegati in italiano.
+- [ ] 5.5 Display LCD 16x2 e sensore a ultrasuoni; esempi pronti (Blink, semaforo, pulsante, potenziometro→LED, servo, LCD).
+- [ ] 5.6 Editor a blocchi (Blockly) che genera il codice Arduino.
+- [ ] 5.7 Verifica finale: build Actions, prova Playwright, resoconto di fase.
+
+## Fase 3 – Modulo PLC Ladder + impianti virtuali animati (confermata il 2026-11-01)
+
+Attività 3.1–3.9 tutte completate; resoconto qui sotto.
 
 ## Resoconto della Fase 3 (2026-11-01)
 
@@ -145,9 +149,9 @@ Attività 1.1–1.10 tutte completate; resoconto qui sotto.
 | 0 | Architettura, struttura, tecnologie, licenza | completata (confermata 2026-10-24) |
 | 1 | Guscio app: schermata iniziale, editor, libreria, salva/apri, .exe portable | completata (confermata 2026-10-25) |
 | 2 | Impianti elettrici + esempi pronti | completata (confermata 2026-11-01) |
-| 3 | PLC Ladder + impianti virtuali animati | completata, in attesa di conferma |
+| 3 | PLC Ladder + impianti virtuali animati | completata (confermata 2026-11-01) |
 | 4 | Elettronica con SPICE e strumenti virtuali | da fare |
-| 5 | Arduino con breadboard ed editor codice/blocchi | da fare |
+| 5 | Arduino con breadboard ed editor codice/blocchi | in corso (anticipata) |
 | 6 | Modalità esercizio, esportazioni, installer, README e LICENZE | da fare |
 
 ## Regola
@@ -187,3 +191,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-01 — attività 3.7: impianti animati (2). Nuovi modelli puri in `src/motori/plc/impianti/`: **serbatoio con pompa** (pompa Q0.0, valvola di scarico Q0.1, galleggianti di minimo I0.2 e massimo I0.3, clic = rubinetto dell'utenza aperto/chiuso, «TRABOCCA!» se si pompa a serbatoio pieno), **ascensore a 3 piani** (motore su Q0.0 e giù Q0.1, finecorsa di piano I0.2–I0.4, pulsanti di chiamata I0.5–I0.7 tenuti premuti, 2 s per piano, segnalazioni per su+giù insieme e per cabina spinta oltre il vano), **parcheggio da 5 posti** (fotocellule di ingresso I0.2 e uscita I0.3, sbarre Q0.0 e Q0.1 che si alzano in 1 s, scritta COMPLETO Q0.2; clic a sinistra = arriva un'auto, a destra = un'auto chiede di uscire; l'auto passa in 1,5 s quando la sbarra è alzata; «Posti finiti!» se ne entra una di troppo). Per sapere quale pulsante si clicca, il punto del clic (in coordinate del componente) ora arriva fino al modello (`clicGiuPlc(s, id, punto)`). Disegni SVG originali e animazioni in `DisegnoImpianti.tsx` (livello dell'acqua con percentuale, cabina che sale e scende, sbarre che ruotano, auto che entrano ed escono, posti occupati). Corretto un difetto trovato dai test: la segnalazione «fine del vano» dell'ascensore non scattava mai. 9 nuovi test; `npm test` 418 OK, build OK, prova Playwright dei tre impianti in movimento senza errori.
 - 2026-11-01 — attività 3.8: esempi pronti del PLC. Nuovo `strumenti/genera-esempi-plc.ts` (segmento = commento + contatti in serie + ramo parallelo al primo contatto + uscite; posa barra, simboli e fili sulla griglia) che scrive 8 esempi in `esempi/`, aggiunti al catalogo `esempi.json` con descrizione e «Come provarlo»: marcia/arresto con autoritenuta (quadro con pulsanti, lampada e motore), telerruttore (fronte P + SET/RESET), nastro trasportatore (merker di impianto in funzione, stop sul pacco in fondo), semaforo (tre TON in cascata), cancello automatico (autoritenuta, interblocco, finecorsa, fotocellula di sicurezza, lampeggiante), serbatoio con pompa (controllo di livello fra minimo e massimo, selettore di scarico), ascensore (piano 0 e piano 2; il piano 1 è lasciato come esercizio), parcheggio (stesso contatore CTU/CTD sul fronte di discesa delle fotocellule, COMPLETO a 5 auto). Nuovo `src/progetto/esempiPlc.test.ts`: 9 test che aprono ogni esempio e lo simulano seguendo «Come provarlo». Icona del commento senza righe decorative (sembravano barrare il testo). `npm test` 427 OK, build OK, `prova-interfaccia` 35 controlli OK, prova Playwright di 3 esempi aperti dalla finestra Esempi senza problemi né errori.
 - 2026-11-01 — attività 3.9: verifica finale della Fase 3. Esteso `strumenti/prova-interfaccia.cjs` con il modulo PLC (segmento disegnato da zero con pulsante e lampada del quadro, operandi proposti, gli 8 esempi PLC provati dall'interfaccia leggendo il pannello «Ingressi e uscite»): 62 controlli superati, nessun errore in console. Controllate le build Actions su `windows-latest`: verdi tutte quelle della Fase 3 (n. 21–30). `npm test` 427 OK, `npm run build` OK. Scritto il resoconto della Fase 3; fase in attesa di conferma.
+- 2026-11-01 — Fase 3 confermata da Pierluigi in chat; su sua richiesta («Arduino non assomiglia per nulla a Tinkercad e non è usabile») anticipata la Fase 5 prima della Fase 4, scritte le sue attività. Attività 5.1: nuovo motore puro `src/motori/arduino/`: `circuito.ts` (analisi nodale in continua con generatori di Norton, resistenze e diodi a soglia, ricerca dello stato dei diodi un passo alla volta, nodi flottanti), `componenti.ts` (scheda Uno con pin d'uscita da 25 Ω, PWM come tensione media, INPUT_PULLUP da 20 kΩ, 5V/3V3/GND; LED con soglia per colore, luminosità e LED bruciato sopra 40 mA; resistenza; pulsante a 4 piedini; potenziometro 10 kΩ; fotoresistenza 1 k–100 kΩ; buzzer; servo; letture `digitalRead`/`analogRead` con ingresso flottante che legge a caso), `breadboard.ts` (30 colonne, fori a–e e f–j collegati per colonna, 4 linee di alimentazione). Corretto durante i test un errore di segno nel modello del diodo acceso. 20 nuovi test; `npm test` 447 OK.
