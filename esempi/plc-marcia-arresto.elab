@@ -1,0 +1,158 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "plc",
+  "programma": "0.1.0",
+  "salvato": "2026-11-01T16:59:21.129Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "ladder-commento-1",
+        "tipo": "ladder-commento",
+        "etichetta": "Marcia I0.0 con autoritenuta Q0.0, arresto I0.1 (pulsante NC)",
+        "x": 100,
+        "y": 40,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-1",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "I0.0",
+        "x": 100,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-2",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "I0.1",
+        "x": 220,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-barra-sinistra-1",
+        "tipo": "ladder-barra-sinistra",
+        "etichetta": "",
+        "x": 40,
+        "y": 0,
+        "larghezza": 20,
+        "altezza": 400
+      },
+      {
+        "id": "ladder-contatto-na-3",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "Q0.0",
+        "x": 100,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-bobina-1",
+        "tipo": "ladder-bobina",
+        "etichetta": "Q0.0",
+        "x": 600,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "quadro-pulsante-na-1",
+        "tipo": "quadro-pulsante-na",
+        "etichetta": "I0.0",
+        "x": 780,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "quadro-pulsante-nc-1",
+        "tipo": "quadro-pulsante-nc",
+        "etichetta": "I0.1",
+        "x": 900,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "quadro-lampada-1",
+        "tipo": "quadro-lampada",
+        "etichetta": "Q0.0",
+        "x": 780,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "quadro-motore-1",
+        "tipo": "quadro-motore",
+        "etichetta": "Q0.0",
+        "x": 900,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "ladder-barra-sinistra-1",
+          "morsetto": "p4"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "ladder-barra-sinistra-1",
+          "morsetto": "p6"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-3",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "ladder-contatto-na-3",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "out"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "ladder-contatto-na-2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-bobina-1",
+          "morsetto": "in"
+        }
+      }
+    ]
+  }
+}

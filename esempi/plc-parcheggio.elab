@@ -1,0 +1,316 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "plc",
+  "programma": "0.1.0",
+  "salvato": "2026-11-01T16:59:21.132Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "ladder-commento-1",
+        "tipo": "ladder-commento",
+        "etichetta": "Sbarra di ingresso: si alza se c'è un'auto (I0.2) e c'è posto (C0 non raggiunto)",
+        "x": 100,
+        "y": 40,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-1",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "I0.2",
+        "x": 100,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-nc-1",
+        "tipo": "ladder-contatto-nc",
+        "etichetta": "C0",
+        "x": 220,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-barra-sinistra-1",
+        "tipo": "ladder-barra-sinistra",
+        "etichetta": "",
+        "x": 40,
+        "y": 0,
+        "larghezza": 20,
+        "altezza": 400
+      },
+      {
+        "id": "ladder-bobina-1",
+        "tipo": "ladder-bobina",
+        "etichetta": "Q0.0",
+        "x": 600,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-commento-2",
+        "tipo": "ladder-commento",
+        "etichetta": "Auto entrata: quando la fotocellula di ingresso si libera, +1",
+        "x": 100,
+        "y": 240,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-n-1",
+        "tipo": "ladder-contatto-n",
+        "etichetta": "I0.2",
+        "x": 100,
+        "y": 320,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-ctu-1",
+        "tipo": "ladder-ctu",
+        "etichetta": "C0",
+        "x": 600,
+        "y": 320,
+        "larghezza": 80,
+        "altezza": 80,
+        "preset": 5
+      },
+      {
+        "id": "ladder-commento-3",
+        "tipo": "ladder-commento",
+        "etichetta": "Sbarra di uscita: si alza se un'auto vuole uscire (I0.3)",
+        "x": 100,
+        "y": 480,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-2",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "I0.3",
+        "x": 100,
+        "y": 560,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-barra-sinistra-2",
+        "tipo": "ladder-barra-sinistra",
+        "etichetta": "",
+        "x": 40,
+        "y": 400,
+        "larghezza": 20,
+        "altezza": 400
+      },
+      {
+        "id": "ladder-bobina-2",
+        "tipo": "ladder-bobina",
+        "etichetta": "Q0.1",
+        "x": 600,
+        "y": 560,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-commento-4",
+        "tipo": "ladder-commento",
+        "etichetta": "Auto uscita: quando la fotocellula di uscita si libera, −1",
+        "x": 100,
+        "y": 680,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-n-2",
+        "tipo": "ladder-contatto-n",
+        "etichetta": "I0.3",
+        "x": 100,
+        "y": 760,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-ctd-1",
+        "tipo": "ladder-ctd",
+        "etichetta": "C0",
+        "x": 600,
+        "y": 760,
+        "larghezza": 80,
+        "altezza": 80,
+        "preset": 5
+      },
+      {
+        "id": "ladder-commento-5",
+        "tipo": "ladder-commento",
+        "etichetta": "Scritta COMPLETO quando le auto sono 5",
+        "x": 100,
+        "y": 920,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-3",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "C0",
+        "x": 100,
+        "y": 1000,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-barra-sinistra-3",
+        "tipo": "ladder-barra-sinistra",
+        "etichetta": "",
+        "x": 40,
+        "y": 800,
+        "larghezza": 20,
+        "altezza": 400
+      },
+      {
+        "id": "ladder-bobina-3",
+        "tipo": "ladder-bobina",
+        "etichetta": "Q0.2",
+        "x": 600,
+        "y": 1000,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "impianto-parcheggio-1",
+        "tipo": "impianto-parcheggio",
+        "etichetta": "",
+        "x": 780,
+        "y": 60,
+        "larghezza": 360,
+        "altezza": 180
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "ladder-barra-sinistra-1",
+          "morsetto": "p4"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-nc-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "ladder-contatto-nc-1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-bobina-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "ladder-barra-sinistra-1",
+          "morsetto": "p9"
+        },
+        "a": {
+          "componente": "ladder-contatto-n-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "ladder-contatto-n-1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-ctu-1",
+          "morsetto": "CU"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "ladder-barra-sinistra-2",
+          "morsetto": "p5"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "ladder-contatto-na-2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-bobina-2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "ladder-barra-sinistra-2",
+          "morsetto": "p10"
+        },
+        "a": {
+          "componente": "ladder-contatto-n-2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "ladder-contatto-n-2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-ctd-1",
+          "morsetto": "CD"
+        }
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "ladder-barra-sinistra-3",
+          "morsetto": "p6"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-3",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "ladder-contatto-na-3",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-bobina-3",
+          "morsetto": "in"
+        }
+      }
+    ]
+  }
+}

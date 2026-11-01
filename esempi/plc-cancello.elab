@@ -1,0 +1,398 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "plc",
+  "programma": "0.1.0",
+  "salvato": "2026-11-01T16:59:21.131Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "ladder-commento-1",
+        "tipo": "ladder-commento",
+        "etichetta": "Apertura: pulsante I0.0, si ferma al finecorsa di aperto I0.3",
+        "x": 100,
+        "y": 40,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-1",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "I0.0",
+        "x": 100,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-nc-1",
+        "tipo": "ladder-contatto-nc",
+        "etichetta": "I0.3",
+        "x": 220,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-nc-2",
+        "tipo": "ladder-contatto-nc",
+        "etichetta": "Q0.1",
+        "x": 340,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-barra-sinistra-1",
+        "tipo": "ladder-barra-sinistra",
+        "etichetta": "",
+        "x": 40,
+        "y": 0,
+        "larghezza": 20,
+        "altezza": 400
+      },
+      {
+        "id": "ladder-contatto-na-2",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "Q0.0",
+        "x": 100,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-bobina-1",
+        "tipo": "ladder-bobina",
+        "etichetta": "Q0.0",
+        "x": 600,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-commento-2",
+        "tipo": "ladder-commento",
+        "etichetta": "Chiusura: pulsante I0.1, si ferma al finecorsa di chiuso I0.2 o se la fotocellula I0.4 vede un'auto",
+        "x": 100,
+        "y": 280,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-3",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "I0.1",
+        "x": 100,
+        "y": 360,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-nc-3",
+        "tipo": "ladder-contatto-nc",
+        "etichetta": "I0.2",
+        "x": 220,
+        "y": 360,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-nc-4",
+        "tipo": "ladder-contatto-nc",
+        "etichetta": "I0.4",
+        "x": 340,
+        "y": 360,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-nc-5",
+        "tipo": "ladder-contatto-nc",
+        "etichetta": "Q0.0",
+        "x": 460,
+        "y": 360,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-4",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "Q0.1",
+        "x": 100,
+        "y": 440,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-barra-sinistra-2",
+        "tipo": "ladder-barra-sinistra",
+        "etichetta": "",
+        "x": 40,
+        "y": 400,
+        "larghezza": 20,
+        "altezza": 400
+      },
+      {
+        "id": "ladder-bobina-2",
+        "tipo": "ladder-bobina",
+        "etichetta": "Q0.1",
+        "x": 600,
+        "y": 360,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-commento-3",
+        "tipo": "ladder-commento",
+        "etichetta": "Lampeggiante acceso durante il movimento",
+        "x": 100,
+        "y": 520,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-5",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "Q0.0",
+        "x": 100,
+        "y": 600,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-6",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "Q0.1",
+        "x": 100,
+        "y": 680,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-bobina-3",
+        "tipo": "ladder-bobina",
+        "etichetta": "Q0.2",
+        "x": 600,
+        "y": 600,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "quadro-pulsante-na-1",
+        "tipo": "quadro-pulsante-na",
+        "etichetta": "I0.0",
+        "x": 780,
+        "y": 40,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "quadro-pulsante-na-2",
+        "tipo": "quadro-pulsante-na",
+        "etichetta": "I0.1",
+        "x": 900,
+        "y": 40,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "impianto-cancello-1",
+        "tipo": "impianto-cancello",
+        "etichetta": "",
+        "x": 780,
+        "y": 180,
+        "larghezza": 360,
+        "altezza": 200
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "ladder-barra-sinistra-1",
+          "morsetto": "p4"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-nc-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "ladder-contatto-nc-1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-nc-2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "ladder-barra-sinistra-1",
+          "morsetto": "p6"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "ladder-contatto-na-2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "out"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "ladder-contatto-nc-2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-bobina-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "ladder-barra-sinistra-1",
+          "morsetto": "p10"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-3",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "ladder-contatto-na-3",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-nc-3",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "ladder-contatto-nc-3",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-nc-4",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "ladder-contatto-nc-4",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-nc-5",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "ladder-barra-sinistra-2",
+          "morsetto": "p2"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-4",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-12",
+        "da": {
+          "componente": "ladder-contatto-na-4",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-3",
+          "morsetto": "out"
+        }
+      },
+      {
+        "id": "filo-13",
+        "da": {
+          "componente": "ladder-contatto-nc-5",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-bobina-2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-14",
+        "da": {
+          "componente": "ladder-barra-sinistra-2",
+          "morsetto": "p6"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-5",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-15",
+        "da": {
+          "componente": "ladder-barra-sinistra-2",
+          "morsetto": "p8"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-6",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-16",
+        "da": {
+          "componente": "ladder-contatto-na-6",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-5",
+          "morsetto": "out"
+        }
+      },
+      {
+        "id": "filo-17",
+        "da": {
+          "componente": "ladder-contatto-na-5",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-bobina-3",
+          "morsetto": "in"
+        }
+      }
+    ]
+  }
+}

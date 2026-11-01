@@ -35,6 +35,62 @@
       "titolo": "Comando temporizzato (marcia a tempo)",
       "descrizione": "Il motore, avviato con S1, si ferma da solo dopo 8 secondi: il temporizzatore KT1 al ritardo all'eccitazione si alimenta insieme a K1 e, trascorso il tempo, apre il suo contatto NC temporizzato in serie al pulsante di arresto.",
       "prova": "Premi ▶ AVVIA e clic su Q1. Premi S1: il motore gira e la spia H1 si accende. Guarda l'orologio ⏱: dopo 8 secondi il motore si ferma da solo. Puoi fermarlo prima con S0. Prova a cambiare il tempo di KT1 nel pannello Proprietà."
+    },
+    {
+      "file": "plc-marcia-arresto.elab",
+      "modulo": "plc",
+      "titolo": "PLC – Marcia/arresto con autoritenuta",
+      "descrizione": "Il primo programma Ladder: il contatto Q0.0 in parallelo al pulsante di marcia I0.0 mantiene accesa l'uscita. Il pulsante di arresto del quadro è cablato NC, quindi nel Ladder si usa un contatto NA (I0.1 vale 1 a riposo).",
+      "prova": "Premi ▶ AVVIA. Tieni premuto il pulsante verde I0.0 sul quadro e rilascialo: lampada e motore restano accesi. Premi il pulsante rosso I0.1 per fermare. Guarda i contatti diventare verdi nel Ladder."
+    },
+    {
+      "file": "plc-telerruttore.elab",
+      "modulo": "plc",
+      "titolo": "PLC – Telerruttore (un pulsante accende e spegne)",
+      "descrizione": "Con il contatto a fronte di salita P il programma vede la pressione per un solo ciclo; SET e RESET fanno cambiare stato all'uscita a ogni pressione, come il relè passo-passo delle luci di casa.",
+      "prova": "Premi ▶ AVVIA. Ogni clic sul pulsante I0.0 del quadro accende o spegne la lampada Q0.0. Prova a togliere il contatto P e usare un contatto NA: perché la lampada lampeggia finché tieni premuto?"
+    },
+    {
+      "file": "plc-nastro.elab",
+      "modulo": "plc",
+      "titolo": "PLC – Nastro trasportatore",
+      "descrizione": "Marcia e arresto dell'impianto con autoritenuta su un merker (M0.0); il motore del nastro gira finché la fotocellula di fine (I0.3) non vede il pacco, e una lampada avvisa di ritirarlo.",
+      "prova": "Premi ▶ AVVIA, poi il pulsante di marcia I0.0. Clic sul nastro per posare un pacco: arriva in fondo e il nastro si ferma. Nel pannello sotto il foglio guarda I0.3 e Q0.0."
+    },
+    {
+      "file": "plc-semaforo.elab",
+      "modulo": "plc",
+      "titolo": "PLC – Semaforo",
+      "descrizione": "Tre temporizzatori TON in cascata: verde 5 s, giallo 2 s, rosso 5 s; alla fine del rosso T2 azzera la catena e il ciclo ricomincia da solo.",
+      "prova": "Premi ▶ AVVIA e guarda il semaforo cambiare luce; sotto ogni temporizzatore c'è il tempo che scorre. Prova a cambiare i tempi nelle Proprietà dei TON (a simulazione ferma)."
+    },
+    {
+      "file": "plc-cancello.elab",
+      "modulo": "plc",
+      "titolo": "PLC – Cancello automatico",
+      "descrizione": "Apertura e chiusura con autoritenuta e interblocco (Q0.0 e Q0.1 non possono essere accese insieme), arresto sui finecorsa e sicurezza della fotocellula: se un'auto è in mezzo il cancello non si chiude. Il lampeggiante segnala il movimento.",
+      "prova": "Premi ▶ AVVIA. Pulsante I0.0 = apri (si ferma da solo tutto aperto), pulsante I0.1 = chiudi. Durante la chiusura clic sul cancello per far entrare un'auto: la chiusura si ferma."
+    },
+    {
+      "file": "plc-serbatoio.elab",
+      "modulo": "plc",
+      "titolo": "PLC – Serbatoio con pompa",
+      "descrizione": "Controllo di livello: la pompa parte quando il liquido scende sotto il galleggiante di minimo e si ferma al massimo (autoritenuta fra i due livelli). Il selettore apre la valvola di scarico.",
+      "prova": "Premi ▶ AVVIA: il serbatoio vuoto si riempie fino al massimo. Clic sul serbatoio per aprire il rubinetto dell'utenza o gira il selettore I0.0 per scaricare: quando il livello scende sotto il minimo la pompa riparte."
+    },
+    {
+      "file": "plc-ascensore.elab",
+      "modulo": "plc",
+      "titolo": "PLC – Ascensore (piano 0 e piano 2)",
+      "descrizione": "Salita e discesa con autoritenuta, interblocco fra i due versi del motore e arresto sui finecorsa di piano. Il piano 1 non è ancora gestito: è un buon esercizio da completare.",
+      "prova": "Premi ▶ AVVIA. Tieni premuto il pulsante di chiamata del piano 2 (accanto al vano): la cabina sale e si ferma al piano 2. Chiama il piano 0 per farla scendere."
+    },
+    {
+      "file": "plc-parcheggio.elab",
+      "modulo": "plc",
+      "titolo": "PLC – Parcheggio con contatore",
+      "descrizione": "Lo stesso contatore C0 conta in avanti le auto che entrano (CTU) e all'indietro quelle che escono (CTD), sul fronte di discesa delle fotocellule. Con 5 auto si accende COMPLETO e la sbarra di ingresso non si alza più.",
+      "prova": "Premi ▶ AVVIA. Clic sulla parte sinistra del parcheggio per far arrivare un'auto: la sbarra si alza e l'auto entra. Con 5 auto compare COMPLETO. Clic a destra per far uscire un'auto. Sotto il contatore leggi il conteggio."
     }
   ]
 }
