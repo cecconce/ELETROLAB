@@ -174,3 +174,38 @@ describe("simulazione del banco", () => {
     expect(riletto.ok && riletto.progetto.schema.componenti.find((c) => c.id === "R")?.valore).toBe(220);
   });
 });
+
+describe("vista e problemi del banco", () => {
+  it("LED acceso nella vista, LED L della scheda col pin 13, problemi spiegati", async () => {
+    const { vistaDaSessioneArduino } = await import("./arduino");
+    const s = bancoBlink();
+    const sess = avviaSessioneArduino(SKETCH_PREDEFINITO, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    passoArduino(sess, 200);
+    const v = vistaDaSessioneArduino(sess, s, lib);
+    expect(v.componenti.L.arduino?.luminosita).toBeGreaterThan(0.5);
+    expect(v.componenti.U.arduino?.ledL).toBe(true);
+    expect(v.problemiPlc).toEqual([]);
+  });
+
+  it("LED senza resistenza: «si è bruciato» con la corrente", async () => {
+    const { problemiArduino } = await import("./arduino");
+    let s: Schema = { componenti: [comp("U", "arduino-uno", 0, 0), comp("L", "led-verde", 600, 0)], fili: [] };
+    s = filo(s, "U/D13", "L/A");
+    s = filo(s, "L/K", "U/GND1");
+    const sess = avviaSessioneArduino(SKETCH_PREDEFINITO, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    passoArduino(sess, 200);
+    const p = problemiArduino(sess, s, lib);
+    expect(p).toHaveLength(1);
+    expect(p[0].testo).toMatch(/LED verde si è bruciato: ci passano \d+ mA/);
+    expect(p[0].componenti).toEqual(["L"]);
+  });
+
+  it("senza scheda: avviso; errore nel codice: riga e spiegazione", async () => {
+    const { problemiArduino } = await import("./arduino");
+    const s: Schema = { componenti: [comp("L", "led-blu", 0, 0)], fili: [] };
+    const sess = avviaSessioneArduino("void setup() {\n  int x = ;\n}\nvoid loop(){}", componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    const testi = problemiArduino(sess, s, lib).map((p) => p.testo);
+    expect(testi[0]).toMatch(/^Riga 2 del programma/);
+    expect(testi[1]).toMatch(/non c'è la scheda/);
+  });
+});

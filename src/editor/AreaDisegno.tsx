@@ -40,6 +40,7 @@ import { componenteDaVoce, svgComeDataUrl, tipiContatto, type Libreria, type Voc
 import { numeroMorsetto } from "./associazioni";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
 import { DisegnoImpianto } from "./DisegnoImpianti";
+import { DisegnoArduino } from "./DisegnoArduino";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { copiaSelezione, incolla, type Appunti } from "./appunti";
 import {
@@ -667,6 +668,7 @@ export function AreaDisegno({
                       colori={colori}
                       siglaSopra={libreria.modulo === "plc" || libreria.modulo === "arduino"}
                       siglaDentro={c.tipo === "ladder-commento"}
+                      colpoPreciso={libreria.modulo === "arduino"}
                     />
                     {MODELLI_IMPIANTI_PLC[c.tipo] && (
                       <DisegnoImpianto
@@ -676,7 +678,8 @@ export function AreaDisegno({
                         colori={colori}
                       />
                     )}
-                    {aspetto && (
+                    {libreria.modulo === "arduino" && <DisegnoArduino componente={c} aspetto={aspetto} />}
+                    {aspetto && libreria.modulo !== "arduino" && (
                       <AspettoInSimulazione
                         componente={c}
                         voce={vociPerTipo.get(c.tipo)}
@@ -991,7 +994,7 @@ export function AreaDisegno({
           {t("editor.adatta")}
         </button>
         <span className={avviso ? "suggerimento avviso" : "suggerimento"} role="status" aria-live="polite">
-          {avviso ?? (inSimulazione ? t(libreria.modulo === "plc" ? "simulazione.suggerimentoPlc" : "simulazione.suggerimento") : filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
+          {avviso ?? (inSimulazione ? t(libreria.modulo === "plc" ? "simulazione.suggerimentoPlc" : libreria.modulo === "arduino" ? "simulazione.suggerimentoArduino" : "simulazione.suggerimento") : filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
         </span>
       </div>
     </div>
@@ -1017,15 +1020,34 @@ interface PropsSimbolo {
   siglaSopra?: boolean;
   /** Sigla scritta dentro il simbolo, a capo se serve (commenti del Ladder). */
   siglaDentro?: boolean;
+  /**
+   * Si clicca solo sulle parti disegnate (non sul riquadro intero): nel banco
+   * Arduino i fori della breadboard accanto ai piedini restano raggiungibili.
+   */
+  colpoPreciso?: boolean;
+}
+
+/** Immagine che risponde ai clic solo dove non è trasparente. */
+function ImmaginePrecisa({ immagine, larghezza, altezza }: { immagine: HTMLImageElement; larghezza: number; altezza: number }) {
+  const rif = useRef<Konva.Image>(null);
+  useEffect(() => {
+    const nodo = rif.current;
+    if (!nodo) return;
+    nodo.cache({ pixelRatio: 1 });
+    nodo.drawHitFromCache(0);
+  }, [immagine, larghezza, altezza]);
+  return <ImmagineKonva ref={rif} image={immagine} width={larghezza} height={altezza} />;
 }
 
 /** Disegno di un componente: simbolo, sigla a sinistra (o sopra) e contorno di selezione. */
-function SimboloComponente({ larghezza, altezza, etichetta, nonAssociato, numeri, immagine, scelto, colori, siglaSopra, siglaDentro }: PropsSimbolo) {
+function SimboloComponente({ larghezza, altezza, etichetta, nonAssociato, numeri, immagine, scelto, colori, siglaSopra, siglaDentro, colpoPreciso }: PropsSimbolo) {
   return (
     <>
       {/* Area cliccabile trasparente: si seleziona cliccando anche fra le linee del simbolo. */}
-      <Rect width={larghezza} height={altezza} fill="rgba(0,0,0,0)" />
-      {immagine ? (
+      {!(colpoPreciso && immagine) && <Rect width={larghezza} height={altezza} fill="rgba(0,0,0,0)" />}
+      {immagine && colpoPreciso ? (
+        <ImmaginePrecisa immagine={immagine} larghezza={larghezza} altezza={altezza} />
+      ) : immagine ? (
         <ImmagineKonva image={immagine} width={larghezza} height={altezza} listening={false} />
       ) : (
         <Rect

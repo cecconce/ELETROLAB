@@ -41,6 +41,17 @@ export interface AspettoComponente {
   valore?: string;
   /** PLC: stato dell'impianto animato da disegnare (nastro, semaforo, cancello…). */
   impianto?: unknown;
+  /** Arduino: stato da disegnare sul banco (LED, manopole, servo, buzzer, LED L della scheda). */
+  arduino?: {
+    luminosita?: number;
+    bruciato?: boolean;
+    posizione?: number;
+    luce?: number;
+    angolo?: number;
+    frequenza?: number;
+    suona?: boolean;
+    ledL?: boolean;
+  };
 }
 
 export interface VistaSimulazione {
@@ -141,7 +152,7 @@ export function formattaTempo(secondi: number): string {
  * ridisegna lo schema solo allora, non a ogni scatto dell'orologio.
  */
 export function firmaVista(v: VistaSimulazione): string {
-  return JSON.stringify([v.poliDeiFili, v.componenti, [...v.morsettiInCorto], v.problemi]);
+  return JSON.stringify([v.poliDeiFili, v.componenti, [...v.morsettiInCorto], v.problemi, v.problemiPlc]);
 }
 
 /** Numero con la virgola e al massimo un decimale ("1,5"). */

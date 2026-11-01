@@ -5,7 +5,11 @@
 //   cavetto, se stanno nello stesso punto (un piedino infilato in un foro
 //   della breadboard) o se sono fori collegati internamente dalla breadboard;
 // - i componenti con i loro parametri (colore del LED, valore della resistenza).
-import { gruppoForo, type ComponenteArduino, type NodoDi } from "../motori/arduino";
+import { gruppoForo, pinCollegato, tempoArduino, type ComponenteArduino, type NodoDi, type SessioneArduino } from "../motori/arduino";
+import { t } from "../testi";
+import type { Libreria } from "./libreria";
+import type { ProblemaMostrato } from "./messaggiProblemi";
+import type { AspettoComponente, VistaSimulazione } from "./vistaSimulazione";
 import { morsettiDelComponente, type MorsettiDelTipo } from "./fili";
 import type { Schema } from "./schema";
 
@@ -120,3 +124,86 @@ void loop() {
   delay(1000);
 }
 `;
+
+/** Che cosa fa un clic sui componenti del banco durante la simulazione. */
+function clicArduino(tipo: string): AspettoComponente["clic"] {
+  if (tipo === "pulsante") return "pulsante";
+  if (tipo === "potenziometro" || tipo === "fotoresistenza") return "manuale";
+  return null;
+}
+
+/** Aspetto del banco durante la simulazione, per l'area di disegno. */
+export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libreria: Libreria): VistaSimulazione {
+  const componenti: Record<string, AspettoComponente> = {};
+  for (const c of schema.componenti) {
+    const a = s.aspetto[c.id] ?? {};
+    const arduino: NonNullable<AspettoComponente["arduino"]> = {};
+    if (c.tipo.startsWith("led-")) {
+      arduino.luminosita = a.luminosita ?? 0;
+      arduino.bruciato = a.bruciato ?? false;
+    }
+    if (c.tipo === "potenziometro") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0.5;
+    if (c.tipo === "fotoresistenza") arduino.luce = s.interazioni.luce[c.id] ?? 0.5;
+    if (c.tipo === "servo") {
+      const pin = pinCollegato(s, c.id, "SIG");
+      arduino.angolo = a.alimentato && pin && s.servi[pin] !== undefined ? s.servi[pin] : undefined;
+    }
+    if (c.tipo === "buzzer") {
+      const pin = pinCollegato(s, c.id, "+");
+      arduino.suona = a.alimentato === true;
+      if (pin && s.toni[pin]) arduino.frequenza = s.toni[pin];
+    }
+    if (c.tipo === "arduino-uno") arduino.ledL = (s.pin.D13?.modo === "OUTPUT" && s.pin.D13.livello > 0) || false;
+    componenti[c.id] = {
+      clic: clicArduino(c.tipo),
+      chiuso: false,
+      alimentato: false,
+      azionato: s.interazioni.premuti.has(c.id),
+      intervenuta: false,
+      sovraccarico: false,
+      arduino,
+    };
+  }
+  return {
+    poliDeiFili: {},
+    componenti,
+    morsettiInCorto: new Set(),
+    tempo: tempoArduino(s),
+    problemi: [],
+    problemiPlc: problemiArduino(s, schema, libreria),
+  };
+}
+
+/** Problemi del programma e del circuito, spiegati in italiano. */
+export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Libreria): ProblemaMostrato[] {
+  const problemi: ProblemaMostrato[] = [];
+  if (s.errore) {
+    problemi.push({
+      chiave: "errore-codice",
+      gravita: "errore",
+      testo: s.errore.riga > 0 ? t("arduino.problema.codice", { riga: s.errore.riga, messaggio: s.errore.message }) : s.errore.message,
+      componenti: [],
+      morsetti: [],
+    });
+  }
+  if (!s.scheda) problemi.push({ chiave: "senza-scheda", gravita: "avviso", testo: t("arduino.problema.senzaScheda"), componenti: [], morsetti: [] });
+  for (const c of schema.componenti) {
+    const a = s.aspetto[c.id];
+    if (a?.bruciato) {
+      const nome = libreria.componenti.find((v) => v.id === c.tipo)?.nome ?? c.tipo;
+      problemi.push({
+        chiave: `bruciato-${c.id}`,
+        gravita: "errore",
+        testo: t("arduino.problema.ledBruciato", { nome, corrente: Math.round((a.corrente ?? 0) * 1000) }),
+        componenti: [c.id],
+        morsetti: [],
+      });
+    }
+  }
+  return problemi;
+}
+
+/** Firma della vista Arduino: cambia solo quando cambia qualcosa di visibile. */
+export function firmaArduino(s: SessioneArduino): string {
+  return `${s.versione}|${s.seriale.length}|${s.errore?.message ?? ""}`;
+}

@@ -10,6 +10,8 @@ import { t } from "../testi";
 import { associaContatto, cambiaSigla, contattoAssociato, numeroMorsetto, proprietariPer } from "./associazioni";
 import { vocePerTipo, type Libreria } from "./libreria";
 import { COMMENTO_MASSIMO, TIPO_COMMENTO, impostaCollegamento, impostaCommento } from "./ladder";
+import { leggiOhm, scriviOhm } from "./arduino";
+import { COLORI_FILI, colorePropostoFilo } from "./fili";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
 import type { Schema, Selezione } from "./schema";
@@ -45,6 +47,35 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
     setBozzaPreset(presetDaMostrare(componente?.preset));
     setErrorePreset(null);
   }, [componente?.id, componente?.preset]);
+
+  // Banco Arduino: un cavetto selezionato → scelta del colore.
+  const filo = selezione.length === 1 && libreria.modulo === "arduino" ? schema.fili.find((f) => f.id === selezione[0]) : undefined;
+  if (!componente && filo) {
+    return (
+      <aside className="proprieta" aria-label={t("proprieta.titolo")}>
+        <h2>{t("proprieta.titolo")}</h2>
+        <p className="proprieta-tipo">{t("proprieta.cavetto")}</p>
+        <div className="proprieta-campo">
+          <span>{t("proprieta.coloreCavetto")}</span>
+          <div className="tavolozza-fili">
+            {COLORI_FILI.map((c) => (
+              <button
+                key={c.valore}
+                type="button"
+                className={(filo.colore ?? colorePropostoFilo(filo.da, filo.a)) === c.valore ? "colore-filo scelto" : "colore-filo"}
+                style={{ background: c.valore }}
+                title={c.nome}
+                aria-label={c.nome}
+                data-colore={c.nome}
+                onClick={() => onCambiaSchema({ ...schema, fili: schema.fili.map((f) => (f.id === filo.id ? { ...f, colore: c.valore } : f)) })}
+              />
+            ))}
+          </div>
+        </div>
+        <p className="proprieta-nota">{t("proprieta.cavettoSuggerimento")}</p>
+      </aside>
+    );
+  }
 
   if (!componente) {
     return (
@@ -187,6 +218,33 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
 
       {MODELLI_IMPIANTI_PLC[componente.tipo] && (
         <CollegamentiImpianto key={componente.id} schema={schema} id={componente.id} onCambiaSchema={onCambiaSchema} />
+      )}
+
+      {libreria.modulo === "arduino" && componente.tipo === "resistenza" && (
+        <label className="proprieta-campo">
+          <span>{t("proprieta.resistenza")}</span>
+          <input
+            type="text"
+            key={`${componente.id}-${componente.valore ?? 220}`}
+            defaultValue={scriviOhm(componente.valore ?? 220)}
+            maxLength={12}
+            spellCheck={false}
+            title={t("proprieta.resistenzaSuggerimento")}
+            onBlur={(e) => {
+              const ohm = leggiOhm(e.currentTarget.value);
+              if (ohm === null) {
+                e.currentTarget.value = scriviOhm(componente.valore ?? 220);
+                return;
+              }
+              if (ohm !== (componente.valore ?? 220)) {
+                onCambiaSchema({ ...schema, componenti: schema.componenti.map((c) => (c.id === componente.id ? { ...c, valore: ohm } : c)) });
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+            }}
+          />
+        </label>
       )}
 
       {componente.tipo === TIPO_COMMENTO && (

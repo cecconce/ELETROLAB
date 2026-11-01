@@ -19,6 +19,8 @@ export const R_USCITA_PIN = 25;
 export const R_PULLUP = 20000;
 /** Sopra questa corrente un LED si brucia (A). */
 export const CORRENTE_LED_BRUCIATO = 0.04;
+/** Sotto questa corrente il LED appare spento (A). */
+export const CORRENTE_LED_MINIMA = 0.0005;
 /** Corrente a cui un LED raggiunge la luminosità piena (A). */
 export const CORRENTE_LED_PIENA = 0.015;
 
@@ -152,7 +154,10 @@ export function aspettoComponenti(componenti: readonly ComponenteArduino[], nodo
   for (const c of componenti) {
     if (c.tipo === "led") {
       const i = r.correnti[c.id] ?? 0;
-      aspetto[c.id] = { luminosita: Math.min(1, i / CORRENTE_LED_PIENA), bruciato: i > CORRENTE_LED_BRUCIATO, corrente: i };
+      // Sotto mezzo milliampere un LED vero non si vede acceso (e così si
+      // ignorano le correnti minuscole di un circuito lasciato aperto).
+      const visibile = i >= CORRENTE_LED_MINIMA;
+      aspetto[c.id] = { luminosita: visibile ? Math.min(1, i / CORRENTE_LED_PIENA) : 0, bruciato: i > CORRENTE_LED_BRUCIATO, corrente: i };
     } else if (c.tipo === "buzzer") {
       aspetto[c.id] = { alimentato: v(nodoDi(c.id, "+")) - v(nodoDi(c.id, "-")) > 1 };
     } else if (c.tipo === "servo") {

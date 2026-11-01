@@ -35,6 +35,19 @@ import {
   type SessionePlc,
 } from "../motori/plc";
 import { impiantiDaSchema, programmaDaSchema } from "../editor/ladder";
+import {
+  avviaSessioneArduino,
+  clicGiuArduino,
+  clicSuArduino,
+  inviaSeriale,
+  passoArduino,
+  rilasciaTuttiArduino,
+  tempoArduino,
+  type SessioneArduino,
+} from "../motori/arduino";
+import { componentiDaSchema, nodiDaSchema, SKETCH_PREDEFINITO, vistaDaSessioneArduino } from "../editor/arduino";
+import { PannelloCodice } from "../editor/PannelloCodice";
+import { vocePerTipo } from "../editor/libreria";
 import { PannelloIngressiPlc } from "../editor/PannelloIngressiPlc";
 import { problemiDaMostrare } from "../editor/messaggiProblemi";
 import { PannelloProblemi } from "../editor/PannelloProblemi";
@@ -76,13 +89,16 @@ const PASSO_MASSIMO_S = 60;
 
 /** Orologio della simulazione: si aggiorna da solo senza ridisegnare lo schema. */
 /** Sessione di simulazione di uno dei moduli simulabili. */
-type Sessione = SessioneImpianto | SessionePlc;
+type Sessione = SessioneImpianto | SessionePlc | SessioneArduino;
 const eSessionePlc = (s: Sessione): s is SessionePlc => "conversione" in s;
+const eSessioneArduino = (s: Sessione): s is SessioneArduino => "esecutore" in s;
+/** Secondi trascorsi dall'avvio, per l'orologio. */
+const tempoSessione = (s: Sessione | null) => (!s ? 0 : eSessioneArduino(s) ? tempoArduino(s) : s.stato.tempo);
 
 function OrologioSimulazione({ sessione }: { sessione: React.MutableRefObject<Sessione | null> }) {
   const [tempo, setTempo] = useState(0);
   useEffect(() => {
-    const timer = window.setInterval(() => setTempo(sessione.current?.stato.tempo ?? 0), 100);
+    const timer = window.setInterval(() => setTempo(tempoSessione(sessione.current)), 100);
     return () => window.clearInterval(timer);
   }, [sessione]);
   return (
@@ -203,7 +219,11 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   // --- Simulazione --------------------------------------------------------
   // La sessione cambia a ogni scatto dell'orologio: vive in un ref e lo
   // schema viene ridisegnato solo quando cambia qualcosa di visibile.
-  const simulabile = modulo.id === "impianti" || modulo.id === "plc";
+  const simulabile = modulo.id === "impianti" || modulo.id === "plc" || modulo.id === "arduino";
+  // Arduino: testo del monitor seriale e scheda mostrata a destra (Codice o Proprietà).
+  const [seriale, setSeriale] = useState("");
+  const [schedaDestra, setSchedaDestra] = useState<"codice" | "proprieta">("codice");
+  const morsettiDi = useCallback((tipo: string) => vocePerTipo(libreria, tipo)?.morsetti, [libreria]);
   const sessioneRif = useRef<Sessione | null>(null);
   const firmaRif = useRef("");
   const [vista, setVista] = useState<VistaSimulazione | null>(null);
@@ -214,14 +234,19 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const aggiornaSessione = useCallback(
     (s: Sessione) => {
       sessioneRif.current = s;
-      const v = eSessionePlc(s) ? vistaDaSessionePlc(s, schema) : vistaDaSessione(s, schema.fili);
+      if (eSessioneArduino(s)) setSeriale((prima) => (prima === s.seriale ? prima : s.seriale));
+      const v = eSessioneArduino(s)
+        ? vistaDaSessioneArduino(s, schema, libreria)
+        : eSessionePlc(s)
+          ? vistaDaSessionePlc(s, schema)
+          : vistaDaSessione(s, schema.fili);
       const firma = firmaVista(v);
       if (firma !== firmaRif.current) {
         firmaRif.current = firma;
         setVista(v);
       }
     },
-    [schema],
+    [schema, libreria],
   );
   const avvia = useCallback(() => {
     if (!simulabile) return;
@@ -229,8 +254,11 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     setProblemaScelto(null);
     setProblemiAperti(true);
     firmaRif.current = "";
+    setSeriale("");
     aggiornaSessione(
-      modulo.id === "plc"
+      modulo.id === "arduino"
+        ? avviaSessioneArduino(schema.codice ?? SKETCH_PREDEFINITO, componentiDaSchema(schema), nodiDaSchema(schema, morsettiDi))
+        : modulo.id === "plc"
         ? avviaSessionePlc(
             programmaDaSchema(schema),
             Object.fromEntries(schema.componenti.map((c) => [c.id, c.etichetta])),
@@ -240,7 +268,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           )
         : avviaSessione(schema),
     );
-  }, [aggiornaSessione, schema, simulabile, modulo.id]);
+  }, [aggiornaSessione, schema, simulabile, modulo.id, morsettiDi]);
   const ferma = useCallback(() => {
     sessioneRif.current = null;
     setVista(null);
@@ -256,7 +284,11 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       const dt = Math.min((adesso - ultimo) / 1000, PASSO_MASSIMO_S);
       ultimo = adesso;
       const s = sessioneRif.current;
-      if (s) aggiornaSessione(eSessionePlc(s) ? passoPlc(s, dt) : passo(s, dt));
+      if (!s) return;
+      if (eSessioneArduino(s)) {
+        passoArduino(s, dt * 1000);
+        aggiornaSessione(s);
+      } else aggiornaSessione(eSessionePlc(s) ? passoPlc(s, dt) : passo(s, dt));
     }, INTERVALLO_SIMULAZIONE_MS);
     return () => window.clearInterval(timer);
   }, [inSimulazione, aggiornaSessione]);
@@ -267,7 +299,11 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     if (!inSimulazione) return;
     const rilascia = () => {
       const s = sessioneRif.current;
-      if (s) aggiornaSessione(eSessionePlc(s) ? rilasciaTuttiPlc(s) : rilasciaTutti(s));
+      if (!s) return;
+      if (eSessioneArduino(s)) {
+        rilasciaTuttiArduino(s);
+        aggiornaSessione(s);
+      } else aggiornaSessione(eSessionePlc(s) ? rilasciaTuttiPlc(s) : rilasciaTutti(s));
     };
     window.addEventListener("mouseup", rilascia);
     window.addEventListener("blur", rilascia);
@@ -284,15 +320,25 @@ export function SchermataModulo(props: PropsSchermataModulo) {
             vista,
             onGiu: (id: string, punto?: { x: number; y: number }) => {
               const s = sessioneRif.current;
-              if (s) aggiornaSessione(eSessionePlc(s) ? clicGiuPlc(s, id, punto) : clicGiu(s, id));
+              if (!s) return;
+              if (eSessioneArduino(s)) {
+                // Manopole e luce: clic a destra del componente aumenta, a sinistra diminuisce.
+                const c = schema.componenti.find((x) => x.id === id);
+                clicGiuArduino(s, id, punto !== undefined && c !== undefined && punto.x < c.larghezza / 2);
+                aggiornaSessione(s);
+              } else aggiornaSessione(eSessionePlc(s) ? clicGiuPlc(s, id, punto) : clicGiu(s, id));
             },
             onSu: (id: string) => {
               const s = sessioneRif.current;
-              if (s) aggiornaSessione(eSessionePlc(s) ? clicSuPlc(s, id) : clicSu(s, id));
+              if (!s) return;
+              if (eSessioneArduino(s)) {
+                clicSuArduino(s, id);
+                aggiornaSessione(s);
+              } else aggiornaSessione(eSessionePlc(s) ? clicSuPlc(s, id) : clicSu(s, id));
             },
           }
         : null,
-    [vista, aggiornaSessione],
+    [vista, aggiornaSessione, schema],
   );
 
   // Problemi da spiegare: riga scelta (evidenziata da sola) o, se nessuna, tutti i punti.
@@ -405,7 +451,44 @@ export function SchermataModulo(props: PropsSchermataModulo) {
             ) : null
           }
         />
-        <PannelloProprieta schema={schema} selezione={selezione} libreria={libreria} onCambiaSchema={cambiaSchema} />
+        {modulo.id === "arduino" ? (
+          <div className="colonna-arduino">
+            <div className="schede-arduino" role="tablist">
+              <button type="button" role="tab" aria-selected={schedaDestra === "codice"} className={schedaDestra === "codice" ? "scheda attiva" : "scheda"} onClick={() => setSchedaDestra("codice")}>
+                {t("arduino.codice.titolo")}
+              </button>
+              <button type="button" role="tab" aria-selected={schedaDestra === "proprieta"} className={schedaDestra === "proprieta" ? "scheda attiva" : "scheda"} onClick={() => setSchedaDestra("proprieta")}>
+                {t("proprieta.titolo")}
+              </button>
+            </div>
+            {schedaDestra === "codice" ? (
+              <PannelloCodice
+                codice={schema.codice ?? SKETCH_PREDEFINITO}
+                // Mentre si scrive la modifica è provvisoria; uscendo dal campo diventa un passo di Annulla.
+                onCambia={(codice, definitivo) => cambiaSchema({ ...schema, codice }, !definitivo)}
+                inSimulazione={inSimulazione}
+                errore={(() => {
+                  const s = sessioneRif.current;
+                  return s && eSessioneArduino(s) && s.errore ? { riga: s.errore.riga, messaggio: s.errore.message } : null;
+                })()}
+                seriale={seriale}
+                onInviaSeriale={(testo) => {
+                  const s = sessioneRif.current;
+                  if (s && eSessioneArduino(s)) inviaSeriale(s, testo);
+                }}
+                onPulisciSeriale={() => {
+                  const s = sessioneRif.current;
+                  if (s && eSessioneArduino(s)) s.seriale = "";
+                  setSeriale("");
+                }}
+              />
+            ) : (
+              <PannelloProprieta schema={schema} selezione={selezione} libreria={libreria} onCambiaSchema={cambiaSchema} />
+            )}
+          </div>
+        ) : (
+          <PannelloProprieta schema={schema} selezione={selezione} libreria={libreria} onCambiaSchema={cambiaSchema} />
+        )}
       </div>
     </div>
   );
