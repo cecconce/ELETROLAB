@@ -15,7 +15,7 @@ import {
   type StatoMotore,
   type Tratto,
 } from "../motori/impianti";
-import { MODELLI_LADDER, nodiAlimentati, normalizzaOperando, valoreBit, type ProblemaLadder, type SessionePlc } from "../motori/plc";
+import { MODELLI_IMPIANTI_PLC, MODELLI_LADDER, nodiAlimentati, normalizzaOperando, valoreBit, type ProblemaLadder, type SessionePlc } from "../motori/plc";
 import { t } from "../testi";
 import type { ColoriEditor } from "./colori";
 import type { ProblemaMostrato } from "./messaggiProblemi";
@@ -39,6 +39,8 @@ export interface AspettoComponente {
   motore?: StatoMotore;
   /** PLC: valore da scrivere sotto il blocco (tempo trascorso, conteggio). */
   valore?: string;
+  /** PLC: stato dell'impianto animato da disegnare (nastro, semaforo, cancello…). */
+  impianto?: unknown;
 }
 
 export interface VistaSimulazione {
@@ -198,6 +200,20 @@ export function vistaDaSessionePlc(s: SessionePlc, schema: Schema): VistaSimulaz
         azionato: s.comandiAzionati.includes(c.id),
         intervenuta: false,
         sovraccarico: false,
+      };
+      continue;
+    }
+    if (m.ruolo === "impianto") {
+      const imp = s.impianti[c.id];
+      const modello = imp ? MODELLI_IMPIANTI_PLC[imp.tipo] : undefined;
+      componenti[c.id] = {
+        clic: modello?.clicGiu ? "pulsante" : null,
+        chiuso: false,
+        alimentato: false,
+        azionato: false,
+        intervenuta: false,
+        sovraccarico: false,
+        ...(imp ? { impianto: imp.stato } : {}),
       };
       continue;
     }

@@ -28,6 +28,11 @@ export interface ComponenteSchema {
   tempo?: number;
   /** Solo per i contatori del PLC: valore di preset (numero di impulsi). Salvato nel file. */
   preset?: number;
+  /**
+   * Solo per gli impianti animati del PLC: operando scelto per ogni segnale
+   * (es. { motore: "Q1.0" }). I segnali assenti usano l'operando proposto.
+   */
+  collegamenti?: Record<string, string>;
 }
 
 /** Un capo di un filo: il morsetto `morsetto` (es. "14") del componente `componente`. */

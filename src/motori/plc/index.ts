@@ -4,3 +4,4 @@ export * from "./programma";
 export * from "./scansione";
 export * from "./rete";
 export * from "./sessione";
+export * from "./impianti";

@@ -68,6 +68,11 @@ function leggiComponente(v: unknown): ComponenteSchema | undefined {
   if (eNumero(v.tempo) && v.tempo >= 0) c.tempo = v.tempo;
   // Preset dei contatori del PLC (facoltativo, intero non negativo).
   if (eNumero(v.preset) && v.preset >= 0) c.preset = Math.round(v.preset);
+  // Operandi dei segnali degli impianti animati (solo testi).
+  if (eOggetto(v.collegamenti)) {
+    const collegamenti = Object.fromEntries(Object.entries(v.collegamenti).filter((x): x is [string, string] => eTesto(x[1])));
+    if (Object.keys(collegamenti).length > 0) c.collegamenti = collegamenti;
+  }
   return c;
 }
 

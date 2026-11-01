@@ -9,7 +9,8 @@ import { useEffect, useState } from "react";
 import { t } from "../testi";
 import { associaContatto, cambiaSigla, contattoAssociato, numeroMorsetto, proprietariPer } from "./associazioni";
 import { vocePerTipo, type Libreria } from "./libreria";
-import { COMMENTO_MASSIMO, TIPO_COMMENTO, impostaCommento } from "./ladder";
+import { COMMENTO_MASSIMO, TIPO_COMMENTO, impostaCollegamento, impostaCommento } from "./ladder";
+import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
 import type { Schema, Selezione } from "./schema";
 
@@ -184,6 +185,10 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
         </>
       )}
 
+      {MODELLI_IMPIANTI_PLC[componente.tipo] && (
+        <CollegamentiImpianto key={componente.id} schema={schema} id={componente.id} onCambiaSchema={onCambiaSchema} />
+      )}
+
       {componente.tipo === TIPO_COMMENTO && (
         <label className="proprieta-campo">
           <span>{t("proprieta.commento")}</span>
@@ -252,5 +257,59 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
 
       {voce?.descrizione && <p className="proprieta-descrizione">{voce.descrizione}</p>}
     </aside>
+  );
+}
+
+/**
+ * Operandi dei segnali di un impianto animato: un campo per ogni sensore
+ * (→ ingresso I) e per ogni attuatore (uscita Q →). Si applica con Invio o
+ * uscendo dal campo; un operando sbagliato viene spiegato sotto.
+ */
+function CollegamentiImpianto({ schema, id, onCambiaSchema }: { schema: Schema; id: string; onCambiaSchema: (s: Schema) => void }) {
+  const componente = schema.componenti.find((c) => c.id === id);
+  const modello = componente ? MODELLI_IMPIANTI_PLC[componente.tipo] : undefined;
+  const [errore, setErrore] = useState<string | null>(null);
+  if (!componente || !modello) return null;
+  const operandi = operandiImpianto(modello, componente.collegamenti);
+  const applica = (segnale: string, campo: HTMLInputElement) => {
+    const esito = impostaCollegamento(schema, id, segnale, campo.value);
+    if (!esito.ok) {
+      setErrore(t("proprieta.collegamentoNonValido", { operando: esito.operando }));
+      campo.value = operandi[segnale];
+      return;
+    }
+    setErrore(null);
+    if (esito.schema !== schema) onCambiaSchema(esito.schema);
+  };
+  const riga = (segnale: { id: string; chiaveNome: string }, tipo: "sensore" | "attuatore") => (
+    <label className="proprieta-campo" key={segnale.id}>
+      <span>
+        {t(segnale.chiaveNome)} ({t(`proprieta.${tipo}`)})
+      </span>
+      <input
+        type="text"
+        defaultValue={operandi[segnale.id]}
+        key={`${segnale.id}-${operandi[segnale.id]}`}
+        maxLength={8}
+        spellCheck={false}
+        data-segnale={segnale.id}
+        onBlur={(e) => applica(segnale.id, e.currentTarget)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") applica(segnale.id, e.currentTarget);
+        }}
+      />
+    </label>
+  );
+  return (
+    <div className="proprieta-collegamenti">
+      <h3>{t("proprieta.collegamentiImpianto")}</h3>
+      {modello.sensori.map((x) => riga(x, "sensore"))}
+      {modello.attuatori.map((x) => riga(x, "attuatore"))}
+      {errore && (
+        <p className="proprieta-avviso" role="alert">
+          {errore}
+        </p>
+      )}
+    </div>
   );
 }

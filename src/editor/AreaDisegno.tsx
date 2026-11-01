@@ -39,6 +39,8 @@ import { ICONE, trovaVoce } from "./caricaLibreria";
 import { componenteDaVoce, svgComeDataUrl, tipiContatto, type Libreria, type VoceLibreria } from "./libreria";
 import { numeroMorsetto } from "./associazioni";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
+import { DisegnoImpianto } from "./DisegnoImpianti";
+import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { copiaSelezione, incolla, type Appunti } from "./appunti";
 import {
   coloreFilo,
@@ -696,6 +698,14 @@ export function AreaDisegno({
                       siglaSopra={libreria.modulo === "plc"}
                       siglaDentro={c.tipo === "ladder-commento"}
                     />
+                    {MODELLI_IMPIANTI_PLC[c.tipo] && (
+                      <DisegnoImpianto
+                        tipo={c.tipo}
+                        operandi={operandiImpianto(MODELLI_IMPIANTI_PLC[c.tipo], c.collegamenti)}
+                        stato={aspetto?.impianto}
+                        colori={colori}
+                      />
+                    )}
                     {aspetto && (
                       <AspettoInSimulazione
                         componente={c}

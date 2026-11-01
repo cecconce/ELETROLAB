@@ -23,6 +23,10 @@
       "nome": "Quadro di comando"
     },
     {
+      "id": "impianti",
+      "nome": "Impianti animati"
+    },
+    {
       "id": "note",
       "nome": "Note"
     }
@@ -691,6 +695,60 @@
       "icona": "quadro-sirena.svg",
       "larghezza": 80,
       "altezza": 80,
+      "morsetti": []
+    },
+    {
+      "id": "impianto-nastro",
+      "nome": "Nastro trasportatore",
+      "categoria": "impianti",
+      "sigla": "",
+      "descrizione": "Un nastro mosso da un motore (uscita Q0.0) porta i pacchi verso il contenitore. Due fotocellule vedono il pacco all'inizio (I0.2) e alla fine (I0.3). In simulazione: clic sul nastro per posare un pacco.",
+      "paroleChiave": [
+        "nastro",
+        "trasportatore",
+        "pacchi",
+        "fotocellula",
+        "impianto"
+      ],
+      "icona": "impianto-nastro.svg",
+      "larghezza": 360,
+      "altezza": 160,
+      "morsetti": []
+    },
+    {
+      "id": "impianto-semaforo",
+      "nome": "Semaforo",
+      "categoria": "impianti",
+      "sigla": "",
+      "descrizione": "Semaforo con luce rossa (Q0.0), gialla (Q0.1) e verde (Q0.2) e pulsante di chiamata pedonale (I0.0). In simulazione: tieni premuto il semaforo per chiamare.",
+      "paroleChiave": [
+        "semaforo",
+        "incrocio",
+        "pedonale",
+        "luci",
+        "impianto"
+      ],
+      "icona": "impianto-semaforo.svg",
+      "larghezza": 120,
+      "altezza": 240,
+      "morsetti": []
+    },
+    {
+      "id": "impianto-cancello",
+      "nome": "Cancello automatico",
+      "categoria": "impianti",
+      "sigla": "",
+      "descrizione": "Cancello scorrevole: motore apre (Q0.0) e chiude (Q0.1), lampeggiante (Q0.2), finecorsa di chiuso (I0.2) e di aperto (I0.3), fotocellula (I0.4). In simulazione: clic sul cancello aperto per far passare un'auto.",
+      "paroleChiave": [
+        "cancello",
+        "garage",
+        "fotocellula",
+        "finecorsa",
+        "impianto"
+      ],
+      "icona": "impianto-cancello.svg",
+      "larghezza": 360,
+      "altezza": 200,
       "morsetti": []
     }
   ]

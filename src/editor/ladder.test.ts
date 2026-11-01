@@ -272,3 +272,30 @@ describe("quadro virtuale", () => {
     expect(v.problemiPlc).toEqual([]);
   });
 });
+
+describe("impianti animati nell'editor", () => {
+  it("collegamenti predefiniti, modificabili e salvati nel file", async () => {
+    const { impiantiDaSchema, impostaCollegamento } = await import("./ladder");
+    const { schema, id } = posa(SCHEMA_VUOTO, "impianto-nastro", 400, 0);
+    expect(impiantiDaSchema(schema)[id]).toEqual({ tipo: "impianto-nastro", operandi: { inizio: "I0.2", fine: "I0.3", motore: "Q0.0" } });
+    const ok = impostaCollegamento(schema, id, "motore", "q1.0");
+    if (!ok.ok) throw new Error("rifiutato");
+    expect(ok.schema.componenti[0].collegamenti).toEqual({ motore: "Q1.0" });
+    // Stesso operando di prima: nessuna modifica.
+    expect(impostaCollegamento(ok.schema, id, "motore", "Q1.0")).toEqual({ ok: true, schema: ok.schema });
+    // Un sensore deve andare su un ingresso, un attuatore su un'uscita o un merker.
+    expect(impostaCollegamento(schema, id, "inizio", "Q0.5").ok).toBe(false);
+    expect(impostaCollegamento(schema, id, "motore", "I0.5").ok).toBe(false);
+    expect(impostaCollegamento(schema, id, "motore", "M0.5").ok).toBe(true);
+    const riletto = leggiProgetto(serializzaProgetto({ modulo: "plc", schema: ok.schema }, "0.1.0"));
+    expect(riletto.ok && riletto.progetto.schema.componenti[0].collegamenti).toEqual({ motore: "Q1.0" });
+  });
+
+  it("gli impianti non entrano nel programma e non danno problemi", () => {
+    const { schema } = posa(SCHEMA_VUOTO, "impianto-cancello", 0, 0);
+    const conBarra = posa(schema, "ladder-barra-sinistra", 400, 0).schema;
+    const r = programmaDaSchema(conBarra);
+    expect(r.programma.segmenti).toEqual([]);
+    expect(r.problemi).toEqual([]);
+  });
+});

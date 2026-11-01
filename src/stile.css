@@ -721,3 +721,14 @@ button.io-plc {
   background: var(--io-acceso);
   color: #fff;
 }
+
+/* Collegamenti degli impianti animati nel pannello Proprietà */
+.proprieta-collegamenti {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.proprieta-collegamenti h3 {
+  font-size: 0.9rem;
+  margin: 8px 0 0;
+}

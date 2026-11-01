@@ -5,7 +5,17 @@
 // pannello Proprietà come una sigla qualsiasi. Qui:
 // - si sceglie l'operando proposto quando si posa un componente;
 // - si trasforma lo schema disegnato nell'input del convertitore del motore.
-import { convertiLadder, leggiBlocco, leggiOperando, MODELLI_LADDER, type RisultatoConversione } from "../motori/plc";
+import {
+  convertiLadder,
+  leggiBlocco,
+  leggiOperando,
+  MODELLI_IMPIANTI_PLC,
+  MODELLI_LADDER,
+  normalizzaOperando,
+  operandiImpianto,
+  operandoScrivibile,
+  type RisultatoConversione,
+} from "../motori/plc";
 import type { Schema } from "./schema";
 
 /** Tipo della nota di testo del Ladder (il testo sta nella sigla del componente). */
@@ -92,4 +102,39 @@ export function programmaDaSchema(schema: Schema): RisultatoConversione {
       ...(eContatoreLadder(c.tipo) ? { preset: c.preset ?? PRESET_CONTATORE_PREDEFINITO } : {}),
     }));
   return convertiLadder(elementi, schema.fili);
+}
+
+/** Impianti animati dello schema, con gli operandi di ogni segnale (per la sessione). */
+export function impiantiDaSchema(schema: Schema): Record<string, { tipo: string; operandi: Record<string, string> }> {
+  const risultato: Record<string, { tipo: string; operandi: Record<string, string> }> = {};
+  for (const c of schema.componenti) {
+    const modello = MODELLI_IMPIANTI_PLC[c.tipo];
+    if (modello) risultato[c.id] = { tipo: c.tipo, operandi: operandiImpianto(modello, c.collegamenti) };
+  }
+  return risultato;
+}
+
+export type EsitoCollegamento = { ok: true; schema: Schema } | { ok: false; operando: string };
+
+/**
+ * Cambia l'operando di un segnale di un impianto animato: un sensore va su
+ * un ingresso I, un attuatore su un'uscita Q o un merker M.
+ */
+export function impostaCollegamento(schema: Schema, id: string, segnale: string, scritto: string): EsitoCollegamento {
+  const c = schema.componenti.find((x) => x.id === id);
+  const modello = c ? MODELLI_IMPIANTI_PLC[c.tipo] : undefined;
+  if (!c || !modello) return { ok: true, schema };
+  const operando = normalizzaOperando(scritto);
+  const sensore = modello.sensori.some((x) => x.id === segnale);
+  const attuatore = modello.attuatori.some((x) => x.id === segnale);
+  const valido = sensore ? leggiOperando(operando)?.area === "I" : attuatore && operandoScrivibile(operando);
+  if (!valido) return { ok: false, operando: scritto.trim() };
+  if (operandiImpianto(modello, c.collegamenti)[segnale] === operando) return { ok: true, schema };
+  return {
+    ok: true,
+    schema: {
+      ...schema,
+      componenti: schema.componenti.map((x) => (x.id === id ? { ...x, collegamenti: { ...x.collegamenti, [segnale]: operando } } : x)),
+    },
+  };
 }

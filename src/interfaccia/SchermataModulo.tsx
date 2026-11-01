@@ -34,7 +34,7 @@ import {
   rilasciaTuttiPlc,
   type SessionePlc,
 } from "../motori/plc";
-import { programmaDaSchema } from "../editor/ladder";
+import { impiantiDaSchema, programmaDaSchema } from "../editor/ladder";
 import { PannelloIngressiPlc } from "../editor/PannelloIngressiPlc";
 import { problemiDaMostrare } from "../editor/messaggiProblemi";
 import { PannelloProblemi } from "../editor/PannelloProblemi";
@@ -236,6 +236,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
             Object.fromEntries(schema.componenti.map((c) => [c.id, c.etichetta])),
             undefined,
             Object.fromEntries(schema.componenti.map((c) => [c.id, c.tipo])),
+            impiantiDaSchema(schema),
           )
         : avviaSessione(schema),
     );

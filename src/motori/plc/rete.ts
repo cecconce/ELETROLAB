@@ -39,6 +39,8 @@ export type ModelloLadder =
   | { ruolo: "comando"; modo: "pulsante" | "mantenuto"; nc: boolean }
   /** Attuatore del quadro virtuale, legato a un'uscita Q: si accende quando l'uscita vale 1. */
   | { ruolo: "attuatore"; attuatore: "luce" | "motore" | "suono" }
+  /** Impianto animato (nastro, semaforo, cancello…): segnali in impianti/. */
+  | { ruolo: "impianto" }
   | { ruolo: "contatto"; contatto: TipoContatto; morsetti: [string, string] }
   | { ruolo: "uscita"; uscita: Uscita["tipo"]; ingresso: string };
 
@@ -56,6 +58,9 @@ export const MODELLI_LADDER: Record<string, ModelloLadder> = {
   "quadro-lampada": { ruolo: "attuatore", attuatore: "luce" },
   "quadro-motore": { ruolo: "attuatore", attuatore: "motore" },
   "quadro-sirena": { ruolo: "attuatore", attuatore: "suono" },
+  "impianto-nastro": { ruolo: "impianto" },
+  "impianto-semaforo": { ruolo: "impianto" },
+  "impianto-cancello": { ruolo: "impianto" },
   "ladder-contatto-na": { ruolo: "contatto", contatto: "NA", morsetti: ["in", "out"] },
   "ladder-contatto-nc": { ruolo: "contatto", contatto: "NC", morsetti: ["in", "out"] },
   "ladder-contatto-p": { ruolo: "contatto", contatto: "P", morsetti: ["in", "out"] },
