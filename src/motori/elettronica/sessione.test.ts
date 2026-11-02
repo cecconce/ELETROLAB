@@ -68,6 +68,24 @@ describe("sessione Elettronica", () => {
     expect(s.letture.XMM1.valore).toBeCloseTo(0.01, 4);
   });
 
+  it("il wattmetro misura la potenza del carico (in continua e, come media, in alternata)", () => {
+    const s = circuito(
+      [["V1", "generatore-dc", { tensione: 10 }], ["R1", "resistenza", { resistenza: 10 }], ["GND", "massa"], ["XWM1", "wattmetro"]],
+      [["V1.+", "XWM1.I+", "XWM1.V+"], ["XWM1.I-", "R1.1"], ["R1.2", "V1.-", "GND.0", "XWM1.V-"]],
+    );
+    passoElettronica(s, 0.05);
+    expect(s.letture.XWM1.unita).toBe("W");
+    expect(s.letture.XWM1.valore).toBeCloseTo(10, 1); // 10 V · 1 A
+    // Sinusoide da 10 V di picco su 10 Ω: potenza media Vp² / (2R) = 5 W.
+    const ac = circuito(
+      [["G1", "generatore-funzioni", { forma: "sinusoide", ampiezza: 10, frequenza: 50 }], ["R1", "resistenza", { resistenza: 10 }], ["GND", "massa"], ["XWM1", "wattmetro"]],
+      [["G1.+", "XWM1.I+", "XWM1.V+"], ["XWM1.I-", "R1.1"], ["R1.2", "G1.COM", "GND.0", "XWM1.V-"]],
+    );
+    for (let k = 0; k < 20; k++) passoElettronica(ac, 0.05);
+    expect(ac.letture.XWM1.valore!).toBeGreaterThan(4.6);
+    expect(ac.letture.XWM1.valore!).toBeLessThan(5.4);
+  });
+
   it("l'ohmmetro misura le resistenze (anche in un circuito alimentato, a generatori spenti)", () => {
     const s = circuito(
       [["V1", "generatore-dc", { tensione: 10 }], ["R1", "resistenza", { resistenza: 1000 }], ["R2", "resistenza", { resistenza: 1000 }], ["GND", "massa"], ["XMM1", "multimetro", { modalita: "Ω" }]],

@@ -78,6 +78,13 @@ export function DisegnoElettronica({ componente: c, aspetto, colori }: { compone
         </Group>
       );
     }
+    case "wattmetro":
+      return (
+        <Group listening={false}>
+          <Rect x={14} y={10} width={52} height={22} fill="#c5d6b4" cornerRadius={2} />
+          <Text x={14} y={14} width={50} align="right" text={e?.lettura ?? "– – –"} fontSize={e?.lettura && e.lettura.length > 8 ? 10 : 12} fontStyle="bold" fill="#1b2a12" fontFamily="Consolas, monospace" />
+        </Group>
+      );
     case "generatore-funzioni":
       return (
         <Group listening={false}>
@@ -145,7 +152,7 @@ export function DisegnoElettronica({ componente: c, aspetto, colori }: { compone
 }
 
 /** Strumenti e generatori: la sigla sta sopra, il valore è già sul disegno. */
-const STRUMENTI = new Set(["multimetro", "oscilloscopio", "generatore-funzioni", "analizzatore-logico", "plotter-bode"]);
+const STRUMENTI = new Set(["multimetro", "wattmetro", "oscilloscopio", "generatore-funzioni", "analizzatore-logico", "plotter-bode"]);
 
 /**
  * Sigla e valore del componente, sempre dritti: sopra e sotto per i

@@ -2,6 +2,7 @@
 // così non compaiono mai chiavi grezze nell'interfaccia.
 import { describe, expect, it } from "vitest";
 import it_json from "../lingue/it.json";
+import it_grezzo from "../lingue/it.json?raw";
 
 const sorgenti = import.meta.glob("../src/**/*.{ts,tsx}", { query: "?raw", import: "default", eager: true }) as Record<
   string,
@@ -21,5 +22,11 @@ describe("testi dell'interfaccia", () => {
       }
     }
     expect(mancanti).toEqual([]);
+  });
+
+  it("in it.json nessuna chiave è scritta due volte (la seconda cancellerebbe la prima)", () => {
+    const chiavi = [...it_grezzo.matchAll(/^\s*"([^"]+)"\s*:/gm)].map((m) => m[1]);
+    expect(chiavi.length).toBeGreaterThan(100);
+    expect(chiavi.filter((k, i) => chiavi.indexOf(k) !== i)).toEqual([]);
   });
 });

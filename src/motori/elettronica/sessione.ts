@@ -115,6 +115,8 @@ export interface SessioneElettronica {
   oscilloscopi: Record<string, Storia>;
   /** Letture dei multimetri (valore e unità) o null se fuori scala. */
   letture: Record<string, { valore: number | null; unita: string }>;
+  /** Wattmetri: potenza media (W), aggiornata a ogni passo con una media mobile. */
+  potenze: Record<string, number>;
   /** Stato dei componenti digitali (livelli di ingressi e uscite, memoria). */
   digitali: Record<string, StatoDigitale>;
   /** Storia di ogni analizzatore logico: tempi e livelli dei canali D0…D3. */
@@ -270,6 +272,11 @@ export function elementiDaComponenti(s: Pick<SessioneElettronica, "componenti" |
         el.push({ tipo: "R", id, a: m("+"), b: m("COM"), ohm: modo === "A" ? 0.01 : 1e7 });
         break;
       }
+      case "wattmetro":
+        // Bobina amperometrica in serie (I+ → I−) e voltmetrica in parallelo (V+, V−).
+        el.push({ tipo: "R", id: `${id}#I`, a: m("I+"), b: m("I-"), ohm: 0.01 });
+        el.push({ tipo: "R", id: `${id}#V`, a: m("V+"), b: m("V-"), ohm: 1e7 });
+        break;
       case "plotter-bode":
         el.push({ tipo: "R", id: `${id}#IN`, a: m("IN"), b: m("COM"), ohm: 1e9 });
         el.push({ tipo: "R", id: `${id}#OUT`, a: m("OUT"), b: m("COM"), ohm: 1e9 });
@@ -324,6 +331,7 @@ export function avviaSessioneElettronica(componenti: ComponenteElettronico[], no
     digitali: Object.fromEntries(componenti.filter((c) => eDigitale(c.tipo)).map((c) => [c.id, nuovoStatoDigitale(c.tipo)])),
     analizzatori: Object.fromEntries(componenti.filter((c) => c.tipo === "analizzatore-logico").map((c) => [c.id, nuovaStoria(4)])),
     letture: {},
+    potenze: {},
     // La massa serve quando ci sono generatori (i circuiti solo digitali hanno la massa implicita).
     senzaMassa: componenti.some((c) => c.tipo.startsWith("generatore-") && c.tipo !== "generatore-clock") && !componenti.some((c) => c.tipo === "massa"),
     nonConverge: false,
@@ -347,6 +355,14 @@ function calcolaPasso(s: SessioneElettronica) {
     const a = (sol.tensioni[n(id, "A")] ?? 0) - com;
     const b = (sol.tensioni[n(id, "B")] ?? 0) - com;
     registra(storia, s.tempo, [a, b]);
+  }
+  // Wattmetri: media mobile della potenza istantanea (costante di tempo 0,1 s),
+  // così in alternata si legge la potenza media e non quella che oscilla.
+  for (const c of s.componenti) {
+    if (c.tipo !== "wattmetro") continue;
+    const p = potenzaIstantanea(s, c.id);
+    const prima = s.potenze[c.id];
+    s.potenze[c.id] = prima === undefined ? p : prima + (p - prima) * Math.min(1, s.dt / COSTANTE_WATTMETRO);
   }
   // Componenti digitali: leggono gli ingressi e preparano le uscite del passo successivo.
   for (const c of s.componenti) {
@@ -375,12 +391,25 @@ function calcolaPasso(s: SessioneElettronica) {
   }
 }
 
+/** Costante di tempo della media del wattmetro (s). */
+const COSTANTE_WATTMETRO = 0.1;
+
+/** Potenza istantanea letta dal wattmetro: tensione V+ − V− per corrente da I+ a I−. */
+function potenzaIstantanea(s: SessioneElettronica, id: string): number {
+  const sol = s.soluzione;
+  if (!sol) return 0;
+  const n = nodoConMassa(s);
+  const v = (sol.tensioni[n(id, "V+")] ?? 0) - (sol.tensioni[n(id, "V-")] ?? 0);
+  return v * (sol.correnti[`${id}#I`] ?? 0);
+}
+
 /** Letture dei multimetri e generatori in cortocircuito, dall'ultima soluzione. */
 function aggiornaStrumenti(s: SessioneElettronica) {
   const sol = s.soluzione;
   if (!sol) return;
   const n = nodoConMassa(s);
   for (const c of s.componenti) {
+    if (c.tipo === "wattmetro") s.letture[c.id] = { valore: s.potenze[c.id] ?? potenzaIstantanea(s, c.id), unita: "W" };
     if (c.tipo !== "multimetro") continue;
     const modo = testo(c, "modalita");
     if (modo === "A") s.letture[c.id] = { valore: sol.correnti[c.id] ?? 0, unita: "A" };

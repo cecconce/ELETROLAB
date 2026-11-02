@@ -334,7 +334,6 @@
   "verifica.bruciato": "bruciato",
   "verifica.acceso": "acceso",
   "verifica.spento": "spento",
-  "verifica.segmenti": "segmenti accesi:",
   "verifica.segmenti": "segmenti {segmenti}",
   "verifica.senzaOsservati": "La soluzione del docente non ha LED, lampadine, sonde, display o multimetri da confrontare.",
   "verifica.monitorSeriale": "il monitor seriale",

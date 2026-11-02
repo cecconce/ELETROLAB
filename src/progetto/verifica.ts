@@ -227,7 +227,7 @@ function osservaElettronica(s: SessioneElettronica, osservati: { sigla: string; 
     else if (tipo === "display-7-segmenti") {
       const accesi = Object.entries(s.digitali[id]?.ingressi ?? {}).filter(([, v]) => v === 1).map(([k]) => k).join("");
       o[sigla] = accesi ? t("verifica.segmenti", { segmenti: accesi }) : t("verifica.spento");
-    } else if (tipo === "multimetro") {
+    } else if (tipo === "multimetro" || tipo === "wattmetro") {
       const l = s.letture[id];
       o[sigla] = l ? circa(l.valore, l.unita) : "?";
     }
@@ -236,7 +236,7 @@ function osservaElettronica(s: SessioneElettronica, osservati: { sigla: string; 
 }
 
 const COMANDI_ELETTRONICA = new Set(["interruttore", "pulsante", "interruttore-logico"]);
-const OSSERVATI_ELETTRONICA = new Set(["led", "lampadina", "sonda-logica", "display-7-segmenti", "multimetro"]);
+const OSSERVATI_ELETTRONICA = new Set(["led", "lampadina", "sonda-logica", "display-7-segmenti", "multimetro", "wattmetro"]);
 
 export function verificaElettronica(studente: Schema, soluzione: Pick<Schema, "componenti" | "fili">): EsitoVerifica {
   const libreria = libreriaDelModulo("elettronica");
@@ -316,7 +316,7 @@ export function verificaArduino(studente: Schema, soluzione: NonNullable<NonNull
         if (c.tipo === "led-rgb") o[n] = a.bruciato ? t("verifica.bruciato") : (a.rgb ?? [0, 0, 0]).map((x, k) => `${"RGB"[k]} ${Math.round(x * 4) * 25}%`).join(" ");
         else if (c.tipo === "display-sette-segmenti") {
           const accesi = SEGMENTI_DISPLAY.filter((_, k) => (a.segmenti?.[k] ?? 0) >= 0.1);
-          o[n] = a.bruciato ? t("verifica.bruciato") : accesi.length ? `${t("verifica.segmenti")} ${accesi.join(" ")}` : t("verifica.spento");
+          o[n] = a.bruciato ? t("verifica.bruciato") : accesi.length ? t("verifica.segmenti", { segmenti: accesi.join(" ") }) : t("verifica.spento");
         } else if (c.tipo === "multimetro") o[n] = a.lettura ?? "–";
         else if (c.tipo === "motore-dc") o[n] = !a.velocita ? t("verifica.fermo") : `${t(a.velocita > 0 ? "verifica.giraOrario" : "verifica.giraAntiorario")} ${Math.round(Math.abs(a.velocita) * 4) * 25}%`;
         else if (c.tipo.startsWith("led-")) o[n] = a.bruciato ? t("verifica.bruciato") : (a.luminosita ?? 0) < 0.1 ? t("verifica.spento") : `${t("verifica.acceso")} ${Math.round((a.luminosita ?? 0) * 4) * 25}%`;

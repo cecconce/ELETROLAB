@@ -533,6 +533,26 @@ voce(
 );
 voce(
   {
+    id: "wattmetro",
+    nome: "Wattmetro",
+    categoria: "strumenti",
+    sigla: "XWM",
+    descrizione: "Misura la potenza (in watt) assorbita da un carico: la corrente passa dentro lo strumento da I+ a I− (in serie, come un amperometro) e V+, V− si collegano ai capi del carico (in parallelo, come un voltmetro). P = V · I; in alternata indica la potenza media.",
+    paroleChiave: ["potenza", "watt", "wattmetro", "misura", "energia"],
+    larghezza: 80,
+    altezza: 80,
+    morsetti: [m("I+", 0, 40), m("I-", 80, 40), m("V+", 20, 80), m("V-", 60, 80)],
+  },
+  svg(
+    80,
+    80,
+    `<rect x="6" y="4" width="68" height="64" rx="6"/><rect x="14" y="10" width="52" height="22" rx="2"/>` +
+      `<path d="M0 40H6M74 40H80M20 68V80M60 68V80"/><path d="M14 46H66" stroke-dasharray="3 2"/>` +
+      `${scritta(40, 60, "W", 11)}${scritta(14, 52, "I+", 7)}${scritta(66, 52, "I−", 7)}${scritta(20, 66, "V+", 7)}${scritta(60, 66, "V−", 7)}`,
+  ),
+);
+voce(
+  {
     id: "oscilloscopio",
     nome: "Oscilloscopio a 2 canali",
     categoria: "strumenti",

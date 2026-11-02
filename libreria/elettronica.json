@@ -1177,6 +1177,45 @@
       "icona": "multimetro.svg"
     },
     {
+      "id": "wattmetro",
+      "nome": "Wattmetro",
+      "categoria": "strumenti",
+      "sigla": "XWM",
+      "descrizione": "Misura la potenza (in watt) assorbita da un carico: la corrente passa dentro lo strumento da I+ a I− (in serie, come un amperometro) e V+, V− si collegano ai capi del carico (in parallelo, come un voltmetro). P = V · I; in alternata indica la potenza media.",
+      "paroleChiave": [
+        "potenza",
+        "watt",
+        "wattmetro",
+        "misura",
+        "energia"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "I+",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "I-",
+          "x": 80,
+          "y": 40
+        },
+        {
+          "id": "V+",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "V-",
+          "x": 60,
+          "y": 80
+        }
+      ],
+      "icona": "wattmetro.svg"
+    },
+    {
       "id": "oscilloscopio",
       "nome": "Oscilloscopio a 2 canali",
       "categoria": "strumenti",

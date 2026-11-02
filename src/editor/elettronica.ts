@@ -161,7 +161,7 @@ export function vistaDaSessioneElettronica(s: SessioneElettronica, schema: Schem
     if (m && (c.tipo === "led" || c.tipo === "lampadina")) elettronica.luminosita = luminosita(s, m);
     if (c.tipo === "led") elettronica.bruciato = s.bruciati.has(c.id);
     if (c.tipo === "potenziometro") elettronica.posizione = s.interazioni.posizioni[c.id] ?? 0.5;
-    if (c.tipo === "multimetro") elettronica.lettura = testoLettura(s.letture[c.id]);
+    if (c.tipo === "multimetro" || c.tipo === "wattmetro") elettronica.lettura = testoLettura(s.letture[c.id]);
     const digitale = s.digitali[c.id];
     if (digitale) {
       elettronica.livelli = { ...digitale.ingressi, ...digitale.uscite };
