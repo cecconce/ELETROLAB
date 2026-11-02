@@ -1102,3 +1102,33 @@ button.io-plc {
   color: #ffffff;
   border-color: transparent;
 }
+
+/* Schermi da laboratorio (1280–1440 px): intestazione e barra più compatte,
+   così i comandi stanno su una riga e il foglio resta grande. */
+@media (max-width: 1440px) {
+  .intestazione-modulo {
+    gap: 10px;
+  }
+  .intestazione-modulo h1 {
+    font-size: 1.25rem;
+    white-space: nowrap;
+  }
+  .intestazione-modulo .pulsante {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  .intestazione-modulo .comandi-file {
+    gap: 6px;
+  }
+  .barra-zoom {
+    gap: 5px;
+  }
+  .barra-zoom .pulsante {
+    padding: 3px 8px;
+    font-size: 0.9rem;
+  }
+  .barra-zoom .suggerimento {
+    font-size: 0.8rem;
+  }
+}
