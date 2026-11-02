@@ -15,6 +15,7 @@ import { COLORI_FILI, colorePropostoFilo } from "./fili";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
 import type { Schema, Selezione } from "./schema";
+import { COLORI_LAMPADA, coloreLampada, conColoreLampada, impostaColoreLampada } from "./coloriLampade";
 import { impostaParametro, PARAMETRI_ELETTRONICA, valoreParametro, type DefinizioneParametro } from "./elettronica";
 import { leggiValore, scriviValore } from "../motori/elettronica";
 
@@ -258,6 +259,19 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
             onCambia={(v) => onCambiaSchema(impostaParametro(schema, componente.id, d.id, v))}
           />
         ))}
+
+      {libreria.modulo === "impianti" && conColoreLampada(componente.tipo) && (
+        <label className="proprieta-campo">
+          <span>{t("proprieta.coloreLampada")}</span>
+          <select value={coloreLampada(componente).id} onChange={(e) => onCambiaSchema(impostaColoreLampada(schema, componente.id, e.target.value))}>
+            {COLORI_LAMPADA.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.sigla} — {k.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       {componente.tipo === TIPO_COMMENTO && (
         <label className="proprieta-campo">

@@ -81,7 +81,7 @@ function marciaArresto(): Schema {
   b.posa("K1-autoritenuta", "contatto-na", "K1", 380, 380); // 13-14
   b.posa("K1", "bobina-contattore", "K1", 300, 520);
   b.posa("K1-spia", "contatto-na", "K1", 500, 380); // 23-24
-  b.posa("H1", "lampada", "H1", 500, 520);
+  b.posa("H1", "lampada", "H1", 500, 520, { parametri: { colore: "verde" } });
   b.filo("rete-1f:L", "F1-95:95", 110);
   b.filo("F1-95:96", "S0:11");
   b.filo("S0:12", "S1:13");
@@ -108,7 +108,7 @@ function comandoPiuPunti(): Schema {
   b.posa("K1-autoritenuta", "contatto-na", "K1", 460, 480); // 13-14
   b.posa("K1", "bobina-contattore", "K1", 300, 620);
   b.posa("K1-spia", "contatto-na", "K1", 580, 480); // 23-24
-  b.posa("H1", "lampada", "H1", 580, 620);
+  b.posa("H1", "lampada", "H1", 580, 620, { parametri: { colore: "verde" } });
   b.filo("rete-1f:L", "F1-95:95", 100);
   b.filo("F1-95:96", "S0:11");
   b.filo("S0:12", "S2:11");
@@ -178,9 +178,9 @@ function teleinvertitore(): Schema {
   b.posa("K2", "bobina-contattore", "K2", 540, 600);
   // Spie: H1 avanti, H2 indietro.
   b.posa("K1-spia", "contatto-na", "K1", 760, 360);
-  b.posa("H1", "lampada", "H1", 760, 600);
+  b.posa("H1", "lampada", "H1", 760, 600, { parametri: { colore: "verde" } });
   b.posa("K2-spia", "contatto-na", "K2", 860, 360);
-  b.posa("H2", "lampada", "H2", 860, 600);
+  b.posa("H2", "lampada", "H2", 860, 600, { parametri: { colore: "giallo" } });
 
   b.filo("rete-1f:L", "F1-95:95", 100);
   b.filo("F1-95:96", "S0:11");
@@ -301,7 +301,7 @@ function comandoTemporizzato(): Schema {
   b.posa("K1", "bobina-contattore", "K1", 300, 620);
   b.posa("KT1", "bobina-ritardata-eccitazione", "KT1", 440, 620, { tempo: 8 });
   b.posa("K1-spia", "contatto-na", "K1", 580, 480);
-  b.posa("H1", "lampada", "H1", 580, 620);
+  b.posa("H1", "lampada", "H1", 580, 620, { parametri: { colore: "verde" } });
   b.filo("rete-1f:L", "F1-95:95", 100);
   b.filo("F1-95:96", "S0:11");
   b.filo("S0:12", "KT1-fine:15");

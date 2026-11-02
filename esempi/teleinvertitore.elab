@@ -215,7 +215,10 @@
         "x": 760,
         "y": 600,
         "larghezza": 40,
-        "altezza": 80
+        "altezza": 80,
+        "parametri": {
+          "colore": "verde"
+        }
       },
       {
         "id": "K2-spia",
@@ -237,7 +240,10 @@
         "x": 860,
         "y": 600,
         "larghezza": 40,
-        "altezza": 80
+        "altezza": 80,
+        "parametri": {
+          "colore": "giallo"
+        }
       }
     ],
     "fili": [

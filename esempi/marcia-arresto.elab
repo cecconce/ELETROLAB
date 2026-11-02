@@ -141,7 +141,10 @@
         "x": 500,
         "y": 520,
         "larghezza": 40,
-        "altezza": 80
+        "altezza": 80,
+        "parametri": {
+          "colore": "verde"
+        }
       }
     ],
     "fili": [

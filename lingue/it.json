@@ -337,5 +337,6 @@
   "verifica.segmenti": "segmenti {segmenti}",
   "verifica.senzaOsservati": "La soluzione del docente non ha LED, lampadine, sonde, display o multimetri da confrontare.",
   "verifica.monitorSeriale": "il monitor seriale",
-  "verifica.programma": "il programma"
+  "verifica.programma": "il programma",
+  "proprieta.coloreLampada": "Colore della luce"
 }

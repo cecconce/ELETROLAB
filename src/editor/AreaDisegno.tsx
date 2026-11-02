@@ -42,6 +42,7 @@ import { MIME_COMPONENTE } from "./LibreriaLaterale";
 import { DisegnoImpianto } from "./DisegnoImpianti";
 import { DisegnoArduino } from "./DisegnoArduino";
 import { DisegnoElettronica, EtichettaElettronica } from "./DisegnoElettronica";
+import { coloreLampada, conColoreLampada } from "./coloriLampade";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { copiaSelezione, incolla, type Appunti } from "./appunti";
 import {
@@ -747,6 +748,14 @@ export function AreaDisegno({
                     )}
                     {libreria.modulo === "arduino" && <DisegnoArduino componente={c} aspetto={aspetto} />}
                     {elettronica && <DisegnoElettronica componente={c} aspetto={aspetto} colori={colori} />}
+                    {libreria.modulo === "impianti" && conColoreLampada(c.tipo) && (
+                      // Colore della spia: sigla normativa (simboli) o calotta colorata (vista realistica).
+                      realistico ? (
+                        <Circle x={20} y={40} radius={10} fill={coloreLampada(c).luce} opacity={0.75} listening={false} />
+                      ) : (
+                        <Text x={31} y={58} text={coloreLampada(c).sigla} fontSize={10} fontStyle="bold" fill={colori.testo} fontFamily="Segoe UI, system-ui, sans-serif" listening={false} />
+                      )
+                    )}
                     {aspetto && libreria.modulo !== "arduino" && !elettronica && (
                       <AspettoInSimulazione
                         componente={c}
@@ -1274,11 +1283,11 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori, realistico
           x={w / 2}
           y={h / 2}
           radius={Math.min(w, h) / 2}
-          fill={colori.luce}
-          opacity={0.55}
-          shadowColor={colori.luce}
-          shadowBlur={18}
-          shadowOpacity={0.9}
+          fill={conColoreLampada(c.tipo) ? coloreLampada(c).luce : colori.luce}
+          opacity={0.6}
+          shadowColor={conColoreLampada(c.tipo) ? coloreLampada(c).luce : colori.luce}
+          shadowBlur={22}
+          shadowOpacity={0.95}
         />
       )}
       {utilizzatore === "suono" && aspetto.alimentato && testo("♪ ♪", -16, colori.luce)}
