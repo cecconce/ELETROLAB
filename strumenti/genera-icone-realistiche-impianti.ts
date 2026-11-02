@@ -93,6 +93,22 @@ icone["pulsante-emergenza.svg"] = verticale(
     `<ellipse cx="8" cy="36" rx="3.5" ry="2.2" fill="#ffffff" opacity="0.45"/><rect x="24" y="28" width="8" height="24" rx="2" fill="#cfd8dc"/>`,
   "#eceff1",
 );
+// Impianti civili: frutto bianco con il tasto basculante; morsetti a vite anche agli angoli.
+const viteAngolo = (x: number, y: number) => {
+  const xv = x === 0 ? 6 : 34;
+  const yv = y === 0 ? 7 : 73;
+  return `<path d="M${x} ${y}L${xv} ${yv}" stroke="#8d6e63" stroke-width="2.4"/><circle cx="${xv}" cy="${yv}" r="4.2" fill="#cfd8dc" stroke="#546e7a" stroke-width="1"/><path d="M${xv - 2.6} ${yv - 2.6}L${xv + 2.6} ${yv + 2.6}" stroke="#546e7a" stroke-width="1.2"/>`;
+};
+const frutto = (morsetti: string, segno: string) =>
+  svg(
+    40,
+    80,
+    `<rect x="5" y="14" width="30" height="52" rx="4" fill="#fafafa" stroke="#90a4ae" stroke-width="1.2"/>` +
+      `<rect x="9" y="20" width="22" height="40" rx="3" fill="#ffffff" stroke="#b0bec5"/><path d="M9 40H31" stroke="#cfd8dc"/>` +
+      `<rect x="12" y="23" width="16" height="15" rx="2" fill="#eceff1"/>${scritta(20, 54, segno, 7, "#546e7a", 'font-weight="bold"')}${morsetti}`,
+  );
+icone["deviatore.svg"] = frutto(`${vite(20, 0, 80)}${viteAngolo(0, 80)}${viteAngolo(40, 80)}`, "⇄");
+icone["invertitore.svg"] = frutto(`${viteAngolo(0, 0)}${viteAngolo(40, 0)}${viteAngolo(0, 80)}${viteAngolo(40, 80)}`, "✕");
 const selettore = (colore: string) =>
   verticale(
     `<circle cx="11" cy="40" r="10" fill="#37474f" stroke="#212121"/><rect x="9" y="31" width="4" height="18" rx="2" fill="#eceff1" transform="rotate(-30 11 40)"/>` +

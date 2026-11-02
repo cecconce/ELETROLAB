@@ -153,6 +153,12 @@ export function trattiDelContatto(tipo: string): readonly Tratto[] {
   return m?.tipo === "contatto" ? m.tratti : [];
 }
 
+/** Tratti del contatto in scambio che conducono quando il contatto principale è aperto. */
+export function trattiDiScambio(tipo: string): readonly Tratto[] {
+  const m = MODELLI_IMPIANTI[tipo];
+  return m?.tipo === "contatto" ? (m.scambio ?? []) : [];
+}
+
 /** Tipo di utilizzatore, per scegliere l'animazione. */
 export function tipoUtilizzatore(tipo: string): "bobina" | "luce" | "suono" | "motore" | null {
   // Nel Ladder bobine e blocchi alimentati si mostrano come una bobina eccitata;

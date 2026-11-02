@@ -27,7 +27,7 @@ function costruttore() {
       componenti.push({ id, tipo, etichetta, x, y, larghezza: voce.larghezza, altezza: voce.altezza, ...extra });
     },
     /** Filo fra due morsetti scritti come "S1:13"; `medio` facoltativo. */
-    filo(da: string, a: string, medio?: number) {
+    filo(da: string, a: string, medio?: number, punti?: { x: number; y: number }[]) {
       const [c1, m1] = da.split(":");
       const [c2, m2] = a.split(":");
       for (const [c, m] of [[c1, m1], [c2, m2]]) {
@@ -37,6 +37,7 @@ function costruttore() {
       }
       const f: Filo = { id: `filo-${fili.length + 1}`, da: { componente: c1, morsetto: m1 }, a: { componente: c2, morsetto: m2 } };
       if (medio !== undefined) f.medio = medio;
+      if (punti) f.punti = punti;
       fili.push(f);
     },
     schema(): Schema {
@@ -318,7 +319,36 @@ function comandoTemporizzato(): Schema {
   return b.schema();
 }
 
+/**
+ * Esempio 6 (impianto civile): lampada comandata da tre punti con due
+ * deviatori (S1, S3) e un invertitore (S2) in mezzo. Ogni clic su uno
+ * qualsiasi dei tre comandi cambia lo stato della lampada.
+ */
+function lampadaTrePunti(): Schema {
+  const b = costruttore();
+  b.posa("rete-1f", "rete-monofase", "", 100, 40); // L in x=120, N in x=140
+  b.posa("S1", "deviatore", "S1", 100, 160); // C in alto, 1 e 2 in basso
+  b.posa("S2", "invertitore", "S2", 100, 300);
+  b.posa("S3", "deviatore", "S3", 100, 460, { rotazione: 180 }); // 2 e 1 in alto, C in basso
+  b.posa("H1", "lampada", "H1", 100, 600, { parametri: { colore: "giallo" } });
+  b.filo("rete-1f:L", "S1:C");
+  b.filo("S1:1", "S2:1");
+  b.filo("S1:2", "S2:2");
+  b.filo("S2:3", "S3:2");
+  b.filo("S2:4", "S3:1");
+  b.filo("S3:C", "H1:X1");
+  // Neutro: gira a destra dei comandi, così non si sovrappone ai fili navetta.
+  b.filo("H1:X2", "rete-1f:N", undefined, [
+    { x: 120, y: 700 },
+    { x: 240, y: 700 },
+    { x: 240, y: 120 },
+    { x: 140, y: 120 },
+  ]);
+  return b.schema();
+}
+
 const ESEMPI: Record<string, () => Schema> = {
+  "lampada-tre-punti.elab": lampadaTrePunti,
   "marcia-arresto.elab": marciaArresto,
   "comando-piu-punti.elab": comandoPiuPunti,
   "teleinvertitore.elab": teleinvertitore,

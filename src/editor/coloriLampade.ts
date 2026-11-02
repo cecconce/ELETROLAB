@@ -11,13 +11,15 @@ export interface ColoreLampada {
   sigla: string;
   /** Colore della luce in simulazione. */
   luce: string;
+  /** Colore dell'alone (se diverso dalla luce): la luce bianca su fondo chiaro si vede solo con un alone grigio. */
+  alone?: string;
 }
 
 export const COLORI_LAMPADA: ColoreLampada[] = [
   { id: "giallo", nome: "Gialla (attenzione)", sigla: "YE", luce: "#ffd54f" },
   { id: "verde", nome: "Verde (marcia, tutto regolare)", sigla: "GN", luce: "#4ade80" },
   { id: "rosso", nome: "Rossa (arresto, allarme)", sigla: "RD", luce: "#f87171" },
-  { id: "bianco", nome: "Bianca (presenza tensione)", sigla: "WH", luce: "#f8fafc" },
+  { id: "bianco", nome: "Bianca (presenza tensione)", sigla: "WH", luce: "#ffffff", alone: "#607d8b" },
   { id: "blu", nome: "Blu (intervento richiesto)", sigla: "BU", luce: "#60a5fa" },
 ];
 

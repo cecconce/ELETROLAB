@@ -37,6 +37,13 @@
       "prova": "Premi ▶ AVVIA e clic su Q1. Premi S1: il motore gira e la spia H1 si accende. Guarda l'orologio ⏱: dopo 8 secondi il motore si ferma da solo. Puoi fermarlo prima con S0. Prova a cambiare il tempo di KT1 nel pannello Proprietà."
     },
     {
+      "file": "lampada-tre-punti.elab",
+      "modulo": "impianti",
+      "titolo": "Lampada comandata da tre punti (impianto civile)",
+      "descrizione": "Impianto civile: due deviatori (S1 e S3) agli estremi e un invertitore (S2) in mezzo comandano la stessa lampada H1. I deviatori collegano il comune C al morsetto 1 o al 2; l'invertitore scambia fra loro i due fili «navetta». Togliendo l'invertitore e collegando direttamente i due deviatori si ottiene il comando da due punti (deviata).",
+      "prova": "Premi ▶ AVVIA: la lampada è spenta. Clic su S1, S2 o S3, in qualsiasi ordine: ogni clic accende o spegne la lampada. Segui con il colore dei fili da dove passa la corrente."
+    },
+    {
       "file": "esercizio-marcia-arresto.elab",
       "modulo": "impianti",
       "titolo": "Esercizio: completa la marcia/arresto",

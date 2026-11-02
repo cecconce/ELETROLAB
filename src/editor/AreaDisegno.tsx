@@ -49,6 +49,7 @@ import {
   coloreFilo,
   tipoUtilizzatore,
   trattiDelContatto,
+  trattiDiScambio,
   type AspettoComponente,
   type VistaSimulazione,
 } from "./vistaSimulazione";
@@ -1285,14 +1286,13 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori, realistico
           radius={Math.min(w, h) / 2}
           fill={conColoreLampada(c.tipo) ? coloreLampada(c).luce : colori.luce}
           opacity={0.6}
-          shadowColor={conColoreLampada(c.tipo) ? coloreLampada(c).luce : colori.luce}
+          shadowColor={conColoreLampada(c.tipo) ? (coloreLampada(c).alone ?? coloreLampada(c).luce) : colori.luce}
           shadowBlur={22}
           shadowOpacity={0.95}
         />
       )}
       {utilizzatore === "suono" && aspetto.alimentato && testo("♪ ♪", -16, colori.luce)}
-      {aspetto.chiuso &&
-        trattiDelContatto(c.tipo).map(([a, b]) => {
+      {(aspetto.chiuso ? trattiDelContatto(c.tipo) : trattiDiScambio(c.tipo)).map(([a, b]) => {
           const pa = posMorsetto(a);
           const pb = posMorsetto(b);
           if (!pa || !pb) return null;
@@ -1366,6 +1366,14 @@ function ComandoRealisticoAzionato({ tipo }: { tipo: string }) {
         <Group x={11} y={40} rotation={30}>
           <Rect x={-2} y={-9} width={4} height={18} cornerRadius={2} fill="#eceff1" />
         </Group>
+      </Group>
+    );
+  if (tipo === "deviatore" || tipo === "invertitore")
+    // Tasto basculante premuto in basso.
+    return (
+      <Group listening={false}>
+        <Rect x={12} y={23} width={16} height={15} cornerRadius={2} fill="#ffffff" />
+        <Rect x={12} y={42} width={16} height={15} cornerRadius={2} fill="#cfd8dc" />
       </Group>
     );
   if (tipo === "pulsante-emergenza")

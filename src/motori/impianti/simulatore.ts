@@ -182,7 +182,7 @@ interface ComponenteNoto {
 export function morsettiDelModello(m: ModelloComponente): string[] {
   if (m.tipo === "sorgente") return m.uscite.map((u) => u.morsetto);
   if (m.tipo === "carico") return [...m.morsetti];
-  return m.tratti.flatMap((t) => [...t]);
+  return [...new Set([...m.tratti, ...(m.tipo === "contatto" ? (m.scambio ?? []) : [])].flatMap((t) => [...t]))];
 }
 
 /** Prepara le strutture che non cambiano durante la simulazione. */
@@ -261,10 +261,15 @@ function valuta(p: Preparato, comandi: StatoComandi, eccitate: ReadonlySet<strin
       // Fusibile interrotto o magnetotermico scattato: il tratto è aperto.
       if (comandi.intervenute.has(n.c.id) && PROTEZIONI[n.c.tipo]?.cortocircuito) continue;
       for (const [a, b] of n.m.tratti) gruppi.unisci(p.nodoDi(n.c.id, a), p.nodoDi(n.c.id, b));
-    } else if (n.m.tipo === "contatto" && contattoChiuso(n, comandi, sigleEccitate)) {
-      // Tutti i poli dello stesso componente si muovono insieme.
-      contattiChiusi.push(n.c.id);
-      for (const [a, b] of n.m.tratti) gruppi.unisci(p.nodoDi(n.c.id, a), p.nodoDi(n.c.id, b));
+    } else if (n.m.tipo === "contatto") {
+      if (contattoChiuso(n, comandi, sigleEccitate)) {
+        // Tutti i poli dello stesso componente si muovono insieme.
+        contattiChiusi.push(n.c.id);
+        for (const [a, b] of n.m.tratti) gruppi.unisci(p.nodoDi(n.c.id, a), p.nodoDi(n.c.id, b));
+      } else {
+        // Contatto in scambio a riposo: conduce dall'altra parte.
+        for (const [a, b] of n.m.scambio ?? []) gruppi.unisci(p.nodoDi(n.c.id, a), p.nodoDi(n.c.id, b));
+      }
     }
   }
   const gruppoDi = (id: string, t: string) => gruppi.radice(p.nodoDi(id, t));

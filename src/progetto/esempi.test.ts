@@ -272,4 +272,20 @@ describe("esempi pronti (2)", () => {
     s = premiERilascia(s, "S0");
     expect(eccitate(s)).toEqual([]);
   });
+
+  it("lampada da tre punti: ogni comando (deviatori e invertitore) cambia lo stato della lampada", () => {
+    const schema = schemaDi("lampada-tre-punti.elab");
+    const accesa = (s: SessioneImpianto) => s.risultato.carichiAlimentati.includes("H1");
+    let s = avviaSessione(schema);
+    expect(accesa(s)).toBe(false);
+    const sequenza = ["S1", "S2", "S3", "S2", "S1", "S3"];
+    let atteso = false;
+    for (const comando of sequenza) {
+      s = clicSu(clicGiu(s, comando), comando);
+      atteso = !atteso;
+      expect(accesa(s), `dopo ${comando}`).toBe(atteso);
+    }
+    expect(problemiSessione(s)).toEqual([]);
+  });
 });
+

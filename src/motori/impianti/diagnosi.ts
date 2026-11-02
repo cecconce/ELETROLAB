@@ -127,7 +127,8 @@ export function diagnosiSchema(circuito: Circuito): Problema[] {
   }
   for (const { c, m } of noti) {
     if (m.tipo === "conduttore" || m.tipo === "contatto") {
-      for (const [a, b] of m.tratti) gruppi.unisci(chiaveMorsetto(c.id, a), chiaveMorsetto(c.id, b));
+      const scambio = m.tipo === "contatto" ? (m.scambio ?? []) : [];
+      for (const [a, b] of [...m.tratti, ...scambio]) gruppi.unisci(chiaveMorsetto(c.id, a), chiaveMorsetto(c.id, b));
     }
   }
   // Poli raggiungibili da ogni gruppo e morsetti di ogni gruppo.

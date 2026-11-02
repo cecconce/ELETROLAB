@@ -80,7 +80,18 @@ export type ModelloComponente =
    * Contatto NA (`normalmenteChiuso: false`) o NC. Più tratti = più poli
    * azionati insieme (contatti principali, sezionatore tripolare).
    */
-  | { tipo: "contatto"; tratti: readonly Tratto[]; normalmenteChiuso: boolean; comando: Comando }
+  | {
+      tipo: "contatto";
+      tratti: readonly Tratto[];
+      normalmenteChiuso: boolean;
+      comando: Comando;
+      /**
+       * Contatto in scambio (deviatore, invertitore): tratti chiusi quando i
+       * `tratti` principali sono aperti, così la corrente passa sempre da una
+       * parte o dall'altra.
+       */
+      scambio?: readonly Tratto[];
+    }
   /**
    * Utilizzatore: è alimentato quando i suoi morsetti raggiungono poli
    * diversi. `bobina: true` indica che, eccitandosi, aziona i contatti con la
@@ -143,6 +154,22 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
   "pulsante-na": { tipo: "contatto", tratti: [["13", "14"]], normalmenteChiuso: false, comando: { tipo: "pulsante" } },
   "pulsante-nc": { tipo: "contatto", tratti: [["11", "12"]], normalmenteChiuso: true, comando: { tipo: "pulsante" } },
   selettore: { tipo: "contatto", tratti: [["13", "14"]], normalmenteChiuso: false, comando: { tipo: "manuale" } },
+  // Impianti civili: deviatore (comune C verso 1 a riposo, verso 2 azionato) e invertitore
+  // (a riposo 1-3 e 2-4, azionato incrociato 1-4 e 2-3), a posizione mantenuta.
+  deviatore: { tipo: "contatto", tratti: [["C", "2"]], scambio: [["C", "1"]], normalmenteChiuso: false, comando: { tipo: "manuale" } },
+  invertitore: {
+    tipo: "contatto",
+    tratti: [
+      ["1", "4"],
+      ["2", "3"],
+    ],
+    scambio: [
+      ["1", "3"],
+      ["2", "4"],
+    ],
+    normalmenteChiuso: false,
+    comando: { tipo: "manuale" },
+  },
   // A fungo: resta agganciato quando lo premi (comando a posizione mantenuta).
   "pulsante-emergenza": { tipo: "contatto", tratti: [["11", "12"]], normalmenteChiuso: true, comando: { tipo: "manuale" } },
   "selettore-nc": { tipo: "contatto", tratti: [["11", "12"]], normalmenteChiuso: true, comando: { tipo: "manuale" } },

@@ -1,0 +1,157 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "impianti",
+  "programma": "0.1.0",
+  "salvato": "2026-10-27T00:00:00.000Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "rete-1f",
+        "tipo": "rete-monofase",
+        "etichetta": "",
+        "x": 100,
+        "y": 40,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "S1",
+        "tipo": "deviatore",
+        "etichetta": "S1",
+        "x": 100,
+        "y": 160,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "S2",
+        "tipo": "invertitore",
+        "etichetta": "S2",
+        "x": 100,
+        "y": 300,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "S3",
+        "tipo": "deviatore",
+        "etichetta": "S3",
+        "x": 100,
+        "y": 460,
+        "larghezza": 40,
+        "altezza": 80,
+        "rotazione": 180
+      },
+      {
+        "id": "H1",
+        "tipo": "lampada",
+        "etichetta": "H1",
+        "x": 100,
+        "y": 600,
+        "larghezza": 40,
+        "altezza": 80,
+        "parametri": {
+          "colore": "giallo"
+        }
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "S1",
+          "morsetto": "C"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "S1",
+          "morsetto": "1"
+        },
+        "a": {
+          "componente": "S2",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "S1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "S2",
+          "morsetto": "2"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "S2",
+          "morsetto": "3"
+        },
+        "a": {
+          "componente": "S3",
+          "morsetto": "2"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "S2",
+          "morsetto": "4"
+        },
+        "a": {
+          "componente": "S3",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "S3",
+          "morsetto": "C"
+        },
+        "a": {
+          "componente": "H1",
+          "morsetto": "X1"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "H1",
+          "morsetto": "X2"
+        },
+        "a": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "punti": [
+          {
+            "x": 120,
+            "y": 700
+          },
+          {
+            "x": 240,
+            "y": 700
+          },
+          {
+            "x": 240,
+            "y": 120
+          },
+          {
+            "x": 140,
+            "y": 120
+          }
+        ]
+      }
+    ]
+  }
+}

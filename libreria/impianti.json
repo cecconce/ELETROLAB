@@ -584,6 +584,80 @@
       ]
     },
     {
+      "id": "deviatore",
+      "nome": "Deviatore",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Commutatore a tre morsetti degli impianti civili: il comune C è collegato al morsetto 1 oppure al 2, e ci resta. Con due deviatori si accende e si spegne una lampada da due punti (impianto «deviato»). In simulazione: un clic per spostarlo.",
+      "paroleChiave": [
+        "deviatore",
+        "deviata",
+        "civile",
+        "due punti",
+        "commutatore",
+        "scambio"
+      ],
+      "icona": "deviatore.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "C",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "1",
+          "x": 0,
+          "y": 80
+        },
+        {
+          "id": "2",
+          "x": 40,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "invertitore",
+      "nome": "Invertitore",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Commutatore a quattro morsetti degli impianti civili: a riposo collega 1-3 e 2-4, azionato li incrocia (1-4 e 2-3). Messo fra due deviatori permette di comandare una lampada da tre o più punti (impianto «invertito»). In simulazione: un clic per spostarlo.",
+      "paroleChiave": [
+        "invertitore",
+        "invertita",
+        "civile",
+        "tre punti",
+        "incrocio"
+      ],
+      "icona": "invertitore.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "3",
+          "x": 0,
+          "y": 80
+        },
+        {
+          "id": "4",
+          "x": 40,
+          "y": 80
+        }
+      ]
+    },
+    {
       "id": "finecorsa-na",
       "nome": "Finecorsa NA",
       "categoria": "comandi",
