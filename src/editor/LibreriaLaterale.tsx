@@ -5,7 +5,7 @@
 import { useMemo, useState } from "react";
 import { t } from "../testi";
 import type { Tema } from "../interfaccia/tema";
-import { ICONE } from "./caricaLibreria";
+import { testoIcona } from "./caricaLibreria";
 import { coloriEditor } from "./colori";
 import { cercaComponenti, raggruppaPerCategoria, svgComeDataUrl, type Libreria, type VoceLibreria } from "./libreria";
 
@@ -15,6 +15,8 @@ export const MIME_COMPONENTE = "application/x-elettrolab-componente";
 export interface PropsLibreriaLaterale {
   libreria: Libreria;
   tema: Tema;
+  /** Mostra i disegni realistici al posto dei simboli (se il modulo li ha). */
+  realistico?: boolean;
   /** Componente scelto con un clic, in attesa del clic sul foglio. */
   daPosare: string | null;
   onScegli: (id: string | null) => void;
@@ -26,7 +28,7 @@ interface Suggerimento {
   y: number;
 }
 
-export function LibreriaLaterale({ libreria, tema, daPosare, onScegli }: PropsLibreriaLaterale) {
+export function LibreriaLaterale({ libreria, tema, daPosare, onScegli, realistico = false }: PropsLibreriaLaterale) {
   const [ricerca, setRicerca] = useState("");
   const [suggerimento, setSuggerimento] = useState<Suggerimento | null>(null);
   const colore = coloriEditor(tema).testo;
@@ -37,8 +39,8 @@ export function LibreriaLaterale({ libreria, tema, daPosare, onScegli }: PropsLi
   );
   // Le icone colorate per il tema corrente si calcolano una volta sola.
   const immagini = useMemo(
-    () => new Map(libreria.componenti.map((v) => [v.id, svgComeDataUrl(ICONE.get(v.icona) ?? "", colore)])),
-    [libreria, colore],
+    () => new Map(libreria.componenti.map((v) => [v.id, svgComeDataUrl(testoIcona(v.icona, realistico), colore)])),
+    [libreria, colore, realistico],
   );
 
   const mostraSuggerimento = (voce: VoceLibreria, el: HTMLElement) => {

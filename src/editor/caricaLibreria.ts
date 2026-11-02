@@ -21,6 +21,30 @@ export const ICONE: ReadonlyMap<string, string> = new Map(
   Object.entries(fileIcone).map(([percorso, svg]) => [percorso.split("/").pop() ?? percorso, svg]),
 );
 
+const fileRealistici = import.meta.glob("../../libreria/icone/realistico/*.svg", {
+  eager: true,
+  query: "?raw",
+  import: "default",
+}) as Record<string, string>;
+
+/**
+ * Disegni "realistici" (a colori) da usare al posto dei simboli quando lo
+ * studente sceglie la vista Realistica; stesso nome del file del simbolo.
+ */
+export const ICONE_REALISTICHE: ReadonlyMap<string, string> = new Map(
+  Object.entries(fileRealistici).map(([percorso, svg]) => [percorso.split("/").pop() ?? percorso, svg]),
+);
+
+/** Il modulo ha i disegni realistici per tutti i suoi componenti? */
+export function haVistaRealistica(libreria: Libreria): boolean {
+  return libreria.componenti.length > 0 && libreria.componenti.every((v) => ICONE_REALISTICHE.has(v.icona));
+}
+
+/** Testo SVG da disegnare per un'icona nello stile scelto. */
+export function testoIcona(icona: string, realistico: boolean): string {
+  return (realistico ? ICONE_REALISTICHE.get(icona) : undefined) ?? ICONE.get(icona) ?? "";
+}
+
 const librerie = new Map<string, Libreria>();
 /** Problemi trovati nei file della libreria (mostrati in console per chi la modifica). */
 export const ERRORI_LIBRERIA: string[] = [];

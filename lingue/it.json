@@ -272,5 +272,12 @@
   "elettronica.analizzatore.titolo": "Analizzatore logico {sigla}",
   "elettronica.oscilloscopio.sposta": "Trascina l'intestazione per spostare la finestra",
   "elettronica.oscilloscopio.auto": "⟲ Auto",
-  "elettronica.oscilloscopio.autoSuggerimento": "Sceglie da sola base dei tempi e volt/divisione per vedere bene i segnali"
+  "elettronica.oscilloscopio.autoSuggerimento": "Sceglie da sola base dei tempi e volt/divisione per vedere bene i segnali",
+  "simulazione.premuto": "PREMUTO",
+  "simulazione.azionato": "AZIONATO",
+  "simulazione.inMarcia": "IN MARCIA",
+  "vista.titolo": "Aspetto dei componenti",
+  "vista.simboli": "Simboli",
+  "vista.realistica": "Realistica",
+  "vista.suggerimento": "Simboli: schema secondo le norme CEI. Realistica: disegni degli apparecchi veri. Fili e simulazione restano uguali."
 }

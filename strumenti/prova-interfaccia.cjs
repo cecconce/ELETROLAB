@@ -220,10 +220,28 @@ async function collega(pagina, a, b) {
   await clicSu(pagina, "Q1");
   const h1Spenta = await aspetto(pagina, "H1");
   controlla(!(await inMovimento(pagina, "M1")), "M1 fermo prima della marcia");
-  await premi(pagina, "S1");
+  const testiFoglio = () => pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+  {
+    // Mentre S1 è tenuto premuto compare la scritta PREMUTO sul pulsante.
+    const r = await rettangoloComponente(pagina, "S1");
+    await pagina.mouse.move(r.x + r.w / 2, r.y + r.h / 2);
+    await pagina.mouse.down();
+    await pagina.waitForTimeout(350);
+    controlla((await testiFoglio()).some((t) => t.includes("PREMUTO")), "tenendo premuto S1 compare «PREMUTO»");
+    await pagina.mouse.up();
+    await pagina.waitForTimeout(350);
+  }
   controlla((await aspetto(pagina, "H1")) !== h1Spenta, "dopo S1 la spia H1 resta accesa (autoritenuta)");
   controlla(await inMovimento(pagina, "M1"), "dopo S1 il motore M1 gira");
+  controlla((await testiFoglio()).some((t) => t.includes("IN MARCIA")), "accanto al motore compare «↻ IN MARCIA»");
   await foto("04-marcia-arresto");
+  // Vista realistica: stessi collegamenti e stessa simulazione con i disegni degli apparecchi.
+  await pagina.getByRole("radio", { name: /Realistica/ }).click();
+  await pagina.waitForTimeout(400);
+  controlla(await inMovimento(pagina, "M1"), "in vista Realistica il motore continua a girare");
+  await foto("04b-marcia-arresto-realistica");
+  await pagina.getByRole("radio", { name: /Simboli/ }).click();
+  await pagina.waitForTimeout(300);
   await premi(pagina, "S0");
   controlla((await aspetto(pagina, "H1")) === h1Spenta, "dopo S0 la spia H1 si spegne");
   controlla(!(await inMovimento(pagina, "M1")), "dopo S0 il motore M1 si ferma");

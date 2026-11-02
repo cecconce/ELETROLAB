@@ -222,6 +222,51 @@
       ]
     },
     {
+      "id": "selettore-nc",
+      "nome": "Selettore NC (a due posizioni)",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Selettore a manopola con contatto normalmente chiuso: in posizione 0 lascia passare la corrente, girato su 1 la interrompe e resta così. In simulazione: un clic lo gira, un altro lo riporta.",
+      "paroleChiave": ["selettore", "manopola", "normalmente chiuso", "NC", "commutatore"],
+      "icona": "selettore-nc.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "11", "x": 20, "y": 0 },
+        { "id": "12", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "interruttore-na",
+      "nome": "Interruttore NA (a leva)",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Interruttore a leva normalmente aperto: azionato chiude il circuito e resta chiuso finché non lo riporti a riposo (a differenza del pulsante, non torna indietro da solo). In simulazione: un clic per accendere, un altro per spegnere.",
+      "paroleChiave": ["interruttore", "leva", "normalmente aperto", "NA", "acceso", "spento"],
+      "icona": "interruttore-na.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "13", "x": 20, "y": 0 },
+        { "id": "14", "x": 20, "y": 80 }
+      ]
+    },
+    {
+      "id": "interruttore-nc",
+      "nome": "Interruttore NC (a leva)",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Interruttore a leva normalmente chiuso: a riposo lascia passare la corrente, azionato la interrompe e resta aperto finché non lo riporti indietro. In simulazione: un clic per aprirlo, un altro per richiuderlo.",
+      "paroleChiave": ["interruttore", "leva", "normalmente chiuso", "NC"],
+      "icona": "interruttore-nc.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        { "id": "11", "x": 20, "y": 0 },
+        { "id": "12", "x": 20, "y": 80 }
+      ]
+    },
+    {
       "id": "finecorsa-na",
       "nome": "Finecorsa NA",
       "categoria": "comandi",

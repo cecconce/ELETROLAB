@@ -67,6 +67,19 @@ describe("file della libreria forniti con l'app", () => {
     }
   });
 
+  it("vista realistica: ogni componente degli impianti ha il suo disegno, con le stesse misure", async () => {
+    const { ICONE_REALISTICHE, haVistaRealistica } = await import("./caricaLibreria");
+    const impianti = libreriaDelModulo("impianti");
+    expect(haVistaRealistica(impianti)).toBe(true);
+    expect(haVistaRealistica(libreriaDelModulo("elettronica"))).toBe(false);
+    for (const v of impianti.componenti) {
+      const svg = ICONE_REALISTICHE.get(v.icona) ?? "";
+      expect(svg, v.icona).toContain(`viewBox="0 0 ${v.larghezza} ${v.altezza}"`);
+      expect(svg, v.icona).not.toMatch(/<script|href=|url\(/i);
+      expect(svg, v.icona).not.toMatch(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/);
+    }
+  });
+
   it("i contatti seguono la numerazione normativa (NA 13-14, NC 11-12 / 21-22)", () => {
     const imp = libreriaDelModulo("impianti");
     expect(trovaVoce(imp, "contatto-na")?.morsetti.map((m) => m.id)).toEqual(["13", "14"]);

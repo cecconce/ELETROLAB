@@ -15,7 +15,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { t } from "../testi";
 import { AreaDisegno } from "../editor/AreaDisegno";
 import { LibreriaLaterale } from "../editor/LibreriaLaterale";
-import { libreriaDelModulo } from "../editor/caricaLibreria";
+import { haVistaRealistica, libreriaDelModulo } from "../editor/caricaLibreria";
 import { PannelloProprieta } from "../editor/PannelloProprieta";
 import { rinumeraContatti } from "../editor/associazioni";
 import type { Schema, Selezione } from "../editor/schema";
@@ -135,6 +135,28 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const suAnnulla = useCallback(() => setCronologia(annulla), []);
   const suRipeti = useCallback(() => setCronologia(ripeti), []);
   const [daPosare, setDaPosare] = useState<string | null>(null);
+  // Vista Simboli / Realistica (solo nei moduli che hanno i disegni realistici):
+  // scelta dello studente ricordata su questo computer.
+  const conVistaRealistica = useMemo(() => haVistaRealistica(libreria), [libreria]);
+  const chiaveVista = `elettrolab.vista.${modulo.id}`;
+  const [realistico, setRealistico] = useState(() => {
+    try {
+      return window.localStorage.getItem(chiaveVista) === "realistica";
+    } catch {
+      return false;
+    }
+  });
+  const cambiaRealistico = useCallback(
+    (r: boolean) => {
+      setRealistico(r);
+      try {
+        window.localStorage.setItem(chiaveVista, r ? "realistica" : "simboli");
+      } catch {
+        // senza memoria del browser la scelta vale solo per questa volta
+      }
+    },
+    [chiaveVista],
+  );
 
   // --- File e modifiche non salvate -------------------------------------
   const [percorso, setPercorso] = useState(documento.percorso);
@@ -441,7 +463,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
         </nav>
       </header>
       <div className={inSimulazione ? "corpo-modulo in-simulazione" : "corpo-modulo"}>
-        <LibreriaLaterale libreria={libreria} tema={tema} daPosare={daPosare} onScegli={setDaPosare} />
+        <LibreriaLaterale libreria={libreria} tema={tema} daPosare={daPosare} onScegli={setDaPosare} realistico={conVistaRealistica && realistico} />
         <AreaDisegno
           tema={tema}
           schema={schema}
@@ -456,6 +478,8 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           onSelezione={setSelezione}
           simulazione={simulazione}
           evidenzia={evidenzia}
+          realistico={conVistaRealistica && realistico}
+          onCambiaRealistico={conVistaRealistica ? cambiaRealistico : undefined}
           sopraBarra={
             inSimulazione ? (
               <>

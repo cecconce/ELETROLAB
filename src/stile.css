@@ -996,3 +996,14 @@ button.io-plc {
   font-size: 0.8rem;
   opacity: 0.8;
 }
+
+/* Scelta della vista Simboli / Realistica (modulo Impianti). */
+.scelta-vista {
+  display: inline-flex;
+  gap: 2px;
+}
+.scelta-vista .pulsante.attivo {
+  background: var(--accento, #2563eb);
+  color: #ffffff;
+  border-color: transparent;
+}

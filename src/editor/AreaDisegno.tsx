@@ -35,7 +35,7 @@ import Konva from "konva";
 import { t } from "../testi";
 import type { Tema } from "../interfaccia/tema";
 import { coloriEditor } from "./colori";
-import { ICONE, trovaVoce } from "./caricaLibreria";
+import { testoIcona, trovaVoce } from "./caricaLibreria";
 import { componenteDaVoce, svgComeDataUrl, tipiContatto, type Libreria, type VoceLibreria } from "./libreria";
 import { numeroMorsetto } from "./associazioni";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
@@ -135,13 +135,17 @@ export interface PropsAreaDisegno {
   evidenzia?: { componenti: readonly string[]; morsetti: readonly string[] } | null;
   /** Contenuto mostrato fra il foglio e la barra in basso (es. il pannello dei problemi). */
   sopraBarra?: React.ReactNode;
+  /** Vista realistica (disegni a colori) invece dei simboli CEI, se il modulo la prevede. */
+  realistico?: boolean;
+  /** Se presente, nella barra compare il pulsante per passare da Simboli a Realistico. */
+  onCambiaRealistico?: (realistico: boolean) => void;
 }
 
 /**
  * Immagini delle icone della libreria, colorate per il tema. La mappa si
  * aggiorna quando le immagini finiscono di caricarsi (servono per Konva).
  */
-function useImmaginiIcone(libreria: Libreria, colore: string): ReadonlyMap<string, HTMLImageElement> {
+function useImmaginiIcone(libreria: Libreria, colore: string, realistico: boolean): ReadonlyMap<string, HTMLImageElement> {
   const [pronte, setPronte] = useState<ReadonlyMap<string, HTMLImageElement>>(new Map());
   useEffect(() => {
     let attivo = true;
@@ -161,13 +165,13 @@ function useImmaginiIcone(libreria: Libreria, colore: string): ReadonlyMap<strin
         mancanti--;
         if (attivo && mancanti === 0) setPronte(mappa);
       };
-      img.src = svgComeDataUrl(ICONE.get(nome) ?? "", colore);
+      img.src = svgComeDataUrl(testoIcona(nome, realistico), colore);
       mappa.set(nome, img);
     }
     return () => {
       attivo = false;
     };
-  }, [libreria, colore]);
+  }, [libreria, colore, realistico]);
   return pronte;
 }
 
@@ -212,6 +216,8 @@ export function AreaDisegno({
   simulazione = null,
   evidenzia = null,
   sopraBarra = null,
+  realistico = false,
+  onCambiaRealistico,
 }: PropsAreaDisegno) {
   const inSimulazione = simulazione !== null;
   // Letto dal gestore dei tasti, registrato una volta sola.
@@ -220,7 +226,7 @@ export function AreaDisegno({
   // Componente cliccabile sotto il mouse durante la simulazione (cursore a manina).
   const [cliccabileSotto, setCliccabileSotto] = useState<string | null>(null);
   const colori = coloriEditor(tema);
-  const immagini = useImmaginiIcone(libreria, colori.testo);
+  const immagini = useImmaginiIcone(libreria, colori.testo, realistico);
   const vociPerTipo = useMemo(() => new Map(libreria.componenti.map((v) => [v.id, v])), [libreria]);
   const morsettiDi = useCallback<MorsettiDelTipo>((tipo) => vociPerTipo.get(tipo)?.morsetti, [vociPerTipo]);
   const voceDaPosare = daPosare ? trovaVoce(libreria, daPosare) : undefined;
@@ -1036,6 +1042,18 @@ export function AreaDisegno({
         <button type="button" className="pulsante" onClick={elimina} disabled={selezione.length === 0 || inSimulazione} title={t("modifica.eliminaTasti")}>
           {t("modifica.elimina")}
         </button>
+        {onCambiaRealistico && (
+          <>
+            <span className="separatore-barra" aria-hidden="true" />
+            <div className="scelta-vista" role="radiogroup" aria-label={t("vista.titolo")} title={t("vista.suggerimento")}>
+              {([false, true] as const).map((r) => (
+                <button key={String(r)} type="button" role="radio" aria-checked={realistico === r} className={realistico === r ? "pulsante attivo" : "pulsante"} onClick={() => onCambiaRealistico(r)}>
+                  {r ? `🖼 ${t("vista.realistica")}` : `📐 ${t("vista.simboli")}`}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <span className="separatore-barra" aria-hidden="true" />
         <button type="button" className="pulsante" onClick={rimpicciolisci} title={t("editor.rimpicciolisci")}>
           −
@@ -1248,12 +1266,23 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori }: PropsAsp
       {aspetto.azionato && (
         <Rect x={-3} y={-3} width={w + 6} height={h + 6} stroke={colori.azionato} strokeWidth={2.5} cornerRadius={5} />
       )}
-      {aspetto.motore && (
+      {aspetto.azionato && ePulsante(c.tipo) && (
+        // Pulsante premuto: il tasto (a sinistra del simbolo) si colora e "rientra" verso il contatto.
         <>
-          <FrecciaRotante x={w / 2} y={h / 2} raggio={Math.min(w, h) / 2 + 3} verso={aspetto.motore.verso} colore={colori.attivo} />
-          {aspetto.motore.collegamento &&
-            testo(aspetto.motore.collegamento === "stella" ? "Y" : "Δ", h + 6, colori.attivo)}
+          <Rect x={-6} y={26} width={16} height={28} fill={colori.azionato} opacity={0.9} cornerRadius={4} shadowColor={colori.azionato} shadowBlur={10} shadowOpacity={0.8} />
+          <Line points={[10, 40, 18, 40]} stroke={colori.azionato} strokeWidth={3} lineCap="round" />
+          {testo(`👇 ${t("simulazione.premuto")}`, -18, colori.azionato)}
         </>
+      )}
+      {aspetto.azionato && !ePulsante(c.tipo) && aspetto.clic === "manuale" && utilizzatore === null && testo(`● ${t("simulazione.azionato")}`, -18, colori.azionato)}
+      {aspetto.motore && (
+        <MotoreInMarcia
+          {...centroMotore(c.tipo, w, h)}
+          verso={aspetto.motore.verso}
+          colore={colori.attivo}
+          etichetta={`${aspetto.motore.verso === "orario" ? "↻" : "↺"} ${t("simulazione.inMarcia")}${aspetto.motore.collegamento ? (aspetto.motore.collegamento === "stella" ? "  Y" : "  Δ") : ""}`}
+          larghezza={w}
+        />
       )}
       {aspetto.intervenuta && (
         <>
@@ -1261,8 +1290,56 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori }: PropsAsp
           {testo(t("simulazione.intervenuto"), -18, colori.guasto)}
         </>
       )}
-      {aspetto.sovraccarico && testo(t("simulazione.sovraccarico"), aspetto.motore?.collegamento ? h + 20 : h + 6, colori.guasto)}
+      {aspetto.sovraccarico && testo(t("simulazione.sovraccarico"), h + 6, colori.guasto)}
       {aspetto.valore && testo(aspetto.valore, h + 4, colori.attivo)}
+    </Group>
+  );
+}
+
+/** Pulsanti (si tengono premuti): impianti e quadro del PLC. */
+const ePulsante = (tipo: string) => tipo.startsWith("pulsante-") || tipo.startsWith("quadro-pulsante");
+
+/** Centro del cerchio del simbolo del motore (dove gira la ventola). */
+function centroMotore(tipo: string, w: number, h: number): { x: number; y: number; raggio: number } {
+  if (tipo === "motore-trifase-6") return { x: 40, y: 40, raggio: 22 };
+  if (tipo.startsWith("motore-")) return { x: 40, y: 50, raggio: 24 };
+  return { x: w / 2, y: h / 2, raggio: Math.min(w, h) / 2 - 2 };
+}
+
+/**
+ * Motore in marcia, ben visibile: disco colorato, ventola che gira dentro il
+ * simbolo (due giri al secondo, nel verso di rotazione), freccia circolare
+ * attorno e la scritta "↻ IN MARCIA" sotto (con Y o Δ nell'avviamento stella-triangolo).
+ */
+function MotoreInMarcia({ x, y, raggio, verso, colore, etichetta, larghezza }: { x: number; y: number; raggio: number; verso: "orario" | "antiorario"; colore: string; etichetta: string; larghezza: number }) {
+  const ventola = useRef<Konva.Group>(null);
+  const segno = verso === "orario" ? 1 : -1;
+  useEffect(() => {
+    const g = ventola.current;
+    if (!g) return;
+    const animazione = new Konva.Animation((frame) => {
+      if (frame) g.rotation(g.rotation() + segno * frame.timeDiff * 0.72);
+    }, g.getLayer());
+    animazione.start();
+    return () => {
+      animazione.stop();
+    };
+  }, [segno]);
+  const pala = raggio * 0.62;
+  return (
+    <Group listening={false}>
+      <Circle x={x} y={y} radius={raggio} fill={colore} opacity={0.18} />
+      <Group ref={ventola} x={x} y={y} opacity={0.75}>
+        {[0, 120, 240].map((a) => (
+          <Group key={a} rotation={a}>
+            <Line points={[0, 0, pala * 0.35, -pala * 0.55, 0, -pala, -pala * 0.2, -pala * 0.5]} closed tension={0.3} fill={colore} />
+          </Group>
+        ))}
+        <Circle radius={3} fill={colore} />
+      </Group>
+      <FrecciaRotante x={x} y={y} raggio={raggio + 5} verso={verso} colore={colore} />
+      {/* Scritta a destra del motore (sotto spesso c'è il bordo del foglio). */}
+      <Text text={etichetta} x={larghezza + 6} y={y - 7} fontSize={12} fontStyle="bold" fontFamily="Segoe UI, system-ui, sans-serif" fill={colore} />
     </Group>
   );
 }
