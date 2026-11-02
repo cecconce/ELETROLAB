@@ -37,6 +37,13 @@
       "prova": "Premi ▶ AVVIA e clic su Q1. Premi S1: il motore gira e la spia H1 si accende. Guarda l'orologio ⏱: dopo 8 secondi il motore si ferma da solo. Puoi fermarlo prima con S0. Prova a cambiare il tempo di KT1 nel pannello Proprietà."
     },
     {
+      "file": "esercizio-marcia-arresto.elab",
+      "modulo": "impianti",
+      "titolo": "Esercizio: completa la marcia/arresto",
+      "descrizione": "Esempio di esercizio preparato con il pulsante «📝 Esercizio»: il circuito di potenza è pronto, quello di comando va collegato. Sopra il foglio c'è la consegna; la verifica automatica confronta il funzionamento con la soluzione del docente.",
+      "prova": "Leggi la consegna, collega i morsetti del circuito di comando (clic su un morsetto, poi sull'altro) e premi «✔ Verifica il funzionamento»: se qualcosa non va, il programma spiega dopo quali azioni il motore, K1 o H1 si comportano in modo diverso dal previsto. Puoi sempre provare con ▶ AVVIA."
+    },
+    {
       "file": "plc-marcia-arresto.elab",
       "modulo": "plc",
       "titolo": "PLC – Marcia/arresto con autoritenuta",
@@ -91,6 +98,13 @@
       "titolo": "PLC – Parcheggio con contatore",
       "descrizione": "Lo stesso contatore C0 conta in avanti le auto che entrano (CTU) e all'indietro quelle che escono (CTD), sul fronte di discesa delle fotocellule. Con 5 auto si accende COMPLETO e la sbarra di ingresso non si alza più.",
       "prova": "Premi ▶ AVVIA. Clic sulla parte sinistra del parcheggio per far arrivare un'auto: la sbarra si alza e l'auto entra. Con 5 auto compare COMPLETO. Clic a destra per far uscire un'auto. Sotto il contatore leggi il conteggio."
+    },
+    {
+      "file": "esercizio-plc-autoritenuta.elab",
+      "modulo": "plc",
+      "titolo": "Esercizio: autoritenuta nel Ladder",
+      "descrizione": "Esercizio di esempio: nel segmento manca il contatto che tiene accesa l'uscita dopo aver rilasciato il pulsante di marcia.",
+      "prova": "Premi «✔ Verifica il funzionamento» per vedere che cosa manca; poi aggiungi in parallelo a I0.0 un contatto NA con operando Q0.0, collegalo e verifica di nuovo."
     },
     {
       "file": "arduino-blink.elab",

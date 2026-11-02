@@ -125,6 +125,17 @@ describe("verifica degli esercizi — Arduino", () => {
   });
 });
 
+describe("esercizi di esempio del catalogo", () => {
+  it.each(["esercizio-marcia-arresto.elab", "esercizio-plc-autoritenuta.elab"])("%s: incompleto non passa, con la soluzione passa", (file) => {
+    const e = ESEMPI.find((x) => x.file === file)!;
+    const schema = esempio(file);
+    expect(schema.esercizio?.consegna.length).toBeGreaterThan(40);
+    const soluzione = schema.esercizio!.soluzione!;
+    expect(verificaEsercizio(e.modulo, schema)?.riuscito).toBe(false);
+    expect(verificaEsercizio(e.modulo, { ...schema, componenti: soluzione.componenti, fili: soluzione.fili })?.riuscito).toBe(true);
+  });
+});
+
 describe("esercizio nel file .elab", () => {
   it("consegna e soluzione si salvano (soluzione codificata) e si rileggono", () => {
     const soluzione = esempio("marcia-arresto.elab");

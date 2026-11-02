@@ -107,7 +107,8 @@ describe("esempi della cartella esempi/", () => {
     }
   });
 
-  it.each(ESEMPI.filter((e) => e.modulo === "impianti").map((e) => e.file))(
+  // Gli esercizi sono incompleti di proposito: si provano in verifica.test.ts.
+  it.each(ESEMPI.filter((e) => e.modulo === "impianti" && !e.file.startsWith("esercizio-")).map((e) => e.file))(
     "%s: componenti della libreria, numerazione aggiornata e nessun problema all'avvio",
     (file) => {
       const schema = schemaDi(file);

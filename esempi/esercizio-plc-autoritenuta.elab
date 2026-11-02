@@ -1,0 +1,131 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "plc",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T09:14:39.150Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "ladder-commento-1",
+        "tipo": "ladder-commento",
+        "etichetta": "Marcia I0.0 con autoritenuta Q0.0, arresto I0.1 (pulsante NC)",
+        "x": 100,
+        "y": 40,
+        "larghezza": 480,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-1",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "I0.0",
+        "x": 100,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-contatto-na-2",
+        "tipo": "ladder-contatto-na",
+        "etichetta": "I0.1",
+        "x": 220,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "ladder-barra-sinistra-1",
+        "tipo": "ladder-barra-sinistra",
+        "etichetta": "",
+        "x": 40,
+        "y": 0,
+        "larghezza": 20,
+        "altezza": 400
+      },
+      {
+        "id": "ladder-bobina-1",
+        "tipo": "ladder-bobina",
+        "etichetta": "Q0.0",
+        "x": 600,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "quadro-pulsante-na-1",
+        "tipo": "quadro-pulsante-na",
+        "etichetta": "I0.0",
+        "x": 780,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "quadro-pulsante-nc-1",
+        "tipo": "quadro-pulsante-nc",
+        "etichetta": "I0.1",
+        "x": 900,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "quadro-lampada-1",
+        "tipo": "quadro-lampada",
+        "etichetta": "Q0.0",
+        "x": 780,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "quadro-motore-1",
+        "tipo": "quadro-motore",
+        "etichetta": "Q0.0",
+        "x": 900,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "ladder-barra-sinistra-1",
+          "morsetto": "p4"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "ladder-contatto-na-1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-contatto-na-2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "ladder-contatto-na-2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "ladder-bobina-1",
+          "morsetto": "in"
+        }
+      }
+    ],
+    "esercizio": {
+      "consegna": "Il pulsante di marcia I0.0 accende l'uscita Q0.0 solo finché è premuto. Completa il segmento Ladder in modo che Q0.0 resti accesa anche rilasciando I0.0 (autoritenuta) e si spenga premendo l'arresto I0.1. Poi premi «✔ Verifica il funzionamento».",
+      "soluzioneCodificata": "eyJjb21wb25lbnRpIjpbeyJpZCI6ImxhZGRlci1jb21tZW50by0xIiwidGlwbyI6ImxhZGRlci1jb21tZW50byIsImV0aWNoZXR0YSI6Ik1hcmNpYSBJMC4wIGNvbiBhdXRvcml0ZW51dGEgUTAuMCwgYXJyZXN0byBJMC4xIChwdWxzYW50ZSBOQykiLCJ4IjoxMDAsInkiOjQwLCJsYXJnaGV6emEiOjQ4MCwiYWx0ZXp6YSI6NDB9LHsiaWQiOiJsYWRkZXItY29udGF0dG8tbmEtMSIsInRpcG8iOiJsYWRkZXItY29udGF0dG8tbmEiLCJldGljaGV0dGEiOiJJMC4wIiwieCI6MTAwLCJ5IjoxMjAsImxhcmdoZXp6YSI6ODAsImFsdGV6emEiOjQwfSx7ImlkIjoibGFkZGVyLWNvbnRhdHRvLW5hLTIiLCJ0aXBvIjoibGFkZGVyLWNvbnRhdHRvLW5hIiwiZXRpY2hldHRhIjoiSTAuMSIsIngiOjIyMCwieSI6MTIwLCJsYXJnaGV6emEiOjgwLCJhbHRlenphIjo0MH0seyJpZCI6ImxhZGRlci1iYXJyYS1zaW5pc3RyYS0xIiwidGlwbyI6ImxhZGRlci1iYXJyYS1zaW5pc3RyYSIsImV0aWNoZXR0YSI6IiIsIngiOjQwLCJ5IjowLCJsYXJnaGV6emEiOjIwLCJhbHRlenphIjo0MDB9LHsiaWQiOiJsYWRkZXItY29udGF0dG8tbmEtMyIsInRpcG8iOiJsYWRkZXItY29udGF0dG8tbmEiLCJldGljaGV0dGEiOiJRMC4wIiwieCI6MTAwLCJ5IjoyMDAsImxhcmdoZXp6YSI6ODAsImFsdGV6emEiOjQwfSx7ImlkIjoibGFkZGVyLWJvYmluYS0xIiwidGlwbyI6ImxhZGRlci1ib2JpbmEiLCJldGljaGV0dGEiOiJRMC4wIiwieCI6NjAwLCJ5IjoxMjAsImxhcmdoZXp6YSI6ODAsImFsdGV6emEiOjQwfSx7ImlkIjoicXVhZHJvLXB1bHNhbnRlLW5hLTEiLCJ0aXBvIjoicXVhZHJvLXB1bHNhbnRlLW5hIiwiZXRpY2hldHRhIjoiSTAuMCIsIngiOjc4MCwieSI6NjAsImxhcmdoZXp6YSI6ODAsImFsdGV6emEiOjgwfSx7ImlkIjoicXVhZHJvLXB1bHNhbnRlLW5jLTEiLCJ0aXBvIjoicXVhZHJvLXB1bHNhbnRlLW5jIiwiZXRpY2hldHRhIjoiSTAuMSIsIngiOjkwMCwieSI6NjAsImxhcmdoZXp6YSI6ODAsImFsdGV6emEiOjgwfSx7ImlkIjoicXVhZHJvLWxhbXBhZGEtMSIsInRpcG8iOiJxdWFkcm8tbGFtcGFkYSIsImV0aWNoZXR0YSI6IlEwLjAiLCJ4Ijo3ODAsInkiOjIwMCwibGFyZ2hlenphIjo4MCwiYWx0ZXp6YSI6ODB9LHsiaWQiOiJxdWFkcm8tbW90b3JlLTEiLCJ0aXBvIjoicXVhZHJvLW1vdG9yZSIsImV0aWNoZXR0YSI6IlEwLjAiLCJ4Ijo5MDAsInkiOjIwMCwibGFyZ2hlenphIjo4MCwiYWx0ZXp6YSI6ODB9XSwiZmlsaSI6W3siaWQiOiJmaWxvLTEiLCJkYSI6eyJjb21wb25lbnRlIjoibGFkZGVyLWJhcnJhLXNpbmlzdHJhLTEiLCJtb3JzZXR0byI6InA0In0sImEiOnsiY29tcG9uZW50ZSI6ImxhZGRlci1jb250YXR0by1uYS0xIiwibW9yc2V0dG8iOiJpbiJ9fSx7ImlkIjoiZmlsby0yIiwiZGEiOnsiY29tcG9uZW50ZSI6ImxhZGRlci1jb250YXR0by1uYS0xIiwibW9yc2V0dG8iOiJvdXQifSwiYSI6eyJjb21wb25lbnRlIjoibGFkZGVyLWNvbnRhdHRvLW5hLTIiLCJtb3JzZXR0byI6ImluIn19LHsiaWQiOiJmaWxvLTMiLCJkYSI6eyJjb21wb25lbnRlIjoibGFkZGVyLWJhcnJhLXNpbmlzdHJhLTEiLCJtb3JzZXR0byI6InA2In0sImEiOnsiY29tcG9uZW50ZSI6ImxhZGRlci1jb250YXR0by1uYS0zIiwibW9yc2V0dG8iOiJpbiJ9fSx7ImlkIjoiZmlsby00IiwiZGEiOnsiY29tcG9uZW50ZSI6ImxhZGRlci1jb250YXR0by1uYS0zIiwibW9yc2V0dG8iOiJvdXQifSwiYSI6eyJjb21wb25lbnRlIjoibGFkZGVyLWNvbnRhdHRvLW5hLTEiLCJtb3JzZXR0byI6Im91dCJ9fSx7ImlkIjoiZmlsby01IiwiZGEiOnsiY29tcG9uZW50ZSI6ImxhZGRlci1jb250YXR0by1uYS0yIiwibW9yc2V0dG8iOiJvdXQifSwiYSI6eyJjb21wb25lbnRlIjoibGFkZGVyLWJvYmluYS0xIiwibW9yc2V0dG8iOiJpbiJ9fV19"
+    }
+  }
+}

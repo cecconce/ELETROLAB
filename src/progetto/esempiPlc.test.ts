@@ -52,7 +52,7 @@ const premiERilascia = (s: SessionePlc, id: string, punto?: { x: number; y: numb
 describe("catalogo degli esempi PLC", () => {
   it("ci sono gli 8 esempi del PLC, tutti apribili e senza problemi", () => {
     expect(ERRORI_ESEMPI).toEqual([]);
-    const plc = ESEMPI.filter((e) => e.modulo === "plc");
+    const plc = ESEMPI.filter((e) => e.modulo === "plc" && !e.file.startsWith("esercizio-"));
     expect(plc).toHaveLength(8);
     for (const e of plc) {
       const schema = schemaEsempio(e.file);
