@@ -94,3 +94,42 @@ function scrivi(file: string, schema: Schema) {
   b.filo("XSC1.COM", `${gnd}.0`);
   scrivi("elettronica-filtro-rc.elab", b.schema());
 }
+
+// 3. Porte logiche AND, OR, XOR con interruttori logici e sonde
+{
+  const b = costruttore();
+  b.posa("interruttore-logico", 40, 80);
+  b.posa("interruttore-logico", 40, 160);
+  b.posa("porta-and", 200, 40);
+  b.posa("porta-or", 200, 160);
+  b.posa("porta-xor", 200, 280);
+  b.posa("sonda-logica", 340, 60);
+  b.posa("sonda-logica", 340, 180);
+  b.posa("sonda-logica", 340, 300);
+  for (const [porta, sonda] of [["U1", "X1"], ["U2", "X2"], ["U3", "X3"]]) {
+    b.filo("S1.out", `${porta}.A`);
+    b.filo("S2.out", `${porta}.B`);
+    b.filo(`${porta}.Y`, `${sonda}.in`);
+  }
+  scrivi("elettronica-porte-logiche.elab", b.schema());
+}
+
+// 4. Contatore con display a 7 segmenti e analizzatore logico
+{
+  const b = costruttore();
+  b.posa("generatore-clock", 40, 100, { frequenza: 1 });
+  b.posa("interruttore-logico", 40, 200);
+  b.posa("contatore", 160, 100);
+  b.posa("decodificatore", 320, 100);
+  // Il display sta attaccato al decodificatore: uscite a…g e ingressi combaciano.
+  b.posa("display-7-segmenti", 400, 100);
+  b.posa("analizzatore-logico", 160, 300);
+  b.filo("CLK1.out", "U1.CLK");
+  b.filo("S1.out", "U1.R");
+  for (const [q, ingresso] of [["Q0", "A"], ["Q1", "B"], ["Q2", "C"], ["Q3", "D"]]) b.filo(`U1.${q}`, `U2.${ingresso}`);
+  b.filo("CLK1.out", "XLA1.D0");
+  b.filo("U1.Q0", "XLA1.D1");
+  b.filo("U1.Q1", "XLA1.D2");
+  b.filo("U1.Q2", "XLA1.D3");
+  scrivi("elettronica-contatore.elab", b.schema());
+}

@@ -250,7 +250,7 @@
   "problemi.interventoSovraccarico": "{componente} è intervenuto perché il motore era in sovraccarico. Togli il sovraccarico (clic sul motore), poi clicca su {componente} per riarmarlo.",
   "problemi.oscillazione": "Il circuito oscilla: {bobine} continua a eccitarsi e diseccitarsi da solo (per esempio una bobina che apre il proprio contatto di alimentazione). Controlla i contatti collegati a questa bobina.",
   "problemi.oscillazionePiu": "Il circuito oscilla: {bobine} continuano a eccitarsi e diseccitarsi da sole, senza fermarsi mai. Controlla i contatti con cui queste bobine si comandano a vicenda.",
-  "simulazione.suggerimentoElettronica": "Simulazione in corso · Clic sugli interruttori per commutarli, tieni premuti i pulsanti · Clic a destra o a sinistra del potenziometro per girarlo · Le misure compaiono sugli strumenti; l'oscilloscopio ha una sua finestra",
+  "simulazione.suggerimentoElettronica": "Simulazione in corso · Clic sugli interruttori (anche quelli logici 0/1) per commutarli, tieni premuti i pulsanti · Clic a destra o a sinistra del potenziometro per girarlo · Le misure compaiono sugli strumenti; oscilloscopio e analizzatore logico hanno una loro finestra",
   "elettronica.problema.senzaMassa": "Manca la massa: aggiungi il simbolo «Massa (0 V)» e collegalo al − del generatore. Tutte le tensioni si misurano rispetto alla massa.",
   "elettronica.problema.nonConverge": "Il calcolo non riesce a trovare una soluzione stabile: controlla che non ci siano componenti scollegati a metà o generatori collegati direttamente fra loro.",
   "elettronica.problema.corto": "Cortocircuito: il generatore {sigla} eroga una corrente enorme. C'è un filo (o un interruttore chiuso) direttamente fra + e −?",
@@ -268,5 +268,7 @@
   "elettronica.oscilloscopio.riprendi": "▶ Riprendi",
   "elettronica.oscilloscopio.misure": "A: {ppa} picco-picco · B: {ppb} picco-picco",
   "elettronica.oscilloscopio.riduci": "Riduci",
-  "elettronica.oscilloscopio.apri": "Apri"
+  "elettronica.oscilloscopio.apri": "Apri",
+  "elettronica.analizzatore.titolo": "Analizzatore logico {sigla}",
+  "elettronica.oscilloscopio.sposta": "Trascina l'intestazione per spostare la finestra"
 }

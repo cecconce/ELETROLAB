@@ -150,7 +150,14 @@ function useImmaginiIcone(libreria: Libreria, colore: string): ReadonlyMap<strin
     let mancanti = nomi.length;
     for (const nome of nomi) {
       const img = new window.Image();
-      img.onload = img.onerror = () => {
+      img.onload = () => {
+        mancanti--;
+        if (attivo && mancanti === 0) setPronte(mappa);
+      };
+      // Un'icona illeggibile (file modificato a mano e rovinato) non deve bloccare il
+      // disegno di tutto il foglio: si toglie dalla mappa e il componente resta senza disegno.
+      img.onerror = () => {
+        mappa.delete(nome);
         mancanti--;
         if (attivo && mancanti === 0) setPronte(mappa);
       };

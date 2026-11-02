@@ -1,0 +1,184 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "elettronica",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T05:49:21.906Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "S1",
+        "tipo": "interruttore-logico",
+        "etichetta": "S1",
+        "x": 40,
+        "y": 80,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "S2",
+        "tipo": "interruttore-logico",
+        "etichetta": "S2",
+        "x": 40,
+        "y": 160,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "U1",
+        "tipo": "porta-and",
+        "etichetta": "U1",
+        "x": 200,
+        "y": 40,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "U2",
+        "tipo": "porta-or",
+        "etichetta": "U2",
+        "x": 200,
+        "y": 160,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "U3",
+        "tipo": "porta-xor",
+        "etichetta": "U3",
+        "x": 200,
+        "y": 280,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "X1",
+        "tipo": "sonda-logica",
+        "etichetta": "X1",
+        "x": 340,
+        "y": 60,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "X2",
+        "tipo": "sonda-logica",
+        "etichetta": "X2",
+        "x": 340,
+        "y": 180,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "X3",
+        "tipo": "sonda-logica",
+        "etichetta": "X3",
+        "x": 340,
+        "y": 300,
+        "larghezza": 60,
+        "altezza": 40
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "S1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "U1",
+          "morsetto": "A"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "S2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "U1",
+          "morsetto": "B"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "U1",
+          "morsetto": "Y"
+        },
+        "a": {
+          "componente": "X1",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "S1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "U2",
+          "morsetto": "A"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "S2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "U2",
+          "morsetto": "B"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "U2",
+          "morsetto": "Y"
+        },
+        "a": {
+          "componente": "X2",
+          "morsetto": "in"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "S1",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "U3",
+          "morsetto": "A"
+        }
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "S2",
+          "morsetto": "out"
+        },
+        "a": {
+          "componente": "U3",
+          "morsetto": "B"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "U3",
+          "morsetto": "Y"
+        },
+        "a": {
+          "componente": "X3",
+          "morsetto": "in"
+        }
+      }
+    ]
+  }
+}

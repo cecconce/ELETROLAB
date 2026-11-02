@@ -63,6 +63,9 @@ export interface AspettoComponente {
     bruciato?: boolean;
     posizione?: number;
     lettura?: string;
+    /** Componenti digitali: livello logico di ingressi e uscite; contatore: conteggio. */
+    livelli?: Record<string, 0 | 1>;
+    conteggio?: number;
   };
 }
 

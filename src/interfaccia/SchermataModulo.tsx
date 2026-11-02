@@ -56,7 +56,7 @@ import {
   type SessioneElettronica,
 } from "../motori/elettronica";
 import { componentiDaSchemaElettronica, vistaDaSessioneElettronica } from "../editor/elettronica";
-import { PannelloOscilloscopio } from "../editor/PannelloOscilloscopio";
+import { PannelloAnalizzatore, PannelloOscilloscopio } from "../editor/PannelloOscilloscopio";
 import { vocePerTipo } from "../editor/libreria";
 import { PannelloIngressiPlc } from "../editor/PannelloIngressiPlc";
 import { problemiDaMostrare } from "../editor/messaggiProblemi";
@@ -467,16 +467,26 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                 />
                 {modulo.id === "elettronica" &&
                   schema.componenti
-                    .filter((c) => c.tipo === "oscilloscopio")
-                    .map((c, i) => (
-                      <PannelloOscilloscopio
-                        key={c.id}
-                        indice={i}
-                        id={c.id}
-                        sigla={c.etichetta}
-                        sessione={sessioneRif as React.MutableRefObject<SessioneElettronica | null>}
-                      />
-                    ))}
+                    .filter((c) => c.tipo === "oscilloscopio" || c.tipo === "analizzatore-logico")
+                    .map((c, i) =>
+                      c.tipo === "oscilloscopio" ? (
+                        <PannelloOscilloscopio
+                          key={c.id}
+                          indice={i}
+                          id={c.id}
+                          sigla={c.etichetta}
+                          sessione={sessioneRif as React.MutableRefObject<SessioneElettronica | null>}
+                        />
+                      ) : (
+                        <PannelloAnalizzatore
+                          key={c.id}
+                          indice={i}
+                          id={c.id}
+                          sigla={c.etichetta}
+                          sessione={sessioneRif as React.MutableRefObject<SessioneElettronica | null>}
+                        />
+                      ),
+                    )}
                 {modulo.id === "plc" && sessioneRif.current && eSessionePlc(sessioneRif.current) && (
                   <PannelloIngressiPlc
                     sessione={sessioneRif.current}

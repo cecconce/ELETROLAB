@@ -12,7 +12,7 @@ const FONT = 'font-family="Segoe UI, Arial, sans-serif"';
 const svg = (w: number, h: number, corpo: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\n${corpo}\n</svg>\n`;
 const scritta = (x: number, y: number, t: string, dim = 12, extra = "") =>
-  `<text x="${x}" y="${y}" font-size="${dim}" text-anchor="middle" fill="currentColor" stroke="none" ${FONT} ${extra}>${t}</text>`;
+  `<text x="${x}" y="${y}" font-size="${dim}" text-anchor="middle" fill="currentColor" stroke="none" ${FONT} ${extra}>${t.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</text>`;
 
 interface Voce {
   id: string;
@@ -345,14 +345,170 @@ voce(
   },
   svg(80, 60, `<rect x="14" y="4" width="52" height="36"/><path d="M0 20H14M66 20H80M40 40V60"/>${scritta(40, 26, "78xx", 12)}${scritta(22, 16, "in", 7)}${scritta(58, 16, "out", 7)}`),
 );
-// Porte logiche (completate nell'attività 4.5): si tengono i disegni già fatti.
-for (const [id, nome, alt, morsetti, descrizione] of [
-  ["porta-and", "Porta AND", 80, [m("A", 0, 20), m("B", 0, 60), m("Y", 80, 40)], "L'uscita è 1 solo se tutti gli ingressi sono 1."],
-  ["porta-or", "Porta OR", 80, [m("A", 0, 20), m("B", 0, 60), m("Y", 80, 40)], "L'uscita è 1 se almeno un ingresso è 1."],
-  ["porta-not", "Porta NOT", 40, [m("A", 0, 20), m("Y", 80, 20)], "Inverte il segnale: 1 diventa 0 e 0 diventa 1."],
-] as const) {
-  voce({ id, nome, categoria: "integrati", sigla: "U", descrizione, paroleChiave: ["logica", "digitale"], larghezza: 80, altezza: alt, morsetti: [...morsetti] }, null);
+// ---------------------------------------------------------------- Logica digitale
+// Simboli rettangolari della norma IEC 60617-12: & (AND), ≥1 (OR), 1 (NOT),
+// =1 (XOR); il cerchietto sull'uscita indica la negazione.
+const porta = (simbolo: string, negata: boolean, ingressi: 1 | 2) => {
+  const h = ingressi === 2 ? 80 : 40;
+  const fili = ingressi === 2 ? "M0 20H16M0 60H16" : "M0 20H16";
+  const uscita = negata ? `<circle cx="68" cy="${h / 2}" r="4"/><path d="M72 ${h / 2}H80"/>` : `<path d="M64 ${h / 2}H80"/>`;
+  return svg(80, h, `<path d="${fili}"/><rect x="16" y="${ingressi === 2 ? 8 : 4}" width="48" height="${ingressi === 2 ? 64 : 32}"/>${uscita}${scritta(40, h / 2 + 6, simbolo, 16)}`);
+};
+const PORTE: [string, string, string, boolean, 1 | 2, string][] = [
+  ["porta-and", "Porta AND", "&", false, 2, "L'uscita Y è 1 solo se A e B sono entrambi 1."],
+  ["porta-or", "Porta OR", "≥1", false, 2, "L'uscita Y è 1 se almeno uno degli ingressi è 1."],
+  ["porta-not", "Porta NOT (invertitore)", "1", true, 1, "Inverte il segnale: se l'ingresso è 1 l'uscita è 0 e viceversa."],
+  ["porta-nand", "Porta NAND", "&", true, 2, "Il contrario della AND: l'uscita è 0 solo se entrambi gli ingressi sono 1."],
+  ["porta-nor", "Porta NOR", "≥1", true, 2, "Il contrario della OR: l'uscita è 1 solo se entrambi gli ingressi sono 0."],
+  ["porta-xor", "Porta XOR (OR esclusivo)", "=1", false, 2, "L'uscita è 1 se gli ingressi sono diversi fra loro."],
+];
+for (const [id, nome, simbolo, negata, ingressi, descrizione] of PORTE) {
+  voce(
+    {
+      id,
+      nome,
+      categoria: "digitale",
+      sigla: "U",
+      descrizione: `${descrizione} Livello 1 = 5 V, livello 0 = 0 V; un ingresso scollegato vale 0.`,
+      paroleChiave: ["logica", "digitale", "porta", "booleana", id.replace("porta-", "")],
+      larghezza: 80,
+      altezza: ingressi === 2 ? 80 : 40,
+      morsetti: ingressi === 2 ? [m("A", 0, 20), m("B", 0, 60), m("Y", 80, 40)] : [m("A", 0, 20), m("Y", 80, 20)],
+    },
+    porta(simbolo, negata, ingressi),
+  );
 }
+const scatola = (w: number, h: number, titolo: string, sinistra: [string, number][], destra: [string, number][], extra = "") =>
+  svg(
+    w,
+    h,
+    `<rect x="16" y="4" width="${w - 32}" height="${h - 8}"/>${scritta(w / 2, 20, titolo, 11, 'font-weight="bold"')}` +
+      sinistra.map(([n, y]) => `<path d="M0 ${y}H16"/>${scritta(26, y + 4, n, 9, 'text-anchor="start"').replace('text-anchor="middle" ', "")}`).join("") +
+      destra.map(([n, y]) => `<path d="M${w - 16} ${y}H${w}"/>${scritta(w - 26, y + 4, n, 9, 'text-anchor="end"').replace('text-anchor="middle" ', "")}`).join("") +
+      extra,
+  );
+// Triangolino dell'ingresso di clock (attivo sul fronte di salita).
+const triangoloClock = (y: number) => `<path d="M16 ${y - 5}L23 ${y}L16 ${y + 5}"/>`;
+voce(
+  {
+    id: "flip-flop-d",
+    nome: "Flip-flop D",
+    categoria: "digitale",
+    sigla: "U",
+    descrizione: "Memoria di un bit: sul fronte di salita del clock (quando CLK passa da 0 a 1) l'uscita Q copia l'ingresso D e lo tiene fino al fronte successivo. Q̄ è sempre il contrario di Q.",
+    paroleChiave: ["memoria", "latch", "registro", "bistabile", "74HC74"],
+    larghezza: 80,
+    altezza: 80,
+    morsetti: [m("D", 0, 20), m("CLK", 0, 60), m("Q", 80, 20), m("QN", 80, 60)],
+  },
+  scatola(80, 80, "", [["D", 20], ["C", 60]], [["Q", 20], ["Q̄", 60]], triangoloClock(60)),
+);
+voce(
+  {
+    id: "flip-flop-jk",
+    nome: "Flip-flop JK",
+    categoria: "digitale",
+    sigla: "U",
+    descrizione: "Sul fronte di salita del clock: J=1 porta Q a 1, K=1 porta Q a 0, J=K=1 inverte Q (si usa per dividere la frequenza e nei contatori), J=K=0 lascia tutto com'è.",
+    paroleChiave: ["memoria", "bistabile", "toggle", "divisore", "74HC107"],
+    larghezza: 80,
+    altezza: 80,
+    morsetti: [m("J", 0, 20), m("CLK", 0, 40), m("K", 0, 60), m("Q", 80, 20), m("QN", 80, 60)],
+  },
+  scatola(80, 80, "", [["J", 20], ["C", 40], ["K", 60]], [["Q", 20], ["Q̄", 60]], triangoloClock(40)),
+);
+voce(
+  {
+    id: "contatore",
+    nome: "Contatore binario a 4 bit",
+    categoria: "digitale",
+    sigla: "U",
+    descrizione: "Conta i fronti di salita del clock da 0 a 15 e ricomincia; il numero esce in binario su Q0 (vale 1), Q1 (2), Q2 (4), Q3 (8). Con R a 1 torna a 0.",
+    paroleChiave: ["conteggio", "binario", "74HC393", "CTR"],
+    larghezza: 100,
+    altezza: 100,
+    morsetti: [m("CLK", 0, 20), m("R", 0, 80), m("Q0", 100, 20), m("Q1", 100, 40), m("Q2", 100, 60), m("Q3", 100, 80)],
+  },
+  scatola(100, 100, "", [["C", 20], ["R", 80]], [["Q0", 20], ["Q1", 40], ["Q2", 60], ["Q3", 80]], `${triangoloClock(20)}${scritta(50, 40, "CTR4", 10, 'font-weight="bold"')}`),
+);
+voce(
+  {
+    id: "decodificatore",
+    nome: "Decodificatore BCD → 7 segmenti",
+    categoria: "digitale",
+    sigla: "U",
+    descrizione: "Trasforma un numero binario (A vale 1, B 2, C 4, D 8) nei segmenti a…g da accendere sul display per scrivere la cifra. Mettilo accanto al display: le uscite combaciano con gli ingressi.",
+    paroleChiave: ["display", "BCD", "4511", "7447", "cifra"],
+    larghezza: 80,
+    altezza: 160,
+    morsetti: [m("A", 0, 20), m("B", 0, 40), m("C", 0, 60), m("D", 0, 80), ...["a", "b", "c", "d", "e", "f", "g"].map((s, i) => m(s, 80, 20 + 20 * i))],
+  },
+  scatola(80, 160, "", [["A", 20], ["B", 40], ["C", 60], ["D", 80]], ["a", "b", "c", "d", "e", "f", "g"].map((s, i) => [s, 20 + 20 * i] as [string, number]), scritta(34, 128, "BCD/7", 9, 'font-weight="bold"')),
+);
+// Cifra "8" stilizzata con i 7 segmenti (le stesse coordinate servono al disegno in simulazione).
+const segmentiDisplay = `<path d="M44 34H76M80 38V74M80 86V122M44 126H76M40 86V122M40 38V74M44 80H76" stroke-width="5" opacity="0.18"/>`;
+voce(
+  {
+    id: "display-7-segmenti",
+    nome: "Display a 7 segmenti",
+    categoria: "digitale",
+    sigla: "DS",
+    descrizione: "Scrive una cifra accendendo i segmenti a…g: ogni segmento si accende quando il suo ingresso è a 1 (5 V). Di solito si comanda con un decodificatore BCD.",
+    paroleChiave: ["cifra", "numero", "visualizzatore", "led"],
+    larghezza: 100,
+    altezza: 160,
+    morsetti: ["a", "b", "c", "d", "e", "f", "g"].map((s, i) => m(s, 0, 20 + 20 * i)),
+  },
+  svg(
+    100,
+    160,
+    `<rect x="16" y="4" width="80" height="152" rx="4"/>` +
+      ["a", "b", "c", "d", "e", "f", "g"].map((s, i) => `<path d="M0 ${20 + 20 * i}H16"/>${scritta(22, 24 + 20 * i, s, 8)}`).join("") +
+      segmentiDisplay,
+  ),
+);
+voce(
+  {
+    id: "interruttore-logico",
+    nome: "Interruttore logico (0/1)",
+    categoria: "digitale",
+    sigla: "S",
+    descrizione: "Dà in uscita il livello logico 0 (0 V) o 1 (5 V). In simulazione si cambia con un clic. Serve a comandare gli ingressi delle porte logiche.",
+    paroleChiave: ["ingresso", "livello", "switch", "bit"],
+    larghezza: 60,
+    altezza: 40,
+    morsetti: [m("out", 60, 20)],
+  },
+  svg(60, 40, `<rect x="4" y="6" width="40" height="28" rx="4"/><path d="M44 20H60"/>${scritta(24, 25, "0/1", 11)}`),
+);
+voce(
+  {
+    id: "generatore-clock",
+    nome: "Generatore di clock",
+    categoria: "digitale",
+    sigla: "CLK",
+    descrizione: "Onda quadra logica fra 0 e 1 (0 V e 5 V) alla frequenza scelta: dà il ritmo a flip-flop e contatori.",
+    paroleChiave: ["clock", "orologio", "onda quadra", "impulsi", "frequenza"],
+    larghezza: 60,
+    altezza: 40,
+    morsetti: [m("out", 60, 20)],
+  },
+  svg(60, 40, `<rect x="4" y="6" width="40" height="28" rx="4"/><path d="M44 20H60M10 26H16V14H24V26H32V14H38" stroke-width="1.6"/>`),
+);
+voce(
+  {
+    id: "sonda-logica",
+    nome: "Sonda logica",
+    categoria: "digitale",
+    sigla: "X",
+    descrizione: "Indica il livello logico del punto in cui è collegata: rossa = 1, verde = 0. Una sonda scollegata indica 0.",
+    paroleChiave: ["indicatore", "livello", "probe", "spia"],
+    larghezza: 60,
+    altezza: 40,
+    morsetti: [m("in", 0, 20)],
+  },
+  svg(60, 40, `<path d="M0 20H24"/><circle cx="40" cy="20" r="14"/>`),
+);
 
 // ---------------------------------------------------------------- Strumenti
 voce(
@@ -398,9 +554,29 @@ voce(
   ),
 );
 
+voce(
+  {
+    id: "analizzatore-logico",
+    nome: "Analizzatore logico (4 canali)",
+    categoria: "strumenti",
+    sigla: "XLA",
+    descrizione: "Disegna nel tempo i livelli logici (0 o 1) di quattro punti del circuito, uno sotto l'altro: serve a seguire clock, flip-flop e contatori. Durante la simulazione si apre la sua finestra.",
+    paroleChiave: ["diagramma temporale", "cronogramma", "canali", "digitale"],
+    larghezza: 100,
+    altezza: 100,
+    morsetti: [m("D0", 0, 20), m("D1", 0, 40), m("D2", 0, 60), m("D3", 0, 80)],
+  },
+  svg(
+    100,
+    100,
+    `<rect x="16" y="4" width="80" height="92" rx="6"/>` +
+      [0, 1, 2, 3].map((k) => `<path d="M0 ${20 + 20 * k}H16"/>${scritta(26, 24 + 20 * k, `D${k}`, 8)}`).join("") +
+      `<path d="M36 24H46V16H56V24H66V16H76V24H88M36 44H56V36H76V44H88M36 64H76V56H88M36 84H88" stroke-width="1.4"/>`,
+  ),
+);
+
 // ---------------------------------------------------------------- Scrittura
 for (const [nome, contenuto] of Object.entries(icone)) writeFileSync(`libreria/icone/${nome}`, contenuto);
-// Verifica: le icone non rigenerate (porte logiche) devono esistere.
 for (const v of voci) readFileSync(`libreria/icone/${v.icona}`);
 const libreria = {
   versione: 1,
@@ -410,7 +586,8 @@ const libreria = {
     { id: "passivi", nome: "Componenti passivi" },
     { id: "comandi", nome: "Interruttori e lampadine" },
     { id: "semiconduttori", nome: "Semiconduttori" },
-    { id: "integrati", nome: "Integrati e porte logiche" },
+    { id: "integrati", nome: "Circuiti integrati" },
+    { id: "digitale", nome: "Logica digitale" },
     { id: "strumenti", nome: "Strumenti virtuali" },
   ],
   componenti: voci,

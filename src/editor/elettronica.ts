@@ -68,6 +68,7 @@ export const PARAMETRI_ELETTRONICA: Record<string, DefinizioneParametro[]> = {
   "mosfet-p": [numero("soglia", "Tensione di soglia", "V", 0, 20)],
   operazionale: [numero("saturazione", "Tensione di saturazione (±)", "V", 0.5, 100)],
   regolatore: [numero("tensione", "Tensione di uscita", "V", 1, 50)],
+  "generatore-clock": [numero("frequenza", "Frequenza", "Hz", 0.01, 100000)],
   multimetro: [
     {
       id: "modalita",
@@ -118,6 +119,8 @@ export function etichettaValore(tipo: string, parametri?: Record<string, number 
       return `${scriviValore(n("tensione"), "V")} ${scriviValore(n("potenza"), "W")}`;
     case "zener":
       return scriviValore(n("tensione"), "V");
+    case "generatore-clock":
+      return scriviValore(n("frequenza"), "Hz");
     case "regolatore":
       return `78${String(Math.round(n("tensione"))).padStart(2, "0")}`;
     case "transistor-npn":
@@ -144,7 +147,7 @@ export function testoLettura(l: { valore: number | null; unita: string } | undef
 /** Che cosa fa un clic durante la simulazione. */
 function clicElettronica(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante") return "pulsante";
-  if (tipo === "interruttore" || tipo === "potenziometro") return "manuale";
+  if (tipo === "interruttore" || tipo === "interruttore-logico" || tipo === "potenziometro") return "manuale";
   return null;
 }
 
@@ -159,6 +162,11 @@ export function vistaDaSessioneElettronica(s: SessioneElettronica, schema: Schem
     if (c.tipo === "led") elettronica.bruciato = s.bruciati.has(c.id);
     if (c.tipo === "potenziometro") elettronica.posizione = s.interazioni.posizioni[c.id] ?? 0.5;
     if (c.tipo === "multimetro") elettronica.lettura = testoLettura(s.letture[c.id]);
+    const digitale = s.digitali[c.id];
+    if (digitale) {
+      elettronica.livelli = { ...digitale.ingressi, ...digitale.uscite };
+      if (c.tipo === "contatore") elettronica.conteggio = digitale.memoria;
+    }
     componenti[c.id] = {
       clic: clicElettronica(c.tipo),
       chiuso: s.interazioni.chiusi.has(c.id) || s.interazioni.premuti.has(c.id),

@@ -86,13 +86,66 @@ export function DisegnoElettronica({ componente: c, aspetto, colori }: { compone
           <Text x={9} y={28} width={62} align="center" text={etichettaValore(c.tipo, c.parametri).split(" ").slice(1, 3).join(" ")} fontSize={8} fill={colori.testo} fontFamily={FONT} />
         </Group>
       );
+    case "interruttore-logico": {
+      const uno = e?.livelli?.out === 1;
+      if (!aspetto) return null;
+      return (
+        <Group listening={false}>
+          <Rect x={5} y={7} width={38} height={26} cornerRadius={3} fill={uno ? "#dc2626" : "#16a34a"} />
+          <Text x={5} y={11} width={38} align="center" text={uno ? "1" : "0"} fontSize={18} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+        </Group>
+      );
+    }
+    case "sonda-logica": {
+      if (!aspetto) return null;
+      const uno = e?.livelli?.in === 1;
+      return (
+        <Group listening={false}>
+          <Circle x={40} y={20} radius={13} fill={uno ? "#dc2626" : "#16a34a"} shadowColor={uno ? "#dc2626" : "#16a34a"} shadowBlur={uno ? 16 : 4} shadowOpacity={1} />
+          <Text x={27} y={12} width={26} align="center" text={uno ? "1" : "0"} fontSize={15} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+        </Group>
+      );
+    }
+    case "generatore-clock":
+      return aspetto && e?.livelli?.out === 1 ? <Circle x={50} y={10} radius={4} fill="#dc2626" listening={false} /> : null;
+    case "display-7-segmenti": {
+      if (!aspetto) return null;
+      // Stesse coordinate dei segmenti grigi del simbolo.
+      const SEG: Record<string, number[]> = {
+        a: [44, 34, 76, 34],
+        b: [80, 38, 80, 74],
+        c: [80, 86, 80, 122],
+        d: [44, 126, 76, 126],
+        e: [40, 86, 40, 122],
+        f: [40, 38, 40, 74],
+        g: [44, 80, 76, 80],
+      };
+      return (
+        <Group listening={false}>
+          {Object.entries(SEG)
+            .filter(([seg]) => e?.livelli?.[seg] === 1)
+            .map(([seg, p]) => (
+              <Line key={seg} points={p} stroke="#ff3b30" strokeWidth={6} lineCap="round" shadowColor="#ff3b30" shadowBlur={10} shadowOpacity={0.9} />
+            ))}
+        </Group>
+      );
+    }
+    case "contatore":
+      return aspetto && e?.conteggio !== undefined ? (
+        <Text x={30} y={50} width={40} align="center" text={String(e.conteggio)} fontSize={18} fontStyle="bold" fill={colori.attivo} fontFamily={FONT} listening={false} />
+      ) : null;
+    case "flip-flop-d":
+    case "flip-flop-jk":
+      return aspetto ? (
+        <Text x={16} y={34} width={48} align="center" text={`Q=${e?.livelli?.Q ?? 0}`} fontSize={11} fontStyle="bold" fill={colori.attivo} fontFamily={FONT} listening={false} />
+      ) : null;
     default:
       return null;
   }
 }
 
 /** Strumenti e generatori: la sigla sta sopra, il valore è già sul disegno. */
-const STRUMENTI = new Set(["multimetro", "oscilloscopio", "generatore-funzioni"]);
+const STRUMENTI = new Set(["multimetro", "oscilloscopio", "generatore-funzioni", "analizzatore-logico"]);
 
 /**
  * Sigla e valore del componente, sempre dritti: sopra e sotto per i

@@ -20,7 +20,11 @@
     },
     {
       "id": "integrati",
-      "nome": "Integrati e porte logiche"
+      "nome": "Circuiti integrati"
+    },
+    {
+      "id": "digitale",
+      "nome": "Logica digitale"
     },
     {
       "id": "strumenti",
@@ -619,12 +623,15 @@
     {
       "id": "porta-and",
       "nome": "Porta AND",
-      "categoria": "integrati",
+      "categoria": "digitale",
       "sigla": "U",
-      "descrizione": "L'uscita è 1 solo se tutti gli ingressi sono 1.",
+      "descrizione": "L'uscita Y è 1 solo se A e B sono entrambi 1. Livello 1 = 5 V, livello 0 = 0 V; un ingresso scollegato vale 0.",
       "paroleChiave": [
         "logica",
-        "digitale"
+        "digitale",
+        "porta",
+        "booleana",
+        "and"
       ],
       "larghezza": 80,
       "altezza": 80,
@@ -650,12 +657,15 @@
     {
       "id": "porta-or",
       "nome": "Porta OR",
-      "categoria": "integrati",
+      "categoria": "digitale",
       "sigla": "U",
-      "descrizione": "L'uscita è 1 se almeno un ingresso è 1.",
+      "descrizione": "L'uscita Y è 1 se almeno uno degli ingressi è 1. Livello 1 = 5 V, livello 0 = 0 V; un ingresso scollegato vale 0.",
       "paroleChiave": [
         "logica",
-        "digitale"
+        "digitale",
+        "porta",
+        "booleana",
+        "or"
       ],
       "larghezza": 80,
       "altezza": 80,
@@ -680,13 +690,16 @@
     },
     {
       "id": "porta-not",
-      "nome": "Porta NOT",
-      "categoria": "integrati",
+      "nome": "Porta NOT (invertitore)",
+      "categoria": "digitale",
       "sigla": "U",
-      "descrizione": "Inverte il segnale: 1 diventa 0 e 0 diventa 1.",
+      "descrizione": "Inverte il segnale: se l'ingresso è 1 l'uscita è 0 e viceversa. Livello 1 = 5 V, livello 0 = 0 V; un ingresso scollegato vale 0.",
       "paroleChiave": [
         "logica",
-        "digitale"
+        "digitale",
+        "porta",
+        "booleana",
+        "not"
       ],
       "larghezza": 80,
       "altezza": 40,
@@ -703,6 +716,436 @@
         }
       ],
       "icona": "porta-not.svg"
+    },
+    {
+      "id": "porta-nand",
+      "nome": "Porta NAND",
+      "categoria": "digitale",
+      "sigla": "U",
+      "descrizione": "Il contrario della AND: l'uscita è 0 solo se entrambi gli ingressi sono 1. Livello 1 = 5 V, livello 0 = 0 V; un ingresso scollegato vale 0.",
+      "paroleChiave": [
+        "logica",
+        "digitale",
+        "porta",
+        "booleana",
+        "nand"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "A",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "B",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Y",
+          "x": 80,
+          "y": 40
+        }
+      ],
+      "icona": "porta-nand.svg"
+    },
+    {
+      "id": "porta-nor",
+      "nome": "Porta NOR",
+      "categoria": "digitale",
+      "sigla": "U",
+      "descrizione": "Il contrario della OR: l'uscita è 1 solo se entrambi gli ingressi sono 0. Livello 1 = 5 V, livello 0 = 0 V; un ingresso scollegato vale 0.",
+      "paroleChiave": [
+        "logica",
+        "digitale",
+        "porta",
+        "booleana",
+        "nor"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "A",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "B",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Y",
+          "x": 80,
+          "y": 40
+        }
+      ],
+      "icona": "porta-nor.svg"
+    },
+    {
+      "id": "porta-xor",
+      "nome": "Porta XOR (OR esclusivo)",
+      "categoria": "digitale",
+      "sigla": "U",
+      "descrizione": "L'uscita è 1 se gli ingressi sono diversi fra loro. Livello 1 = 5 V, livello 0 = 0 V; un ingresso scollegato vale 0.",
+      "paroleChiave": [
+        "logica",
+        "digitale",
+        "porta",
+        "booleana",
+        "xor"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "A",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "B",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Y",
+          "x": 80,
+          "y": 40
+        }
+      ],
+      "icona": "porta-xor.svg"
+    },
+    {
+      "id": "flip-flop-d",
+      "nome": "Flip-flop D",
+      "categoria": "digitale",
+      "sigla": "U",
+      "descrizione": "Memoria di un bit: sul fronte di salita del clock (quando CLK passa da 0 a 1) l'uscita Q copia l'ingresso D e lo tiene fino al fronte successivo. Q̄ è sempre il contrario di Q.",
+      "paroleChiave": [
+        "memoria",
+        "latch",
+        "registro",
+        "bistabile",
+        "74HC74"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "D",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "CLK",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Q",
+          "x": 80,
+          "y": 20
+        },
+        {
+          "id": "QN",
+          "x": 80,
+          "y": 60
+        }
+      ],
+      "icona": "flip-flop-d.svg"
+    },
+    {
+      "id": "flip-flop-jk",
+      "nome": "Flip-flop JK",
+      "categoria": "digitale",
+      "sigla": "U",
+      "descrizione": "Sul fronte di salita del clock: J=1 porta Q a 1, K=1 porta Q a 0, J=K=1 inverte Q (si usa per dividere la frequenza e nei contatori), J=K=0 lascia tutto com'è.",
+      "paroleChiave": [
+        "memoria",
+        "bistabile",
+        "toggle",
+        "divisore",
+        "74HC107"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "J",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "CLK",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "K",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Q",
+          "x": 80,
+          "y": 20
+        },
+        {
+          "id": "QN",
+          "x": 80,
+          "y": 60
+        }
+      ],
+      "icona": "flip-flop-jk.svg"
+    },
+    {
+      "id": "contatore",
+      "nome": "Contatore binario a 4 bit",
+      "categoria": "digitale",
+      "sigla": "U",
+      "descrizione": "Conta i fronti di salita del clock da 0 a 15 e ricomincia; il numero esce in binario su Q0 (vale 1), Q1 (2), Q2 (4), Q3 (8). Con R a 1 torna a 0.",
+      "paroleChiave": [
+        "conteggio",
+        "binario",
+        "74HC393",
+        "CTR"
+      ],
+      "larghezza": 100,
+      "altezza": 100,
+      "morsetti": [
+        {
+          "id": "CLK",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "R",
+          "x": 0,
+          "y": 80
+        },
+        {
+          "id": "Q0",
+          "x": 100,
+          "y": 20
+        },
+        {
+          "id": "Q1",
+          "x": 100,
+          "y": 40
+        },
+        {
+          "id": "Q2",
+          "x": 100,
+          "y": 60
+        },
+        {
+          "id": "Q3",
+          "x": 100,
+          "y": 80
+        }
+      ],
+      "icona": "contatore.svg"
+    },
+    {
+      "id": "decodificatore",
+      "nome": "Decodificatore BCD → 7 segmenti",
+      "categoria": "digitale",
+      "sigla": "U",
+      "descrizione": "Trasforma un numero binario (A vale 1, B 2, C 4, D 8) nei segmenti a…g da accendere sul display per scrivere la cifra. Mettilo accanto al display: le uscite combaciano con gli ingressi.",
+      "paroleChiave": [
+        "display",
+        "BCD",
+        "4511",
+        "7447",
+        "cifra"
+      ],
+      "larghezza": 80,
+      "altezza": 160,
+      "morsetti": [
+        {
+          "id": "A",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "B",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "C",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "D",
+          "x": 0,
+          "y": 80
+        },
+        {
+          "id": "a",
+          "x": 80,
+          "y": 20
+        },
+        {
+          "id": "b",
+          "x": 80,
+          "y": 40
+        },
+        {
+          "id": "c",
+          "x": 80,
+          "y": 60
+        },
+        {
+          "id": "d",
+          "x": 80,
+          "y": 80
+        },
+        {
+          "id": "e",
+          "x": 80,
+          "y": 100
+        },
+        {
+          "id": "f",
+          "x": 80,
+          "y": 120
+        },
+        {
+          "id": "g",
+          "x": 80,
+          "y": 140
+        }
+      ],
+      "icona": "decodificatore.svg"
+    },
+    {
+      "id": "display-7-segmenti",
+      "nome": "Display a 7 segmenti",
+      "categoria": "digitale",
+      "sigla": "DS",
+      "descrizione": "Scrive una cifra accendendo i segmenti a…g: ogni segmento si accende quando il suo ingresso è a 1 (5 V). Di solito si comanda con un decodificatore BCD.",
+      "paroleChiave": [
+        "cifra",
+        "numero",
+        "visualizzatore",
+        "led"
+      ],
+      "larghezza": 100,
+      "altezza": 160,
+      "morsetti": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "b",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "c",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "d",
+          "x": 0,
+          "y": 80
+        },
+        {
+          "id": "e",
+          "x": 0,
+          "y": 100
+        },
+        {
+          "id": "f",
+          "x": 0,
+          "y": 120
+        },
+        {
+          "id": "g",
+          "x": 0,
+          "y": 140
+        }
+      ],
+      "icona": "display-7-segmenti.svg"
+    },
+    {
+      "id": "interruttore-logico",
+      "nome": "Interruttore logico (0/1)",
+      "categoria": "digitale",
+      "sigla": "S",
+      "descrizione": "Dà in uscita il livello logico 0 (0 V) o 1 (5 V). In simulazione si cambia con un clic. Serve a comandare gli ingressi delle porte logiche.",
+      "paroleChiave": [
+        "ingresso",
+        "livello",
+        "switch",
+        "bit"
+      ],
+      "larghezza": 60,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "out",
+          "x": 60,
+          "y": 20
+        }
+      ],
+      "icona": "interruttore-logico.svg"
+    },
+    {
+      "id": "generatore-clock",
+      "nome": "Generatore di clock",
+      "categoria": "digitale",
+      "sigla": "CLK",
+      "descrizione": "Onda quadra logica fra 0 e 1 (0 V e 5 V) alla frequenza scelta: dà il ritmo a flip-flop e contatori.",
+      "paroleChiave": [
+        "clock",
+        "orologio",
+        "onda quadra",
+        "impulsi",
+        "frequenza"
+      ],
+      "larghezza": 60,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "out",
+          "x": 60,
+          "y": 20
+        }
+      ],
+      "icona": "generatore-clock.svg"
+    },
+    {
+      "id": "sonda-logica",
+      "nome": "Sonda logica",
+      "categoria": "digitale",
+      "sigla": "X",
+      "descrizione": "Indica il livello logico del punto in cui è collegata: rossa = 1, verde = 0. Una sonda scollegata indica 0.",
+      "paroleChiave": [
+        "indicatore",
+        "livello",
+        "probe",
+        "spia"
+      ],
+      "larghezza": 60,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        }
+      ],
+      "icona": "sonda-logica.svg"
     },
     {
       "id": "multimetro",
@@ -766,6 +1209,44 @@
         }
       ],
       "icona": "oscilloscopio.svg"
+    },
+    {
+      "id": "analizzatore-logico",
+      "nome": "Analizzatore logico (4 canali)",
+      "categoria": "strumenti",
+      "sigla": "XLA",
+      "descrizione": "Disegna nel tempo i livelli logici (0 o 1) di quattro punti del circuito, uno sotto l'altro: serve a seguire clock, flip-flop e contatori. Durante la simulazione si apre la sua finestra.",
+      "paroleChiave": [
+        "diagramma temporale",
+        "cronogramma",
+        "canali",
+        "digitale"
+      ],
+      "larghezza": 100,
+      "altezza": 100,
+      "morsetti": [
+        {
+          "id": "D0",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "D1",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "D2",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "D3",
+          "x": 0,
+          "y": 80
+        }
+      ],
+      "icona": "analizzatore-logico.svg"
     }
   ]
 }

@@ -154,6 +154,20 @@
       "titolo": "Filtro RC passa-basso e oscilloscopio",
       "descrizione": "Il generatore di funzioni dà una sinusoide da 1 kHz e 2 V di picco; la resistenza da 1 kΩ e il condensatore da 159 nF formano un filtro passa-basso con frequenza di taglio fc = 1/(2πRC) ≈ 1 kHz. L'oscilloscopio mostra sul canale A l'ingresso e sul canale B l'uscita, più piccola e in ritardo.",
       "prova": "Premi ▶ AVVIA: si apre la finestra dell'oscilloscopio. A frequenza di taglio l'uscita (B, azzurra) è circa il 71 % dell'ingresso (A, arancione) e in ritardo di un ottavo di periodo. Ferma, porta la frequenza del generatore a 100 Hz (l'uscita è quasi uguale) o a 10 kHz (quasi zero) e riavvia: cambia la base dei tempi per vedere bene le onde."
+    },
+    {
+      "file": "elettronica-porte-logiche.elab",
+      "modulo": "elettronica",
+      "titolo": "Porte logiche AND, OR, XOR",
+      "descrizione": "Due interruttori logici (0 = 0 V, 1 = 5 V) comandano insieme tre porte logiche; le sonde X1, X2 e X3 mostrano l'uscita di AND, OR e XOR. È la tabella di verità «dal vivo».",
+      "prova": "Premi ▶ AVVIA. Clic su S1 e S2 per provare le quattro combinazioni (00, 01, 10, 11) e scrivi la tabella di verità: la AND (X1) va a 1 solo con 11, la OR (X2) con almeno un 1, la XOR (X3) quando gli ingressi sono diversi. Ferma e prova a sostituire una porta con NAND o NOR."
+    },
+    {
+      "file": "elettronica-contatore.elab",
+      "modulo": "elettronica",
+      "titolo": "Contatore con display a 7 segmenti",
+      "descrizione": "Il generatore di clock dà un impulso al secondo; il contatore a 4 bit li conta in binario (Q0, Q1, Q2, Q3), il decodificatore BCD trasforma il numero nei segmenti da accendere e il display lo scrive. L'analizzatore logico mostra il clock e i primi tre bit: ogni bit cambia a metà velocità del precedente.",
+      "prova": "Premi ▶ AVVIA: il display conta 0, 1, 2… (dopo il 9 mostra le lettere A–F, poi ricomincia). Nella finestra dell'analizzatore guarda come D1 (Q0) cambia a ogni impulso del clock (D0) e D2 (Q1) ogni due. Clic su S1 per azzerare (resta a 0 finché S1 è a 1). Ferma e porta la frequenza del clock a 5 Hz per contare più in fretta."
     }
   ]
 }

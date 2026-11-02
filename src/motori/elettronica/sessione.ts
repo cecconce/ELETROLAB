@@ -26,6 +26,7 @@ import {
   type Soluzione,
   type StatoTransitorio,
 } from "./simulatore";
+import { aggiornaDigitale, eDigitale, nuovoStatoDigitale, PIEDINI_DIGITALI, R_INGRESSO, R_USCITA, VCC_LOGICA, type Bit, type StatoDigitale } from "./digitale";
 
 /** Componente dello schema come lo vede il motore. */
 export interface ComponenteElettronico {
@@ -75,6 +76,7 @@ export const PARAMETRI_PREDEFINITI: Record<string, Record<string, number | strin
   operazionale: { saturazione: 12 },
   regolatore: { tensione: 5 },
   multimetro: { modalita: "V" },
+  "generatore-clock": { frequenza: 1 },
 };
 
 /** Parametro numerico (con il valore predefinito se manca o non è valido). */
@@ -112,6 +114,10 @@ export interface SessioneElettronica {
   oscilloscopi: Record<string, { t: number[]; a: number[]; b: number[] }>;
   /** Letture dei multimetri (valore e unità) o null se fuori scala. */
   letture: Record<string, { valore: number | null; unita: string }>;
+  /** Stato dei componenti digitali (livelli di ingressi e uscite, memoria). */
+  digitali: Record<string, StatoDigitale>;
+  /** Storia di ogni analizzatore logico: tempi e livelli dei canali D0…D3. */
+  analizzatori: Record<string, { t: number[]; canali: Bit[][] }>;
   /** Il circuito non ha la massa. */
   senzaMassa: boolean;
   /** Il calcolo non è riuscito a trovare una soluzione all'ultimo passo. */
@@ -227,16 +233,33 @@ export function elementiDaComponenti(s: Pick<SessioneElettronica, "componenti" |
         el.push({ tipo: "R", id: `${id}#B`, a: m("B"), b: m("COM"), ohm: 1e7 });
         break;
       default:
+        if (eDigitale(c.tipo)) {
+          // Ingressi ad alta impedenza verso massa; uscite come generatori 0/5 V
+          // con resistenza interna (equivalente di Norton: corrente V/R e R verso massa).
+          const piedini = PIEDINI_DIGITALI[c.tipo];
+          const stato = (s as Partial<SessioneElettronica>).digitali?.[id];
+          for (const i of piedini.ingressi) el.push({ tipo: "R", id: `${id}#${i}`, a: m(i), b: MASSA, ohm: R_INGRESSO });
+          for (const u of piedini.uscite) {
+            el.push({ tipo: "R", id: `${id}#${u}`, a: m(u), b: MASSA, ohm: R_USCITA });
+            const alto = !spento && stato?.uscite[u] === 1;
+            if (alto) el.push({ tipo: "I", id: `${id}#${u}+`, p: m(u), n: MASSA, onda: { tipo: "continua", valore: VCC_LOGICA / R_USCITA } });
+          }
+        }
         break;
     }
   }
   return el;
 }
 
-/** Passo di calcolo: un centesimo del periodo più breve dei generatori di funzioni (al massimo 0,1 ms). */
+/** Passo di calcolo: un centesimo del periodo più breve dei generatori di funzioni (al massimo 0,1 ms), un quarantesimo di quello del clock. */
 function passoDiCalcolo(componenti: readonly ComponenteElettronico[]): number {
-  let dt = 1e-4;
-  for (const c of componenti) if (c.tipo === "generatore-funzioni") dt = Math.min(dt, 1 / Math.max(0.01, num(c, "frequenza")) / 100);
+  // Circuiti solo resistivi e digitali: basta un passo più lungo (1 ms).
+  const conMemoria = componenti.some((c) => c.tipo === "condensatore" || c.tipo === "induttore" || c.tipo === "generatore-funzioni");
+  let dt = conMemoria ? 1e-4 : 1e-3;
+  for (const c of componenti) {
+    if (c.tipo === "generatore-funzioni") dt = Math.min(dt, 1 / Math.max(0.01, num(c, "frequenza")) / 100);
+    if (c.tipo === "generatore-clock") dt = Math.min(dt, 1 / Math.max(0.01, num(c, "frequenza")) / 40);
+  }
   return Math.max(dt, 1e-8);
 }
 
@@ -252,8 +275,11 @@ export function avviaSessioneElettronica(componenti: ComponenteElettronico[], no
     interazioni: { chiusi: new Set(), premuti: new Set(), posizioni: {} },
     bruciati: new Set(),
     oscilloscopi: Object.fromEntries(componenti.filter((c) => c.tipo === "oscilloscopio").map((c) => [c.id, { t: [], a: [], b: [] }])),
+    digitali: Object.fromEntries(componenti.filter((c) => eDigitale(c.tipo)).map((c) => [c.id, nuovoStatoDigitale(c.tipo)])),
+    analizzatori: Object.fromEntries(componenti.filter((c) => c.tipo === "analizzatore-logico").map((c) => [c.id, { t: [], canali: [[], [], [], []] }])),
     letture: {},
-    senzaMassa: componenti.length > 0 && !componenti.some((c) => c.tipo === "massa"),
+    // La massa serve quando ci sono generatori (i circuiti solo digitali hanno la massa implicita).
+    senzaMassa: componenti.some((c) => c.tipo.startsWith("generatore-") && c.tipo !== "generatore-clock") && !componenti.some((c) => c.tipo === "massa"),
     nonConverge: false,
     inCorto: new Set(),
     versione: 0,
@@ -281,6 +307,29 @@ function calcolaPasso(s: SessioneElettronica) {
       storia.t.splice(0, via);
       storia.a.splice(0, via);
       storia.b.splice(0, via);
+    }
+  }
+  // Componenti digitali: leggono gli ingressi e preparano le uscite del passo successivo.
+  for (const c of s.componenti) {
+    const stato = s.digitali[c.id];
+    if (!stato) continue;
+    const tensioni = Object.fromEntries(PIEDINI_DIGITALI[c.tipo].ingressi.map((i) => [i, sol.tensioni[n(c.id, i)] ?? 0]));
+    const esterno =
+      c.tipo === "interruttore-logico"
+        ? s.interazioni.chiusi.has(c.id)
+        : c.tipo === "generatore-clock"
+          ? (s.tempo * Math.max(0.01, num(c, "frequenza"))) % 1 < 0.5
+          : false;
+    if (aggiornaDigitale(c.tipo, stato, tensioni, esterno)) s.versione++;
+  }
+  for (const [id, storia] of Object.entries(s.analizzatori)) {
+    const ingressi = s.digitali[id]?.ingressi ?? {};
+    storia.t.push(s.tempo);
+    ["D0", "D1", "D2", "D3"].forEach((d, k) => storia.canali[k].push(ingressi[d] ?? 0));
+    if (storia.t.length > CAMPIONI_OSCILLOSCOPIO * 1.25) {
+      const via = storia.t.length - CAMPIONI_OSCILLOSCOPIO;
+      storia.t.splice(0, via);
+      for (const c of storia.canali) c.splice(0, via);
     }
   }
   // LED che superano la corrente massima: si bruciano.
@@ -346,7 +395,7 @@ export function passoElettronica(s: SessioneElettronica, secondiReali: number): 
 export function clicGiuElettronica(s: SessioneElettronica, id: string, indietro = false): void {
   const c = s.componenti.find((x) => x.id === id);
   if (!c) return;
-  if (c.tipo === "interruttore") {
+  if (c.tipo === "interruttore" || c.tipo === "interruttore-logico") {
     if (s.interazioni.chiusi.has(id)) s.interazioni.chiusi.delete(id);
     else s.interazioni.chiusi.add(id);
   } else if (c.tipo === "pulsante") s.interazioni.premuti.add(id);

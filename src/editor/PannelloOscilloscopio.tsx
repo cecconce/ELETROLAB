@@ -117,9 +117,39 @@ function disegna(canvas: HTMLCanvasElement, storia: { t: number[]; a: number[]; 
   return pp;
 }
 
+
+/**
+ * Finestra spostabile trascinando l'intestazione (come gli strumenti da
+ * banco: si mettono dove non coprono il circuito). Restituisce lo stile da
+ * dare alla finestra e il gestore da mettere sull'intestazione.
+ */
+function useSpostabile(indice: number) {
+  const [spostamento, setSpostamento] = useState({ x: 0, y: 0 });
+  const inizio = useRef<{ x: number; y: number; dx: number; dy: number } | null>(null);
+  const suGiu = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("button, select")) return;
+    e.preventDefault();
+    inizio.current = { x: e.clientX, y: e.clientY, dx: spostamento.x, dy: spostamento.y };
+    const muovi = (ev: MouseEvent) => {
+      const i = inizio.current;
+      if (i) setSpostamento({ x: i.dx + ev.clientX - i.x, y: Math.max(-8 - indice * 44, i.dy + ev.clientY - i.y) });
+    };
+    const su = () => {
+      inizio.current = null;
+      window.removeEventListener("mousemove", muovi);
+      window.removeEventListener("mouseup", su);
+    };
+    window.addEventListener("mousemove", muovi);
+    window.addEventListener("mouseup", su);
+  };
+  const stile = { top: 8 + indice * 44 + spostamento.y, right: 8 + indice * 24 - spostamento.x };
+  return { stile, suGiu };
+}
+
 export function PannelloOscilloscopio({ sessione, id, sigla, indice = 0 }: { sessione: React.MutableRefObject<SessioneElettronica | null>; id: string; sigla: string; indice?: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [schermo, setSchermo] = useState<StatoSchermo>({ baseTempi: 5e-4, voltA: 1, voltB: 1 });
+  const { stile, suGiu } = useSpostabile(indice);
   const [bloccato, setBloccato] = useState(false);
   const [aperto, setAperto] = useState(true);
   const [misure, setMisure] = useState({ ppa: 0, ppb: 0 });
@@ -155,8 +185,8 @@ export function PannelloOscilloscopio({ sessione, id, sigla, indice = 0 }: { ses
   );
 
   return (
-    <section className="pannello-oscilloscopio" style={{ top: 8 + indice * 44, right: 8 + indice * 24 }} aria-label={t("elettronica.oscilloscopio.titolo", { sigla })} data-testid={`oscilloscopio-${sigla}`}>
-      <header>
+    <section className="pannello-oscilloscopio" style={stile} aria-label={t("elettronica.oscilloscopio.titolo", { sigla })} data-testid={`oscilloscopio-${sigla}`}>
+      <header onMouseDown={suGiu} title={t("elettronica.oscilloscopio.sposta")}>
         <strong>📈 {t("elettronica.oscilloscopio.titolo", { sigla })}</strong>
         {aperto && (
           <span className="osc-misure">
@@ -174,6 +204,109 @@ export function PannelloOscilloscopio({ sessione, id, sigla, indice = 0 }: { ses
             {scelta(t("elettronica.oscilloscopio.baseTempi"), BASI_TEMPI, schermo.baseTempi, "s", (baseTempi) => setSchermo((s) => ({ ...s, baseTempi })))}
             {scelta(t("elettronica.oscilloscopio.canaleA"), VOLT_DIV, schermo.voltA, "V", (voltA) => setSchermo((s) => ({ ...s, voltA })), COLORE_A)}
             {scelta(t("elettronica.oscilloscopio.canaleB"), VOLT_DIV, schermo.voltB, "V", (voltB) => setSchermo((s) => ({ ...s, voltB })), COLORE_B)}
+            <button type="button" className="pulsante piccolo" onClick={() => setBloccato((b) => !b)}>
+              {bloccato ? t("elettronica.oscilloscopio.riprendi") : t("elettronica.oscilloscopio.ferma")}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+const COLORI_CANALI = ["#f59e0b", "#22d3ee", "#a3e635", "#f472b6"];
+
+/**
+ * Finestra dell'analizzatore logico: quattro tracce (D0…D3), una sotto
+ * l'altra, con il livello 0 in basso e 1 in alto. Mostra le ultime 10
+ * divisioni della base dei tempi scelta.
+ */
+export function PannelloAnalizzatore({ sessione, id, sigla, indice = 0 }: { sessione: React.MutableRefObject<SessioneElettronica | null>; id: string; sigla: string; indice?: number }) {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  // Predefinita lenta: gli esempi didattici usano clock di pochi hertz.
+  const [baseTempi, setBaseTempi] = useState(0.5);
+  const { stile, suGiu } = useSpostabile(indice);
+  const [aperto, setAperto] = useState(true);
+  const [bloccato, setBloccato] = useState(false);
+  useEffect(() => {
+    if (!aperto || bloccato) return;
+    const ridisegna = () => {
+      const storia = sessione.current?.analizzatori[id];
+      const cv = canvas.current;
+      const ctx = cv?.getContext("2d");
+      if (!cv || !ctx || !storia) return;
+      const w = cv.width;
+      const h = cv.height;
+      ctx.fillStyle = "#0b1a14";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(120, 200, 160, 0.2)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= DIV_X; i++) {
+        ctx.beginPath();
+        ctx.moveTo((i * w) / DIV_X + 0.5, 0);
+        ctx.lineTo((i * w) / DIV_X + 0.5, h);
+        ctx.stroke();
+      }
+      const n = storia.t.length;
+      if (n === 0) return;
+      const durata = baseTempi * DIV_X;
+      const fine = storia.t[n - 1];
+      const inizio = Math.max(0, fine - durata);
+      const fascia = h / 4;
+      storia.canali.forEach((valori, k) => {
+        const alto = k * fascia + fascia * 0.2;
+        const basso = (k + 1) * fascia - fascia * 0.2;
+        ctx.fillStyle = COLORI_CANALI[k];
+        ctx.font = "12px Segoe UI, sans-serif";
+        ctx.fillText(`D${k}`, 4, alto + 12);
+        ctx.strokeStyle = COLORI_CANALI[k];
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        let primo = true;
+        let prima = 0;
+        for (let i = 0; i < n; i++) {
+          if (storia.t[i] < inizio) continue;
+          const x = 28 + ((storia.t[i] - inizio) / durata) * (w - 32);
+          const y = valori[i] === 1 ? alto : basso;
+          if (primo) ctx.moveTo(x, y);
+          else {
+            if (valori[i] !== prima) ctx.lineTo(x, prima === 1 ? alto : basso); // fronte verticale
+            ctx.lineTo(x, y);
+          }
+          prima = valori[i];
+          primo = false;
+        }
+        ctx.stroke();
+      });
+    };
+    ridisegna();
+    const timer = window.setInterval(ridisegna, 100);
+    return () => window.clearInterval(timer);
+  }, [sessione, id, baseTempi, aperto, bloccato]);
+  return (
+    <section className="pannello-oscilloscopio" style={stile} aria-label={t("elettronica.analizzatore.titolo", { sigla })} data-testid={`analizzatore-${sigla}`}>
+      <header onMouseDown={suGiu} title={t("elettronica.oscilloscopio.sposta")}>
+        <strong>📊 {t("elettronica.analizzatore.titolo", { sigla })}</strong>
+        <span className="osc-misure" />
+        <button type="button" className="pulsante piccolo" onClick={() => setAperto((a) => !a)}>
+          {aperto ? t("elettronica.oscilloscopio.riduci") : t("elettronica.oscilloscopio.apri")}
+        </button>
+      </header>
+      {aperto && (
+        <div className="osc-corpo">
+          <canvas ref={canvas} width={360} height={200} className="osc-schermo" style={{ height: 200 }} />
+          <div className="osc-comandi">
+            <label className="osc-scelta">
+              <span>{t("elettronica.oscilloscopio.baseTempi")}</span>
+              <select value={baseTempi} onChange={(e) => setBaseTempi(Number(e.target.value))}>
+                {BASI_TEMPI.map((v) => (
+                  <option key={v} value={v}>
+                    {scriviValore(v, "s")}
+                    {t("elettronica.oscilloscopio.perDivisione")}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button type="button" className="pulsante piccolo" onClick={() => setBloccato((b) => !b)}>
               {bloccato ? t("elettronica.oscilloscopio.riprendi") : t("elettronica.oscilloscopio.ferma")}
             </button>

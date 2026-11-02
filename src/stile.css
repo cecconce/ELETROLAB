@@ -956,6 +956,8 @@ button.io-plc {
   max-width: calc(100% - 16px);
 }
 .pannello-oscilloscopio header {
+  cursor: move;
+  user-select: none;
   display: flex;
   align-items: center;
   gap: 12px;

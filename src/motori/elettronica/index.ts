@@ -2,3 +2,4 @@
 export * from "./simulatore";
 export * from "./sessione";
 export * from "./valori";
+export * from "./digitale";
