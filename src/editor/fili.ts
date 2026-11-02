@@ -21,7 +21,7 @@
 // lo studente sposta il filo a mano se passa sopra un simbolo.
 import { PASSO_GRIGLIA, agganciaValore, type Punto } from "./geometria";
 import type { MorsettoLibreria } from "./libreria";
-import type { ComponenteSchema, EstremoFilo, Filo, Schema } from "./schema";
+import { dimensioni, ruotaPunto, type ComponenteSchema, type EstremoFilo, type Filo, type Schema } from "./schema";
 
 /** Da dove si ricavano i morsetti di un tipo di componente (di solito la libreria). */
 export type MorsettiDelTipo = (tipo: string) => readonly MorsettoLibreria[] | undefined;
@@ -61,12 +61,17 @@ export function direzioneMorsetto(c: Pick<ComponenteSchema, "larghezza" | "altez
 
 /** Tutti i morsetti di un componente posato, in coordinate del foglio. */
 export function morsettiDelComponente(c: ComponenteSchema, morsettiDi: MorsettiDelTipo): MorsettoPosato[] {
-  return (morsettiDi(c.tipo) ?? []).map((m) => ({
-    componente: c.id,
-    morsetto: m.id,
-    posizione: { x: c.x + m.x, y: c.y + m.y },
-    direzione: direzioneMorsetto(c, m),
-  }));
+  // Con la rotazione si spostano anche i morsetti e cambia il lato da cui esce il filo.
+  const d = dimensioni(c);
+  return (morsettiDi(c.tipo) ?? []).map((m) => {
+    const r = ruotaPunto(c, m);
+    return {
+      componente: c.id,
+      morsetto: m.id,
+      posizione: { x: c.x + r.x, y: c.y + r.y },
+      direzione: direzioneMorsetto(d, r),
+    };
+  });
 }
 
 /** Il morsetto indicato da un capo del filo; undefined se il componente o il morsetto non esistono più. */

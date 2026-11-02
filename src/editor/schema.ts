@@ -3,6 +3,9 @@
 // oggetto senza modificare quello ricevuto: servirà ad Annulla/Ripeti (1.7).
 import { agganciaPunto, type Punto } from "./geometria";
 
+/** Rotazioni ammesse (gradi, senso orario). */
+export type Rotazione = 0 | 90 | 180 | 270;
+
 /** Un componente posato sul foglio (per ora solo posizione e ingombro). */
 export interface ComponenteSchema {
   id: string;
@@ -15,6 +18,12 @@ export interface ComponenteSchema {
   y: number;
   larghezza: number;
   altezza: number;
+  /**
+   * Rotazione in senso orario (0, 90, 180, 270 gradi); se manca vale 0.
+   * `x`, `y` restano l'angolo in alto a sinistra del componente ruotato;
+   * `larghezza`/`altezza` sono quelle del disegno non ruotato.
+   */
+  rotazione?: Rotazione;
   /**
    * Numeri mostrati accanto ai morsetti al posto dell'id della libreria
    * (es. il secondo contatto NA di K1 ha i morsetti "13"/"14" numerati
@@ -161,7 +170,10 @@ export function rettangoloTra(a: Punto, b: Punto): Rettangolo {
 export function componentiNelRettangolo(schema: Schema, r: Rettangolo): string[] {
   return schema.componenti
     .filter(
-      (c) => c.x >= r.x && c.y >= r.y && c.x + c.larghezza <= r.x + r.larghezza && c.y + c.altezza <= r.y + r.altezza,
+      (c) => {
+        const d = dimensioni(c);
+        return c.x >= r.x && c.y >= r.y && c.x + d.larghezza <= r.x + r.larghezza && c.y + d.altezza <= r.y + r.altezza;
+      },
     )
     .map((c) => c.id);
 }
@@ -171,8 +183,8 @@ export function ingombroSchema(schema: Schema): Rettangolo | undefined {
   if (schema.componenti.length === 0) return undefined;
   const xs = schema.componenti.map((c) => c.x);
   const ys = schema.componenti.map((c) => c.y);
-  const x2 = schema.componenti.map((c) => c.x + c.larghezza);
-  const y2 = schema.componenti.map((c) => c.y + c.altezza);
+  const x2 = schema.componenti.map((c) => c.x + dimensioni(c).larghezza);
+  const y2 = schema.componenti.map((c) => c.y + dimensioni(c).altezza);
   const x = Math.min(...xs);
   const y = Math.min(...ys);
   return { x, y, larghezza: Math.max(...x2) - x, altezza: Math.max(...y2) - y };
@@ -196,4 +208,68 @@ export function eliminaSelezione(schema: Schema, selezione: Selezione): Schema {
 /** Id di tutti gli elementi dello schema (Ctrl+A). */
 export function tuttiGliId(schema: Schema): string[] {
   return [...schema.componenti.map((c) => c.id), ...schema.fili.map((f) => f.id)];
+}
+
+// --- Rotazione dei componenti ---
+
+/** Ingombro sul foglio tenendo conto della rotazione (a 90° e 270° larghezza e altezza si scambiano). */
+export function dimensioni(c: Pick<ComponenteSchema, "larghezza" | "altezza" | "rotazione">): { larghezza: number; altezza: number } {
+  const r = c.rotazione ?? 0;
+  return r === 90 || r === 270 ? { larghezza: c.altezza, altezza: c.larghezza } : { larghezza: c.larghezza, altezza: c.altezza };
+}
+
+/**
+ * Posizione di un punto del disegno (coordinate del componente non ruotato)
+ * dopo la rotazione, sempre rispetto all'angolo in alto a sinistra del
+ * componente ruotato. I punti sulla griglia restano sulla griglia.
+ */
+export function ruotaPunto(c: Pick<ComponenteSchema, "larghezza" | "altezza" | "rotazione">, p: Punto): Punto {
+  const w = c.larghezza;
+  const h = c.altezza;
+  switch (c.rotazione ?? 0) {
+    case 90:
+      return { x: h - p.y, y: p.x };
+    case 180:
+      return { x: w - p.x, y: h - p.y };
+    case 270:
+      return { x: p.y, y: w - p.x };
+    default:
+      return { x: p.x, y: p.y };
+  }
+}
+
+/**
+ * Trasformazione da dare al disegno (Konva): rotazione e spostamento che
+ * portano il disegno non ruotato nel riquadro del componente ruotato.
+ */
+export function trasformazioneRotazione(c: Pick<ComponenteSchema, "larghezza" | "altezza" | "rotazione">): { x: number; y: number; rotazione: number } {
+  const r = c.rotazione ?? 0;
+  if (r === 90) return { x: c.altezza, y: 0, rotazione: 90 };
+  if (r === 180) return { x: c.larghezza, y: c.altezza, rotazione: 180 };
+  if (r === 270) return { x: 0, y: c.larghezza, rotazione: 270 };
+  return { x: 0, y: 0, rotazione: 0 };
+}
+
+/**
+ * Ruota di 90° in senso orario i componenti selezionati, ognuno attorno al
+ * proprio centro (agganciato alla griglia). I fili seguono i morsetti da soli.
+ */
+export function ruotaSelezione(schema: Schema, selezione: Selezione): Schema {
+  const scelti = new Set(selezione);
+  if (!schema.componenti.some((c) => scelti.has(c.id))) return schema;
+  return {
+    ...schema,
+    componenti: schema.componenti.map((c) => {
+      if (!scelti.has(c.id)) return c;
+      const prima = dimensioni(c);
+      const rotazione = (((c.rotazione ?? 0) + 90) % 360) as Rotazione;
+      const dopo = dimensioni({ ...c, rotazione });
+      const centro = { x: c.x + prima.larghezza / 2, y: c.y + prima.altezza / 2 };
+      const angolo = agganciaPunto({ x: centro.x - dopo.larghezza / 2, y: centro.y - dopo.altezza / 2 });
+      const nuovo: ComponenteSchema = { ...c, x: angolo.x, y: angolo.y, rotazione };
+      // Tornato a 0° il campo si toglie: il file resta uguale a prima.
+      if (rotazione === 0) delete nuovo.rotazione;
+      return nuovo;
+    }),
+  };
 }

@@ -91,6 +91,9 @@ import {
   selezionaConClic,
   selezionePerTrascinamento,
   spostaSelezione,
+  dimensioni,
+  ruotaSelezione,
+  trasformazioneRotazione,
   type ComponenteSchema,
   type Schema,
   type Selezione,
@@ -263,6 +266,11 @@ export function AreaDisegno({
     onCambiaSchema(eliminaSelezione(schema, selezione));
     setSelezione([]);
   };
+  // Rotazione di 90° in senso orario dei componenti selezionati (tasto R).
+  const ruota = () => {
+    const nuovo = ruotaSelezione(schema, selezione);
+    if (nuovo !== schema) onCambiaSchema(nuovo);
+  };
   const copia = () => {
     const appunti = copiaSelezione(schema, selezione);
     if (!appunti) {
@@ -288,8 +296,8 @@ export function AreaDisegno({
   };
 
   // Il gestore dei tasti è registrato una volta sola: legge i comandi aggiornati da qui.
-  const comandiRif = useRef({ elimina, copia, taglia, incollaAppunti, onAnnulla, onRipeti, tutto: () => setSelezione(tuttiGliId(schema)) });
-  comandiRif.current = { elimina, copia, taglia, incollaAppunti, onAnnulla, onRipeti, tutto: () => setSelezione(tuttiGliId(schema)) };
+  const comandiRif = useRef({ elimina, ruota, copia, taglia, incollaAppunti, onAnnulla, onRipeti, tutto: () => setSelezione(tuttiGliId(schema)) });
+  comandiRif.current = { elimina, ruota, copia, taglia, incollaAppunti, onAnnulla, onRipeti, tutto: () => setSelezione(tuttiGliId(schema)) };
 
   // Barra spaziatrice = modalità "mano" per spostare la vista; Esc = deseleziona;
   // scorciatoie di modifica come nei programmi più comuni.
@@ -317,6 +325,11 @@ export function AreaDisegno({
           return;
         }
         cmd.elimina();
+        return;
+      }
+      if ((e.key === "r" || e.key === "R") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        cmd.ruota();
         return;
       }
       if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
@@ -626,6 +639,12 @@ export function AreaDisegno({
   const disegnaComponente = (c: ComponenteSchema) => {
                 const scelto = selezionati.has(c.id);
                 const aspetto = simulazione?.vista.componenti[c.id];
+                // Componente ruotato: il disegno (fatto per 0°) gira dentro un gruppo
+                // interno; la sigla resta dritta e si scrive fuori dal gruppo.
+                const rot = trasformazioneRotazione(c);
+                const ruotato = rot.rotazione !== 0;
+                const ingombro = dimensioni(c);
+                const sigla = libreria.modulo === "arduino" ? "" : siglaMostrata(c);
                 return (
                   <Group
                     key={c.id}
@@ -640,7 +659,8 @@ export function AreaDisegno({
                         // In simulazione il clic aziona il componente (se si può).
                         if (e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
                         e.cancelBubble = true;
-                        const gruppo = e.currentTarget as Konva.Group;
+                        // Punto del clic nel disegno non ruotato (serve a impianti e banco).
+                        const gruppo = ((e.currentTarget as Konva.Group).findOne(".disegno") ?? e.currentTarget) as Konva.Group;
                         const locale = gruppo.getRelativePointerPosition();
                         simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
                         return;
@@ -656,11 +676,12 @@ export function AreaDisegno({
                     onDragMove={(e) => durante(e.target)}
                     onDragEnd={(e) => fineTrascinamento(e.target)}
                   >
+                    <Group name="disegno" x={rot.x} y={rot.y} rotation={rot.rotazione}>
                     <SimboloComponente
                       larghezza={c.larghezza}
                       altezza={c.altezza}
                       // Nel banco Arduino niente sigle sopra i componenti (come sul banco vero).
-                      etichetta={libreria.modulo === "arduino" ? "" : siglaMostrata(c)}
+                      etichetta={ruotato ? "" : sigla}
                       nonAssociato={siglaMostrata(c) !== c.etichetta}
                       numeri={numeriDa(c)}
                       immagine={immagine(c.tipo)}
@@ -685,6 +706,21 @@ export function AreaDisegno({
                         voce={vociPerTipo.get(c.tipo)}
                         aspetto={aspetto}
                         colori={colori}
+                      />
+                    )}
+                    </Group>
+                    {ruotato && sigla && (
+                      <Text
+                        text={sigla}
+                        x={libreria.modulo === "plc" ? -20 : -64}
+                        y={libreria.modulo === "plc" ? -18 : ingombro.altezza / 2 - 8}
+                        width={libreria.modulo === "plc" ? ingombro.larghezza + 40 : 58}
+                        align={libreria.modulo === "plc" ? "center" : "right"}
+                        fontSize={14}
+                        fontStyle="bold"
+                        fontFamily="Segoe UI, system-ui, sans-serif"
+                        fill={colori.testo}
+                        listening={false}
                       />
                     )}
                   </Group>
@@ -902,8 +938,8 @@ export function AreaDisegno({
                       key={`evidenzia-${id}`}
                       x={c.x - 8}
                       y={c.y - 8}
-                      width={c.larghezza + 16}
-                      height={c.altezza + 16}
+                      width={dimensioni(c).larghezza + 16}
+                      height={dimensioni(c).altezza + 16}
                       stroke={colori.guasto}
                       strokeWidth={2.5}
                       dash={[8, 5]}
@@ -975,6 +1011,15 @@ export function AreaDisegno({
           title={t("modifica.ripetiTasti")}
         >
           ↷ {t("modifica.ripeti")}
+        </button>
+        <button
+          type="button"
+          className="pulsante"
+          onClick={ruota}
+          disabled={!selezione.some((id) => componentePerId.has(id)) || inSimulazione}
+          title={t("modifica.ruotaTasti")}
+        >
+          ↻ {t("modifica.ruota")}
         </button>
         <button type="button" className="pulsante" onClick={elimina} disabled={selezione.length === 0 || inSimulazione} title={t("modifica.eliminaTasti")}>
           {t("modifica.elimina")}
