@@ -145,7 +145,7 @@ describe("ricerca per nome", () => {
   });
 
   it("tutte le parole devono corrispondere; prima i nomi che iniziano col testo", () => {
-    expect(cercaComponenti(imp, "pulsante arresto").map((v) => v.id)).toEqual(["pulsante-nc"]);
+    expect(cercaComponenti(imp, "pulsante arresto").map((v) => v.id)).toEqual(["pulsante-nc", "pulsante-emergenza"]);
     const risultato = cercaComponenti(imp, "contatto").map((v) => v.id);
     // Prima tutti i nomi che iniziano con "Contatto…" (ausiliari, termici, temporizzati, principali).
     const iniziano = imp.componenti.filter((v) => normalizza(v.nome).startsWith("contatto")).map((v) => v.id);

@@ -1368,6 +1368,14 @@ function ComandoRealisticoAzionato({ tipo }: { tipo: string }) {
         </Group>
       </Group>
     );
+  if (tipo === "pulsante-emergenza")
+    // Fungo premuto e agganciato: più piccolo e più scuro, con l'anello giallo che si vede tutto.
+    return (
+      <Group listening={false}>
+        <Circle x={11} y={40} radius={11} fill="#fdd835" stroke="#f9a825" />
+        <Circle x={13} y={40} radius={6.5} fill="#b71c1c" stroke="#7f0000" />
+      </Group>
+    );
   if (tipo === "interruttore-na" || tipo === "interruttore-nc")
     return (
       <Group listening={false}>

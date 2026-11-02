@@ -2,6 +2,7 @@
 // restano nella posizione scelta, come il selettore.
 import { describe, expect, it } from "vitest";
 import { simula, type Circuito } from "./simulatore";
+import { MODELLI_IMPIANTI } from "./modelli";
 
 const lampadaCon = (tipo: string, a: string, b: string): Circuito => ({
   componenti: [
@@ -28,5 +29,12 @@ describe("interruttori a posizione mantenuta", () => {
       expect(simula(c).carichiAlimentati, tipo).toContain("H1");
       expect(simula(c, { azionati: ["S1"] }).carichiAlimentati, tipo).not.toContain("H1");
     }
+  });
+  it("pulsante d'emergenza: NC e agganciato (resta premuto finché non lo sblocchi)", () => {
+    const c = lampadaCon("pulsante-emergenza", "11", "12");
+    expect(simula(c).carichiAlimentati).toContain("H1");
+    expect(simula(c, { azionati: ["S1"] }).carichiAlimentati).not.toContain("H1");
+    const m = MODELLI_IMPIANTI["pulsante-emergenza"];
+    expect(m.tipo === "contatto" && m.comando?.tipo).toBe("manuale");
   });
 });

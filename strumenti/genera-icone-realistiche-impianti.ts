@@ -87,6 +87,12 @@ const pulsante = (colore: string, bordo: string, segno: string) =>
   );
 icone["pulsante-na.svg"] = pulsante("#43a047", "#2e7d32", "I");
 icone["pulsante-nc.svg"] = pulsante("#e53935", "#b71c1c", "O");
+// Fungo d'emergenza: testa rossa grande su una base gialla, a sinistra come gli altri tasti.
+icone["pulsante-emergenza.svg"] = verticale(
+  `<circle cx="11" cy="40" r="11" fill="#fdd835" stroke="#f9a825"/><circle cx="11" cy="40" r="8.5" fill="#e53935" stroke="#b71c1c" stroke-width="1.2"/>` +
+    `<ellipse cx="8" cy="36" rx="3.5" ry="2.2" fill="#ffffff" opacity="0.45"/><rect x="24" y="28" width="8" height="24" rx="2" fill="#cfd8dc"/>`,
+  "#eceff1",
+);
 const selettore = (colore: string) =>
   verticale(
     `<circle cx="11" cy="40" r="10" fill="#37474f" stroke="#212121"/><rect x="9" y="31" width="4" height="18" rx="2" fill="#eceff1" transform="rotate(-30 11 40)"/>` +

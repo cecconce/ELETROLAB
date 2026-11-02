@@ -2,11 +2,26 @@
   "versione": 1,
   "modulo": "impianti",
   "categorie": [
-    { "id": "alimentazione", "nome": "Alimentazione" },
-    { "id": "protezioni", "nome": "Protezioni e manovra" },
-    { "id": "comandi", "nome": "Comandi e sensori" },
-    { "id": "contattori", "nome": "Contattori e relè" },
-    { "id": "utilizzatori", "nome": "Utilizzatori" }
+    {
+      "id": "alimentazione",
+      "nome": "Alimentazione"
+    },
+    {
+      "id": "protezioni",
+      "nome": "Protezioni e manovra"
+    },
+    {
+      "id": "comandi",
+      "nome": "Comandi e sensori"
+    },
+    {
+      "id": "contattori",
+      "nome": "Contattori e relè"
+    },
+    {
+      "id": "utilizzatori",
+      "nome": "Utilizzatori"
+    }
   ],
   "componenti": [
     {
@@ -15,14 +30,33 @@
       "categoria": "alimentazione",
       "sigla": "",
       "descrizione": "Alimentazione trifase con le tre fasi L1, L2, L3 (400 V fra le fasi). Da qui parte il circuito di potenza.",
-      "paroleChiave": ["linea", "400 V", "fasi", "L1", "L2", "L3"],
+      "paroleChiave": [
+        "linea",
+        "400 V",
+        "fasi",
+        "L1",
+        "L2",
+        "L3"
+      ],
       "icona": "rete-trifase.svg",
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "L1", "x": 20, "y": 40 },
-        { "id": "L2", "x": 40, "y": 40 },
-        { "id": "L3", "x": 60, "y": 40 }
+        {
+          "id": "L1",
+          "x": 20,
+          "y": 40
+        },
+        {
+          "id": "L2",
+          "x": 40,
+          "y": 40
+        },
+        {
+          "id": "L3",
+          "x": 60,
+          "y": 40
+        }
       ]
     },
     {
@@ -31,13 +65,26 @@
       "categoria": "alimentazione",
       "sigla": "",
       "descrizione": "Alimentazione monofase con fase L e neutro N (230 V). Si usa spesso per il circuito di comando.",
-      "paroleChiave": ["linea", "230 V", "fase", "neutro"],
+      "paroleChiave": [
+        "linea",
+        "230 V",
+        "fase",
+        "neutro"
+      ],
       "icona": "rete-monofase.svg",
       "larghezza": 60,
       "altezza": 40,
       "morsetti": [
-        { "id": "L", "x": 20, "y": 40 },
-        { "id": "N", "x": 40, "y": 40 }
+        {
+          "id": "L",
+          "x": 20,
+          "y": 40
+        },
+        {
+          "id": "N",
+          "x": 40,
+          "y": 40
+        }
       ]
     },
     {
@@ -46,13 +93,29 @@
       "categoria": "alimentazione",
       "sigla": "",
       "descrizione": "Alimentazione in corrente continua con polo positivo (+) e negativo (−), per esempio 24 V. Serve per i motori in CC e per i circuiti di comando in continua.",
-      "paroleChiave": ["continua", "CC", "DC", "24 V", "positivo", "negativo", "batteria"],
+      "paroleChiave": [
+        "continua",
+        "CC",
+        "DC",
+        "24 V",
+        "positivo",
+        "negativo",
+        "batteria"
+      ],
       "icona": "alimentatore-cc.svg",
       "larghezza": 60,
       "altezza": 40,
       "morsetti": [
-        { "id": "+", "x": 20, "y": 40 },
-        { "id": "-", "x": 40, "y": 40 }
+        {
+          "id": "+",
+          "x": 20,
+          "y": 40
+        },
+        {
+          "id": "-",
+          "x": 40,
+          "y": 40
+        }
       ]
     },
     {
@@ -61,13 +124,24 @@
       "categoria": "protezioni",
       "sigla": "F",
       "descrizione": "Protegge la linea dai cortocircuiti: se passa troppa corrente il filamento interno fonde e apre il circuito.",
-      "paroleChiave": ["protezione", "cortocircuito"],
+      "paroleChiave": [
+        "protezione",
+        "cortocircuito"
+      ],
       "icona": "fusibile.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "1", "x": 20, "y": 0 },
-        { "id": "2", "x": 20, "y": 80 }
+        {
+          "id": "1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -76,13 +150,26 @@
       "categoria": "protezioni",
       "sigla": "Q",
       "descrizione": "Interruttore automatico: scatta da solo per sovraccarico (parte termica) o cortocircuito (parte magnetica). Si riarma a mano.",
-      "paroleChiave": ["interruttore", "automatico", "protezione", "sovraccarico"],
+      "paroleChiave": [
+        "interruttore",
+        "automatico",
+        "protezione",
+        "sovraccarico"
+      ],
       "icona": "magnetotermico.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "1", "x": 20, "y": 0 },
-        { "id": "2", "x": 20, "y": 80 }
+        {
+          "id": "1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -91,17 +178,46 @@
       "categoria": "protezioni",
       "sigla": "Q",
       "descrizione": "Separa l'impianto dalla rete per lavorare in sicurezza. Si manovra a mano e solo senza carico. In simulazione: clic per chiuderlo o aprirlo.",
-      "paroleChiave": ["sezionatore", "separatore", "manovra", "tripolare"],
+      "paroleChiave": [
+        "sezionatore",
+        "separatore",
+        "manovra",
+        "tripolare"
+      ],
       "icona": "sezionatore.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "1", "x": 20, "y": 0 },
-        { "id": "2", "x": 20, "y": 80 },
-        { "id": "3", "x": 40, "y": 0 },
-        { "id": "4", "x": 40, "y": 80 },
-        { "id": "5", "x": 60, "y": 0 },
-        { "id": "6", "x": 60, "y": 80 }
+        {
+          "id": "1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "3",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "4",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "5",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "6",
+          "x": 60,
+          "y": 80
+        }
       ]
     },
     {
@@ -110,17 +226,47 @@
       "categoria": "protezioni",
       "sigla": "Q",
       "descrizione": "Interruttore automatico per motori: unisce sganciatore magnetico (cortocircuito) e termico regolabile (sovraccarico). Si chiude e si riarma a mano con un clic.",
-      "paroleChiave": ["salvamotore", "magnetotermico", "motore", "protezione", "sovraccarico"],
+      "paroleChiave": [
+        "salvamotore",
+        "magnetotermico",
+        "motore",
+        "protezione",
+        "sovraccarico"
+      ],
       "icona": "salvamotore.svg",
       "larghezza": 100,
       "altezza": 80,
       "morsetti": [
-        { "id": "1", "x": 20, "y": 0 },
-        { "id": "2", "x": 20, "y": 80 },
-        { "id": "3", "x": 40, "y": 0 },
-        { "id": "4", "x": 40, "y": 80 },
-        { "id": "5", "x": 60, "y": 0 },
-        { "id": "6", "x": 60, "y": 80 }
+        {
+          "id": "1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "3",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "4",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "5",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "6",
+          "x": 60,
+          "y": 80
+        }
       ]
     },
     {
@@ -129,17 +275,47 @@
       "categoria": "protezioni",
       "sigla": "F",
       "descrizione": "Protegge il motore dal sovraccarico: le lamine bimetalliche si scaldano con la corrente e, se è troppa, fanno commutare i contatti 95-96 (si apre) e 97-98 (si chiude).",
-      "paroleChiave": ["termico", "sovraccarico", "protezione motore", "bimetallo", "95-96"],
+      "paroleChiave": [
+        "termico",
+        "sovraccarico",
+        "protezione motore",
+        "bimetallo",
+        "95-96"
+      ],
       "icona": "rele-termico.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "1", "x": 20, "y": 0 },
-        { "id": "2", "x": 20, "y": 80 },
-        { "id": "3", "x": 40, "y": 0 },
-        { "id": "4", "x": 40, "y": 80 },
-        { "id": "5", "x": 60, "y": 0 },
-        { "id": "6", "x": 60, "y": 80 }
+        {
+          "id": "1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "3",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "4",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "5",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "6",
+          "x": 60,
+          "y": 80
+        }
       ],
       "comandaContatti": true,
       "protezioneTermica": true
@@ -150,15 +326,31 @@
       "categoria": "protezioni",
       "sigla": "F",
       "descrizione": "Contatto normalmente chiuso del relè termico: si apre quando il relè interviene. Va in serie alla bobina del contattore per fermare il motore in sovraccarico.",
-      "paroleChiave": ["termico", "95-96", "normalmente chiuso", "sovraccarico"],
+      "paroleChiave": [
+        "termico",
+        "95-96",
+        "normalmente chiuso",
+        "sovraccarico"
+      ],
       "icona": "contatto-termico-nc.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "95", "x": 20, "y": 0 },
-        { "id": "96", "x": 20, "y": 80 }
+        {
+          "id": "95",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "96",
+          "x": 20,
+          "y": 80
+        }
       ],
-      "contatto": { "tipo": "termico", "stato": "NC" }
+      "contatto": {
+        "tipo": "termico",
+        "stato": "NC"
+      }
     },
     {
       "id": "contatto-termico-na",
@@ -166,15 +358,31 @@
       "categoria": "protezioni",
       "sigla": "F",
       "descrizione": "Contatto normalmente aperto del relè termico: si chiude quando il relè interviene. Si usa per accendere una spia o una sirena di allarme.",
-      "paroleChiave": ["termico", "97-98", "normalmente aperto", "allarme"],
+      "paroleChiave": [
+        "termico",
+        "97-98",
+        "normalmente aperto",
+        "allarme"
+      ],
       "icona": "contatto-termico-na.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "97", "x": 20, "y": 0 },
-        { "id": "98", "x": 20, "y": 80 }
+        {
+          "id": "97",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "98",
+          "x": 20,
+          "y": 80
+        }
       ],
-      "contatto": { "tipo": "termico", "stato": "NA" }
+      "contatto": {
+        "tipo": "termico",
+        "stato": "NA"
+      }
     },
     {
       "id": "pulsante-na",
@@ -182,13 +390,26 @@
       "categoria": "comandi",
       "sigla": "S",
       "descrizione": "Pulsante normalmente aperto: chiude il circuito solo mentre lo tieni premuto. Si usa per la MARCIA.",
-      "paroleChiave": ["normalmente aperto", "marcia", "avvio", "start"],
+      "paroleChiave": [
+        "normalmente aperto",
+        "marcia",
+        "avvio",
+        "start"
+      ],
       "icona": "pulsante-na.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "13", "x": 20, "y": 0 },
-        { "id": "14", "x": 20, "y": 80 }
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -197,13 +418,54 @@
       "categoria": "comandi",
       "sigla": "S",
       "descrizione": "Pulsante normalmente chiuso: lascia passare la corrente e la interrompe quando lo premi. Si usa per l'ARRESTO.",
-      "paroleChiave": ["normalmente chiuso", "arresto", "stop"],
+      "paroleChiave": [
+        "normalmente chiuso",
+        "arresto",
+        "stop"
+      ],
       "icona": "pulsante-nc.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "11", "x": 20, "y": 0 },
-        { "id": "12", "x": 20, "y": 80 }
+        {
+          "id": "11",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "12",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "pulsante-emergenza",
+      "nome": "Pulsante d'emergenza (a fungo)",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Pulsante a fungo rosso con contatto NC: premuto toglie subito la corrente al circuito di comando e resta agganciato, così la macchina non riparte da sola. Si sblocca ruotandolo. In simulazione: un clic per premerlo (resta premuto), un altro per sbloccarlo.",
+      "paroleChiave": [
+        "emergenza",
+        "fungo",
+        "arresto di emergenza",
+        "stop",
+        "sicurezza"
+      ],
+      "icona": "pulsante-emergenza.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "11",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "12",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -212,13 +474,26 @@
       "categoria": "comandi",
       "sigla": "S",
       "descrizione": "Interruttore a manopola che resta nella posizione scelta (0 / 1). In simulazione: un clic lo gira, un altro clic lo riporta indietro.",
-      "paroleChiave": ["selettore", "manopola", "interruttore", "commutatore"],
+      "paroleChiave": [
+        "selettore",
+        "manopola",
+        "interruttore",
+        "commutatore"
+      ],
       "icona": "selettore.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "13", "x": 20, "y": 0 },
-        { "id": "14", "x": 20, "y": 80 }
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -227,13 +502,27 @@
       "categoria": "comandi",
       "sigla": "S",
       "descrizione": "Selettore a manopola con contatto normalmente chiuso: in posizione 0 lascia passare la corrente, girato su 1 la interrompe e resta così. In simulazione: un clic lo gira, un altro lo riporta.",
-      "paroleChiave": ["selettore", "manopola", "normalmente chiuso", "NC", "commutatore"],
+      "paroleChiave": [
+        "selettore",
+        "manopola",
+        "normalmente chiuso",
+        "NC",
+        "commutatore"
+      ],
       "icona": "selettore-nc.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "11", "x": 20, "y": 0 },
-        { "id": "12", "x": 20, "y": 80 }
+        {
+          "id": "11",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "12",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -242,13 +531,28 @@
       "categoria": "comandi",
       "sigla": "S",
       "descrizione": "Interruttore a leva normalmente aperto: azionato chiude il circuito e resta chiuso finché non lo riporti a riposo (a differenza del pulsante, non torna indietro da solo). In simulazione: un clic per accendere, un altro per spegnere.",
-      "paroleChiave": ["interruttore", "leva", "normalmente aperto", "NA", "acceso", "spento"],
+      "paroleChiave": [
+        "interruttore",
+        "leva",
+        "normalmente aperto",
+        "NA",
+        "acceso",
+        "spento"
+      ],
       "icona": "interruttore-na.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "13", "x": 20, "y": 0 },
-        { "id": "14", "x": 20, "y": 80 }
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -257,13 +561,26 @@
       "categoria": "comandi",
       "sigla": "S",
       "descrizione": "Interruttore a leva normalmente chiuso: a riposo lascia passare la corrente, azionato la interrompe e resta aperto finché non lo riporti indietro. In simulazione: un clic per aprirlo, un altro per richiuderlo.",
-      "paroleChiave": ["interruttore", "leva", "normalmente chiuso", "NC"],
+      "paroleChiave": [
+        "interruttore",
+        "leva",
+        "normalmente chiuso",
+        "NC"
+      ],
       "icona": "interruttore-nc.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "11", "x": 20, "y": 0 },
-        { "id": "12", "x": 20, "y": 80 }
+        {
+          "id": "11",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "12",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -272,13 +589,26 @@
       "categoria": "comandi",
       "sigla": "SQ",
       "descrizione": "Interruttore di posizione azionato da una parte in movimento (cancello, carrello): il contatto si chiude quando viene toccato. In simulazione: clic per azionarlo o rilasciarlo.",
-      "paroleChiave": ["finecorsa", "fine corsa", "posizione", "normalmente aperto"],
+      "paroleChiave": [
+        "finecorsa",
+        "fine corsa",
+        "posizione",
+        "normalmente aperto"
+      ],
       "icona": "finecorsa-na.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "13", "x": 20, "y": 0 },
-        { "id": "14", "x": 20, "y": 80 }
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -287,13 +617,26 @@
       "categoria": "comandi",
       "sigla": "SQ",
       "descrizione": "Interruttore di posizione normalmente chiuso: si apre quando la parte in movimento lo raggiunge, per esempio per fermare un motore a fine corsa.",
-      "paroleChiave": ["finecorsa", "fine corsa", "posizione", "normalmente chiuso"],
+      "paroleChiave": [
+        "finecorsa",
+        "fine corsa",
+        "posizione",
+        "normalmente chiuso"
+      ],
       "icona": "finecorsa-nc.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "11", "x": 20, "y": 0 },
-        { "id": "12", "x": 20, "y": 80 }
+        {
+          "id": "11",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "12",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -302,13 +645,27 @@
       "categoria": "comandi",
       "sigla": "B",
       "descrizione": "Sensore che chiude il contatto quando un oggetto si avvicina, senza toccarlo (induttivo, capacitivo o fotocellula). In simulazione: clic per simulare l'oggetto davanti al sensore.",
-      "paroleChiave": ["sensore", "prossimità", "induttivo", "fotocellula", "presenza"],
+      "paroleChiave": [
+        "sensore",
+        "prossimità",
+        "induttivo",
+        "fotocellula",
+        "presenza"
+      ],
       "icona": "sensore-prossimita.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "13", "x": 20, "y": 0 },
-        { "id": "14", "x": 20, "y": 80 }
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -317,13 +674,27 @@
       "categoria": "contattori",
       "sigla": "K",
       "descrizione": "Quando arriva tensione ai morsetti A1-A2 la bobina si eccita e fa commutare tutti i contatti del contattore con la stessa sigla.",
-      "paroleChiave": ["contattore", "relè", "eccitazione", "A1", "A2"],
+      "paroleChiave": [
+        "contattore",
+        "relè",
+        "eccitazione",
+        "A1",
+        "A2"
+      ],
       "icona": "bobina.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "A1", "x": 20, "y": 0 },
-        { "id": "A2", "x": 20, "y": 80 }
+        {
+          "id": "A1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "A2",
+          "x": 20,
+          "y": 80
+        }
       ],
       "comandaContatti": true
     },
@@ -333,15 +704,31 @@
       "categoria": "contattori",
       "sigla": "K",
       "descrizione": "Contatto normalmente aperto del contattore: si chiude quando la bobina è eccitata. Serve, per esempio, per l'autoritenuta.",
-      "paroleChiave": ["normalmente aperto", "autoritenuta", "ausiliario", "13-14"],
+      "paroleChiave": [
+        "normalmente aperto",
+        "autoritenuta",
+        "ausiliario",
+        "13-14"
+      ],
       "icona": "contatto-na.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "13", "x": 20, "y": 0 },
-        { "id": "14", "x": 20, "y": 80 }
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
       ],
-      "contatto": { "tipo": "ausiliario", "stato": "NA" }
+      "contatto": {
+        "tipo": "ausiliario",
+        "stato": "NA"
+      }
     },
     {
       "id": "contatto-nc",
@@ -349,15 +736,31 @@
       "categoria": "contattori",
       "sigla": "K",
       "descrizione": "Contatto normalmente chiuso del contattore: si apre quando la bobina è eccitata. Serve, per esempio, per l'interblocco.",
-      "paroleChiave": ["normalmente chiuso", "interblocco", "ausiliario", "21-22"],
+      "paroleChiave": [
+        "normalmente chiuso",
+        "interblocco",
+        "ausiliario",
+        "21-22"
+      ],
       "icona": "contatto-nc.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "21", "x": 20, "y": 0 },
-        { "id": "22", "x": 20, "y": 80 }
+        {
+          "id": "21",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "22",
+          "x": 20,
+          "y": 80
+        }
       ],
-      "contatto": { "tipo": "ausiliario", "stato": "NC" }
+      "contatto": {
+        "tipo": "ausiliario",
+        "stato": "NC"
+      }
     },
     {
       "id": "contatti-principali",
@@ -365,19 +768,52 @@
       "categoria": "contattori",
       "sigla": "K",
       "descrizione": "I tre contatti di potenza del contattore (1-2, 3-4, 5-6): si chiudono insieme quando la bobina con la stessa sigla è eccitata e portano la corrente al motore.",
-      "paroleChiave": ["contattore", "potenza", "principali", "tripolare", "1-2"],
+      "paroleChiave": [
+        "contattore",
+        "potenza",
+        "principali",
+        "tripolare",
+        "1-2"
+      ],
       "icona": "contatti-principali.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "1", "x": 20, "y": 0 },
-        { "id": "2", "x": 20, "y": 80 },
-        { "id": "3", "x": 40, "y": 0 },
-        { "id": "4", "x": 40, "y": 80 },
-        { "id": "5", "x": 60, "y": 0 },
-        { "id": "6", "x": 60, "y": 80 }
+        {
+          "id": "1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "3",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "4",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "5",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "6",
+          "x": 60,
+          "y": 80
+        }
       ],
-      "contatto": { "tipo": "principale", "stato": "NA" }
+      "contatto": {
+        "tipo": "principale",
+        "stato": "NA"
+      }
     },
     {
       "id": "bobina-rele",
@@ -385,13 +821,27 @@
       "categoria": "contattori",
       "sigla": "KA",
       "descrizione": "Relè ausiliario: come un piccolo contattore, ma con soli contatti ausiliari. Si usa nei circuiti di comando per moltiplicare i contatti o separare due circuiti.",
-      "paroleChiave": ["relè", "ausiliario", "rele", "A1", "A2"],
+      "paroleChiave": [
+        "relè",
+        "ausiliario",
+        "rele",
+        "A1",
+        "A2"
+      ],
       "icona": "bobina.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "A1", "x": 20, "y": 0 },
-        { "id": "A2", "x": 20, "y": 80 }
+        {
+          "id": "A1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "A2",
+          "x": 20,
+          "y": 80
+        }
       ],
       "comandaContatti": true
     },
@@ -401,13 +851,27 @@
       "categoria": "contattori",
       "sigla": "KT",
       "descrizione": "Temporizzatore: quando arriva tensione aspetta il tempo impostato e poi fa commutare i suoi contatti; togliendo tensione tornano subito a riposo.",
-      "paroleChiave": ["temporizzatore", "timer", "ritardo", "eccitazione", "TON"],
+      "paroleChiave": [
+        "temporizzatore",
+        "timer",
+        "ritardo",
+        "eccitazione",
+        "TON"
+      ],
       "icona": "bobina-ritardata-eccitazione.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "A1", "x": 20, "y": 0 },
-        { "id": "A2", "x": 20, "y": 80 }
+        {
+          "id": "A1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "A2",
+          "x": 20,
+          "y": 80
+        }
       ],
       "comandaContatti": true
     },
@@ -417,13 +881,27 @@
       "categoria": "contattori",
       "sigla": "KT",
       "descrizione": "Temporizzatore: i contatti commutano subito quando arriva tensione; quando la tensione viene tolta aspettano il tempo impostato prima di tornare a riposo.",
-      "paroleChiave": ["temporizzatore", "timer", "ritardo", "diseccitazione", "TOF"],
+      "paroleChiave": [
+        "temporizzatore",
+        "timer",
+        "ritardo",
+        "diseccitazione",
+        "TOF"
+      ],
       "icona": "bobina-ritardata-diseccitazione.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "A1", "x": 20, "y": 0 },
-        { "id": "A2", "x": 20, "y": 80 }
+        {
+          "id": "A1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "A2",
+          "x": 20,
+          "y": 80
+        }
       ],
       "comandaContatti": true
     },
@@ -433,15 +911,31 @@
       "categoria": "contattori",
       "sigla": "KT",
       "descrizione": "Contatto normalmente aperto di un temporizzatore (17-18): commuta con il ritardo impostato nella bobina del temporizzatore con la stessa sigla.",
-      "paroleChiave": ["temporizzato", "ritardato", "17-18", "timer"],
+      "paroleChiave": [
+        "temporizzato",
+        "ritardato",
+        "17-18",
+        "timer"
+      ],
       "icona": "contatto-temporizzato-na.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "17", "x": 20, "y": 0 },
-        { "id": "18", "x": 20, "y": 80 }
+        {
+          "id": "17",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "18",
+          "x": 20,
+          "y": 80
+        }
       ],
-      "contatto": { "tipo": "temporizzato", "stato": "NA" }
+      "contatto": {
+        "tipo": "temporizzato",
+        "stato": "NA"
+      }
     },
     {
       "id": "contatto-temporizzato-nc",
@@ -449,15 +943,31 @@
       "categoria": "contattori",
       "sigla": "KT",
       "descrizione": "Contatto normalmente chiuso di un temporizzatore (15-16): si apre con il ritardo impostato nella bobina del temporizzatore con la stessa sigla.",
-      "paroleChiave": ["temporizzato", "ritardato", "15-16", "timer"],
+      "paroleChiave": [
+        "temporizzato",
+        "ritardato",
+        "15-16",
+        "timer"
+      ],
       "icona": "contatto-temporizzato-nc.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "15", "x": 20, "y": 0 },
-        { "id": "16", "x": 20, "y": 80 }
+        {
+          "id": "15",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "16",
+          "x": 20,
+          "y": 80
+        }
       ],
-      "contatto": { "tipo": "temporizzato", "stato": "NC" }
+      "contatto": {
+        "tipo": "temporizzato",
+        "stato": "NC"
+      }
     },
     {
       "id": "lampada",
@@ -465,13 +975,25 @@
       "categoria": "utilizzatori",
       "sigla": "H",
       "descrizione": "Si accende quando riceve tensione: indica, per esempio, che un motore è in marcia o che è scattata una protezione.",
-      "paroleChiave": ["spia", "segnalazione", "luce"],
+      "paroleChiave": [
+        "spia",
+        "segnalazione",
+        "luce"
+      ],
       "icona": "lampada.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "X1", "x": 20, "y": 0 },
-        { "id": "X2", "x": 20, "y": 80 }
+        {
+          "id": "X1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "X2",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -480,14 +1002,31 @@
       "categoria": "utilizzatori",
       "sigla": "M",
       "descrizione": "Motore alimentato dalle tre fasi U, V, W. Scambiando due fasi fra loro si inverte il verso di rotazione.",
-      "paroleChiave": ["motore", "asincrono", "3~", "rotazione"],
+      "paroleChiave": [
+        "motore",
+        "asincrono",
+        "3~",
+        "rotazione"
+      ],
       "icona": "motore-trifase.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "U", "x": 20, "y": 0 },
-        { "id": "V", "x": 40, "y": 0 },
-        { "id": "W", "x": 60, "y": 0 }
+        {
+          "id": "U",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "V",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "W",
+          "x": 60,
+          "y": 0
+        }
       ]
     },
     {
@@ -496,17 +1035,48 @@
       "categoria": "utilizzatori",
       "sigla": "M",
       "descrizione": "Motore trifase con i due capi di ogni avvolgimento (U1-U2, V1-V2, W1-W2): unendo U2, V2, W2 si collega a stella, collegando U1-W2, V1-U2, W1-V2 si collega a triangolo. Si usa nell'avviamento stella-triangolo.",
-      "paroleChiave": ["motore", "asincrono", "3~", "stella", "triangolo", "avvolgimenti"],
+      "paroleChiave": [
+        "motore",
+        "asincrono",
+        "3~",
+        "stella",
+        "triangolo",
+        "avvolgimenti"
+      ],
       "icona": "motore-trifase-6.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "U1", "x": 20, "y": 0 },
-        { "id": "V1", "x": 40, "y": 0 },
-        { "id": "W1", "x": 60, "y": 0 },
-        { "id": "U2", "x": 20, "y": 80 },
-        { "id": "V2", "x": 40, "y": 80 },
-        { "id": "W2", "x": 60, "y": 80 }
+        {
+          "id": "U1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "V1",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "W1",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "U2",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "V2",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "W2",
+          "x": 60,
+          "y": 80
+        }
       ]
     },
     {
@@ -515,13 +1085,26 @@
       "categoria": "utilizzatori",
       "sigla": "H",
       "descrizione": "Segnalatore acustico: suona quando riceve tensione. Si usa per gli allarmi, per esempio quando interviene il relè termico.",
-      "paroleChiave": ["sirena", "allarme", "acustico", "suoneria"],
+      "paroleChiave": [
+        "sirena",
+        "allarme",
+        "acustico",
+        "suoneria"
+      ],
       "icona": "sirena.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "X1", "x": 20, "y": 0 },
-        { "id": "X2", "x": 20, "y": 80 }
+        {
+          "id": "X1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "X2",
+          "x": 20,
+          "y": 80
+        }
       ]
     },
     {
@@ -530,13 +1113,26 @@
       "categoria": "utilizzatori",
       "sigla": "M",
       "descrizione": "Motore alimentato da fase e neutro (230 V), con condensatore di avviamento interno. Si usa per piccole macchine: ventilatori, pompe, trapani.",
-      "paroleChiave": ["motore", "monofase", "1~", "230 V"],
+      "paroleChiave": [
+        "motore",
+        "monofase",
+        "1~",
+        "230 V"
+      ],
       "icona": "motore-monofase.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "U1", "x": 20, "y": 0 },
-        { "id": "U2", "x": 60, "y": 0 }
+        {
+          "id": "U1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "U2",
+          "x": 60,
+          "y": 0
+        }
       ]
     },
     {
@@ -545,13 +1141,27 @@
       "categoria": "utilizzatori",
       "sigla": "M",
       "descrizione": "Motore a corrente continua con morsetti di armatura A1-A2: invertendo la polarità si inverte il verso di rotazione.",
-      "paroleChiave": ["motore", "continua", "CC", "DC", "armatura"],
+      "paroleChiave": [
+        "motore",
+        "continua",
+        "CC",
+        "DC",
+        "armatura"
+      ],
       "icona": "motore-cc.svg",
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "A1", "x": 20, "y": 0 },
-        { "id": "A2", "x": 60, "y": 0 }
+        {
+          "id": "A1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "A2",
+          "x": 60,
+          "y": 0
+        }
       ]
     }
   ]
