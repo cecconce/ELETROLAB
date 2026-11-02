@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 8 – Impianti più completi, Impianti + PLC nello stesso file, strumenti realistici** — in corso
+**Fase 8 – Impianti più completi, Impianti + PLC nello stesso file, strumenti realistici** — completata — in attesa di conferma
 
 Fase 7 confermata da Pierluigi il 2026-11-02 («buono»). Richieste: il clone di CADe_SIMU manca di funzioni e dispositivi (per primi interruttori, deviatori, invertitori degli impianti civili); vista realistica con immagini più vere; Impianti e PLC devono lavorare insieme in un unico file; in Elettronica oscilloscopio, multimetro e generatore di funzioni realistici.
 
@@ -15,7 +15,39 @@ Fase 7 confermata da Pierluigi il 2026-11-02 («buono»). Richieste: il clone di
 - [x] 8.3 PLC nello schema degli Impianti: componente PLC con ingressi I e uscite Q collegabili con i fili, programma Ladder nello stesso file, simulazione insieme; esempio.
 - [x] 8.4 Elettronica: oscilloscopio, multimetro e generatore di funzioni con pannelli realistici (manopole, schermo, display).
 - [x] 8.4b Impianti: pneumatica semplificata (cilindro con elettrovalvola 5/2 e finecorsa a0/a1) con esempio del ciclo di andata e ritorno.
-- [ ] 8.5 Verifica finale: build Actions, prova Playwright, resoconto.
+- [x] 8.5 Verifica finale: build Actions, prova Playwright, resoconto.
+
+## Resoconto della Fase 8 (2026-11-02)
+
+### Cosa funziona
+- **Impianti civili** (nuova categoria della libreria): interruttore unipolare e bipolare, pulsante civile (campanello), deviatore, invertitore, **relè passo-passo** (a ogni impulso il contatto cambia stato e resta così), suoneria, **magnetotermico bipolare** e **differenziale («salvavita») con tasto di prova T** (un clic lo fa scattare con il messaggio in italiano, un altro lo riarma).
+- **Sensori di processo**: interruttore a galleggiante, pressostato, termostato (NC, si apre col caldo), fotocellula; un clic cambia la grandezza misurata.
+- **Vista realistica rifatta**: tutti gli apparecchi hanno disegni con volumi, luce da sinistra, ombre, viti metalliche, moduli DIN, frutti civili, contattori con finestrella, motori con carcassa alettata.
+- **PLC nello schema degli Impianti**: componente «PLC» con alimentazione L-N, ingressi I0.0–I0.7, comune 1L e uscite a relè Q0.0–Q0.5, collegati con i fili come gli altri apparecchi; il programma Ladder sta nello stesso file `.elab` (scheda «🔢 Programma PLC», con Annulla/Ripeti e Lista istruzioni); in simulazione i LED del PLC si accendono e la scheda del Ladder mostra lo stato in tempo reale.
+- **Pneumatica semplificata**: cilindro a doppio effetto con elettrovalvola 5/2 monostabile (corsa 1,5 s, stelo animato) e finecorsa a0/a1 che commutano esattamente a fine corsa.
+- **Elettronica**: multimetro, generatore di funzioni e oscilloscopio con disegni realistici; un clic sul multimetro in simulazione gira la manopola V → A → Ω; la finestra dell'oscilloscopio sembra lo strumento vero, con manopole VOLTS/DIV e TIME/DIV che si girano con clic, rotellina o frecce.
+- Esempi nuovi: «Impianto civile: salvavita, punto luce e campanello», «Lampada da tre punti con il relè passo-passo», «Impianto comandato dal PLC (schema e Ladder nello stesso file)», «Pneumatica: cilindro con andata e ritorno automatici».
+
+### Come provarlo passo per passo
+1. GitHub → **Actions** → ultima esecuzione «Build Windows» verde → **Artifacts** → `ElettroLab-portable`; avviare `ElettroLab.exe`.
+2. **Impianti** → Sfoglia gli esempi → «Impianto civile: salvavita…» → ▶ AVVIA → clic su S1: la lampada si accende; tieni premuto S2: suona il campanello; clic su Q1: il differenziale scatta e tutto si spegne; clic di nuovo su Q1 per riarmarlo. Passare a **🖼 Realistica** per vedere i nuovi disegni.
+3. «Lampada da tre punti con il relè passo-passo» → ▶ AVVIA → premere S1, S2 o S3: ogni pressione accende o spegne la lampada.
+4. «Impianto comandato dal PLC» → ▶ AVVIA → clic su Q1 → premere S1: si accendono i LED I0.0 e Q0.0 sul PLC, K1 si eccita e il motore gira; S0 lo ferma. Aprire la scheda «🔢 Programma PLC» anche durante la simulazione per vedere il Ladder che si colora.
+5. «Pneumatica: cilindro…» → ▶ AVVIA → premere S1: lo stelo esce, arrivato in fondo il finecorsa a1 lo fa rientrare da solo.
+6. **Elettronica** → «Filtro RC passa-basso» → ▶ AVVIA: finestra dell'oscilloscopio con le manopole (girarle con un clic a destra/sinistra o la rotellina). «Partitore di tensione e multimetro»: clic sul multimetro per cambiare funzione.
+
+### Test eseguiti
+- `npm test`: **642 test Vitest**, tutti superati (17 nuovi in questa fase: componenti civili e relè passo-passo, differenziale con tasto di prova, sensori di processo, disegni realistici completi e senza riferimenti esterni, PLC nello schema acceso/spento/senza programma, esempio PLC completo, clic sul multimetro, cilindro e finecorsa, ogni nuovo esempio simulato). `npm run build` OK.
+- **GitHub Actions** (`windows-latest`, test + `cargo test` + `tauri build` + portable e installer): verdi le esecuzioni n. 72, 73, 75 e 76 (l'ultima sul commit finale delle funzioni). La n. 74 (commit dell'attività 8.4) si era fermata ai test su Windows; il commit successivo è verde.
+- **Prova dell'interfaccia con Playwright** (`npm run prova-interfaccia`): **138 controlli superati**, nessun errore in console. Nuova sezione «Fase 8» (20 controlli): differenziale che scatta e si riarma, vista Realistica, lampada da tre punti (ogni clic su S1/S2/S3 cambia la lampada), relè passo-passo, PLC nello schema (motore, LED del PLC, scheda Ladder durante la simulazione), stelo del cilindro che esce e rientra da solo.
+
+### Limiti noti
+- Pneumatica semplificata: solo il cilindro a doppio effetto con valvola 5/2 monostabile; niente circuito pneumatico disegnato a parte (tubi, compressore, regolatori di flusso), corsa a velocità fissa.
+- Il PLC nello schema ha 8 ingressi e 6 uscite fissi e uscite solo a relè; gli ingressi riconoscono la fase a 230 V (non 24 V in continua).
+- Il differenziale scatta solo con il tasto di prova: non si simula una dispersione verso terra.
+- I sensori di processo si comandano con i clic (stato sì/no), non con il valore continuo della grandezza.
+- I disegni realistici sono vettoriali originali, non fotografie.
+- L'.exe non è stato provato su un PC Windows reale.
 
 ## Fase 7 – Miglioramenti dopo il piano (confermata il 2026-11-02)
 
@@ -388,3 +420,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-02 — attività 8.4: **strumenti realistici in Elettronica**. Nuovi disegni a colori (`strumenti/disegni-strumenti-elettronica.ts`, originali, cavetti in currentColor): **multimetro** portatile con guscio giallo, display a cristalli liquidi, manopola V/A/Ω (l'indice segue la funzione) e boccole rossa/nera; **generatore di funzioni** da banco con display a LED azzurri (forma d'onda, frequenza, ampiezza), tasti delle forme d'onda, manopola e uscita BNC; **oscilloscopio** da banco con schermo a reticolo verde, tracce gialla e azzurra, manopole e BNC CH1/CH2. In simulazione un clic sul multimetro gira la manopola (V → A → Ω, clic a sinistra al contrario) senza toccare lo schema. La **finestra dell'oscilloscopio** ora sembra lo strumento vero: frontale in metallo scuro, schermo incassato con bagliore delle tracce e scritte CH1/CH2/M sullo schermo, **manopole** VOLTS/DIV dei due canali e TIME/DIV (`src/editor/Manopola.tsx`: si girano con un clic a destra/sinistra, la rotellina o le frecce), tasti AUTO e RUN/STOP colorati. 1 nuovo test (clic sul multimetro); `npm test` 638 OK, build OK, prove Playwright (filtro RC e partitore).
 - 2026-11-02 — completamento dell'attività 8.1: sensori di processo negli Impianti (libreria a 49 voci): **interruttore a galleggiante** (livello), **pressostato**, **termostato** (NC: si apre col caldo) e **fotocellula**, tutti a posizione mantenuta (un clic cambia lo stato misurato), con simboli CEI (galleggiante, P, θ, raggio di luce) e disegni realistici; il relè passo-passo ora è riconosciuto dall'editor come bobina che comanda contatti (`comandaContatti`). 1 nuovo test; `npm test` 639 OK.
 - 2026-11-02 — attività 8.4b: **pneumatica** negli Impianti (nuova categoria, libreria a 52 voci), come in CADe_SIMU in forma semplificata: **cilindro a doppio effetto con elettrovalvola 5/2 monostabile** (bobina A1-A2: alimentata lo stelo esce, non alimentata rientra; corsa 1,5 s) e **finecorsa a1 (stelo fuori) e a0 (stelo dentro)** legati al cilindro dalla sigla (posandoli prendono quella dell'ultimo cilindro). Motore: posizione dello stelo in `StatoImpianto.cilindri`, aggiornata a ogni passo; il passo si spezza esattamente quando lo stelo arriva a fine corsa (`prossimoEvento`), così i finecorsa commutano al momento giusto; nuovo comando dei contatti `{ tipo: "cilindro", fine }`. Simbolo ISO 1219 originale (bobina, valvola 5/2 a due quadrati con molla, cilindro con pistone e stelo) e disegno realistico (bobina nera, valvola in alluminio azzurro, tubi blu, canna cromata); in simulazione lo stelo esce animato. Nuovo esempio «Pneumatica: cilindro con andata e ritorno automatici». 2 nuovi test; `npm test` 642 OK, build OK, prova Playwright con lo stelo che esce.
+- 2026-11-02 — attività 8.5 e chiusura della Fase 8: `strumenti/prova-interfaccia.cjs` esteso con la sezione «Fase 8» (impianto civile con differenziale e vista Realistica, lampada da tre punti, relè passo-passo, PLC nello schema con la scheda Ladder, cilindro pneumatico: lo stelo si misura dal rettangolo disegnato perché `aspetto()` non guarda le misure); 138 controlli superati, nessun errore in console. Build Actions verdi n. 72, 73, 75, 76 (n. 74 fallita ai test, superata dal commit successivo). `npm test` 642 OK, build OK. README aggiornato con le novità degli Impianti. Scritto il resoconto della Fase 8; fase in attesa di conferma.

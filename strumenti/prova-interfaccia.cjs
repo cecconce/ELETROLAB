@@ -313,6 +313,9 @@ async function collega(pagina, a, b) {
   controlla(await nessunProblema(pagina), "nessuna oscillazione segnalata");
   await foto("08-temporizzato");
 
+  // === Fase 8: impianti civili, PLC nello schema, pneumatica ================
+  await provaImpiantiFase8(pagina, controlla, foto, apriEsempio);
+
   // === Modulo PLC ===========================================================
   await provaPlc(pagina, controlla, foto, apriEsempio);
 
@@ -333,6 +336,107 @@ async function collega(pagina, a, b) {
   console.error(e);
   process.exit(1);
 });
+
+// --- Impianti, Fase 8 --------------------------------------------------------
+
+/**
+ * Esempi aggiunti nella Fase 8, provati seguendo il loro «Come provarlo»:
+ * impianti civili (differenziale con tasto di prova, deviatori/invertitore,
+ * relè passo-passo), PLC posato nello schema con il Ladder nello stesso file,
+ * cilindro pneumatico con andata e ritorno automatici.
+ */
+async function provaImpiantiFase8(pagina, controlla, foto, apriEsempio) {
+  // Impianto civile: salvavita, punto luce e campanello.
+  console.log("Impianti civili: salvavita, punto luce e campanello");
+  await apriEsempio(pagina, "impianto-civile.elab");
+  await avvia(pagina);
+  controlla(await nessunProblema(pagina), "nessun problema all'avvio");
+  const h1Spenta = await aspetto(pagina, "H1");
+  await clicSu(pagina, "S1");
+  controlla((await aspetto(pagina, "H1")) !== h1Spenta, "clic su S1: la lampada H1 si accende");
+  await clicSu(pagina, "Q1"); // tasto di prova T: il differenziale scatta
+  controlla((await aspetto(pagina, "H1")) === h1Spenta, "tasto di prova su Q1: il differenziale scatta e la lampada si spegne");
+  await clicSu(pagina, "Q1"); // riarmo
+  controlla((await aspetto(pagina, "H1")) !== h1Spenta, "nuovo clic su Q1: riarmato, la lampada torna accesa");
+  await foto("08b-impianto-civile");
+  // Vista realistica (attività 8.2): i disegni nuovi non devono dare problemi.
+  await pagina.getByRole("radio", { name: /Realistica/ }).click();
+  await pagina.waitForTimeout(400);
+  controlla((await aspetto(pagina, "H1")) !== h1Spenta, "in vista Realistica la lampada resta accesa");
+  await foto("08c-impianto-civile-realistica");
+  await pagina.getByRole("radio", { name: /Simboli/ }).click();
+  await pagina.waitForTimeout(300);
+
+  // Lampada da tre punti con deviatori e invertitore.
+  console.log("Impianti civili: lampada da tre punti (deviatori e invertitore)");
+  await apriEsempio(pagina, "lampada-tre-punti.elab");
+  await avvia(pagina);
+  controlla(await nessunProblema(pagina), "nessun problema all'avvio");
+  let stato = await aspetto(pagina, "H1");
+  let tuttiCambiano = true;
+  for (const s of ["S1", "S2", "S3", "S2"]) {
+    await clicSu(pagina, s);
+    const nuovo = await aspetto(pagina, "H1");
+    if (nuovo === stato) tuttiCambiano = false;
+    stato = nuovo;
+  }
+  controlla(tuttiCambiano, "ogni clic su S1, S2, S3 cambia lo stato della lampada");
+
+  // Relè passo-passo.
+  console.log("Impianti civili: relè passo-passo");
+  await apriEsempio(pagina, "rele-passo-passo.elab");
+  await avvia(pagina);
+  controlla(await nessunProblema(pagina), "nessun problema all'avvio");
+  const h1Off = await aspetto(pagina, "H1");
+  await premi(pagina, "S1");
+  controlla((await aspetto(pagina, "H1")) !== h1Off, "un impulso su S1 accende la lampada e resta accesa");
+  await premi(pagina, "S3");
+  controlla((await aspetto(pagina, "H1")) === h1Off, "un impulso su S3 la spegne");
+
+  // PLC nello schema degli Impianti.
+  console.log("Impianti + PLC nello stesso file");
+  await apriEsempio(pagina, "plc-nello-schema.elab");
+  await avvia(pagina);
+  controlla(await nessunProblema(pagina), "nessun problema all'avvio");
+  await clicSu(pagina, "Q1");
+  const plcRiposo = await aspetto(pagina, "PLC1");
+  controlla(!(await inMovimento(pagina, "M1")), "M1 fermo prima della marcia");
+  await premi(pagina, "S1");
+  await pagina.waitForTimeout(300);
+  controlla(await inMovimento(pagina, "M1"), "S1 → I0.0 → Q0.0: K1 si eccita e il motore gira");
+  controlla((await aspetto(pagina, "PLC1")) !== plcRiposo, "sul PLC si accendono i LED delle uscite");
+  await foto("08d-plc-nello-schema");
+  await pagina.getByText("Programma PLC").first().click();
+  await pagina.waitForTimeout(500);
+  controlla((await pagina.locator("canvas").count()) > 0, "scheda «Programma PLC» aperta durante la simulazione");
+  await foto("08e-plc-nello-schema-ladder");
+  await pagina.getByText("Schema elettrico").first().click();
+  await pagina.waitForTimeout(500);
+  await premi(pagina, "S0");
+  await pagina.waitForTimeout(300);
+  controlla(!(await inMovimento(pagina, "M1")), "S0 ferma il motore");
+
+  // Pneumatica: cilindro con andata e ritorno.
+  console.log("Pneumatica: cilindro con andata e ritorno");
+  await apriEsempio(pagina, "cilindro-andata-ritorno.elab");
+  await avvia(pagina);
+  controlla(await nessunProblema(pagina), "nessun problema all'avvio");
+  // Lunghezza dello stelo che esce (rettangolo cromato disegnato sopra il
+  // cilindro durante la simulazione; 0 quando lo stelo è tutto dentro).
+  const larghezzaCilindro = () =>
+    pagina.evaluate(() => {
+      const steli = window.Konva.stages[0].find("Rect").filter((r) => r.fill() === "#cfd5da" && r.stroke() === "#5f686e");
+      return steli.length ? Math.max(...steli.map((r) => r.width())) : 0;
+    });
+  const riposo = await larghezzaCilindro();
+  await premi(pagina, "S1");
+  await pagina.waitForTimeout(500);
+  controlla((await larghezzaCilindro()) > riposo + 5, "S1: lo stelo del cilindro A1 esce");
+  await foto("08f-cilindro");
+  await pagina.waitForTimeout(4000); // andata (1,5 s) + ritorno (1,5 s) con margine
+  controlla(Math.abs((await larghezzaCilindro()) - riposo) < 1, "lo stelo torna da solo in posizione di riposo");
+  controlla(await nessunProblema(pagina), "nessuna oscillazione segnalata");
+}
 
 // --- Modulo PLC --------------------------------------------------------------
 
