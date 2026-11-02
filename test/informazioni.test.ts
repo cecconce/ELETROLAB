@@ -6,7 +6,7 @@ import pacchetto from "../package.json";
 import lock from "../package-lock.json";
 import cargoToml from "../src-tauri/Cargo.toml?raw";
 import licenze from "../LICENZE.txt?raw";
-import { LIBRERIE, licenzaCompatibile, istitutoDaMostrare } from "../src/informazioni/dati";
+import { LIBRERIE, licenzaCompatibile } from "../src/informazioni/dati";
 
 /** Nomi dei crate nella sezione [dependencies] o [build-dependencies] di Cargo.toml. */
 function crateDichiarati(toml: string): string[] {
@@ -77,13 +77,5 @@ describe("controllo delle licenze", () => {
     expect(licenzaCompatibile("Proprietaria")).toBe(false);
     expect(licenzaCompatibile("CC-BY-NC-4.0")).toBe(false);
     expect(licenzaCompatibile("")).toBe(false);
-  });
-});
-
-describe("istituto", () => {
-  it("usa la dicitura neutra finché il nome non è indicato", () => {
-    expect(istitutoDaMostrare("", "Istituto tecnico")).toBe("Istituto tecnico");
-    expect(istitutoDaMostrare("   ", "Istituto tecnico")).toBe("Istituto tecnico");
-    expect(istitutoDaMostrare(" ITIS Esempio ", "Istituto tecnico")).toBe("ITIS Esempio");
   });
 });

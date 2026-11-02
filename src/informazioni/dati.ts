@@ -1,15 +1,10 @@
-// Dati della finestra "Informazioni": autore, istituto, licenza e librerie usate.
+// Dati della finestra "Informazioni": sviluppatore, licenza e librerie usate.
 // L'elenco delle librerie è l'unica fonte: la finestra lo mostra e i test
 // controllano che corrisponda alle dipendenze vere (package.json, Cargo.toml)
 // e che ogni voce sia riportata anche in LICENZE.txt.
 
 export const AUTORE = "Pierluigi Ceccon";
 
-/**
- * Nome dell'istituto mostrato nella finestra. Vuoto finché il docente non lo
- * indica: in quel caso la finestra mostra un testo neutro ("Istituto tecnico").
- */
-export const ISTITUTO = "";
 
 export const LICENZA_PROGRAMMA = "GPL-3.0";
 
@@ -105,8 +100,3 @@ export function licenzaCompatibile(licenza: string): boolean {
   return parti.some((p) => LICENZE_COMPATIBILI.includes(p));
 }
 
-/** Testo dell'istituto da mostrare: il nome indicato oppure una dicitura neutra. */
-export function istitutoDaMostrare(istituto: string, predefinito: string): string {
-  const pulito = istituto.trim();
-  return pulito === "" ? predefinito : pulito;
-}

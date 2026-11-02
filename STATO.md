@@ -4,17 +4,21 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 6 – Modalità esercizio, esportazioni, rifiniture, installer, README e LICENZE** — completata — in attesa di conferma
+**Fase 7 – Miglioramenti richiesti dopo il piano originale** — in corso
 
-Obiettivo: le funzioni per il docente (esercizi con consegna e verifica automatica), esportazione e stampa degli schemi con cartiglio, rifiniture dell'interfaccia, installer finale e documentazione per chi mantiene il programma.
+Il piano (Fasi 0–6) è completo e confermato. Pierluigi ha chiesto di continuare a migliorare il programma («vai avanti per altre 2 ore»); le attività sono scelte per avvicinare ancora di più il funzionamento ai programmi di riferimento e per completare quanto previsto dalla Fase 0.
 
 ### Attività (una per sessione, in ordine)
 
-- [x] 6.1 Esportazione dello schema in PNG e PDF e stampa, con cartiglio (titolo, nome, classe, data, modulo); funziona anche con il tema scuro (stampa sempre su fondo bianco). PDF scritto senza librerie esterne. Test.
-- [x] 6.2 Modalità Esercizio: il docente salva uno schema incompleto con la consegna (e la soluzione nascosta); lo studente lo apre, vede la consegna in un riquadro e lo completa. File `.elab` con il campo `esercizio`. Test.
-- [x] 6.3 Verifica automatica del funzionamento (Impianti e PLC): il programma prova lo schema dello studente e la soluzione del docente con le stesse azioni sui comandi e confronta lampade, bobine e motori; esito spiegato in italiano. Test.
-- [x] 6.4 README in italiano (come compilare l'.exe, come aggiungere un componente e un esercizio), LICENZE.txt e finestra Informazioni aggiornate, installer anche silenzioso per il tecnico (documentato).
-- [x] 6.5 Rifiniture e verifica finale: build Actions, prova Playwright di tutti i moduli, resoconto di fase.
+- [x] 7.1 Finestra Informazioni senza istituto: solo lo sviluppatore (Pierluigi Ceccon), come richiesto.
+- [ ] 7.2 Impianti: colore delle lampade di segnalazione (rossa, verde, gialla, bianca, blu) scelto nelle Proprietà, con la luce del colore giusto in simulazione e nella vista Realistica.
+- [ ] 7.3 Arduino: editor del codice con evidenziazione della sintassi, numeri di riga e completamento delle funzioni Arduino (CodeMirror 6, previsto nella Fase 0).
+- [ ] 7.4 Elettronica: plotter di Bode (strumento per la risposta in frequenza, usa l'analisi AC già nel motore).
+- [ ] 7.5 Verifica finale: build Actions, prova Playwright, resoconto.
+
+## Fase 6 – Modalità esercizio, esportazioni, rifiniture (confermata il 2026-11-02)
+
+Attività 6.1–6.5 tutte completate; resoconto qui sotto.
 
 ## Resoconto della Fase 6 (2026-11-02)
 
@@ -41,7 +45,6 @@ Obiettivo: le funzioni per il docente (esercizi con consegna e verifica automati
 - La soluzione nel file è solo codificata, non cifrata: uno studente esperto potrebbe decodificarla. Anche il pulsante «📝 Esercizio» è visibile agli studenti (non ci sono account, per scelta di privacy).
 - La verifica riconosce comandi e utilizzatori dalla sigla: lo studente deve usare le sigle della consegna. Prova una sequenza fissa di azioni (circa 60 nel modulo Impianti/PLC, meno in Elettronica e Arduino): un errore che si vede solo in una combinazione non provata può sfuggire. Arduino: si confrontano LED, servo, buzzer, display e l'ultima riga del monitor seriale, non i valori intermedi; potenziometri, fotoresistenze e distanze non vengono mossi.
 - La stampa usa la finestra di stampa di Windows (WebView2); il PDF contiene l'immagine della tavola (non testo selezionabile).
-- Il nome dell'istituto nella finestra Informazioni è ancora vuoto (mostra «Istituto tecnico»): va scritto in `src/informazioni/dati.ts`.
 - L'.exe non è stato provato su un PC Windows reale.
 
 ## Fase 4 – Modulo Elettronica (confermata il 2026-11-02)
@@ -246,7 +249,7 @@ Attività 1.1–1.10 tutte completate; resoconto qui sotto.
 - **L'.exe non è stato avviato su un PC Windows reale**: le sessioni automatiche girano su Linux. Va provato da Pierluigi (passi 1–6), in particolare finestre Apri/Salva native e cartella `dati`.
 - Programma non firmato digitalmente: Windows SmartScreen mostra un avviso al primo avvio.
 - La versione portable richiede il runtime WebView2 (già presente in Windows 10/11 aggiornati); l'installer lo scarica se manca.
-- Nome dell'istituto ancora generico (da scrivere in `ISTITUTO` in `src/informazioni/dati.ts`).
+- ~~Nome dell'istituto ancora generico~~ (il 2026-11-02 il docente ha chiesto di non indicarlo: la finestra Informazioni mostra solo lo sviluppatore).
 - I moduli non simulano ancora nulla: per ora sono editor di schemi (la simulazione arriva dalla Fase 2). "Esempi" è vuoto.
 - I fili non aggirano i simboli; gli appunti sono interni all'app; i file della libreria sono inclusi nella build (aggiungere componenti richiede ricompilare); associazione dei file `.elab` rimandata alla Fase 6.
 - Arduino ha per ora simboli schematici: la breadboard realistica arriva nella Fase 5.
@@ -261,7 +264,8 @@ Attività 1.1–1.10 tutte completate; resoconto qui sotto.
 | 3 | PLC Ladder + impianti virtuali animati | completata (confermata 2026-11-01) |
 | 4 | Elettronica con simulazione circuitale e strumenti virtuali | completata (confermata 2026-11-02) |
 | 5 | Arduino con breadboard ed editor codice/blocchi | completata (confermata 2026-11-02, anticipata prima della 4) |
-| 6 | Modalità esercizio, esportazioni, installer, README e LICENZE | completata — in attesa di conferma |
+| 6 | Modalità esercizio, esportazioni, installer, README e LICENZE | completata (confermata 2026-11-02) |
+| 7 | Miglioramenti dopo il piano (lampade colorate, editor del codice, plotter di Bode) | in corso |
 
 ## Regola
 
@@ -318,3 +322,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-02 — attività 6.2 e 6.3: modalità Esercizio e verifica automatica. Pulsante «📝 Esercizio» nell'intestazione: finestra per il docente con i passi spiegati, consegna, «Usa questo schema come soluzione», «Togli tutti i fili», «Salva la consegna», «Togli l'esercizio». Nel `.elab` il campo `esercizio` con la consegna e la soluzione **codificata** (base64, non leggibile aprendo il file; `codificaTesto`/`decodificaTesto` in formato.ts, lettura di componenti e fili riusata per la soluzione). Lo studente vede sopra il foglio il riquadro arancione della consegna (riducibile) con «✔ Verifica il funzionamento». Nuovo `src/progetto/verifica.ts`: lo schema dello studente e la soluzione vengono provati con la stessa sequenza di azioni (prima i comandi a posizione mantenuta, poi ogni pulsante da solo, poi 60 azioni pseudo-casuali sempre uguali con attese di 6 s per i temporizzatori); dopo ogni azione si confrontano bobine, lampade, sirene e motori con il verso (Impianti) o le uscite Q (PLC), riconosciuti dalla sigla; l'esito spiega in italiano le prime differenze («Dopo «commuta Q1 → premi e rilascia S0 → premi e rilascia S1»: M1 dovrebbe essere «in rotazione oraria», invece è «fermo»; …») o i componenti con sigla mancante; conta solo il funzionamento, non come sono disegnati i fili. Elettronica e Arduino: consegna sì, verifica automatica no (detto nella finestra del docente). 10 nuovi test (schema giusto anche con i fili in altro ordine, autoritenuta mancante, arresto scavalcato, sigla diversa, verso di rotazione sbagliato nel teleinvertitore, PLC uguale e PLC con un contatto in meno, salvataggio e rilettura dell'esercizio, moduli senza verifica); `npm test` 590 OK, build OK, prova Playwright del flusso completo (docente prepara l'esercizio dalla marcia/arresto, verifica senza fili → spiegazione, fili ripristinati → «Bravo!»).
 - 2026-11-02 — attività 6.4: README in italiano riscritto: i quattro moduli con il programma di riferimento (solo funzionale), funzioni per il docente, principi (offline, portable, leggero, aperto), istruzioni per i laboratori (versione portable con `portable.txt`, installer per l'utente corrente, **installazione silenziosa** `/S` e `/S /D=cartella`, disinstallazione silenziosa, WebView2), strumenti e comandi per compilare e provare (`npm ci`, `npm test`, `npx tauri build`, `cargo test`, prova dell'interfaccia), struttura delle cartelle, **come aggiungere un componente** (voce JSON con esempio, simbolo SVG in currentColor, disegno realistico, modello di simulazione per ogni modulo), **come aggiungere un esercizio** (dal programma con la modalità Esercizio, oppure fra gli esempi pronti con `esempi.json`), formato dei file `.elab`, autore e licenza. LICENZE.txt e finestra Informazioni già allineati (nessuna libreria nuova in questa fase: il PDF è scritto senza librerie; il test delle licenze lo controlla). `npm test` 590 OK.
 - 2026-11-02 — attività 6.5 e chiusura della Fase 6: verifica automatica estesa a Elettronica (LED, lampadine, sonde, display, multimetri a due cifre significative) e Arduino (i due programmi eseguiti sui due banchi, LED con il livello di luminosità, LED «L», servo, buzzer, display, monitor seriale; la soluzione registra anche il codice); Arduino più veloce (il circuito si ricalcola solo quando un pin cambia davvero); due esercizi di esempio da `strumenti/genera-esercizi.ts`; intestazione e barra compatte sotto i 1440 px; `prova-interfaccia` estesa a esportazione ed esercizi (115 controlli superati). Build Actions verdi (n. 50, 52, 53, 55). `npm test` 596 OK, build OK. Scritto il resoconto della Fase 6; fase in attesa di conferma.
+- 2026-11-02 — Fase 6 confermata da Pierluigi in chat; avviata la Fase 7 (miglioramenti). Attività 7.1: tolto l'istituto dalla finestra Informazioni (costante `ISTITUTO`, funzione e testi relativi rimossi), la voce «Autore» diventa «Sviluppatore: Pierluigi Ceccon». `npm test` 595 OK.

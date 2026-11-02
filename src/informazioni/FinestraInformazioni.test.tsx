@@ -15,7 +15,8 @@ describe("finestra Informazioni", () => {
     expect(html).toContain("Versione 1.2.3");
     expect(html).toContain("GPL-3.0");
     expect(html).toContain(t("info.privacyTesto"));
-    expect(html).toContain(t("info.istitutoPredefinito"));
+    expect(html).toContain(t("info.autore"));
+    expect(html).not.toContain("Istituto");
     expect(html).toContain(t("comune.chiudi"));
   });
 

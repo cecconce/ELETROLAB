@@ -1,9 +1,9 @@
-// Finestra "Informazioni": autore, istituto, versione, licenza, privacy,
+// Finestra "Informazioni": sviluppatore, versione, licenza, privacy,
 // cartella dei dati ed elenco delle librerie usate con la loro licenza.
 // È un componente "puro" (dati dalle props), provato nei test senza browser.
 import { useEffect, useRef } from "react";
 import { t } from "../testi";
-import { AUTORE, ISTITUTO, LIBRERIE, LICENZA_PROGRAMMA, istitutoDaMostrare } from "./dati";
+import { AUTORE, LIBRERIE, LICENZA_PROGRAMMA } from "./dati";
 
 export interface PropsFinestraInformazioni {
   versione: string;
@@ -44,8 +44,6 @@ export function FinestraInformazioni(props: PropsFinestraInformazioni) {
           </dd>
           <dt>{t("info.autore")}</dt>
           <dd>{AUTORE}</dd>
-          <dt>{t("info.istituto")}</dt>
-          <dd>{istitutoDaMostrare(ISTITUTO, t("info.istitutoPredefinito"))}</dd>
           <dt>{t("info.licenza")}</dt>
           <dd>{t("info.licenzaTesto", { licenza: LICENZA_PROGRAMMA })}</dd>
           <dt>{t("info.privacy")}</dt>
