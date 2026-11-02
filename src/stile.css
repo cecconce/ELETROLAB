@@ -1007,3 +1007,38 @@ button.io-plc {
   color: #ffffff;
   border-color: transparent;
 }
+
+/* Stampa della tavola: si vede solo l'immagine, su un foglio A4 orizzontale. */
+.area-stampa {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  body > *:not(.area-stampa) {
+    display: none !important;
+  }
+  .area-stampa {
+    display: block;
+  }
+  .area-stampa img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* Finestra Esporta e stampa */
+.finestra-esporta {
+  width: min(460px, 92vw);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pulsanti-finestra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}

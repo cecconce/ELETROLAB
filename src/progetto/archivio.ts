@@ -30,6 +30,10 @@ export interface Archivio {
   scriviImpostazioni(contenuto: string): Promise<void>;
   leggiAutosalvataggio(modulo: IdModulo): Promise<string | null>;
   scriviAutosalvataggio(modulo: IdModulo, contenuto: string): Promise<void>;
+  /** Finestra "Salva con nome" per un'esportazione (png o pdf): percorso o null. */
+  scegliFileEsportazione(nomeSuggerito: string, estensione: "png" | "pdf"): Promise<string | null>;
+  /** Scrive un file binario esportato (nel browser lo scarica). */
+  scriviEsportazione(percorso: string, dati: Uint8Array): Promise<void>;
   /** Domanda sì/no (es. "perdere le modifiche?"). */
   conferma(domanda: string): Promise<boolean>;
 }
@@ -60,6 +64,12 @@ const archivioDesktop: Archivio = {
     const scelto = await save({ title: t("file.salvaTitolo"), defaultPath: conEstensioneElab(nomeSuggerito), filters: filtri() });
     return scelto ? conEstensioneElab(scelto) : null;
   },
+  async scegliFileEsportazione(nomeSuggerito, estensione) {
+    const nome = conEstensione(nomeSuggerito, estensione);
+    const scelto = await save({ title: t("esporta.titolo"), defaultPath: nome, filters: [{ name: estensione.toUpperCase(), extensions: [estensione] }] });
+    return scelto ? conEstensione(scelto, estensione) : null;
+  },
+  scriviEsportazione: (percorso, dati) => comando("scrivi_esportazione", { percorso, dati: Array.from(dati) }),
   leggiFile: (percorso) => comando("leggi_progetto", { percorso }),
   scriviFile: (percorso, contenuto) => comando("scrivi_progetto", { percorso, contenuto }),
   leggiImpostazioni: () => comando("leggi_impostazioni"),
@@ -114,8 +124,28 @@ const archivioBrowser: Archivio = {
   scriviImpostazioni: async (contenuto) => scriviChiave("impostazioni", contenuto),
   leggiAutosalvataggio: async (modulo) => leggiChiave("auto:" + modulo),
   scriviAutosalvataggio: async (modulo, contenuto) => scriviChiave("auto:" + modulo, contenuto),
+  async scegliFileEsportazione(nomeSuggerito, estensione) {
+    return conEstensione(nomeSuggerito, estensione);
+  },
+  async scriviEsportazione(percorso, dati) {
+    // Nel browser il file si scarica (cartella Download).
+    const url = URL.createObjectURL(new Blob([dati as BlobPart]));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = percorso.split(/[\\/]/).pop() ?? percorso;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
   conferma: async (domanda) => window.confirm(domanda),
 };
+
+/** Aggiunge l'estensione se manca ("schema" → "schema.pdf"). */
+export function conEstensione(nome: string, estensione: string): string {
+  const senza = nome.replace(/\.elab$/i, "");
+  return senza.toLowerCase().endsWith(`.${estensione}`) ? senza : `${senza}.${estensione}`;
+}
 
 /** Archivio giusto per l'ambiente in cui gira l'interfaccia. */
 export function creaArchivio(): Archivio {

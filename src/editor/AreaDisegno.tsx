@@ -139,6 +139,11 @@ export interface PropsAreaDisegno {
   realistico?: boolean;
   /** Se presente, nella barra compare il pulsante per passare da Simboli a Realistico. */
   onCambiaRealistico?: (realistico: boolean) => void;
+  /**
+   * Riferimento in cui l'area mette la funzione che disegna tutto lo schema
+   * (senza griglia) su un canvas, per l'esportazione e la stampa; null se il foglio è vuoto.
+   */
+  esportatore?: React.MutableRefObject<(() => HTMLCanvasElement | null) | null>;
 }
 
 /**
@@ -218,6 +223,7 @@ export function AreaDisegno({
   sopraBarra = null,
   realistico = false,
   onCambiaRealistico,
+  esportatore,
 }: PropsAreaDisegno) {
   const inSimulazione = simulazione !== null;
   // Letto dal gestore dei tasti, registrato una volta sola.
@@ -650,6 +656,27 @@ export function AreaDisegno({
   const morsettiFondo = morsetti.filter((m) => eFondo(tipoDi.get(m.componente) ?? ""));
   const morsettiSopra = morsetti.filter((m) => !eFondo(tipoDi.get(m.componente) ?? ""));
 
+  // Esportazione: lo strato dei componenti e dei fili (non la griglia) disegnato
+  // su un canvas a risoluzione doppia, qualunque sia lo zoom attuale.
+  const stageRif = useRef<Konva.Stage>(null);
+  if (esportatore) {
+    esportatore.current = () => {
+      const stage = stageRif.current;
+      const r = ingombroSchema(schema);
+      const strato = stage?.getLayers()[1];
+      if (!stage || !r || !strato) return null;
+      const margine = 60;
+      const s = vista.scala;
+      return strato.toCanvas({
+        x: vista.x + (r.x - margine) * s,
+        y: vista.y + (r.y - margine) * s,
+        width: (r.larghezza + 2 * margine) * s,
+        height: (r.altezza + 2 * margine) * s,
+        pixelRatio: 2 / s,
+      });
+    };
+  }
+
   const disegnaComponente = (c: ComponenteSchema) => {
                 const scelto = selezionati.has(c.id);
                 const aspetto = simulazione?.vista.componenti[c.id];
@@ -818,6 +845,7 @@ export function AreaDisegno({
       >
         {larghezza > 0 && altezza > 0 && (
           <Stage
+            ref={stageRif}
             width={larghezza}
             height={altezza}
             scaleX={vista.scala}

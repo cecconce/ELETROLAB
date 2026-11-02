@@ -36,6 +36,23 @@ pub fn scrivi_atomico(percorso: &Path, contenuto: &str) -> Result<(), String> {
     })
 }
 
+/// Come `scrivi_atomico` ma per dati binari (immagini PNG e PDF esportati).
+pub fn scrivi_binario_atomico(percorso: &Path, contenuto: &[u8]) -> Result<(), String> {
+    if let Some(cartella) = percorso.parent() {
+        if !cartella.as_os_str().is_empty() {
+            fs::create_dir_all(cartella).map_err(|e| errore_scrittura(percorso, &e))?;
+        }
+    }
+    let mut temporaneo = percorso.as_os_str().to_owned();
+    temporaneo.push(".tmp");
+    let temporaneo = PathBuf::from(temporaneo);
+    fs::write(&temporaneo, contenuto).map_err(|e| errore_scrittura(percorso, &e))?;
+    fs::rename(&temporaneo, percorso).map_err(|e| {
+        let _ = fs::remove_file(&temporaneo);
+        errore_scrittura(percorso, &e)
+    })
+}
+
 /// Legge un file di testo (UTF-8) con un limite di dimensione.
 pub fn leggi_testo(percorso: &Path) -> Result<String, String> {
     let info = fs::metadata(percorso).map_err(|e| errore_lettura(percorso, &e))?;
@@ -137,6 +154,15 @@ mod test {
         assert_eq!(leggi_testo(&file).unwrap(), "{\"formato\":\"elettrolab\"}");
         // Nessun file temporaneo rimasto.
         assert!(!base.join("sotto").join("marcia arresto.elab.tmp").exists());
+    }
+
+    #[test]
+    fn scrive_un_file_binario() {
+        let cartella = cartella_temporanea("binario");
+        let percorso = cartella.join("schema.png");
+        scrivi_binario_atomico(&percorso, &[0x89, b'P', b'N', b'G', 0, 255]).unwrap();
+        assert_eq!(fs::read(&percorso).unwrap(), vec![0x89, b'P', b'N', b'G', 0, 255]);
+        let _ = fs::remove_dir_all(&cartella);
     }
 
     #[test]

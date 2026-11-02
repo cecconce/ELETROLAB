@@ -46,6 +46,12 @@ fn scrivi_progetto(percorso: String, contenuto: String) -> Result<(), String> {
     archivio::scrivi_atomico(Path::new(&percorso), &contenuto)
 }
 
+/// Scrive un'esportazione (PNG o PDF) nel percorso scelto dallo studente.
+#[tauri::command]
+fn scrivi_esportazione(percorso: String, dati: Vec<u8>) -> Result<(), String> {
+    archivio::scrivi_binario_atomico(Path::new(&percorso), &dati)
+}
+
 #[tauri::command]
 fn leggi_impostazioni(stato: tauri::State<Stato>) -> Result<Option<String>, String> {
     archivio::leggi_se_esiste(&stato.dati.percorso.join(archivio::FILE_IMPOSTAZIONI))
@@ -105,6 +111,7 @@ pub fn avvia() {
             info_cartella_dati,
             leggi_progetto,
             scrivi_progetto,
+            scrivi_esportazione,
             leggi_impostazioni,
             scrivi_impostazioni,
             leggi_autosalvataggio,

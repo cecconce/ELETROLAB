@@ -279,5 +279,19 @@
   "vista.titolo": "Aspetto dei componenti",
   "vista.simboli": "Simboli",
   "vista.realistica": "Realistica",
-  "vista.suggerimento": "Simboli: schema secondo le norme CEI. Realistica: disegni degli apparecchi veri. Fili e simulazione restano uguali."
+  "vista.suggerimento": "Simboli: schema secondo le norme CEI. Realistica: disegni degli apparecchi veri. Fili e simulazione restano uguali.",
+  "esporta.pulsante": "Esporta / Stampa",
+  "esporta.tasti": "Esporta lo schema in PNG o PDF con il cartiglio, oppure stampalo (Ctrl+P)",
+  "esporta.titolo": "Esporta e stampa lo schema",
+  "esporta.introduzione": "Lo schema viene messo su un foglio A4 orizzontale con il cartiglio in basso a destra. Il fondo è sempre bianco, anche con il tema scuro.",
+  "esporta.titoloSchema": "Titolo dello schema",
+  "esporta.nome": "Nome e cognome",
+  "esporta.classe": "Classe",
+  "esporta.data": "Data",
+  "esporta.png": "Immagine PNG",
+  "esporta.pdf": "Documento PDF",
+  "esporta.stampa": "Stampa",
+  "esporta.vuoto": "Il foglio è vuoto: disegna qualcosa prima di esportare.",
+  "esporta.fatto": "Esportato: {nome}",
+  "esporta.errore": "Non è stato possibile esportare: {motivo}"
 }

@@ -57,6 +57,8 @@ import {
 } from "../motori/elettronica";
 import { componentiDaSchemaElettronica, vistaDaSessioneElettronica } from "../editor/elettronica";
 import { PannelloAnalizzatore, PannelloOscilloscopio } from "../editor/PannelloOscilloscopio";
+import { FinestraEsporta } from "./FinestraEsporta";
+import { componiTavola, stampaTavola, tavolaPdf, tavolaPng, type Cartiglio } from "../editor/esportazione";
 import { vocePerTipo } from "../editor/libreria";
 import { PannelloIngressiPlc } from "../editor/PannelloIngressiPlc";
 import { problemiDaMostrare } from "../editor/messaggiProblemi";
@@ -231,15 +233,38 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     [scriviAutomatico],
   );
 
-  // --- Scorciatoie dei file: Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Maiusc+S ------
-  const comandi = useRef({ nuovo, apri, salva });
-  comandi.current = { nuovo, apri, salva };
+  // --- Esportazione e stampa (PNG, PDF, stampante) con il cartiglio --------
+  const esportatore = useRef<(() => HTMLCanvasElement | null) | null>(null);
+  const [finestraEsporta, setFinestraEsporta] = useState(false);
+  const esporta = useCallback(
+    async (formato: "png" | "pdf" | "stampa", cartiglio: Cartiglio) => {
+      setFinestraEsporta(false);
+      const tavola = componiTavola(esportatore.current?.() ?? null, cartiglio, tema === "scuro");
+      if (formato === "stampa") {
+        stampaTavola(tavola);
+        return;
+      }
+      try {
+        const nome = (cartiglio.titolo || t("file.nomePredefinito")).replace(/[\\/:*?"<>|]/g, "_");
+        const destinazione = await archivio.scegliFileEsportazione(nome, formato);
+        if (!destinazione) return;
+        await archivio.scriviEsportazione(destinazione, formato === "png" ? tavolaPng(tavola) : tavolaPdf(tavola, cartiglio.titolo));
+      } catch (e) {
+        onErrore(t("esporta.errore", { motivo: (e as Error).message }));
+      }
+    },
+    [archivio, onErrore, tema],
+  );
+
+  // --- Scorciatoie dei file: Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Maiusc+S, Ctrl+P ---
+  const comandi = useRef({ nuovo, apri, salva, esporta: () => setFinestraEsporta(true) });
+  comandi.current = { nuovo, apri, salva, esporta: () => setFinestraEsporta(true) };
   useEffect(() => {
     const giu = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
       const tasto = e.key.toLowerCase();
       const c = comandi.current;
-      const azione = { n: c.nuovo, o: c.apri, s: () => c.salva(e.shiftKey) }[tasto];
+      const azione = { n: c.nuovo, o: c.apri, s: () => c.salva(e.shiftKey), p: c.esporta }[tasto];
       if (azione) {
         e.preventDefault(); // niente comandi della WebView (es. Ctrl+N = nuova finestra)
         void azione();
@@ -423,6 +448,15 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const nomeFile = percorso ? nomeDaPercorso(percorso) : (documento.titolo ?? t("file.senzaNome"));
   return (
     <div className="schermata-modulo" data-modulo={modulo.id}>
+      {finestraEsporta && (
+        <FinestraEsporta
+          titoloIniziale={nomeFile.replace(/\.elab$/i, "")}
+          modulo={t(modulo.chiaveTitolo)}
+          vuoto={schema.componenti.length === 0}
+          onEsporta={(f, c) => void esporta(f, c)}
+          onChiudi={() => setFinestraEsporta(false)}
+        />
+      )}
       <header className="intestazione intestazione-modulo" style={{ borderColor: modulo.coloreAccento }}>
         <button type="button" className="pulsante" onClick={props.onIndietro}>
           ← {t("comune.home")}
@@ -460,6 +494,9 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           <button type="button" className="pulsante" onClick={() => void salva(true)} title={t("file.salvaConNomeTasti")} disabled={salvataggioInCorso}>
             {t("file.salvaConNome")}
           </button>
+          <button type="button" className="pulsante" onClick={() => setFinestraEsporta(true)} title={t("esporta.tasti")}>
+            🖨 {t("esporta.pulsante")}
+          </button>
         </nav>
       </header>
       <div className={inSimulazione ? "corpo-modulo in-simulazione" : "corpo-modulo"}>
@@ -478,6 +515,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           onSelezione={setSelezione}
           simulazione={simulazione}
           evidenzia={evidenzia}
+          esportatore={esportatore}
           realistico={conVistaRealistica && realistico}
           onCambiaRealistico={conVistaRealistica ? cambiaRealistico : undefined}
           sopraBarra={
