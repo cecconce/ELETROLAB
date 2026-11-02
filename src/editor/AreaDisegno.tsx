@@ -723,6 +723,7 @@ export function AreaDisegno({
                         voce={vociPerTipo.get(c.tipo)}
                         aspetto={aspetto}
                         colori={colori}
+                        realistico={realistico}
                       />
                     )}
                     </Group>
@@ -1199,6 +1200,8 @@ interface PropsAspetto {
   voce: VoceLibreria | undefined;
   aspetto: AspettoComponente;
   colori: ColoriEditor;
+  /** Vista realistica: manopole, leve e maniglie si disegnano nella posizione azionata. */
+  realistico?: boolean;
 }
 
 /**
@@ -1210,7 +1213,7 @@ interface PropsAspetto {
  * - motore che gira: freccia che ruota nel verso di rotazione (con Y/Δ);
  * - protezione intervenuta o motore in sovraccarico: segni rossi.
  */
-function AspettoInSimulazione({ componente: c, voce, aspetto, colori }: PropsAspetto) {
+function AspettoInSimulazione({ componente: c, voce, aspetto, colori, realistico = false }: PropsAspetto) {
   const w = c.larghezza;
   const h = c.altezza;
   const posMorsetto = (id: string) => voce?.morsetti.find((m) => m.id === id);
@@ -1269,12 +1272,17 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori }: PropsAsp
       {aspetto.azionato && ePulsante(c.tipo) && (
         // Pulsante premuto: il tasto (a sinistra del simbolo) si colora e "rientra" verso il contatto.
         <>
-          <Rect x={-6} y={26} width={16} height={28} fill={colori.azionato} opacity={0.9} cornerRadius={4} shadowColor={colori.azionato} shadowBlur={10} shadowOpacity={0.8} />
-          <Line points={[10, 40, 18, 40]} stroke={colori.azionato} strokeWidth={3} lineCap="round" />
+          {c.tipo.startsWith("pulsante-") && (
+            <>
+              <Rect x={-6} y={26} width={16} height={28} fill={colori.azionato} opacity={0.9} cornerRadius={4} shadowColor={colori.azionato} shadowBlur={10} shadowOpacity={0.8} />
+              <Line points={[10, 40, 18, 40]} stroke={colori.azionato} strokeWidth={3} lineCap="round" />
+            </>
+          )}
           {testo(`👇 ${t("simulazione.premuto")}`, -18, colori.azionato)}
         </>
       )}
       {aspetto.azionato && !ePulsante(c.tipo) && aspetto.clic === "manuale" && utilizzatore === null && testo(`● ${t("simulazione.azionato")}`, -18, colori.azionato)}
+      {realistico && aspetto.azionato && <ComandoRealisticoAzionato tipo={c.tipo} />}
       {aspetto.motore && (
         <MotoreInMarcia
           {...centroMotore(c.tipo, w, h)}
@@ -1294,6 +1302,39 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori }: PropsAsp
       {aspetto.valore && testo(aspetto.valore, h + 4, colori.attivo)}
     </Group>
   );
+}
+
+/**
+ * Vista realistica: il comando a posizione mantenuta disegnato nella posizione
+ * azionata (stesse coordinate dei disegni di genera-icone-realistiche-impianti.ts):
+ * manopola del selettore girata, leva dell'interruttore abbassata, maniglia del
+ * sezionatore orizzontale.
+ */
+function ComandoRealisticoAzionato({ tipo }: { tipo: string }) {
+  if (tipo === "selettore" || tipo === "selettore-nc")
+    return (
+      <Group listening={false}>
+        <Circle x={11} y={40} radius={10} fill="#37474f" stroke="#212121" />
+        <Group x={11} y={40} rotation={30}>
+          <Rect x={-2} y={-9} width={4} height={18} cornerRadius={2} fill="#eceff1" />
+        </Group>
+      </Group>
+    );
+  if (tipo === "interruttore-na" || tipo === "interruttore-nc")
+    return (
+      <Group listening={false}>
+        <Rect x={4} y={30} width={16} height={22} cornerRadius={3} fill="#455a64" />
+        <Rect x={8} y={40} width={8} height={18} cornerRadius={3} fill="#eceff1" stroke="#90a4ae" />
+      </Group>
+    );
+  if (tipo === "sezionatore")
+    return (
+      <Group listening={false}>
+        <Circle x={40} y={40} radius={13} fill="#c62828" />
+        <Rect x={25} y={36} width={30} height={8} cornerRadius={3} fill="#e53935" stroke="#b71c1c" />
+      </Group>
+    );
+  return null;
 }
 
 /** Pulsanti (si tengono premuti): impianti e quadro del PLC. */
