@@ -198,6 +198,13 @@
       "prova": "Premi ▶ AVVIA: il multimetro XMM1 indica circa 6 V. Ferma la simulazione, seleziona R2 e cambia il valore nelle Proprietà (per esempio 1k: la misura diventa 4,5 V). Prova anche il multimetro in funzione Ω (a circuito spento misura le resistenze) o A (va messo in serie)."
     },
     {
+      "file": "elettronica-wattmetro.elab",
+      "modulo": "elettronica",
+      "titolo": "Potenza di una lampadina e wattmetro",
+      "descrizione": "Il wattmetro misura la potenza assorbita dalla lampadina da 12 V – 1,2 W: la corrente passa dentro lo strumento (I+ → I−, in serie) e la tensione si prende ai capi della lampadina (V+ e V−, in parallelo). P = V · I = 12 V · 0,1 A = 1,2 W.",
+      "prova": "Premi ▶ AVVIA: il wattmetro indica circa 1,2 W e la lampadina è accesa. Ferma, cambia la tensione del generatore (per esempio 6 V) e riprova: la potenza diventa un quarto (P = V² / R)."
+    },
+    {
       "file": "elettronica-filtro-rc.elab",
       "modulo": "elettronica",
       "titolo": "Filtro RC passa-basso: oscilloscopio e plotter di Bode",

@@ -77,6 +77,22 @@ function scrivi(file: string, schema: Schema) {
   scrivi("elettronica-partitore.elab", b.schema());
 }
 
+// 1b. Potenza di una lampadina misurata con il wattmetro
+{
+  const b = costruttore();
+  b.posa("generatore-dc", 100, 100, { tensione: 12 });
+  b.posa("wattmetro", 200, 40);
+  b.posa("lampadina", 360, 60, { tensione: 12, potenza: 1.2 });
+  const gnd = b.posa("massa", 100, 240);
+  b.filo("V1.+", "XWM1.I+");
+  b.filo("XWM1.I-", "H1.1");
+  b.filo("XWM1.V+", "H1.1");
+  b.filo("H1.2", `${gnd}.0`);
+  b.filo("XWM1.V-", `${gnd}.0`);
+  b.filo("V1.-", `${gnd}.0`);
+  scrivi("elettronica-wattmetro.elab", b.schema());
+}
+
 // 2. Filtro RC passa-basso con generatore di funzioni e oscilloscopio
 {
   const b = costruttore();

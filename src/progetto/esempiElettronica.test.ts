@@ -29,15 +29,22 @@ const scorri = (s: SessioneElettronica, secondi: number) => {
 const massimo = (v: number[]) => Math.max(...v);
 
 describe("esempi del modulo Elettronica", () => {
-  it("il catalogo ha 9 esempi di Elettronica con descrizione e «Come provarlo»", () => {
+  it("il catalogo ha gli esempi di Elettronica con descrizione e «Come provarlo»", () => {
     const el = ESEMPI.filter((e) => e.modulo === "elettronica");
-    expect(el).toHaveLength(9);
+    expect(el).toHaveLength(10);
     for (const e of el) expect(e.prova.length).toBeGreaterThan(40);
   });
 
   it("partitore: il multimetro indica 6 V, senza problemi", () => {
     const { schema, s } = apri("elettronica-partitore.elab");
     expect(s.letture.XMM1.valore).toBeCloseTo(6, 2);
+    expect(problemiElettronica(s, schema, libreria)).toEqual([]);
+  });
+
+  it("wattmetro: la lampadina da 12 V assorbe 1,2 W", () => {
+    const { schema, s } = apri("elettronica-wattmetro.elab");
+    scorri(s, 0.05);
+    expect(s.letture.XWM1.valore!).toBeCloseTo(1.2, 2);
     expect(problemiElettronica(s, schema, libreria)).toEqual([]);
   });
 

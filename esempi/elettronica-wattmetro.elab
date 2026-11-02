@@ -1,0 +1,122 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "elettronica",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T11:30:30.104Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "V1",
+        "tipo": "generatore-dc",
+        "etichetta": "V1",
+        "x": 100,
+        "y": 100,
+        "larghezza": 40,
+        "altezza": 80,
+        "parametri": {
+          "tensione": 12
+        }
+      },
+      {
+        "id": "XWM1",
+        "tipo": "wattmetro",
+        "etichetta": "XWM1",
+        "x": 200,
+        "y": 40,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "H1",
+        "tipo": "lampadina",
+        "etichetta": "H1",
+        "x": 360,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "parametri": {
+          "tensione": 12,
+          "potenza": 1.2
+        }
+      },
+      {
+        "id": "massa-4",
+        "tipo": "massa",
+        "etichetta": "",
+        "x": 100,
+        "y": 240,
+        "larghezza": 40,
+        "altezza": 40
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "V1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "XWM1",
+          "morsetto": "I+"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "XWM1",
+          "morsetto": "I-"
+        },
+        "a": {
+          "componente": "H1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "XWM1",
+          "morsetto": "V+"
+        },
+        "a": {
+          "componente": "H1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "H1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "massa-4",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "XWM1",
+          "morsetto": "V-"
+        },
+        "a": {
+          "componente": "massa-4",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "V1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "massa-4",
+          "morsetto": "0"
+        }
+      }
+    ]
+  }
+}
