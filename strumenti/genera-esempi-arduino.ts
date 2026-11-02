@@ -485,3 +485,36 @@ void loop() {
 `),
   );
 }
+
+// 10. Misure con il multimetro
+{
+  const b = costruttore();
+  b.resistenza("a8"); // colonne 8–12
+  b.led("rosso", "e14");
+  b.filo("U:D13", "b8", ARANCIONE);
+  b.filo("c16", "Am16");
+  b.filo("U:GND3", "Am1");
+  // XMM1 voltmetro ai capi del LED; XMM2 amperometro in serie fra resistenza e LED.
+  b.posa("multimetro", 620, -200);
+  b.posa("multimetro", 800, -200, { parametri: { funzione: "A" } });
+  b.filo("multimetro-1:V", "d14", "#d32f2f");
+  b.filo("multimetro-1:COM", "d16", "#212121");
+  b.filo("multimetro-2:A", "c12", "#d32f2f");
+  b.filo("multimetro-2:COM", "b14", "#212121");
+  scrivi(
+    "arduino-multimetro.elab",
+    b.schema(`// Misure con il multimetro: il LED sul pin 13 resta acceso.
+// XMM1 (voltmetro, in parallelo al LED) misura la tensione sul LED;
+// XMM2 (amperometro, in serie) misura la corrente che passa nel circuito.
+// Legge di Ohm sulla resistenza: I = (5 V − tensione del LED) / 220 Ω.
+
+void setup() {
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
+}
+
+void loop() {
+}
+`),
+  );
+}

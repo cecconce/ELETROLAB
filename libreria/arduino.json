@@ -17,6 +17,10 @@
     {
       "id": "passivi",
       "nome": "Componenti passivi"
+    },
+    {
+      "id": "strumenti",
+      "nome": "Strumenti di misura"
     }
   ],
   "componenti": [
@@ -2914,6 +2918,41 @@
         }
       ],
       "icona": "ard-display-sette-segmenti.svg"
+    },
+    {
+      "id": "multimetro",
+      "nome": "Multimetro",
+      "categoria": "strumenti",
+      "sigla": "XMM",
+      "descrizione": "Strumento per misurare tensioni (V), correnti (A) e resistenze (Ω). Tensione: puntale nero da COM, rosso da V, toccando i due punti da confrontare (in parallelo). Corrente: rosso da A, va messo in serie, interrompendo il circuito. Resistenza: si misura con il componente non alimentato. In simulazione: clic sul multimetro per cambiare funzione.",
+      "paroleChiave": [
+        "multimetro",
+        "tester",
+        "voltmetro",
+        "amperometro",
+        "ohmmetro",
+        "misura"
+      ],
+      "larghezza": 120,
+      "altezza": 140,
+      "morsetti": [
+        {
+          "id": "A",
+          "x": 20,
+          "y": 140
+        },
+        {
+          "id": "COM",
+          "x": 60,
+          "y": 140
+        },
+        {
+          "id": "V",
+          "x": 100,
+          "y": 140
+        }
+      ],
+      "icona": "ard-multimetro.svg"
     }
   ]
 }

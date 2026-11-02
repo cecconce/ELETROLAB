@@ -170,6 +170,13 @@
       "prova": "Premi ▶ AVVIA: il display conta da 0 a 9 e il monitor seriale scrive lo stesso numero. Prova a togliere una resistenza (o a cambiare i numeri dell'array cifre) e guarda quali segmenti cambiano."
     },
     {
+      "file": "arduino-multimetro.elab",
+      "modulo": "arduino",
+      "titolo": "Misure con il multimetro",
+      "descrizione": "Un LED con la sua resistenza sul pin 13 e due multimetri: XMM1 come voltmetro in parallelo al LED (puntali V e COM) e XMM2 come amperometro in serie fra resistenza e LED (puntali A e COM). Con le due misure si verifica la legge di Ohm sulla resistenza.",
+      "prova": "Premi ▶ AVVIA: XMM1 indica circa 1,9 V, XMM2 circa 12 mA. Calcola (5 − 1,9) / 220 e confronta. Clic su un multimetro per cambiare funzione (V → A → Ω); ferma la simulazione, metti una resistenza da 1k nelle Proprietà e misura di nuovo."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

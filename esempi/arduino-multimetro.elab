@@ -1,0 +1,156 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T11:00:10.071Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 660,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-1",
+        "tipo": "led-rosso",
+        "etichetta": "D1",
+        "x": 780,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "multimetro-1",
+        "tipo": "multimetro",
+        "etichetta": "XMM1",
+        "x": 620,
+        "y": -200,
+        "larghezza": 120,
+        "altezza": 140
+      },
+      {
+        "id": "multimetro-2",
+        "tipo": "multimetro",
+        "etichetta": "XMM2",
+        "x": 800,
+        "y": -200,
+        "larghezza": 120,
+        "altezza": 140,
+        "parametri": {
+          "funzione": "A"
+        }
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D13"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b8"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c16"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am16"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND3"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am1"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "multimetro-1",
+          "morsetto": "V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "d14"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "multimetro-1",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "d16"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "multimetro-2",
+          "morsetto": "A"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "c12"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "multimetro-2",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b14"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Misure con il multimetro: il LED sul pin 13 resta acceso.\n// XMM1 (voltmetro, in parallelo al LED) misura la tensione sul LED;\n// XMM2 (amperometro, in serie) misura la corrente che passa nel circuito.\n// Legge di Ohm sulla resistenza: I = (5 V − tensione del LED) / 220 Ω.\n\nvoid setup() {\n  pinMode(13, OUTPUT);\n  digitalWrite(13, HIGH);\n}\n\nvoid loop() {\n}\n"
+  }
+}

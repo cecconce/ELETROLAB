@@ -202,6 +202,18 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
+    case "multimetro": {
+      // Lettura sul display e indice della manopola sulla funzione scelta.
+      const angolo = { V: -50, A: 0, "Ω": 50 }[a?.funzione ?? "V"] ?? -50;
+      return (
+        <Group listening={false}>
+          {inSimulazione && (
+            <Text x={16} y={21} width={84} align="right" text={a?.lettura ?? ""} fontSize={17} fontStyle="bold" fill="#1b2a12" fontFamily="Consolas, 'Courier New', monospace" />
+          )}
+          <Line points={[60, 78, 60 + 17 * Math.sin((angolo * Math.PI) / 180), 78 - 17 * Math.cos((angolo * Math.PI) / 180)]} stroke="#ffffff" strokeWidth={4} lineCap="round" />
+        </Group>
+      );
+    }
     case "motore-dc":
       return <MotoreDc velocita={a?.velocita ?? 0} />;
     case "tmp36":

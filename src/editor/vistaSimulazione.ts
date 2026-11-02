@@ -60,6 +60,9 @@ export interface AspettoComponente {
     rgb?: [number, number, number];
     /** Display a 7 segmenti: luminosità di a…g e del punto. */
     segmenti?: number[];
+    /** Multimetro: funzione (V, A, Ω) e testo del display. */
+    funzione?: string;
+    lettura?: string;
     /** Sensore di temperatura (°C). */
     temperatura?: number;
     /** Motore in continua: velocità −1…1. */

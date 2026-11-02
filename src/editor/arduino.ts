@@ -8,6 +8,7 @@
 import {
   DISTANZA_PREDEFINITA,
   TEMPERATURA_PREDEFINITA,
+  testoMultimetro,
   gruppoForo,
   nomePin,
   pinCollegato,
@@ -68,7 +69,8 @@ export function componentiDaSchema(schema: Schema): ComponenteArduino[] {
   return schema.componenti.map((c) => {
     const led = /^led-(\w+)$/.exec(c.tipo);
     if (led && c.tipo !== "led-rgb") return { id: c.id, tipo: "led", colore: led[1] };
-    return { id: c.id, tipo: c.tipo, ...(c.valore !== undefined ? { valore: c.valore } : {}) };
+    const funzione = c.tipo === "multimetro" && typeof c.parametri?.funzione === "string" ? { funzione: c.parametri.funzione } : {};
+    return { id: c.id, tipo: c.tipo, ...(c.valore !== undefined ? { valore: c.valore } : {}), ...funzione };
   });
 }
 
@@ -138,7 +140,7 @@ void loop() {
 /** Che cosa fa un clic sui componenti del banco durante la simulazione. */
 function clicArduino(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante") return "pulsante";
-  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta") return "manuale";
+  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro") return "manuale";
   return null;
 }
 
@@ -162,6 +164,10 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
     if (c.tipo === "interruttore-slitta") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
     if (c.tipo === "tmp36") arduino.temperatura = s.interazioni.temperature[c.id] ?? TEMPERATURA_PREDEFINITA;
     if (c.tipo === "motore-dc") arduino.velocita = a.velocita ?? 0;
+    if (c.tipo === "multimetro" && a.funzione) {
+      arduino.funzione = a.funzione;
+      arduino.lettura = testoMultimetro(a.funzione, a.misura ?? 0);
+    }
     if (c.tipo === "fotoresistenza") arduino.luce = s.interazioni.luce[c.id] ?? 0.5;
     if (c.tipo === "servo") {
       const pin = pinCollegato(s, c.id, "SIG");

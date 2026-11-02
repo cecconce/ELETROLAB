@@ -31,7 +31,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(9);
+    expect(arduino).toHaveLength(10);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -143,5 +143,28 @@ describe("esempio del display a 7 segmenti", () => {
     expect(accesi()).toBe("abcdefg"); // 8
     expect(s.seriale).toMatch(/^0\n1\n2\n/);
     expect(s.aspetto[display]?.bruciato).toBe(false);
+  });
+});
+
+describe("esempio del multimetro", () => {
+  it("il voltmetro legge la tensione del LED e l'amperometro la corrente", () => {
+    const { schema, s } = apri("arduino-multimetro.elab");
+    aspetta(s, 300);
+    expect(s.errore).toBeNull();
+    const vista = vistaDaSessioneArduino(s, schema, lib).componenti;
+    const [m1, m2] = schema.componenti.filter((c) => c.tipo === "multimetro").map((c) => vista[c.id].arduino!);
+    expect(m1.funzione).toBe("V");
+    expect(m1.lettura).toMatch(/^1,9\d V$/);
+    expect(m2.funzione).toBe("A");
+    expect(m2.lettura).toMatch(/^1[23],\d mA$/);
+    expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.5);
+    // Un clic passa il voltmetro all'ohmmetro passando per l'amperometro.
+    const id1 = schema.componenti.find((c) => c.tipo === "multimetro")!.id;
+    clicGiuArduino(s, id1);
+    clicSuArduino(s, id1);
+    clicGiuArduino(s, id1);
+    clicSuArduino(s, id1);
+    aspetta(s, 100);
+    expect(vistaDaSessioneArduino(s, schema, lib).componenti[id1].arduino!.funzione).toBe("Ω");
   });
 });

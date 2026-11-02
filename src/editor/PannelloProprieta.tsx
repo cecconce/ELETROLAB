@@ -273,6 +273,20 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
         </label>
       )}
 
+      {libreria.modulo === "arduino" && componente.tipo === "multimetro" && (
+        <label className="proprieta-campo">
+          <span>{t("proprieta.funzioneMultimetro")}</span>
+          <select
+            value={String(componente.parametri?.funzione ?? "V")}
+            onChange={(e) => onCambiaSchema(impostaColoreLampada(schema, componente.id, e.target.value, "funzione"))}
+          >
+            <option value="V">{t("proprieta.multimetroV")}</option>
+            <option value="A">{t("proprieta.multimetroA")}</option>
+            <option value="Ω">{t("proprieta.multimetroOhm")}</option>
+          </select>
+        </label>
+      )}
+
       {componente.tipo === TIPO_COMMENTO && (
         <label className="proprieta-campo">
           <span>{t("proprieta.commento")}</span>

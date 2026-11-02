@@ -592,6 +592,42 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------------- Multimetro
+voce(
+  {
+    id: "multimetro",
+    nome: "Multimetro",
+    categoria: "strumenti",
+    sigla: "XMM",
+    descrizione: "Strumento per misurare tensioni (V), correnti (A) e resistenze (Ω). Tensione: puntale nero da COM, rosso da V, toccando i due punti da confrontare (in parallelo). Corrente: rosso da A, va messo in serie, interrompendo il circuito. Resistenza: si misura con il componente non alimentato. In simulazione: clic sul multimetro per cambiare funzione.",
+    paroleChiave: ["multimetro", "tester", "voltmetro", "amperometro", "ohmmetro", "misura"],
+    larghezza: 120,
+    altezza: 140,
+    morsetti: [
+      { id: "A", x: 20, y: 140 },
+      { id: "COM", x: 60, y: 140 },
+      { id: "V", x: 100, y: 140 },
+    ],
+  },
+  svg(
+    120,
+    140,
+    [
+      `<rect x="2" y="2" width="116" height="128" rx="12" fill="#f9a825" stroke="#c17900" stroke-width="2"/>`,
+      `<rect x="9" y="9" width="102" height="114" rx="8" fill="#37474f"/>`,
+      `<rect x="16" y="15" width="88" height="30" rx="3" fill="#b9c7a3" stroke="#263238"/>`,
+      `<circle cx="60" cy="78" r="20" fill="#263238" stroke="#90a4ae" stroke-width="2"/>`,
+      `<circle cx="60" cy="78" r="5" fill="#90a4ae"/>`,
+      testo(36, 66, "V", 9, "#ffffff", 'font-weight="bold"'),
+      testo(60, 54, "A", 9, "#ffffff", 'font-weight="bold"'),
+      testo(84, 66, "Ω", 9, "#ffffff", 'font-weight="bold"'),
+      ...([[20, "A", "#e53935"], [60, "COM", "#212121"], [100, "V Ω", "#e53935"]] as const).map(
+        ([x, t, c]) => `<line x1="${x}" y1="118" x2="${x}" y2="140" stroke="${c}" stroke-width="3"/><circle cx="${x}" cy="114" r="6" fill="#111" stroke="${c}" stroke-width="2.5"/>` + testo(x, 104, t, 7, "#eceff1"),
+      ),
+    ].join("\n"),
+  ),
+);
+
 const libreria = {
   versione: 1,
   modulo: "arduino",
@@ -600,6 +636,7 @@ const libreria = {
     { id: "uscite", nome: "Uscite (LED, suono, motori)" },
     { id: "ingressi", nome: "Ingressi (pulsanti, sensori)" },
     { id: "passivi", nome: "Componenti passivi" },
+    { id: "strumenti", nome: "Strumenti di misura" },
   ],
   componenti: voci,
 };

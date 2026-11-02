@@ -7,6 +7,8 @@ import {
   gruppoForo,
   letturaAnalogica,
   letturaDigitale,
+  misureMultimetri,
+  testoMultimetro,
   MASSA,
   risolviCircuito,
   type ComponenteArduino,
@@ -180,6 +182,37 @@ describe("componenti aggiunti: LED RGB, motore, sensore di temperatura, interrut
     // Senza resistenza il segmento si brucia, come un LED.
     const diretto = calcola(comp, { "U.D2": "sa", "DS.a": "sa", "DS.COM1": "m", "U.GND1": "m" }, { D2: { modo: "OUTPUT", livello: 1 } });
     expect(diretto.aspetto.DS.bruciato).toBe(true);
+  });
+  it("multimetro: tensione su un LED, corrente in serie, resistenza a circuito spento", () => {
+    const M = { id: "M", tipo: "multimetro" };
+    const comp: ComponenteArduino[] = [U, { id: "R1", tipo: "resistenza", valore: 220 }, { id: "D1", tipo: "led", colore: "rosso" }, M];
+    const pin = { D13: { modo: "OUTPUT" as const, livello: 1 } };
+    // Voltmetro sul LED (V sull'anodo, COM al GND).
+    const v = calcola(comp, { "U.D13": "p", "R1.1": "p", "R1.2": "an", "D1.A": "an", "M.V": "an", "D1.K": "m", "M.COM": "m", "U.GND1": "m" }, pin);
+    const mv = misureMultimetri(comp, v.nodoDi, nessuna, v.r).M;
+    expect(mv.funzione).toBe("V");
+    expect(mv.misura!).toBeGreaterThan(1.8);
+    expect(mv.misura!).toBeLessThan(2.2);
+    expect(testoMultimetro("V", mv.misura!)).toMatch(/^[12],\d\d V$/);
+    // Amperometro in serie fra resistenza e LED: circa (5 − 1,9) / 245 Ω ≈ 12 mA.
+    const amp = { ...nessuna, posizioni: { M: 1 } };
+    const a = calcola(comp, { "U.D13": "p", "R1.1": "p", "R1.2": "x", "M.A": "x", "M.COM": "an", "D1.A": "an", "D1.K": "m", "U.GND1": "m" }, pin, amp);
+    const ma = misureMultimetri(comp, a.nodoDi, amp, a.r).M;
+    expect(ma.funzione).toBe("A");
+    expect(ma.misura!).toBeGreaterThan(0.010);
+    expect(ma.misura!).toBeLessThan(0.014);
+    expect(testoMultimetro("A", ma.misura!)).toMatch(/^1[0-4],\d mA$/);
+    // Ohmmetro ai capi della resistenza: 220 Ω anche se la scheda è accesa (misura a parte, senza generatori).
+    const ohm = { ...nessuna, posizioni: { M: 2 } };
+    const o = calcola(comp, { "U.D13": "p", "R1.1": "p", "M.V": "p", "R1.2": "q", "M.COM": "q" }, pin, ohm);
+    const mo = misureMultimetri(comp, o.nodoDi, ohm, o.r).M;
+    expect(mo.misura!).toBeCloseTo(220, 0);
+    expect(testoMultimetro("Ω", mo.misura!)).toBe("220 Ω");
+    // Puntali nel vuoto: fuori scala.
+    const aperto = calcola(comp, {}, {}, ohm);
+    expect(testoMultimetro("Ω", misureMultimetri(comp, aperto.nodoDi, ohm, aperto.r).M.misura!)).toBe("OL");
+    expect(testoMultimetro("Ω", 4700)).toBe("4,70 kΩ");
+    expect(testoMultimetro("V", 0)).toBe("0,00 V");
   });
   it("motore in continua: gira con il verso della tensione, fermo senza", () => {
     const comp: ComponenteArduino[] = [U, { id: "M", tipo: "motore-dc" }];

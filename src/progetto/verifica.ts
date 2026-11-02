@@ -293,7 +293,7 @@ export function verificaElettronica(studente: Schema, soluzione: Pick<Schema, "c
 export function verificaArduino(studente: Schema, soluzione: NonNullable<NonNullable<Schema["esercizio"]>["soluzione"]>): EsitoVerifica {
   const libreria = libreriaDelModulo("arduino");
   const morsettiDi = (tipo: string) => vocePerTipo(libreria, tipo)?.morsetti;
-  const OSSERVATI = (tipo: string) => tipo.startsWith("led-") || tipo === "servo" || tipo === "buzzer" || tipo === "lcd" || tipo === "arduino-uno" || tipo === "motore-dc" || tipo === "display-sette-segmenti";
+  const OSSERVATI = (tipo: string) => tipo.startsWith("led-") || tipo === "servo" || tipo === "buzzer" || tipo === "lcd" || tipo === "arduino-uno" || tipo === "motore-dc" || tipo === "display-sette-segmenti" || tipo === "multimetro";
   const nome = (c: { etichetta: string; tipo: string; id: string }) => c.etichetta || c.id;
   const osservati = soluzione.componenti.filter((c) => OSSERVATI(c.tipo));
   const pulsanti = soluzione.componenti.filter((c) => c.tipo === "pulsante").map(nome);
@@ -317,7 +317,8 @@ export function verificaArduino(studente: Schema, soluzione: NonNullable<NonNull
         else if (c.tipo === "display-sette-segmenti") {
           const accesi = SEGMENTI_DISPLAY.filter((_, k) => (a.segmenti?.[k] ?? 0) >= 0.1);
           o[n] = a.bruciato ? t("verifica.bruciato") : accesi.length ? `${t("verifica.segmenti")} ${accesi.join(" ")}` : t("verifica.spento");
-        } else if (c.tipo === "motore-dc") o[n] = !a.velocita ? t("verifica.fermo") : `${t(a.velocita > 0 ? "verifica.giraOrario" : "verifica.giraAntiorario")} ${Math.round(Math.abs(a.velocita) * 4) * 25}%`;
+        } else if (c.tipo === "multimetro") o[n] = a.lettura ?? "–";
+        else if (c.tipo === "motore-dc") o[n] = !a.velocita ? t("verifica.fermo") : `${t(a.velocita > 0 ? "verifica.giraOrario" : "verifica.giraAntiorario")} ${Math.round(Math.abs(a.velocita) * 4) * 25}%`;
         else if (c.tipo.startsWith("led-")) o[n] = a.bruciato ? t("verifica.bruciato") : (a.luminosita ?? 0) < 0.1 ? t("verifica.spento") : `${t("verifica.acceso")} ${Math.round((a.luminosita ?? 0) * 4) * 25}%`;
         else if (c.tipo === "servo") o[n] = a.angolo === undefined ? "–" : `${Math.round(a.angolo / 10) * 10}°`;
         else if (c.tipo === "buzzer") o[n] = a.suona ? t("verifica.suona") : t("verifica.muta");

@@ -10,6 +10,9 @@
 import { risolviCircuito, type RisultatoCircuito } from "./circuito";
 import {
   aspettoComponenti,
+  FUNZIONI_MULTIMETRO,
+  indiceFunzioneMultimetro,
+  misureMultimetri,
   elementiCircuito,
   letturaAnalogica,
   letturaDigitale,
@@ -60,7 +63,7 @@ export interface SessioneArduino {
 function ricalcola(s: SessioneArduino) {
   const interazioni: Interazioni = s.interazioni;
   s.risultato = risolviCircuito(elementiCircuito(s.componenti, s.nodoDi, s.pin, interazioni));
-  s.aspetto = aspettoComponenti(s.componenti, s.nodoDi, s.risultato);
+  s.aspetto = { ...aspettoComponenti(s.componenti, s.nodoDi, s.risultato), ...misureMultimetri(s.componenti, s.nodoDi, interazioni, s.risultato) };
   s.sporco = false;
   s.versione++;
 }
@@ -200,6 +203,10 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false)
     const ora = s.interazioni.temperature[id] ?? TEMPERATURA_PREDEFINITA;
     const i = Math.max(0, TEMPERATURE.indexOf(ora));
     s.interazioni.temperature[id] = TEMPERATURE[Math.min(TEMPERATURE.length - 1, Math.max(0, i + (indietro ? -1 : 1)))];
+  } else if (c.tipo === "multimetro") {
+    // Il selettore passa alla funzione seguente (o precedente con il clic destro).
+    const n = FUNZIONI_MULTIMETRO.length;
+    s.interazioni.posizioni[id] = (indiceFunzioneMultimetro(s.interazioni, c) + (indietro ? n - 1 : 1)) % n;
   } else if (c.tipo === "interruttore-slitta") {
     s.interazioni.posizioni[id] = (s.interazioni.posizioni[id] ?? 0) >= 0.5 ? 0 : 1;
   } else if (c.tipo === "fotoresistenza") {

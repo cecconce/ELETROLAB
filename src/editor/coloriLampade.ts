@@ -30,7 +30,7 @@ export function coloreLampada(c: Pick<ComponenteSchema, "parametri">): ColoreLam
   return COLORI_LAMPADA.find((k) => k.id === id) ?? COLORI_LAMPADA[0];
 }
 
-/** Schema con il nuovo colore della lampada. */
-export function impostaColoreLampada<S extends { componenti: ComponenteSchema[] }>(schema: S, id: string, colore: string): S {
-  return { ...schema, componenti: schema.componenti.map((c) => (c.id === id ? { ...c, parametri: { ...c.parametri, colore } } : c)) };
+/** Schema con il nuovo colore della lampada (o, in generale, con un parametro testuale cambiato). */
+export function impostaColoreLampada<S extends { componenti: ComponenteSchema[] }>(schema: S, id: string, valore: string, parametro = "colore"): S {
+  return { ...schema, componenti: schema.componenti.map((c) => (c.id === id ? { ...c, parametri: { ...c.parametri, [parametro]: valore } } : c)) };
 }

@@ -50,6 +50,8 @@ export interface ComponenteArduino {
   valore?: number;
   /** LED: colore (rosso, verde…). */
   colore?: string;
+  /** Multimetro: funzione di partenza (V, A o Ω). */
+  funzione?: string;
 }
 
 /** Azioni dello studente durante la simulazione. */
@@ -67,6 +69,24 @@ export interface Interazioni {
 /** Temperatura iniziale dei sensori (°C) e passo del clic. */
 export const TEMPERATURA_PREDEFINITA = 20;
 export const TEMPERATURE = [-10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+/** Funzioni del multimetro, scelte con un clic in simulazione (indice in `interazioni.posizioni`). */
+export const FUNZIONI_MULTIMETRO = ["V", "A", "Ω"] as const;
+export type FunzioneMultimetro = (typeof FUNZIONI_MULTIMETRO)[number];
+/** Indice della funzione del multimetro: quella scelta con i clic o, all'inizio, quella delle Proprietà. */
+export function indiceFunzioneMultimetro(interazioni: Interazioni, c: ComponenteArduino): number {
+  const scelta = interazioni.posizioni[c.id];
+  if (scelta !== undefined) return Math.round(scelta) % FUNZIONI_MULTIMETRO.length;
+  return Math.max(0, FUNZIONI_MULTIMETRO.indexOf(c.funzione as FunzioneMultimetro));
+}
+export function funzioneMultimetro(interazioni: Interazioni, c: ComponenteArduino): FunzioneMultimetro {
+  return FUNZIONI_MULTIMETRO[indiceFunzioneMultimetro(interazioni, c)];
+}
+/** Resistenza interna del voltmetro e dell'amperometro (Ω). */
+const R_VOLTMETRO = 10e6;
+const R_AMPEROMETRO = 0.05;
+/** Sopra questo valore l'ohmmetro indica «OL» (circuito aperto). */
+export const OHM_FUORI_SCALA = 20e6;
+
 /** Resistenza dell'avvolgimento del motorino in continua (Ω). */
 export const R_MOTORE_DC = 20;
 
@@ -121,6 +141,14 @@ export function elementiCircuito(
         R(`${c.id}:COM`, n("COM1"), n("COM2"), 1e-3);
         for (const seg of SEGMENTI_DISPLAY) el.push({ tipo: "diodo", id: `${c.id}:${seg}`, anodo: n(seg), catodo: n("COM1"), vf: SOGLIA_LED.rosso, ron: 15 });
         break;
+      case "multimetro": {
+        // Voltmetro fra V e COM (resistenza altissima), amperometro fra A e COM (quasi un filo);
+        // come ohmmetro non tocca il circuito acceso (la misura si fa a parte, vedi misuraOhm).
+        const f = funzioneMultimetro(interazioni, c);
+        if (f === "V") R(`${c.id}:V`, n("V"), n("COM"), R_VOLTMETRO);
+        else if (f === "A") R(`${c.id}:A`, n("A"), n("COM"), R_AMPEROMETRO);
+        break;
+      }
       case "motore-dc":
         R(c.id, n("+"), n("-"), R_MOTORE_DC);
         break;
@@ -196,6 +224,9 @@ export interface AspettoArduino {
   rgb?: [number, number, number];
   /** Display a 7 segmenti: luminosità di a, b, c, d, e, f, g, dp (0…1). */
   segmenti?: number[];
+  /** Multimetro: funzione scelta e valore misurato (V, A o Ω; Infinity = fuori scala). */
+  funzione?: FunzioneMultimetro;
+  misura?: number;
   /** Motore in continua: velocità −1…1 (il segno è il verso). */
   velocita?: number;
 }
@@ -241,6 +272,66 @@ export function aspettoComponenti(componenti: readonly ComponenteArduino[], nodo
     }
   }
   return aspetto;
+}
+
+/**
+ * Misure dei multimetri: tensione e corrente dal circuito appena risolto;
+ * la resistenza come fa uno strumento vero, con il circuito senza
+ * alimentazione (generatori tolti) e una piccola pila interna fra V e COM.
+ */
+export function misureMultimetri(
+  componenti: readonly ComponenteArduino[],
+  nodoDi: NodoDi,
+  interazioni: Interazioni,
+  r: RisultatoCircuito,
+): Record<string, AspettoArduino> {
+  const esito: Record<string, AspettoArduino> = {};
+  const v = (n: string) => r.tensioni[n] ?? 0;
+  for (const c of componenti) {
+    if (c.tipo !== "multimetro") continue;
+    const funzione = funzioneMultimetro(interazioni, c);
+    const misura =
+      funzione === "V"
+        ? v(nodoDi(c.id, "V")) - v(nodoDi(c.id, "COM"))
+        : funzione === "A"
+          ? r.correnti[`${c.id}:A`] ?? 0
+          : misuraOhm(componenti, nodoDi, interazioni, c.id);
+    esito[c.id] = { funzione, misura };
+  }
+  return esito;
+}
+
+function misuraOhm(componenti: readonly ComponenteArduino[], nodoDi: NodoDi, interazioni: Interazioni, id: string): number {
+  const nV = nodoDi(id, "V");
+  const nCom = nodoDi(id, "COM");
+  if (nV === nCom) return 0;
+  const altri = componenti.filter((c) => c.id !== id);
+  const elementi: Elemento[] = elementiCircuito(altri, nodoDi, {}, interazioni).filter((e) => e.tipo !== "generatore");
+  // Pila interna da 1 V con 1 kΩ in serie; il COM è il riferimento.
+  const R_INTERNA = 1000;
+  elementi.push({ tipo: "generatore", id: `${id}:pila`, nodo: nV, volt: 1, ohm: R_INTERNA });
+  elementi.push({ tipo: "resistenza", id: `${id}:rif`, a: nCom, b: MASSA, ohm: 1e-6 });
+  const r = risolviCircuito(elementi);
+  const vx = (r.tensioni[nV] ?? 0) - (r.tensioni[nCom] ?? 0);
+  const i = (1 - (r.tensioni[nV] ?? 0)) / R_INTERNA;
+  if (i <= 0) return Infinity;
+  const ohm = vx / i;
+  return ohm > OHM_FUORI_SCALA ? Infinity : ohm;
+}
+
+/** Testo del display del multimetro, con tre cifre significative e l'unità adatta. */
+export function testoMultimetro(funzione: FunzioneMultimetro, misura: number): string {
+  if (!Number.isFinite(misura)) return "OL";
+  const unita = funzione === "Ω" ? "Ω" : funzione;
+  const a = Math.abs(misura);
+  const [fattore, prefisso] =
+    funzione === "Ω"
+      ? a >= 1e6 ? [1e-6, "M"] : a >= 1e3 ? [1e-3, "k"] : [1, ""]
+      : a >= 1 || a === 0 ? [1, ""] : a >= 1e-3 ? [1e3, "m"] : [1e6, "µ"];
+  const x = misura * fattore;
+  const ax = Math.abs(x);
+  const cifre = ax >= 100 ? 0 : ax >= 10 ? 1 : 2;
+  return `${x.toFixed(cifre).replace(".", ",").replace(/^-(0,0+)$/, "$1")} ${prefisso}${unita}`;
 }
 
 /** Valore letto da digitalRead: HIGH sopra 2,5 V; un ingresso flottante legge "a caso". */
