@@ -58,6 +58,8 @@ import {
 import { componentiDaSchemaElettronica, vistaDaSessioneElettronica } from "../editor/elettronica";
 import { PannelloAnalizzatore, PannelloOscilloscopio } from "../editor/PannelloOscilloscopio";
 import { FinestraEsporta } from "./FinestraEsporta";
+import { FinestraPreparaEsercizio, RiquadroConsegna, type EsitoMostrato } from "./Esercizio";
+import { MODULI_VERIFICABILI, verificaEsercizio } from "../progetto/verifica";
 import { componiTavola, stampaTavola, tavolaPdf, tavolaPng, type Cartiglio } from "../editor/esportazione";
 import { vocePerTipo } from "../editor/libreria";
 import { PannelloIngressiPlc } from "../editor/PannelloIngressiPlc";
@@ -256,6 +258,16 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     [archivio, onErrore, tema],
   );
 
+  // --- Modalità Esercizio: consegna, verifica automatica, preparazione (docente) ---
+  const [finestraEsercizio, setFinestraEsercizio] = useState(false);
+  const [esitoVerifica, setEsitoVerifica] = useState<EsitoMostrato | null>(null);
+  const verifica = useCallback(() => {
+    const r = verificaEsercizio(modulo.id, schema);
+    if (r) setEsitoVerifica({ riuscito: r.riuscito, righe: r.righe });
+  }, [modulo.id, schema]);
+  // Lo schema cambia: l'esito di prima non vale più.
+  useEffect(() => setEsitoVerifica(null), [schema]);
+
   // --- Scorciatoie dei file: Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Maiusc+S, Ctrl+P ---
   const comandi = useRef({ nuovo, apri, salva, esporta: () => setFinestraEsporta(true) });
   comandi.current = { nuovo, apri, salva, esporta: () => setFinestraEsporta(true) };
@@ -448,6 +460,9 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const nomeFile = percorso ? nomeDaPercorso(percorso) : (documento.titolo ?? t("file.senzaNome"));
   return (
     <div className="schermata-modulo" data-modulo={modulo.id}>
+      {finestraEsercizio && (
+        <FinestraPreparaEsercizio schema={schema} onCambia={(nuovo) => cambiaSchema(nuovo)} onChiudi={() => setFinestraEsercizio(false)} verificabile={MODULI_VERIFICABILI.has(modulo.id)} />
+      )}
       {finestraEsporta && (
         <FinestraEsporta
           titoloIniziale={nomeFile.replace(/\.elab$/i, "")}
@@ -494,6 +509,9 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           <button type="button" className="pulsante" onClick={() => void salva(true)} title={t("file.salvaConNomeTasti")} disabled={salvataggioInCorso}>
             {t("file.salvaConNome")}
           </button>
+          <button type="button" className="pulsante" onClick={() => setFinestraEsercizio(true)} title={t("esercizio.pulsanteTasti")} disabled={inSimulazione}>
+            📝 {t("esercizio.pulsante")}
+          </button>
           <button type="button" className="pulsante" onClick={() => setFinestraEsporta(true)} title={t("esporta.tasti")}>
             🖨 {t("esporta.pulsante")}
           </button>
@@ -516,6 +534,17 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           simulazione={simulazione}
           evidenzia={evidenzia}
           esportatore={esportatore}
+          sopraFoglio={
+            schema.esercizio?.consegna ? (
+              <RiquadroConsegna
+                esercizio={schema.esercizio}
+                verificabile={MODULI_VERIFICABILI.has(modulo.id) && !inSimulazione}
+                onVerifica={verifica}
+                esito={esitoVerifica}
+                onChiudiEsito={() => setEsitoVerifica(null)}
+              />
+            ) : null
+          }
           realistico={conVistaRealistica && realistico}
           onCambiaRealistico={conVistaRealistica ? cambiaRealistico : undefined}
           sopraBarra={

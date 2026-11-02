@@ -41,9 +41,32 @@ export function serializzaProgetto(progetto: Progetto, versioneProgramma: string
     modulo: progetto.modulo,
     programma: versioneProgramma,
     salvato: adesso.toISOString(),
-    schema: progetto.schema,
+    schema: schemaDaScrivere(progetto.schema),
   };
   return JSON.stringify(dati, null, 2) + "\n";
+}
+
+/** Base64 di un testo UTF-8 (per la soluzione degli esercizi). */
+export function codificaTesto(testo: string): string {
+  const b = new TextEncoder().encode(testo);
+  let s = "";
+  for (const x of b) s += String.fromCharCode(x);
+  return btoa(s);
+}
+export function decodificaTesto(base64: string): string | null {
+  try {
+    const s = atob(base64);
+    return new TextDecoder().decode(Uint8Array.from(s, (c) => c.charCodeAt(0)));
+  } catch {
+    return null;
+  }
+}
+
+/** Nel file la soluzione dell'esercizio va codificata, così lo studente non la legge aprendo il file. */
+function schemaDaScrivere(schema: Schema): unknown {
+  if (!schema.esercizio) return schema;
+  const { soluzione, ...resto } = schema.esercizio;
+  return { ...schema, esercizio: soluzione ? { ...resto, soluzioneCodificata: codificaTesto(JSON.stringify(soluzione)) } : resto };
 }
 
 type Oggetto = Record<string, unknown>;
@@ -133,10 +156,36 @@ export function leggiProgetto(testo: string): EsitoLettura {
   const modulo = eTesto(d.modulo) ? trovaModulo(d.modulo) : undefined;
   if (!modulo) return { ok: false, errore: t("file.moduloSconosciuto") };
   const schemaGrezzo = eOggetto(d.schema) ? d.schema : {};
+  const avvisi: string[] = [];
+  const { componenti, fili } = leggiComponentiEFili(schemaGrezzo, avvisi);
+
+  // Programma Arduino (facoltativo).
+  const schema: Schema = eTesto(schemaGrezzo.codice) ? { componenti, fili, codice: schemaGrezzo.codice } : { componenti, fili };
+  if (eTesto(schemaGrezzo.blocchi)) schema.blocchi = schemaGrezzo.blocchi;
+  if (schemaGrezzo.modoCodice === "blocchi" || schemaGrezzo.modoCodice === "testo") schema.modoCodice = schemaGrezzo.modoCodice;
+  // Esercizio (facoltativo): consegna e soluzione codificata.
+  if (eOggetto(schemaGrezzo.esercizio) && eTesto(schemaGrezzo.esercizio.consegna)) {
+    const esercizio: NonNullable<Schema["esercizio"]> = { consegna: schemaGrezzo.esercizio.consegna };
+    const cod = schemaGrezzo.esercizio.soluzioneCodificata;
+    const testo = eTesto(cod) ? decodificaTesto(cod) : null;
+    if (testo !== null) {
+      try {
+        const grezza = JSON.parse(testo) as unknown;
+        if (eOggetto(grezza)) esercizio.soluzione = leggiComponentiEFili(grezza, []);
+      } catch {
+        // soluzione rovinata: l'esercizio resta senza verifica automatica
+      }
+    }
+    schema.esercizio = esercizio;
+  }
+  return { ok: true, progetto: { modulo: modulo.id, schema }, avvisi };
+}
+
+/** Legge componenti e fili di uno schema, scartando (con un avviso) quelli rovinati. */
+function leggiComponentiEFili(schemaGrezzo: Oggetto, avvisi: string[]): { componenti: ComponenteSchema[]; fili: Filo[] } {
   const componentiGrezzi = Array.isArray(schemaGrezzo.componenti) ? schemaGrezzo.componenti : [];
   const filiGrezzi = Array.isArray(schemaGrezzo.fili) ? schemaGrezzo.fili : [];
 
-  const avvisi: string[] = [];
   const componenti: ComponenteSchema[] = [];
   const idVisti = new Set<string>();
   let scartati = 0;
@@ -165,11 +214,7 @@ export function leggiProgetto(testo: string): EsitoLettura {
   }
   if (filiScartati > 0) avvisi.push(t("file.filiScartati", { numero: filiScartati }));
 
-  // Programma Arduino (facoltativo).
-  const schema: Schema = eTesto(schemaGrezzo.codice) ? { componenti, fili, codice: schemaGrezzo.codice } : { componenti, fili };
-  if (eTesto(schemaGrezzo.blocchi)) schema.blocchi = schemaGrezzo.blocchi;
-  if (schemaGrezzo.modoCodice === "blocchi" || schemaGrezzo.modoCodice === "testo") schema.modoCodice = schemaGrezzo.modoCodice;
-  return { ok: true, progetto: { modulo: modulo.id, schema }, avvisi };
+  return { componenti, fili };
 }
 
 /** Nome del file senza cartella né estensione ("C:\\Esercizi\\marcia.elab" → "marcia"). */

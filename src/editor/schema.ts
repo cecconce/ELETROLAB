@@ -91,6 +91,12 @@ export interface Schema {
   blocchi?: string;
   /** Solo nel modulo Arduino: si programma con i blocchi o con il testo. */
   modoCodice?: "blocchi" | "testo";
+  /**
+   * Modalità Esercizio (preparata dal docente): consegna mostrata allo
+   * studente e, facoltativa, la soluzione completa usata dalla verifica
+   * automatica. Nel file la soluzione è codificata (non leggibile a colpo d'occhio).
+   */
+  esercizio?: Esercizio;
 }
 
 export const SCHEMA_VUOTO: Schema = { componenti: [], fili: [] };
@@ -278,4 +284,12 @@ export function ruotaSelezione(schema: Schema, selezione: Selezione): Schema {
       return nuovo;
     }),
   };
+}
+
+/** Esercizio preparato dal docente. */
+export interface Esercizio {
+  /** Testo della consegna (cosa deve fare lo studente). */
+  consegna: string;
+  /** Schema completo e funzionante del docente. */
+  soluzione?: { componenti: ComponenteSchema[]; fili: Filo[] };
 }

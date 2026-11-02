@@ -1042,3 +1042,63 @@ button.io-plc {
   gap: 8px;
   margin-top: 8px;
 }
+
+/* Modalità Esercizio */
+.riquadro-consegna {
+  background: var(--superficie);
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+}
+.riquadro-consegna header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.riquadro-consegna header strong {
+  flex: 1;
+}
+.testo-consegna {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+}
+.esito-verifica {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+.esito-verifica.riuscito {
+  background: rgba(22, 163, 74, 0.15);
+  border: 1px solid #16a34a;
+}
+.esito-verifica.non-riuscito {
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid #dc2626;
+}
+.esito-verifica ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+.finestra-esercizio {
+  width: min(560px, 94vw);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.finestra-esercizio textarea {
+  width: 100%;
+  font: inherit;
+}
+.passi-esercizio {
+  margin: 0;
+  padding-left: 20px;
+}
+.esito-soluzione.registrata {
+  color: #16a34a;
+}
+.pulsante.primario {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: transparent;
+}

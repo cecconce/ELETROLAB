@@ -144,6 +144,8 @@ export interface PropsAreaDisegno {
    * (senza griglia) su un canvas, per l'esportazione e la stampa; null se il foglio è vuoto.
    */
   esportatore?: React.MutableRefObject<(() => HTMLCanvasElement | null) | null>;
+  /** Riquadro sopra il foglio (es. la consegna dell'esercizio). */
+  sopraFoglio?: React.ReactNode;
 }
 
 /**
@@ -224,6 +226,7 @@ export function AreaDisegno({
   realistico = false,
   onCambiaRealistico,
   esportatore,
+  sopraFoglio = null,
 }: PropsAreaDisegno) {
   const inSimulazione = simulazione !== null;
   // Letto dal gestore dei tasti, registrato una volta sola.
@@ -827,6 +830,7 @@ export function AreaDisegno({
 
   return (
     <div className="area-disegno">
+      {sopraFoglio}
       <div
         ref={contenitore}
         className="area-disegno-canvas"
