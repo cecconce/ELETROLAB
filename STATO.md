@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 7 – Miglioramenti richiesti dopo il piano originale** — in corso
+**Fase 7 – Miglioramenti richiesti dopo il piano originale** — completata — in attesa di conferma
 
 Il piano (Fasi 0–6) è completo e confermato. Pierluigi ha chiesto di continuare a migliorare il programma («vai avanti per altre 2 ore»); le attività sono scelte per avvicinare ancora di più il funzionamento ai programmi di riferimento e per completare quanto previsto dalla Fase 0.
 
@@ -22,7 +22,48 @@ Il piano (Fasi 0–6) è completo e confermato. Pierluigi ha chiesto di continua
 - [x] 7.4g Impianti civili: deviatore e invertitore (contatti in scambio) con l'esempio della lampada comandata da tre punti.
 - [x] 7.4h Elettronica: wattmetro (potenza media in continua e in alternata).
 - [x] 7.4i Arduino: sensore di movimento (PIR) con l'esempio dell'allarme; sigle degli esempi numerate per lettera.
-- [ ] 7.5 Verifica finale: build Actions, prova Playwright, resoconto.
+- [x] 7.5 Verifica finale: build Actions, prova Playwright, resoconto.
+
+## Resoconto della Fase 7 (2026-11-02)
+
+### Cosa funziona
+- **Informazioni**: compare solo lo sviluppatore, Pierluigi Ceccon (nessun istituto), con le librerie aggiornate (CodeMirror aggiunto).
+- **Impianti elettrici (CADe_SIMU)**
+  - Lampade di segnalazione colorate (gialla, verde, rossa, bianca, blu, con sigla YE/GN/RD/WH/BU), scelte nelle Proprietà.
+  - **Pulsante d'emergenza a fungo**: contatto NC che resta agganciato finché non lo sblocchi.
+  - **Impianti civili**: deviatore e invertitore (contatti in scambio), con l'esempio «Lampada comandata da tre punti».
+  - Tutti i nuovi apparecchi hanno sia il simbolo CEI che il disegno realistico.
+- **PLC (PC_SIMU)**
+  - Pulsante «📄 Lista istruzioni»: lo stesso programma Ladder si legge in lista istruzioni IEC 61131-3 (LD, AND, OR, parentesi, ST, S, R, fronti, temporizzatori e contatori), con i commenti dei segmenti e «Copia».
+- **Arduino (Tinkercad)**
+  - Editor del codice con colori, numeri di riga, completamento delle funzioni Arduino e riga dell'errore evidenziata.
+  - Nuovi componenti (la libreria passa da 14 a 21): LED RGB, motore in continua, sensore di temperatura, interruttore a slitta, display a 7 segmenti, **multimetro** (V, A, Ω, come in Tinkercad) e sensore di movimento PIR.
+  - Quattro esempi nuovi: termometro, conteggio sul display a 7 segmenti, misure con il multimetro, allarme con il PIR.
+- **Elettronica (Multisim)**
+  - **Plotter di Bode**: guadagno e fase da 1 Hz a 1 MHz, con la frequenza di taglio indicata.
+  - **Wattmetro**: in alternata indica la potenza media.
+  - Esempi del filtro RC con Bode e della potenza di una lampadina.
+- **Verifica automatica degli esercizi**: confronta anche i nuovi componenti, cioè LED RGB, motore, segmenti del display, multimetro Arduino e wattmetro.
+
+### Come provarlo passo per passo
+1. GitHub → **Actions** → ultima esecuzione «Build Windows» verde → **Artifacts** → `ElettroLab-portable`; avviare `ElettroLab.exe`.
+2. **Impianti**: Sfoglia gli esempi → «Lampada comandata da tre punti» → ▶ AVVIA → clic su S1, S2, S3 in qualsiasi ordine: ogni clic accende o spegne H1. Nella libreria cercare «emergenza», posarlo in serie a una marcia/arresto e provarlo: resta premuto finché non lo si clicca di nuovo.
+3. **PLC**: aprire «PLC – Semaforo» → «📄 Lista istruzioni»: ci sono sei segmenti con i loro commenti e i TON scritti come `CAL T0(PT := T#5s)`.
+4. **Arduino**: aprire «Misure con il multimetro» → ▶ AVVIA: XMM1 indica 1,98 V e XMM2 12,3 mA; un clic su un multimetro cambia funzione. Poi «Conteggio con il display a 7 segmenti», «Termometro» (clic a destra o a sinistra del sensore per scaldarlo o raffreddarlo) e «Allarme con il sensore di movimento» (clic sul sensore).
+5. **Elettronica**: aprire «Filtro RC passa-basso» → ▶ AVVIA: si apre la finestra del plotter di Bode con il taglio a circa 1 kHz. Poi «Potenza di una lampadina e wattmetro»: il wattmetro indica 1,2 W.
+
+### Test eseguiti
+- `npm test`: **625 test Vitest**, tutti superati (30 nuovi in questa fase: colori delle lampade, completamento Arduino, Bode, ognuno dei nuovi componenti Arduino, multimetro in V/A/Ω, lista istruzioni con serie/paralleli/fronti/blocchi, deviatore/invertitore, pulsante d'emergenza, wattmetro in continua e in alternata, ogni nuovo esempio simulato, nessuna chiave doppia nei testi).
+- `cargo test` e `tauri build` su GitHub Actions (`windows-latest`): verdi le esecuzioni n. 59–64, 66, 68, 69 e 70. Le n. 65 e 67 sono state annullate perché superate dalla successiva.
+- **Prova dell'interfaccia con Playwright**: **118 controlli superati**, nessun errore in console. Le prove mirate su ogni novità sono state guardate negli screenshot.
+
+### Limiti noti
+- La lista istruzioni si può solo leggere: il programma non si scrive in lista istruzioni. Le istruzioni sono quelle della norma IEC, non i dialetti dei singoli costruttori.
+- Multimetro Arduino: l'ohmmetro misura con il circuito senza alimentazione (generatori tolti), come uno strumento vero usato correttamente. Non avvisa se si misura un componente alimentato.
+- Wattmetro: la media mobile ha una costante di tempo di 0,1 s, quindi dopo un cambiamento la lettura si assesta in circa mezzo secondo. Non indica il fattore di potenza.
+- Sensore di temperatura e PIR si comandano con i clic (±5 °C; movimento sì/no), non con un cursore continuo come in Tinkercad.
+- Il motore in continua di Arduino è una resistenza da 20 Ω: non c'è inerzia e non c'è la corrente di spunto.
+- L'.exe non è stato provato su un PC Windows reale.
 
 ## Fase 6 – Modalità esercizio, esportazioni, rifiniture (confermata il 2026-11-02)
 
@@ -273,7 +314,7 @@ Attività 1.1–1.10 tutte completate; resoconto qui sotto.
 | 4 | Elettronica con simulazione circuitale e strumenti virtuali | completata (confermata 2026-11-02) |
 | 5 | Arduino con breadboard ed editor codice/blocchi | completata (confermata 2026-11-02, anticipata prima della 4) |
 | 6 | Modalità esercizio, esportazioni, installer, README e LICENZE | completata (confermata 2026-11-02) |
-| 7 | Miglioramenti dopo il piano (lampade colorate, editor del codice, plotter di Bode) | in corso |
+| 7 | Miglioramenti dopo il piano (lampade colorate, editor del codice, Bode, componenti Arduino, multimetro, lista istruzioni, impianti civili, wattmetro) | completata — in attesa di conferma |
 
 ## Regola
 
@@ -343,3 +384,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-02 — attività 7.4h: **wattmetro** nel modulo Elettronica (XWM, libreria a 39 voci): bobina amperometrica in serie I+ → I− (0,01 Ω) e voltmetrica V+, V− (10 MΩ); P = V·I con media mobile (costante di tempo 0,1 s) a ogni passo di calcolo, così in alternata indica la potenza media; display come il multimetro; la verifica degli esercizi confronta anche le sue letture. Corretta una chiave ripetuta in `lingue/it.json` (`verifica.segmenti`, scritta due volte nell'attività 7.4c: la seconda cancellava la prima) e aggiunto un test che impedisce chiavi doppie. 2 nuovi test (10 W in continua, 5 W medi con 10 V di picco su 10 Ω); `npm test` 622 OK, build OK.
 - 2026-11-02 — attività 7.4i: **sensore di movimento PIR** nel modulo Arduino (libreria a 21 voci; VCC, OUT, GND; uscita a 5 V quando c'è movimento, scelto con un clic in simulazione, con la cupola illuminata e la scritta «MOVIMENTO»). Nuovo esempio «Allarme con il sensore di movimento» (digitalRead, LED L, messaggio solo al cambio di stato). Il generatore degli esempi Arduino numera le sigle per lettera come l'editor (prima i LED di colori diversi erano tutti «D1» e il sensore di temperatura «U1» come la scheda; ora D1, D2, D3 e U2). 2 nuovi test; `npm test` 624 OK, build OK, prova Playwright.
 - 2026-11-02 — esempio «Potenza di una lampadina e wattmetro» (Elettronica: 12 V, lampadina 12 V – 1,2 W, il wattmetro indica 1,2 W) con test; README aggiornato con i componenti e gli strumenti nuovi (deviatori/invertitori, pulsante d'emergenza, lista istruzioni, componenti Arduino, wattmetro, plotter di Bode). `npm test` 625 OK, `prova-interfaccia` 118 controlli superati.
+- 2026-11-02 — attività 7.5 e chiusura della Fase 7: build Actions verdi (n. 59–64, 66, 68–70), `npm test` 625 OK, build OK, `prova-interfaccia` 118 controlli superati. Scritto il resoconto della Fase 7; fase in attesa di conferma.
