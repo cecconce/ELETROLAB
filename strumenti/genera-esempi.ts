@@ -5,7 +5,8 @@
 // e con la numerazione dei contatti calcolata dal programma stesso.
 //
 // Uso: npx vite-node strumenti/genera-esempi.ts
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { leggiProgetto } from "../src/progetto/formato";
 import { libreriaDelModulo } from "../src/editor/caricaLibreria";
 import { vocePerTipo } from "../src/editor/libreria";
 import { rinumeraContatti } from "../src/editor/associazioni";
@@ -415,7 +416,46 @@ function relePassoPasso(): Schema {
   return b.schema();
 }
 
+/**
+ * Esempio 9 (Impianti + PLC nello stesso file): potenza come nella
+ * marcia/arresto, ma il comando lo fa il PLC. S1 (marcia) va all'ingresso
+ * I0.0, S0 (arresto, NC) a I0.1; l'uscita Q0.0 eccita K1 e accende la spia.
+ * Il programma Ladder è quello dell'esempio PLC «marcia/arresto».
+ */
+function plcNelloSchema(): Schema {
+  const b = costruttore();
+  potenzaMotore(b);
+  b.posa("rete-1f", "rete-monofase", "", 720, 40); // L in x=740, N in x=760
+  b.posa("PLC1", "plc", "PLC1", 300, 300); // L 320, N 340, I0.0 380, I0.1 400 · 1L 320, Q0.0 360 (y 420)
+  b.posa("S1", "pulsante-na", "S1", 340, 140); // 13-14 in x=360
+  b.posa("S0", "pulsante-nc", "S0", 380, 140); // 11-12 in x=400
+  b.posa("K1", "bobina-contattore", "K1", 340, 500);
+  b.posa("H1", "lampada", "H1", 440, 500, { parametri: { colore: "verde" } });
+  b.filo("rete-1f:L", "PLC1:L", 100);
+  b.filo("rete-1f:N", "PLC1:N", 110);
+  b.filo("rete-1f:L", "S1:13", 100);
+  b.filo("rete-1f:L", "S0:11", 100);
+  b.filo("S1:14", "PLC1:I0.0", 260);
+  b.filo("S0:12", "PLC1:I0.1");
+  b.filo("rete-1f:L", "PLC1:1L", undefined, [
+    { x: 740, y: 460 },
+    { x: 320, y: 460 },
+  ]);
+  b.filo("PLC1:Q0.0", "K1:A1");
+  b.filo("PLC1:Q0.0", "H1:X1", 470);
+  b.filo("K1:A2", "rete-1f:N", 760);
+  b.filo("H1:X2", "rete-1f:N", 760);
+  // Programma Ladder: lo stesso dell'esempio del modulo PLC, senza il quadro virtuale.
+  const esito = leggiProgetto(readFileSync("esempi/plc-marcia-arresto.elab", "utf8"));
+  if (!esito.ok) throw new Error("manca esempi/plc-marcia-arresto.elab");
+  const ladder = esito.progetto.schema.componenti.filter((c) => c.tipo.startsWith("ladder-"));
+  const ids = new Set(ladder.map((c) => c.id));
+  const fili = esito.progetto.schema.fili.filter((f) => ids.has(f.da.componente) && ids.has(f.a.componente));
+  return { ...b.schema(), plc: { componenti: ladder, fili } };
+}
+
 const ESEMPI: Record<string, () => Schema> = {
+  "plc-nello-schema.elab": plcNelloSchema,
   "impianto-civile.elab": impiantoCivile,
   "rele-passo-passo.elab": relePassoPasso,
   "lampada-tre-punti.elab": lampadaTrePunti,

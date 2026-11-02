@@ -131,6 +131,8 @@ export function diagnosiSchema(circuito: Circuito): Problema[] {
       const scambio = m.tipo === "contatto" ? (m.scambio ?? []) : [];
       for (const [a, b] of [...m.tratti, ...scambio]) gruppi.unisci(chiaveMorsetto(c.id, a), chiaveMorsetto(c.id, b));
     }
+    // Uscite del PLC: possono chiudersi tutte (dipende dal programma).
+    if (m.tipo === "carico" && m.plc) for (const q of m.plc.uscite) gruppi.unisci(chiaveMorsetto(c.id, m.plc.comune), chiaveMorsetto(c.id, q));
   }
   // Poli raggiungibili da ogni gruppo e morsetti di ogni gruppo.
   const poliDelGruppo = new Map<string, Set<Polo>>();

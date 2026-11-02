@@ -58,6 +58,13 @@
       "prova": "Premi ▶ AVVIA. Premi e rilascia S1: la lampada si accende e resta accesa. Premi S2 o S3: si spegne. Ogni pressione cambia lo stato, da qualunque punto."
     },
     {
+      "file": "plc-nello-schema.elab",
+      "modulo": "impianti",
+      "titolo": "Impianto comandato dal PLC (schema e Ladder nello stesso file)",
+      "descrizione": "Il circuito di potenza è quello della marcia/arresto, ma il comando lo fa un PLC posato nello schema: S1 (marcia) porta la fase all'ingresso I0.0, S0 (arresto, NC) a I0.1, e l'uscita a relè Q0.0 eccita il contattore K1 e accende la spia H1. Il programma Ladder (autoritenuta su Q0.0) è nella scheda «Programma PLC» dello stesso file.",
+      "prova": "Premi ▶ AVVIA e clic su Q1. Premi S1: sul PLC si accende il LED di I0.0, poi quello di Q0.0, K1 si eccita e il motore gira. Premi S0 per fermarlo. Passa alla scheda «🔢 Programma PLC» (anche durante la simulazione) per vedere il Ladder con i contatti che si accendono."
+    },
+    {
       "file": "esercizio-marcia-arresto.elab",
       "modulo": "impianti",
       "titolo": "Esercizio: completa la marcia/arresto",

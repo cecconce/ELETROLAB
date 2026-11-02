@@ -115,9 +115,20 @@ export type ModelloComponente =
        * fino all'impulso successivo (memoria in tempo.ts).
        */
       passoPasso?: boolean;
+      /**
+       * Solo per il PLC posato nello schema: `morsetti` sono quelli
+       * dell'alimentazione (L, N); gli ingressi sono "alimentati" quando
+       * ricevono la fase, le uscite a relè chiudono il comune verso Qx quando
+       * il programma Ladder le porta a 1 (vedi sessione.ts).
+       */
+      plc?: { ingressi: readonly string[]; comune: string; uscite: readonly string[] };
       /** Solo per i motori: come calcolare rotazione e verso. */
       motore?: TipoMotore;
     };
+
+/** Morsetti del PLC posato nello schema elettrico: 8 ingressi e 6 uscite a relè. */
+export const INGRESSI_PLC: readonly string[] = Array.from({ length: 8 }, (_, i) => `I0.${i}`);
+export const USCITE_PLC: readonly string[] = Array.from({ length: 6 }, (_, i) => `Q0.${i}`);
 
 /** I tre poli di un componente tripolare con morsetti 1-2, 3-4, 5-6. */
 const TRIPOLARE: readonly Tratto[] = [
@@ -217,6 +228,12 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
   "bobina-contattore": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true },
   "bobina-rele": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true },
   suoneria: { tipo: "carico", morsetti: ["X1", "X2"], bobina: false },
+  plc: {
+    tipo: "carico",
+    morsetti: ["L", "N"],
+    bobina: false,
+    plc: { ingressi: INGRESSI_PLC, comune: "1L", uscite: USCITE_PLC },
+  },
   "rele-passo-passo": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true, passoPasso: true },
   "bobina-ritardata-eccitazione": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true, temporizzata: "eccitazione" },
   "bobina-ritardata-diseccitazione": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true, temporizzata: "diseccitazione" },

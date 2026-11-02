@@ -4,6 +4,9 @@
 // raggiunge, contatti chiusi, bobine eccitate, lampade accese, motori che
 // girano con il loro verso, protezioni intervenute, punti in cortocircuito.
 import {
+  ingressiPlcAttivi,
+  plcAlimentato,
+  uscitePlcAttive,
   MODELLI_IMPIANTI,
   azioneClic,
   chiaveMorsetto,
@@ -37,6 +40,8 @@ export interface AspettoComponente {
   sovraccarico: boolean;
   /** Motore che gira: verso ed eventuale collegamento stella/triangolo. */
   motore?: StatoMotore;
+  /** PLC posato nello schema elettrico: alimentato, ingressi e uscite a 1 (per i LED). */
+  plcSchema?: { acceso: boolean; ingressi: string[]; uscite: string[] };
   /** PLC: valore da scrivere sotto il blocco (tempo trascorso, conteggio). */
   valore?: string;
   /** PLC: stato dell'impianto animato da disegnare (nastro, semaforo, cancello…). */
@@ -119,6 +124,11 @@ export function vistaDaSessione(sessione: SessioneImpianto, fili: readonly Filo[
       intervenuta: intervenute.has(c.id),
       sovraccarico: sovraccarichi.has(c.id),
       ...(r.motori[c.id] ? { motore: r.motori[c.id] } : {}),
+      ...(c.tipo === "plc" && sessione.plc?.id === c.id
+        ? { plcSchema: { acceso: plcAlimentato(sessione), ingressi: ingressiPlcAttivi(sessione), uscite: uscitePlcAttive(sessione) } }
+        : c.tipo === "plc"
+          ? { plcSchema: { acceso: alimentati.has(c.id), ingressi: [], uscite: [] } }
+          : {}),
     };
   }
   return {
@@ -169,6 +179,7 @@ export function tipoUtilizzatore(tipo: string): "bobina" | "luce" | "suono" | "m
   const m = MODELLI_IMPIANTI[tipo];
   if (m?.tipo !== "carico") return null;
   if (m.bobina) return "bobina";
+  if (m.plc) return null;
   if (m.motore) return "motore";
   if (tipo === "sirena" || tipo === "suoneria") return "suono";
   return "luce";

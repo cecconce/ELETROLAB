@@ -1,0 +1,509 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "impianti",
+  "programma": "0.1.0",
+  "salvato": "2026-10-27T00:00:00.000Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "rete-3f",
+        "tipo": "rete-trifase",
+        "etichetta": "",
+        "x": 40,
+        "y": 40,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "Q1",
+        "tipo": "sezionatore",
+        "etichetta": "Q1",
+        "x": 40,
+        "y": 140,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "K1-potenza",
+        "tipo": "contatti-principali",
+        "etichetta": "K1",
+        "x": 40,
+        "y": 280,
+        "larghezza": 80,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "1": "1",
+          "2": "2",
+          "3": "3",
+          "4": "4",
+          "5": "5",
+          "6": "6"
+        }
+      },
+      {
+        "id": "F1",
+        "tipo": "rele-termico",
+        "etichetta": "F1",
+        "x": 40,
+        "y": 420,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "M1",
+        "tipo": "motore-trifase",
+        "etichetta": "M1",
+        "x": 40,
+        "y": 560,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "rete-1f",
+        "tipo": "rete-monofase",
+        "etichetta": "",
+        "x": 720,
+        "y": 40,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "PLC1",
+        "tipo": "plc",
+        "etichetta": "PLC1",
+        "x": 300,
+        "y": 300,
+        "larghezza": 240,
+        "altezza": 120
+      },
+      {
+        "id": "S1",
+        "tipo": "pulsante-na",
+        "etichetta": "S1",
+        "x": 340,
+        "y": 140,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "S0",
+        "tipo": "pulsante-nc",
+        "etichetta": "S0",
+        "x": 380,
+        "y": 140,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "K1",
+        "tipo": "bobina-contattore",
+        "etichetta": "K1",
+        "x": 340,
+        "y": 500,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "H1",
+        "tipo": "lampada",
+        "etichetta": "H1",
+        "x": 440,
+        "y": 500,
+        "larghezza": 40,
+        "altezza": 80,
+        "parametri": {
+          "colore": "verde"
+        }
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "rete-3f",
+          "morsetto": "L1"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "rete-3f",
+          "morsetto": "L2"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "3"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "rete-3f",
+          "morsetto": "L3"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "5"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "K1-potenza",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "4"
+        },
+        "a": {
+          "componente": "K1-potenza",
+          "morsetto": "3"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "6"
+        },
+        "a": {
+          "componente": "K1-potenza",
+          "morsetto": "5"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "K1-potenza",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "F1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "K1-potenza",
+          "morsetto": "4"
+        },
+        "a": {
+          "componente": "F1",
+          "morsetto": "3"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "K1-potenza",
+          "morsetto": "6"
+        },
+        "a": {
+          "componente": "F1",
+          "morsetto": "5"
+        }
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "F1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "M1",
+          "morsetto": "U"
+        }
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "F1",
+          "morsetto": "4"
+        },
+        "a": {
+          "componente": "M1",
+          "morsetto": "V"
+        }
+      },
+      {
+        "id": "filo-12",
+        "da": {
+          "componente": "F1",
+          "morsetto": "6"
+        },
+        "a": {
+          "componente": "M1",
+          "morsetto": "W"
+        }
+      },
+      {
+        "id": "filo-13",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "PLC1",
+          "morsetto": "L"
+        },
+        "medio": 100
+      },
+      {
+        "id": "filo-14",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "a": {
+          "componente": "PLC1",
+          "morsetto": "N"
+        },
+        "medio": 110
+      },
+      {
+        "id": "filo-15",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "S1",
+          "morsetto": "13"
+        },
+        "medio": 100
+      },
+      {
+        "id": "filo-16",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "S0",
+          "morsetto": "11"
+        },
+        "medio": 100
+      },
+      {
+        "id": "filo-17",
+        "da": {
+          "componente": "S1",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "PLC1",
+          "morsetto": "I0.0"
+        },
+        "medio": 260
+      },
+      {
+        "id": "filo-18",
+        "da": {
+          "componente": "S0",
+          "morsetto": "12"
+        },
+        "a": {
+          "componente": "PLC1",
+          "morsetto": "I0.1"
+        }
+      },
+      {
+        "id": "filo-19",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "PLC1",
+          "morsetto": "1L"
+        },
+        "punti": [
+          {
+            "x": 740,
+            "y": 460
+          },
+          {
+            "x": 320,
+            "y": 460
+          }
+        ]
+      },
+      {
+        "id": "filo-20",
+        "da": {
+          "componente": "PLC1",
+          "morsetto": "Q0.0"
+        },
+        "a": {
+          "componente": "K1",
+          "morsetto": "A1"
+        }
+      },
+      {
+        "id": "filo-21",
+        "da": {
+          "componente": "PLC1",
+          "morsetto": "Q0.0"
+        },
+        "a": {
+          "componente": "H1",
+          "morsetto": "X1"
+        },
+        "medio": 470
+      },
+      {
+        "id": "filo-22",
+        "da": {
+          "componente": "K1",
+          "morsetto": "A2"
+        },
+        "a": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "medio": 760
+      },
+      {
+        "id": "filo-23",
+        "da": {
+          "componente": "H1",
+          "morsetto": "X2"
+        },
+        "a": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "medio": 760
+      }
+    ],
+    "plc": {
+      "componenti": [
+        {
+          "id": "ladder-commento-1",
+          "tipo": "ladder-commento",
+          "etichetta": "Marcia I0.0 con autoritenuta Q0.0, arresto I0.1 (pulsante NC)",
+          "x": 100,
+          "y": 40,
+          "larghezza": 480,
+          "altezza": 40
+        },
+        {
+          "id": "ladder-contatto-na-1",
+          "tipo": "ladder-contatto-na",
+          "etichetta": "I0.0",
+          "x": 100,
+          "y": 120,
+          "larghezza": 80,
+          "altezza": 40
+        },
+        {
+          "id": "ladder-contatto-na-2",
+          "tipo": "ladder-contatto-na",
+          "etichetta": "I0.1",
+          "x": 220,
+          "y": 120,
+          "larghezza": 80,
+          "altezza": 40
+        },
+        {
+          "id": "ladder-barra-sinistra-1",
+          "tipo": "ladder-barra-sinistra",
+          "etichetta": "",
+          "x": 40,
+          "y": 0,
+          "larghezza": 20,
+          "altezza": 400
+        },
+        {
+          "id": "ladder-contatto-na-3",
+          "tipo": "ladder-contatto-na",
+          "etichetta": "Q0.0",
+          "x": 100,
+          "y": 200,
+          "larghezza": 80,
+          "altezza": 40
+        },
+        {
+          "id": "ladder-bobina-1",
+          "tipo": "ladder-bobina",
+          "etichetta": "Q0.0",
+          "x": 600,
+          "y": 120,
+          "larghezza": 80,
+          "altezza": 40
+        }
+      ],
+      "fili": [
+        {
+          "id": "filo-1",
+          "da": {
+            "componente": "ladder-barra-sinistra-1",
+            "morsetto": "p4"
+          },
+          "a": {
+            "componente": "ladder-contatto-na-1",
+            "morsetto": "in"
+          }
+        },
+        {
+          "id": "filo-2",
+          "da": {
+            "componente": "ladder-contatto-na-1",
+            "morsetto": "out"
+          },
+          "a": {
+            "componente": "ladder-contatto-na-2",
+            "morsetto": "in"
+          }
+        },
+        {
+          "id": "filo-3",
+          "da": {
+            "componente": "ladder-barra-sinistra-1",
+            "morsetto": "p6"
+          },
+          "a": {
+            "componente": "ladder-contatto-na-3",
+            "morsetto": "in"
+          }
+        },
+        {
+          "id": "filo-4",
+          "da": {
+            "componente": "ladder-contatto-na-3",
+            "morsetto": "out"
+          },
+          "a": {
+            "componente": "ladder-contatto-na-1",
+            "morsetto": "out"
+          }
+        },
+        {
+          "id": "filo-5",
+          "da": {
+            "componente": "ladder-contatto-na-2",
+            "morsetto": "out"
+          },
+          "a": {
+            "componente": "ladder-bobina-1",
+            "morsetto": "in"
+          }
+        }
+      ]
+    }
+  }
+}

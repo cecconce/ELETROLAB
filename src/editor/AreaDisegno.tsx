@@ -1324,6 +1324,7 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori, realistico
       )}
       {aspetto.azionato && !ePulsante(c.tipo) && aspetto.clic === "manuale" && utilizzatore === null && testo(`● ${t("simulazione.azionato")}`, -18, colori.azionato)}
       {realistico && aspetto.azionato && <ComandoRealisticoAzionato tipo={c.tipo} />}
+      {aspetto.plcSchema && <LedPlc stato={aspetto.plcSchema} />}
       {realistico && (c.tipo === "contatti-principali" ? aspetto.chiuso : utilizzatore === "bobina" && aspetto.alimentato) && (
         // Indicatore meccanico del contattore: finestrella verde con "I" quando è chiuso.
         <Group listening={false}>
@@ -1399,6 +1400,23 @@ function ComandoRealisticoAzionato({ tipo }: { tipo: string }) {
       </Group>
     );
   return null;
+}
+
+/**
+ * LED del PLC posato nello schema elettrico (stesse posizioni del disegno
+ * realistico): verdi sopra gli ingressi a 1, arancioni sopra le uscite a 1, RUN acceso.
+ */
+function LedPlc({ stato }: { stato: { acceso: boolean; ingressi: string[]; uscite: string[] } }) {
+  const led = (x: number, y: number, colore: string, chiave: string) => (
+    <Circle key={chiave} x={x} y={y} radius={3.2} fill={colore} shadowColor={colore} shadowBlur={8} shadowOpacity={1} />
+  );
+  return (
+    <Group listening={false}>
+      {stato.acceso && led(214, 52, "#2ecc40", "run")}
+      {stato.ingressi.map((i) => led(80 + 20 * Number(i.split(".")[1]), 27, "#2ecc40", i))}
+      {stato.uscite.map((q) => led(60 + 20 * Number(q.split(".")[1]), 93, "#ff9800", q))}
+    </Group>
+  );
 }
 
 /** Pulsanti (si tengono premuti): impianti e quadro del PLC. */

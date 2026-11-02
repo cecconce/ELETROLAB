@@ -97,6 +97,12 @@ export interface Schema {
    * automatica. Nel file la soluzione è codificata (non leggibile a colpo d'occhio).
    */
   esercizio?: Esercizio;
+  /**
+   * Solo nel modulo Impianti: programma Ladder del PLC posato nello schema
+   * elettrico (un foglio del modulo PLC con barre, contatti e bobine). Sta
+   * nello stesso file, così schema elettrico e programma lavorano insieme.
+   */
+  plc?: { componenti: ComponenteSchema[]; fili: Filo[] };
 }
 
 export const SCHEMA_VUOTO: Schema = { componenti: [], fili: [] };

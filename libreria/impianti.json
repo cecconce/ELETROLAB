@@ -23,6 +23,10 @@
       "nome": "Contattori e relè"
     },
     {
+      "id": "automazione",
+      "nome": "PLC (automazione)"
+    },
+    {
       "id": "utilizzatori",
       "nome": "Utilizzatori"
     }
@@ -1098,6 +1102,111 @@
         "tipo": "principale",
         "stato": "NA"
       }
+    },
+    {
+      "id": "plc",
+      "nome": "PLC (controllore programmabile)",
+      "categoria": "automazione",
+      "sigla": "PLC",
+      "descrizione": "Controllore programmabile alimentato a 230 V (L, N): gli ingressi I0.0–I0.7 sono a 1 quando ricevono la fase (per esempio attraverso un pulsante), le uscite Q0.0–Q0.5 sono relè che collegano il comune 1L al morsetto Q quando il programma le porta a 1. Il programma Ladder si scrive nella scheda «Programma PLC» dello stesso file.",
+      "paroleChiave": [
+        "plc",
+        "controllore",
+        "automazione",
+        "ladder",
+        "ingressi",
+        "uscite"
+      ],
+      "icona": "plc.svg",
+      "larghezza": 240,
+      "altezza": 120,
+      "morsetti": [
+        {
+          "id": "L",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "N",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "I0.0",
+          "x": 80,
+          "y": 0
+        },
+        {
+          "id": "I0.1",
+          "x": 100,
+          "y": 0
+        },
+        {
+          "id": "I0.2",
+          "x": 120,
+          "y": 0
+        },
+        {
+          "id": "I0.3",
+          "x": 140,
+          "y": 0
+        },
+        {
+          "id": "I0.4",
+          "x": 160,
+          "y": 0
+        },
+        {
+          "id": "I0.5",
+          "x": 180,
+          "y": 0
+        },
+        {
+          "id": "I0.6",
+          "x": 200,
+          "y": 0
+        },
+        {
+          "id": "I0.7",
+          "x": 220,
+          "y": 0
+        },
+        {
+          "id": "1L",
+          "x": 20,
+          "y": 120
+        },
+        {
+          "id": "Q0.0",
+          "x": 60,
+          "y": 120
+        },
+        {
+          "id": "Q0.1",
+          "x": 80,
+          "y": 120
+        },
+        {
+          "id": "Q0.2",
+          "x": 100,
+          "y": 120
+        },
+        {
+          "id": "Q0.3",
+          "x": 120,
+          "y": 120
+        },
+        {
+          "id": "Q0.4",
+          "x": 140,
+          "y": 120
+        },
+        {
+          "id": "Q0.5",
+          "x": 160,
+          "y": 120
+        }
+      ]
     },
     {
       "id": "bobina-rele",

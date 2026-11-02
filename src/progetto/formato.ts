@@ -163,6 +163,8 @@ export function leggiProgetto(testo: string): EsitoLettura {
   const schema: Schema = eTesto(schemaGrezzo.codice) ? { componenti, fili, codice: schemaGrezzo.codice } : { componenti, fili };
   if (eTesto(schemaGrezzo.blocchi)) schema.blocchi = schemaGrezzo.blocchi;
   if (schemaGrezzo.modoCodice === "blocchi" || schemaGrezzo.modoCodice === "testo") schema.modoCodice = schemaGrezzo.modoCodice;
+  // Programma Ladder del PLC posato nello schema degli Impianti (facoltativo).
+  if (eOggetto(schemaGrezzo.plc)) schema.plc = leggiComponentiEFili(schemaGrezzo.plc, avvisi);
   // Esercizio (facoltativo): consegna e soluzione codificata.
   if (eOggetto(schemaGrezzo.esercizio) && eTesto(schemaGrezzo.esercizio.consegna)) {
     const esercizio: NonNullable<Schema["esercizio"]> = { consegna: schemaGrezzo.esercizio.consegna };

@@ -9,7 +9,8 @@
 // - `clicGiu` / `clicSu` quando lo studente preme e rilascia il mouse su un componente;
 // - `rilasciaTutti` quando il mouse viene rilasciato fuori dal componente;
 // - `passo` a intervalli regolari con il tempo reale trascorso.
-import { MODELLI_IMPIANTI, PROTEZIONI } from "./modelli";
+import { INGRESSI_PLC, MODELLI_IMPIANTI, PROTEZIONI, USCITE_PLC } from "./modelli";
+import { avviaSessionePlc, passoPlc, valoreBit, type RisultatoConversione, type SessionePlc } from "../plc";
 import { avanza, prossimoEvento, riarma, statoIniziale, type StatoImpianto } from "./tempo";
 import type { Circuito, RisultatoConProtezioni } from "./simulatore";
 import { diagnosiRisultato, diagnosiSchema, ordinaProblemi, type MotivoIntervento, type Problema } from "./diagnosi";
@@ -28,6 +29,32 @@ export interface SessioneImpianto {
   motivi: Readonly<Record<string, MotivoIntervento>>;
   /** Problemi dello schema trovati all'avvio (circuito aperto, contatti non associati…). */
   problemiSchema: readonly Problema[];
+  /**
+   * PLC posato nello schema elettrico, con il suo programma Ladder (salvato
+   * nello stesso file): gli ingressi I li legge dai morsetti, le uscite Q
+   * chiudono i suoi relè. Il programma gira a ogni `passo`.
+   */
+  plc?: { id: string; sessione: SessionePlc };
+}
+
+const FASI = new Set(["L1", "L2", "L3", "+"]);
+
+/** Vero se il PLC dello schema è alimentato (fra L e N c'è tensione). */
+export function plcAlimentato(s: Pick<SessioneImpianto, "plc"> & { risultato?: RisultatoConProtezioni }): boolean {
+  return !!s.plc && !!s.risultato?.carichiAlimentati.includes(s.plc.id);
+}
+
+/** Ingressi del PLC che ricevono la fase in questo momento (es. ["I0.0", "I0.3"]). */
+export function ingressiPlcAttivi(s: Pick<SessioneImpianto, "plc"> & { risultato?: RisultatoConProtezioni }): string[] {
+  if (!s.plc || !plcAlimentato(s)) return [];
+  const poli = s.risultato!.poliDeiMorsetti;
+  return INGRESSI_PLC.filter((i) => (poli[`${s.plc!.id}:${i}`] ?? []).some((p) => FASI.has(p)));
+}
+
+/** Uscite del PLC a 1 (relè chiusi); con il PLC spento sono tutte aperte. */
+export function uscitePlcAttive(s: Pick<SessioneImpianto, "plc"> & { risultato?: RisultatoConProtezioni }): string[] {
+  if (!s.plc || !plcAlimentato(s)) return [];
+  return USCITE_PLC.filter((q) => valoreBit(s.plc!.sessione.stato, q));
 }
 
 /**
@@ -60,7 +87,12 @@ function ricalcola(
   const { stato, risultato } = avanza(
     s.circuito,
     s.stato,
-    { premuti: s.premuti, azionati: s.azionati, sovraccarichi: s.sovraccarichi },
+    {
+      premuti: s.premuti,
+      azionati: s.azionati,
+      sovraccarichi: s.sovraccarichi,
+      uscitePlc: s.plc ? uscitePlcAttive(s).map((q) => `${s.plc!.id}:${q}`) : [],
+    },
     dt,
   );
   // Motivo degli interventi: un cortocircuito se compare negli interventi di
@@ -79,8 +111,13 @@ export function problemiSessione(s: SessioneImpianto): Problema[] {
   return ordinaProblemi([...diagnosiRisultato(s.risultato, s.motivi), ...s.problemiSchema]);
 }
 
-/** Avvio della simulazione: tutto a riposo, tempo zero. */
-export function avviaSessione(circuito: Circuito): SessioneImpianto {
+/**
+ * Avvio della simulazione: tutto a riposo, tempo zero. Se nello schema c'è un
+ * PLC e il file contiene il suo programma Ladder (`programmaPlc`), il PLC parte insieme.
+ */
+export function avviaSessione(circuito: Circuito, programmaPlc?: RisultatoConversione): SessioneImpianto {
+  const idPlc = circuito.componenti.find((c) => c.tipo === "plc")?.id;
+  const plc = idPlc && programmaPlc ? { id: idPlc, sessione: avviaSessionePlc(programmaPlc, {}) } : undefined;
   return ricalcola({
     circuito,
     stato: statoIniziale(),
@@ -88,6 +125,7 @@ export function avviaSessione(circuito: Circuito): SessioneImpianto {
     azionati: [],
     sovraccarichi: [],
     problemiSchema: diagnosiSchema(circuito),
+    ...(plc ? { plc } : {}),
   });
 }
 
@@ -151,6 +189,11 @@ export function passo(s: SessioneImpianto, dt: number): SessioneImpianto {
   for (let i = 0; i < MAX_SOTTOPASSI && resto > 0; i++) {
     const evento = prossimoEvento(corrente.circuito, corrente.stato);
     const pezzo = evento !== null && evento < resto ? evento : resto;
+    // Il PLC alimentato legge gli ingressi dai morsetti ed esegue i suoi cicli di scansione.
+    if (corrente.plc && plcAlimentato(corrente)) {
+      const sessione = passoPlc({ ...corrente.plc.sessione, fissi: ingressiPlcAttivi(corrente) }, pezzo);
+      corrente = { ...corrente, plc: { ...corrente.plc, sessione } };
+    }
     corrente = ricalcola(corrente, pezzo);
     resto -= pezzo;
   }

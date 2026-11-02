@@ -7,6 +7,7 @@ import { SCHEMA_VUOTO, type Schema } from "../editor/schema";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { rinumeraContatti } from "../editor/associazioni";
 import { vocePerTipo } from "../editor/libreria";
+import { programmaDaSchema } from "../editor/ladder";
 import {
   avviaSessione,
   clicGiu,
@@ -312,6 +313,26 @@ describe("esempi pronti (2)", () => {
       atteso = !atteso;
       expect(spiaAccesa(s), `dopo ${p}`).toBe(atteso);
     }
+    expect(problemiSessione(s)).toEqual([]);
+  });
+
+  it("impianto comandato dal PLC: il programma nello stesso file fa partire e fermare il motore", () => {
+    const schema = schemaDi("plc-nello-schema.elab");
+    expect(schema.plc?.componenti.length).toBeGreaterThan(3);
+    const conv = programmaDaSchema(schema.plc!);
+    expect(conv.problemi).toEqual([]);
+    let s = clicGiu(avviaSessione(schema, conv), "Q1");
+    s = passo(s, 0.2);
+    expect(motoreGira(s)).toBeUndefined();
+    s = passo(clicSu(clicGiu(s, "S1"), "S1"), 0);
+    s = passo(clicGiu(s, "S1"), 0.2);
+    s = passo(clicSu(s, "S1"), 0.2);
+    expect(k1Eccitato(s)).toBe(true);
+    expect(motoreGira(s)).toBe("orario");
+    expect(spiaAccesa(s)).toBe(true);
+    s = passo(clicGiu(s, "S0"), 0.2);
+    s = passo(clicSu(s, "S0"), 0.2);
+    expect(k1Eccitato(s)).toBe(false);
     expect(problemiSessione(s)).toEqual([]);
   });
 });

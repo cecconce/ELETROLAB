@@ -168,6 +168,31 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   // Ultimo schema scritto nel file; null = c'è qualcosa da salvare.
   const [salvato, setSalvato] = useState<Schema | null>(documento.modificato ? null : documento.schema);
   const schema = cronologia.presente;
+
+  // --- Impianti + PLC nello stesso file: scheda «Schema elettrico» / «Programma PLC» ---
+  // Il programma Ladder del PLC posato nello schema sta in schema.plc: si
+  // modifica con la libreria del modulo PLC e passa dalla stessa cronologia.
+  const conFoglioPlc = modulo.id === "impianti";
+  const [foglio, setFoglio] = useState<"schema" | "plc">("schema");
+  const sulPlc = conFoglioPlc && foglio === "plc";
+  const libreriaPlc = useMemo(() => libreriaDelModulo("plc"), []);
+  const libreriaAttiva = sulPlc ? libreriaPlc : libreria;
+  const schemaAttivo: Schema = useMemo(
+    () => (sulPlc ? { componenti: schema.plc?.componenti ?? [], fili: schema.plc?.fili ?? [] } : schema),
+    [sulPlc, schema],
+  );
+  const cambiaSchemaAttivo = useCallback(
+    (nuovo: Schema, provvisoria?: boolean) => {
+      if (!sulPlc) return cambiaSchema(nuovo, provvisoria);
+      setCronologia((c) => modifica(c, { ...c.presente, plc: { componenti: nuovo.componenti, fili: nuovo.fili } }, provvisoria));
+    },
+    [sulPlc, cambiaSchema],
+  );
+  const scegliFoglio = useCallback((f: "schema" | "plc") => {
+    setFoglio(f);
+    setSelezione([]);
+    setDaPosare(null);
+  }, []);
   const modificato = useMemo(() => salvato === null || !schemiUguali(schema, salvato), [schema, salvato]);
   const [salvataggioInCorso, setSalvataggioInCorso] = useState(false);
 
@@ -313,14 +338,17 @@ export function SchermataModulo(props: PropsSchermataModulo) {
         ? vistaDaSessioneArduino(s, schema, libreria)
         : eSessionePlc(s)
           ? vistaDaSessionePlc(s, schema)
-          : vistaDaSessione(s, schema.fili);
+          : sulPlc && s.plc
+            ? // Scheda «Programma PLC» durante la simulazione dell'impianto: il Ladder con lo stato in tempo reale.
+              vistaDaSessionePlc(s.plc.sessione, schemaAttivo)
+            : vistaDaSessione(s, schema.fili);
       const firma = firmaVista(v);
       if (firma !== firmaRif.current) {
         firmaRif.current = firma;
         setVista(v);
       }
     },
-    [schema, libreria],
+    [schema, libreria, sulPlc, schemaAttivo],
   );
   const avvia = useCallback(() => {
     if (!simulabile) return;
@@ -342,7 +370,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
             Object.fromEntries(schema.componenti.map((c) => [c.id, c.tipo])),
             impiantiDaSchema(schema),
           )
-        : avviaSessione(schema),
+        : avviaSessione(schema, schema.plc && schema.componenti.some((c) => c.tipo === "plc") ? programmaDaSchema(schema.plc) : undefined),
     );
   }, [aggiornaSessione, schema, simulabile, modulo.id, morsettiDi]);
   const ferma = useCallback(() => {
@@ -465,7 +493,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       {finestraEsercizio && (
         <FinestraPreparaEsercizio schema={schema} onCambia={(nuovo) => cambiaSchema(nuovo)} onChiudi={() => setFinestraEsercizio(false)} verificabile={MODULI_VERIFICABILI.has(modulo.id)} />
       )}
-      {finestraLista && <FinestraListaIstruzioni schema={schema} onChiudi={() => setFinestraLista(false)} />}
+      {finestraLista && <FinestraListaIstruzioni schema={modulo.id === "plc" ? schema : schemaAttivo} onChiudi={() => setFinestraLista(false)} />}
       {finestraEsporta && (
         <FinestraEsporta
           titoloIniziale={nomeFile.replace(/\.elab$/i, "")}
@@ -515,7 +543,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           <button type="button" className="pulsante" onClick={() => setFinestraEsercizio(true)} title={t("esercizio.pulsanteTasti")} disabled={inSimulazione}>
             📝 {t("esercizio.pulsante")}
           </button>
-          {modulo.id === "plc" && (
+          {(modulo.id === "plc" || sulPlc) && (
             <button type="button" className="pulsante" onClick={() => setFinestraLista(true)} title={t("lista.suggerimento")}>
               📄 {t("lista.pulsante")}
             </button>
@@ -526,16 +554,17 @@ export function SchermataModulo(props: PropsSchermataModulo) {
         </nav>
       </header>
       <div className={inSimulazione ? "corpo-modulo in-simulazione" : "corpo-modulo"}>
-        <LibreriaLaterale libreria={libreria} tema={tema} daPosare={daPosare} onScegli={setDaPosare} realistico={conVistaRealistica && realistico} />
+        <LibreriaLaterale libreria={libreriaAttiva} tema={tema} daPosare={daPosare} onScegli={setDaPosare} realistico={!sulPlc && conVistaRealistica && realistico} />
         <AreaDisegno
+          key={foglio}
           tema={tema}
-          schema={schema}
-          onCambiaSchema={cambiaSchema}
+          schema={schemaAttivo}
+          onCambiaSchema={cambiaSchemaAttivo}
           onAnnulla={inSimulazione ? undefined : suAnnulla}
           onRipeti={inSimulazione ? undefined : suRipeti}
           puoAnnullare={puoAnnullare(cronologia)}
           puoRipetere={puoRipetere(cronologia)}
-          libreria={libreria}
+          libreria={libreriaAttiva}
           daPosare={daPosare}
           onFinePosa={() => setDaPosare(null)}
           onSelezione={setSelezione}
@@ -543,7 +572,18 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           evidenzia={evidenzia}
           esportatore={esportatore}
           sopraFoglio={
-            schema.esercizio?.consegna ? (
+            <>
+              {conFoglioPlc && (
+                <div className="schede-foglio" role="tablist" aria-label={t("foglio.schede")}>
+                  <button type="button" role="tab" aria-selected={!sulPlc} className={!sulPlc ? "scheda attiva" : "scheda"} onClick={() => scegliFoglio("schema")}>
+                    ⚡ {t("foglio.schema")}
+                  </button>
+                  <button type="button" role="tab" aria-selected={sulPlc} className={sulPlc ? "scheda attiva" : "scheda"} onClick={() => scegliFoglio("plc")} title={t("foglio.plcSuggerimento")}>
+                    🔢 {t("foglio.plc")}
+                  </button>
+                </div>
+              )}
+              {schema.esercizio?.consegna ? (
               <RiquadroConsegna
                 esercizio={schema.esercizio}
                 verificabile={MODULI_VERIFICABILI.has(modulo.id) && !inSimulazione}
@@ -551,10 +591,11 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                 esito={esitoVerifica}
                 onChiudiEsito={() => setEsitoVerifica(null)}
               />
-            ) : null
+              ) : null}
+            </>
           }
-          realistico={conVistaRealistica && realistico}
-          onCambiaRealistico={conVistaRealistica ? cambiaRealistico : undefined}
+          realistico={!sulPlc && conVistaRealistica && realistico}
+          onCambiaRealistico={conVistaRealistica && !sulPlc ? cambiaRealistico : undefined}
           sopraBarra={
             inSimulazione ? (
               <>
@@ -643,7 +684,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
             )}
           </div>
         ) : (
-          <PannelloProprieta schema={schema} selezione={selezione} libreria={libreria} onCambiaSchema={cambiaSchema} />
+          <PannelloProprieta schema={schemaAttivo} selezione={selezione} libreria={libreriaAttiva} onCambiaSchema={cambiaSchemaAttivo} />
         )}
       </div>
     </div>

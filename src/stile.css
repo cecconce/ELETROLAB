@@ -1227,3 +1227,27 @@ button.io-plc {
   border: 1px solid #44464f;
   max-width: 260px;
 }
+
+/* Schede «Schema elettrico / Programma PLC» del modulo Impianti */
+.schede-foglio {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  pointer-events: auto;
+}
+.schede-foglio .scheda {
+  padding: 5px 14px;
+  border: 1px solid var(--bordo, #c5cbd0);
+  border-radius: 8px 8px 0 0;
+  background: var(--sfondo-pannello, #f4f6f8);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.schede-foglio .scheda.attiva {
+  background: var(--accento, #d84315);
+  border-color: var(--accento, #d84315);
+  color: #ffffff;
+  font-weight: 600;
+}

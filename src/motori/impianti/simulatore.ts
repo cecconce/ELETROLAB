@@ -76,6 +76,8 @@ export interface Ingressi {
   protezioniIntervenute?: Iterable<string>;
   /** Id dei motori a cui lo studente ha messo un sovraccarico (es. albero frenato). */
   sovraccarichi?: Iterable<string>;
+  /** Uscite dei PLC nello schema portate a 1 dal programma ("idPlc:Q0.0"): il relè chiude il comune verso Qx. */
+  uscitePlc?: Iterable<string>;
 }
 
 /**
@@ -183,7 +185,7 @@ interface ComponenteNoto {
 /** Morsetti di un modello (quelli che il motore considera). */
 export function morsettiDelModello(m: ModelloComponente): string[] {
   if (m.tipo === "sorgente") return m.uscite.map((u) => u.morsetto);
-  if (m.tipo === "carico") return [...m.morsetti];
+  if (m.tipo === "carico") return m.plc ? [...m.morsetti, ...m.plc.ingressi, m.plc.comune, ...m.plc.uscite] : [...m.morsetti];
   return [...new Set([...m.tratti, ...(m.tipo === "contatto" ? (m.scambio ?? []) : [])].flatMap((t) => [...t]))];
 }
 
@@ -222,6 +224,7 @@ interface StatoComandi {
   scaduti: ReadonlySet<string>;
   inRitardo: ReadonlySet<string>;
   passoPasso: ReadonlySet<string>;
+  uscitePlc: ReadonlySet<string>;
   /** Bobine eccitate all'inizio del calcolo (per il ritardo alla diseccitazione). */
   precedenti: ReadonlySet<string>;
 }
@@ -264,6 +267,9 @@ function valuta(p: Preparato, comandi: StatoComandi, eccitate: ReadonlySet<strin
       // Fusibile interrotto o magnetotermico scattato: il tratto è aperto.
       if (comandi.intervenute.has(n.c.id) && PROTEZIONI[n.c.tipo]?.cortocircuito) continue;
       for (const [a, b] of n.m.tratti) gruppi.unisci(p.nodoDi(n.c.id, a), p.nodoDi(n.c.id, b));
+    } else if (n.m.tipo === "carico" && n.m.plc) {
+      // Uscite a relè del PLC chiuse dal programma.
+      for (const q of n.m.plc.uscite) if (comandi.uscitePlc.has(`${n.c.id}:${q}`)) gruppi.unisci(p.nodoDi(n.c.id, n.m.plc.comune), p.nodoDi(n.c.id, q));
     } else if (n.m.tipo === "contatto") {
       if (contattoChiuso(n, comandi, sigleEccitate)) {
         // Tutti i poli dello stesso componente si muovono insieme.
@@ -490,6 +496,7 @@ export function simula(
     scaduti: new Set(temporizzatori.scaduti ?? []),
     inRitardo: new Set(temporizzatori.inRitardo ?? []),
     passoPasso: new Set(temporizzatori.passoPassoChiusi ?? []),
+    uscitePlc: new Set(ingressi.uscitePlc ?? []),
     precedenti: new Set(eccitate),
   };
 

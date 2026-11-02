@@ -372,6 +372,36 @@ icone["contatti-principali.svg"] = largo(
     scritta(60, 18, "5", 5, "#37474f"),
 );
 
+// ============================================================ PLC
+// Controllore compatto su guida DIN: morsettiere in alto (alimentazione e
+// ingressi) e in basso (comune e uscite a relè), file di LED verdi sopra gli
+// ingressi (y = 27) e arancioni sopra le uscite (y = 93) che l'editor accende
+// in simulazione, display e tasti al centro.
+{
+  const xIn = Array.from({ length: 8 }, (_, i) => 80 + 20 * i);
+  const xOut = Array.from({ length: 6 }, (_, i) => 60 + 20 * i);
+  icone["plc.svg"] = svg(
+    240,
+    120,
+    ombra(4, 8, 232, 104, 4) +
+      `<rect x="4" y="8" width="232" height="104" rx="4" fill="url(#pl)" stroke="#7f888e"/>` +
+      `<rect x="6" y="10" width="228" height="12" rx="2" fill="url(#inc)" opacity="0.55"/><rect x="6" y="98" width="228" height="12" rx="2" fill="url(#inc)" opacity="0.55"/>` +
+      [20, 40, ...xIn].map((x) => morsetto(x, 0, 120)).join("") +
+      [20, ...xOut].map((x) => morsetto(x, 120, 120)).join("") +
+      [["L", 20], ["N", 40], ...xIn.map((x, i) => [`I0.${i}`, x] as const)].map(([t, x]) => scritta(Number(x), 34, String(t), 5.2, "#37474f", 'font-weight="bold"')).join("") +
+      xIn.map((x) => `<circle cx="${x}" cy="27" r="2.6" fill="#1f3a24" stroke="#0f1f12" stroke-width="0.6"/>`).join("") +
+      [["1L", 20], ...xOut.map((x, i) => [`Q0.${i}`, x] as const)].map(([t, x]) => scritta(Number(x), 89, String(t), 5.2, "#37474f", 'font-weight="bold"')).join("") +
+      xOut.map((x) => `<circle cx="${x}" cy="93" r="2.6" fill="#3d2a12" stroke="#1f1408" stroke-width="0.6"/>`).join("") +
+      // Display, tasti e LED RUN.
+      `<rect x="62" y="42" width="72" height="30" rx="3" fill="#1d2226"/><rect x="66" y="46" width="64" height="22" rx="2" fill="#a9c7a0"/>` +
+      scritta(98, 56, "PLC", 9, "#1b2a12", 'font-weight="bold"') +
+      scritta(98, 65, "I 8 · Q 6", 6, "#1b2a12") +
+      [150, 166, 182, 198].map((x) => `<rect x="${x}" y="48" width="12" height="9" rx="2" fill="url(#pg)" stroke="#6c757b"/>`).join("") +
+      `<circle cx="214" cy="52" r="3" fill="#1f3a24" stroke="#0f1f12" stroke-width="0.6"/>${scritta(214, 63, "RUN", 5, "#37474f", 'font-weight="bold"')}` +
+      `<rect x="12" y="44" width="38" height="26" rx="2" fill="url(#pg)" stroke="#6c757b"/>${scritta(31, 55, "230 V~", 6, "#263238", 'font-weight="bold"')}${scritta(31, 64, "relè 8 A", 5, "#263238")}`,
+  );
+}
+
 // ============================================================ Utilizzatori
 // Spia da quadro: ghiera cromata e calotta in vetro (il colore della luce lo disegna l'editor).
 icone["lampada.svg"] = svg(
