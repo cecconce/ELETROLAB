@@ -18,7 +18,9 @@
 // esempi pronti (LED, pulsante, potenziometro, servo, display, ultrasuoni).
 // Per ultimo il modulo Elettronica: generatore → resistenza → LED disegnato da
 // zero, poi gli 8 esempi (multimetro, oscilloscopio, porte logiche, contatore,
-// alimentatore, transistor, operazionale, condensatore).
+// alimentatore, transistor, operazionale, condensatore). Infine le funzioni per
+// il docente: esportazione PNG/PDF con cartiglio e modalità Esercizio con la
+// verifica automatica.
 // Lo stato di lampade, bobine e motori si legge dal disegno Konva (colori e
 // rotazioni delle forme), quindi la prova non dipende dai pixel dello schermo.
 // Al termine stampa l'esito di ogni controllo ed esce con codice 1 se uno fallisce.
@@ -158,7 +160,7 @@ async function collega(pagina, a, b) {
 (async () => {
   fs.mkdirSync(CARTELLA_IMMAGINI, { recursive: true });
   const browser = await chromium.launch();
-  const pagina = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+  const pagina = await browser.newPage({ viewport: { width: 1366, height: 768 }, acceptDownloads: true });
   const errori = [];
   pagina.on("console", (m) => m.type() === "error" && errori.push(m.text()));
   pagina.on("pageerror", (e) => errori.push(String(e)));
@@ -319,6 +321,9 @@ async function collega(pagina, a, b) {
 
   // === Modulo Elettronica ====================================================
   await provaElettronica(pagina, controlla, foto, apriEsempio);
+
+  // === Funzioni per il docente: esportazione e modalità Esercizio ===========
+  await provaDocente(pagina, controlla, foto, apriEsempio);
 
   controlla(errori.length === 0, `nessun errore nella console${errori.length ? ": " + errori.join(" | ") : ""}`);
   await browser.close();
@@ -824,4 +829,51 @@ async function provaElettronica(pagina, controlla, foto, apriEsempio) {
   controlla(v.some((x) => x > 3 && x < 10), `il condensatore si sta caricando (${v.join(" / ")})`);
   await foto("25-elettronica-condensatore");
   await ferma();
+}
+
+// --- Funzioni per il docente ----------------------------------------------------
+
+async function provaDocente(pagina, controlla, foto, apriEsempio) {
+  console.log("Docente: esportazione PNG e PDF");
+  const ferma = async () => {
+    const p = pagina.locator(".pulsante-simulazione");
+    if ((await p.innerText()).includes("FERMA")) await p.click();
+  };
+  await ferma();
+  await apriEsempio(pagina, "marcia-arresto.elab");
+  for (const [testo, inizio] of [
+    ["Immagine PNG", [0x89, 0x50, 0x4e, 0x47]],
+    ["Documento PDF", [0x25, 0x50, 0x44, 0x46]],
+  ]) {
+    await pagina.getByRole("button", { name: /Esporta/ }).click();
+    await pagina.getByLabel("Nome e cognome").fill("Studente di prova");
+    await pagina.getByLabel("Classe").fill("4A");
+    const [scaricato] = await Promise.all([pagina.waitForEvent("download"), pagina.getByRole("button", { name: testo }).click()]);
+    const percorso = path.join(CARTELLA_IMMAGINI, scaricato.suggestedFilename());
+    await scaricato.saveAs(percorso);
+    const byte = [...fs.readFileSync(percorso).subarray(0, 4)];
+    controlla(JSON.stringify(byte) === JSON.stringify(inizio) && fs.statSync(percorso).size > 20000, `esportato ${scaricato.suggestedFilename()} (${fs.statSync(percorso).size} byte)`);
+  }
+
+  console.log("Docente: modalità Esercizio");
+  pagina.once("dialog", (d) => d.accept());
+  await pagina.getByRole("button", { name: /Esercizio/ }).click();
+  await pagina.getByLabel("Consegna per lo studente").fill("Collega il circuito: S1 avvia M1 con autoritenuta, S0 lo ferma.");
+  await pagina.getByRole("button", { name: "Usa questo schema come soluzione" }).click();
+  controlla((await pagina.getByTestId("stato-soluzione").innerText()).includes("Soluzione registrata"), "soluzione registrata dal docente");
+  await pagina.getByRole("button", { name: "Togli tutti i fili" }).click();
+  await pagina.getByRole("button", { name: "Salva la consegna" }).click();
+  await pagina.waitForTimeout(300);
+  controlla((await pagina.getByTestId("consegna").innerText()).includes("S1 avvia M1"), "lo studente vede la consegna sopra il foglio");
+  await pagina.getByRole("button", { name: /Verifica il funzionamento/ }).click();
+  await pagina.waitForTimeout(400);
+  const esito1 = await pagina.getByTestId("esito-verifica").innerText();
+  controlla(esito1.includes("non funziona") && esito1.includes("dovrebbe essere"), "schema incompleto: la verifica spiega cosa non va");
+  await foto("27-esercizio-da-completare");
+  await pagina.keyboard.press("Control+z");
+  await pagina.waitForTimeout(300);
+  await pagina.getByRole("button", { name: /Verifica il funzionamento/ }).click();
+  await pagina.waitForTimeout(400);
+  controlla((await pagina.getByTestId("esito-verifica").innerText()).includes("Bravo"), "schema completato: la verifica dice «Bravo!»");
+  await foto("28-esercizio-riuscito");
 }

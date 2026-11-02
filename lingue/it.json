@@ -332,5 +332,10 @@
   "verifica.senzaUscite": "La soluzione del docente non ha uscite Q da confrontare.",
   "verifica.tutteUguali": "Provate {prove} situazioni diverse: in tutte lo schema si comporta come la soluzione.",
   "esercizio.senzaVerifica": "In questo modulo la verifica automatica non c'è ancora: lo studente vedrà la consegna e il docente controllerà lo schema.",
-  "verifica.dettaglio": "{chi} dovrebbe essere «{atteso}», invece è «{ottenuto}»"
+  "verifica.dettaglio": "{chi} dovrebbe essere «{atteso}», invece è «{ottenuto}»",
+  "verifica.bruciato": "bruciato",
+  "verifica.acceso": "acceso",
+  "verifica.spento": "spento",
+  "verifica.segmenti": "segmenti {segmenti}",
+  "verifica.senzaOsservati": "La soluzione del docente non ha LED, lampadine, sonde, display o multimetri da confrontare."
 }

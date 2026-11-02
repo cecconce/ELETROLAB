@@ -1,4 +1,4 @@
-// Verifica automatica degli esercizi (moduli Impianti elettrici e PLC).
+// Verifica automatica degli esercizi (moduli Impianti elettrici, PLC ed Elettronica).
 //
 // Idea: lo schema dello studente "funziona" se si comporta come la soluzione
 // del docente. Il programma prova i due schemi con la stessa sequenza di
@@ -6,12 +6,26 @@
 // poi una lunga serie di azioni pseudo-casuali sempre uguali, con attese per i
 // temporizzatori) e dopo ogni azione confronta ciò che si vede: bobine
 // eccitate, lampade accese, motori fermi o in rotazione (con il verso); nel
-// PLC le uscite Q. Comandi e utilizzatori si riconoscono dalla sigla (S1, K1,
+// PLC le uscite Q; nell'Elettronica LED, lampadine, sonde, display e letture
+// dei multimetri (arrotondate a due cifre). Comandi e utilizzatori si riconoscono dalla sigla (S1, K1,
 // M1… / I0.0, Q0.1…), quindi lo studente deve usare le sigle della consegna.
 // Non conta come sono disegnati i fili: conta solo il funzionamento.
 import { MODELLI_IMPIANTI, avviaSessione, azioneClic, clicGiu, clicSu, passo, type SessioneImpianto } from "../motori/impianti";
 import { avviaSessionePlc, commutaIngresso, passoPlc, valoreBit, type SessionePlc } from "../motori/plc";
 import { impiantiDaSchema, programmaDaSchema } from "../editor/ladder";
+import {
+  avviaSessioneElettronica,
+  clicGiuElettronica,
+  clicSuElettronica,
+  luminosita,
+  passoElettronica,
+  scriviValore,
+  type SessioneElettronica,
+} from "../motori/elettronica";
+import { nodiDaSchema } from "../editor/arduino";
+import { componentiDaSchemaElettronica } from "../editor/elettronica";
+import { libreriaDelModulo } from "../editor/caricaLibreria";
+import { vocePerTipo } from "../editor/libreria";
 import { tipoUtilizzatore } from "../editor/vistaSimulazione";
 import type { Schema } from "../editor/schema";
 import { t } from "../testi";
@@ -189,13 +203,91 @@ export function verificaPlc(studente: Schema, soluzione: Pick<Schema, "component
   return { riuscito: righe.length === 0, righe: righe.length ? righe : [t("verifica.tutteUguali", { prove: azioni.length })], prove: azioni.length };
 }
 
+// ---------------------------------------------------------------- Elettronica
+
+/** Fa scorrere `secondi` di tempo simulato (a pezzi, come fa l'interfaccia). */
+function avanzaElettronica(s: SessioneElettronica, secondi: number) {
+  const fine = s.tempo + secondi;
+  for (let k = 0; k < 2000 && s.tempo < fine - 1e-9; k++) passoElettronica(s, Math.min(fine - s.tempo, 400 * s.dt));
+}
+
+/** Valore misurato arrotondato a due cifre significative (piccole differenze di calcolo non contano). */
+const circa = (v: number | null, unita: string) => (v === null ? "OL" : Math.abs(v) < 1e-6 ? `0 ${unita}` : scriviValore(Number(v.toPrecision(2)), unita));
+
+function osservaElettronica(s: SessioneElettronica, osservati: { sigla: string; tipo: string }[], idDi: (sigla: string, tipo: string) => string | undefined): Record<string, string> {
+  const o: Record<string, string> = {};
+  for (const { sigla, tipo } of osservati) {
+    const id = idDi(sigla, tipo);
+    const c = s.componenti.find((x) => x.id === id);
+    if (!c || !id) continue;
+    if (tipo === "led" || tipo === "lampadina") o[sigla] = s.bruciati.has(id) ? t("verifica.bruciato") : luminosita(s, c) > 0.1 ? t("verifica.acceso") : t("verifica.spento");
+    else if (tipo === "sonda-logica") o[sigla] = String(s.digitali[id]?.ingressi.in ?? 0);
+    else if (tipo === "display-7-segmenti") {
+      const accesi = Object.entries(s.digitali[id]?.ingressi ?? {}).filter(([, v]) => v === 1).map(([k]) => k).join("");
+      o[sigla] = accesi ? t("verifica.segmenti", { segmenti: accesi }) : t("verifica.spento");
+    } else if (tipo === "multimetro") {
+      const l = s.letture[id];
+      o[sigla] = l ? circa(l.valore, l.unita) : "?";
+    }
+  }
+  return o;
+}
+
+const COMANDI_ELETTRONICA = new Set(["interruttore", "pulsante", "interruttore-logico"]);
+const OSSERVATI_ELETTRONICA = new Set(["led", "lampadina", "sonda-logica", "display-7-segmenti", "multimetro"]);
+
+export function verificaElettronica(studente: Schema, soluzione: Pick<Schema, "componenti" | "fili">): EsitoVerifica {
+  const libreria = libreriaDelModulo("elettronica");
+  const morsettiDi = (tipo: string) => vocePerTipo(libreria, tipo)?.morsetti;
+  const comandi = soluzione.componenti.filter((c) => c.etichetta && COMANDI_ELETTRONICA.has(c.tipo));
+  const osservati = soluzione.componenti.filter((c) => c.etichetta && OSSERVATI_ELETTRONICA.has(c.tipo)).map((c) => ({ sigla: c.etichetta, tipo: c.tipo }));
+  if (osservati.length === 0) return { riuscito: false, prove: 0, righe: [t("verifica.senzaOsservati")] };
+  const trova = (schema: Pick<Schema, "componenti">) => (sigla: string, tipo: string) => schema.componenti.find((c) => c.etichetta === sigla && c.tipo === tipo)?.id;
+  const mancanti = [...comandi.map((c) => ({ sigla: c.etichetta, tipo: c.tipo })), ...osservati].filter((c) => !trova(studente)(c.sigla, c.tipo));
+  if (mancanti.length > 0) return { riuscito: false, prove: 0, righe: [...new Set(mancanti.map((m) => t("verifica.manca", { sigla: m.sigla })))] };
+  const pulsanti = comandi.filter((c) => c.tipo === "pulsante").map((c) => c.etichetta);
+  const manuali = comandi.filter((c) => c.tipo !== "pulsante").map((c) => c.etichetta);
+  // Meno passi che negli altri moduli: il calcolo circuitale è più pesante.
+  const azioni = sequenza(pulsanti, manuali, 16).map((a) => (a.tipo === "attendi" ? { ...a, secondi: 1 } : a));
+  const esegui = (schema: Pick<Schema, "componenti" | "fili">) => {
+    const completo: Schema = { componenti: schema.componenti, fili: schema.fili };
+    const s = avviaSessioneElettronica(componentiDaSchemaElettronica(completo), nodiDaSchema(completo, morsettiDi));
+    const idDi = trova(schema);
+    const idComando = (sigla: string) => comandi.filter((c) => c.etichetta === sigla).map((c) => idDi(sigla, c.tipo)).filter((x): x is string => !!x);
+    avanzaElettronica(s, 0.2);
+    const osservazioni: Record<string, string>[] = [];
+    for (const a of azioni) {
+      if (a.tipo === "attendi") avanzaElettronica(s, a.secondi);
+      else if (a.tipo === "commuta") {
+        for (const id of idComando(a.sigla)) clicGiuElettronica(s, id);
+        avanzaElettronica(s, 0.2);
+      } else {
+        for (const id of idComando(a.sigla)) clicGiuElettronica(s, id);
+        avanzaElettronica(s, 0.2);
+        osservazioni.push(osservaElettronica(s, osservati, idDi));
+        for (const id of idComando(a.sigla)) clicSuElettronica(s, id);
+        avanzaElettronica(s, 0.2);
+        // Per un pulsante conta soprattutto cosa succede mentre è premuto: si confronta quello.
+        continue;
+      }
+      osservazioni.push(osservaElettronica(s, osservati, idDi));
+    }
+    return osservazioni;
+  };
+  const attese = esegui(soluzione);
+  const ottenute = esegui(studente);
+  const righe = confronta(azioni, attese, ottenute);
+  return { riuscito: righe.length === 0, righe: righe.length ? righe : [t("verifica.tutteUguali", { prove: azioni.length })], prove: azioni.length };
+}
+
 /** Moduli in cui la verifica automatica è disponibile. */
-export const MODULI_VERIFICABILI = new Set(["impianti", "plc"]);
+export const MODULI_VERIFICABILI = new Set(["impianti", "plc", "elettronica"]);
 
 export function verificaEsercizio(modulo: string, studente: Schema): EsitoVerifica | null {
   const soluzione = studente.esercizio?.soluzione;
   if (!soluzione) return null;
   if (modulo === "impianti") return verificaImpianto(studente, soluzione);
   if (modulo === "plc") return verificaPlc(studente, soluzione);
+  if (modulo === "elettronica") return verificaElettronica(studente, soluzione);
   return null;
 }

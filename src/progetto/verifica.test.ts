@@ -4,7 +4,7 @@ import type { Schema } from "../editor/schema";
 import { ESEMPI } from "./caricaEsempi";
 import { apriEsempio } from "./esempi";
 import { leggiProgetto, serializzaProgetto } from "./formato";
-import { verificaEsercizio, verificaImpianto, verificaPlc } from "./verifica";
+import { verificaElettronica, verificaEsercizio, verificaImpianto, verificaPlc } from "./verifica";
 
 function esempio(file: string): Schema {
   const e = ESEMPI.find((x) => x.file === file)!;
@@ -82,6 +82,31 @@ describe("verifica degli esercizi — PLC", () => {
     const r = verificaPlc(studente, soluzione);
     expect(r.riuscito).toBe(false);
     expect(r.righe.join(" ")).toMatch(/Q\d\.\d/);
+  });
+});
+
+describe("verifica degli esercizi — Elettronica", () => {
+  it("transistor come interruttore: uguale → giusto; senza resistenza di base → il LED non si accende", () => {
+    const sol = esempio("elettronica-transistor.elab");
+    expect(verificaElettronica(sol, sol).riuscito).toBe(true);
+    const studente = senzaFili(sol, sol.fili.find((f) => f.da.componente === "S1" && f.a.componente === "R1")!.id);
+    const r = verificaElettronica(studente, sol);
+    expect(r.riuscito).toBe(false);
+    expect(r.righe.join(" ")).toMatch(/D1|XMM1/);
+  });
+  it("porte logiche: una OR al posto della XOR si scopre con la sonda X3", () => {
+    const sol = esempio("elettronica-porte-logiche.elab");
+    const studente: Schema = { ...sol, componenti: sol.componenti.map((c) => (c.id === "U3" ? { ...c, tipo: "porta-or" } : c)) };
+    const r = verificaElettronica(studente, sol);
+    expect(r.riuscito).toBe(false);
+    expect(r.righe.join(" ")).toMatch(/X3/);
+  });
+  it("partitore: un valore di resistenza sbagliato cambia la lettura del multimetro", () => {
+    const sol = esempio("elettronica-partitore.elab");
+    const studente: Schema = { ...sol, componenti: sol.componenti.map((c) => (c.id === "R2" ? { ...c, parametri: { resistenza: 1000 } } : c)) };
+    const r = verificaElettronica(studente, sol);
+    expect(r.riuscito).toBe(false);
+    expect(r.righe.join(" ")).toMatch(/XMM1.*6 V.*4,5 V/);
   });
 });
 
