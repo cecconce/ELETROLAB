@@ -1132,3 +1132,78 @@ button.io-plc {
     font-size: 0.8rem;
   }
 }
+
+/* Editor del codice Arduino (CodeMirror) sul fondo scuro di .codice-editor. */
+.editor-codice {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  position: relative;
+}
+.editor-codice .codice-testo {
+  position: absolute;
+  inset: 0;
+}
+.editor-codemirror {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  overflow: hidden;
+}
+.editor-codemirror .cm-editor {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 0;
+  height: 100%;
+  color: #e6e6e6;
+  font: 13px Consolas, "Cascadia Mono", "Courier New", monospace;
+}
+.editor-codemirror .cm-editor.cm-focused {
+  outline: none;
+}
+.editor-codemirror .cm-scroller {
+  font-family: inherit;
+  line-height: 19px;
+}
+.editor-codemirror .cm-gutters {
+  background: #26272d;
+  color: #7c8190;
+  border-right: none;
+}
+.editor-codemirror .cm-activeLine {
+  background: rgba(255, 255, 255, 0.05);
+}
+.editor-codemirror .cm-activeLineGutter {
+  background: #33343b;
+  color: #d0d3db;
+}
+.editor-codemirror .cm-cursor {
+  border-left-color: #f5f5f5;
+}
+.editor-codemirror .cm-selectionBackground,
+.editor-codemirror .cm-editor.cm-focused .cm-selectionBackground {
+  background: rgba(96, 165, 250, 0.35) !important;
+}
+.editor-codemirror .cm-riga-errore {
+  background: rgba(220, 38, 38, 0.35);
+}
+.editor-codemirror .cm-matchingBracket {
+  background: rgba(250, 204, 21, 0.3);
+  outline: 1px solid rgba(250, 204, 21, 0.6);
+}
+.editor-codemirror .cm-tooltip-autocomplete {
+  background: #2b2d34;
+  color: #e6e6e6;
+  border: 1px solid #44464f;
+}
+.editor-codemirror .cm-tooltip-autocomplete ul li[aria-selected] {
+  background: #2563eb;
+  color: #ffffff;
+}
+.editor-codemirror .cm-completionInfo {
+  background: #2b2d34;
+  color: #e6e6e6;
+  border: 1px solid #44464f;
+  max-width: 260px;
+}

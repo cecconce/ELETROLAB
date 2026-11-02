@@ -17,11 +17,13 @@ React, React DOM    MIT             Interfaccia
 Konva               MIT             Area di disegno su canvas
 react-konva         MIT             Collegamento fra Konva e React
 Blockly             Apache-2.0      Editor a blocchi del modulo Arduino
+CodeMirror 6        MIT             Editor del codice Arduino (sintassi, completamento)
 Serde, serde_json   MIT/Apache-2.0  Dati fra interfaccia e parte Rust
 
 Le librerie con doppia licenza "MIT/Apache-2.0" sono usate secondo la licenza
 MIT. Le dipendenze indirette incluse nell'interfaccia (scheduler,
-react-reconciler, its-fine, loose-envify, js-tokens) sono anch'esse MIT; le
+react-reconciler, its-fine, loose-envify, js-tokens, @lezer/*, style-mod,
+w3c-keyname, crelt) sono anch'esse MIT; le
 dipendenze indirette della parte Rust sono crate con licenze MIT, Apache-2.0
 o simili (permissive).
 
@@ -47,6 +49,11 @@ react-konva
 Blockly
   Copyright 2011 Google LLC; dal 2024 Raspberry Pi Foundation
   https://developers.google.com/blockly - licenza Apache 2.0 (testo in fondo)
+
+CodeMirror 6 (@codemirror/*, e le dipendenze @lezer/*, style-mod,
+w3c-keyname, crelt dello stesso autore)
+  Copyright (C) 2018-2021 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
+  https://codemirror.net
 
 Serde, serde_json
   Erick Tryzelaar, David Tolnay - https://serde.rs

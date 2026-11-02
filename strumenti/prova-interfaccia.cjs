@@ -617,6 +617,7 @@ async function provaArduino(pagina, controlla, foto, apriEsempio) {
   await apri("arduino-semaforo.elab");
   await pagina.waitForTimeout(700);
   controlla((await ledAcceso(pagina, VERDE)) && !(await ledAcceso(pagina, ROSSO)), "parte il verde");
+  controlla((await pagina.locator(".cm-editor .cm-lineNumbers").count()) === 1 && (await pagina.locator(".cm-content span").count()) > 10, "editor del codice con numeri di riga e colori della sintassi");
 
   console.log("Arduino: pulsante");
   await apri("arduino-pulsante.elab");

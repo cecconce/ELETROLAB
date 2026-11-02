@@ -1,12 +1,14 @@
 // Pannello del codice del modulo Arduino (a destra del banco).
-// - Editor di testo con i numeri di riga; la riga con un errore è segnata in
-//   rosso e il messaggio è spiegato sotto.
+// - Editor del codice (CodeMirror: colori della sintassi, numeri di riga,
+//   completamento); la riga con un errore è segnata in rosso e il messaggio è
+//   spiegato sotto.
 // - Durante la simulazione il codice non si modifica (come sulla scheda vera
 //   bisogna fermare, correggere e riavviare) e compare il monitor seriale,
 //   con la casella per inviare testo al programma.
 import { useEffect, useRef, useState } from "react";
 import { t } from "../testi";
 import { EditorBlocchi } from "./EditorBlocchi";
+import { EditorCodice } from "./EditorCodice";
 
 export interface PropsPannelloCodice {
   codice: string;
@@ -25,33 +27,16 @@ export interface PropsPannelloCodice {
   onCambiaModo: (modo: "blocchi" | "testo") => void;
 }
 
-const ALTEZZA_RIGA = 19;
 
 export function PannelloCodice(props: PropsPannelloCodice) {
   const { codice, onCambia, inSimulazione, errore, seriale, onInviaSeriale, onPulisciSeriale, modo } = props;
-  const testo = useRef<HTMLTextAreaElement>(null);
-  const numeri = useRef<HTMLDivElement>(null);
   const monitor = useRef<HTMLPreElement>(null);
   const [daInviare, setDaInviare] = useState("");
-  const righe = codice.split("\n").length;
 
   // Il monitor seriale scorre da solo fino all'ultima riga.
   useEffect(() => {
     if (monitor.current) monitor.current.scrollTop = monitor.current.scrollHeight;
   }, [seriale]);
-
-  // Il tasto Tab inserisce due spazi invece di spostarsi su un altro controllo.
-  const suTasto = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key !== "Tab") return;
-    e.preventDefault();
-    const el = e.currentTarget;
-    const inizio = el.selectionStart;
-    const nuovo = `${codice.slice(0, inizio)}  ${codice.slice(el.selectionEnd)}`;
-    onCambia(nuovo, false);
-    requestAnimationFrame(() => {
-      el.selectionStart = el.selectionEnd = inizio + 2;
-    });
-  };
 
   // Cambio di modo: dai blocchi al testo il programma resta (ma le modifiche
   // al testo non tornano nei blocchi); dal testo ai blocchi il codice scritto
@@ -83,30 +68,7 @@ export function PannelloCodice(props: PropsPannelloCodice) {
         <EditorBlocchi blocchi={props.blocchi} inSimulazione={inSimulazione} onCambia={props.onCambiaBlocchi} />
       ) : (
       <div className="codice-editor" data-errore={errore ? errore.riga : undefined}>
-        <div className="codice-numeri" ref={numeri} aria-hidden="true">
-          {Array.from({ length: righe }, (_, i) => (
-            <div key={i} className={errore?.riga === i + 1 ? "riga-errore" : undefined} style={{ height: ALTEZZA_RIGA }}>
-              {i + 1}
-            </div>
-          ))}
-        </div>
-        <textarea
-          ref={testo}
-          className="codice-testo"
-          value={codice}
-          spellCheck={false}
-          autoCapitalize="off"
-          autoCorrect="off"
-          readOnly={inSimulazione}
-          aria-label={t("arduino.codice.titolo")}
-          style={{ lineHeight: `${ALTEZZA_RIGA}px` }}
-          onChange={(e) => onCambia(e.target.value, false)}
-          onBlur={(e) => onCambia(e.target.value, true)}
-          onKeyDown={suTasto}
-          onScroll={(e) => {
-            if (numeri.current) numeri.current.scrollTop = e.currentTarget.scrollTop;
-          }}
-        />
+        <EditorCodice codice={codice} onCambia={onCambia} sola={inSimulazione} rigaErrore={errore?.riga ?? null} />
       </div>
       )}
       {errore && (

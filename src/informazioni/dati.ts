@@ -69,6 +69,14 @@ export const LIBRERIE: Libreria[] = [
     npm: ["blockly"],
   },
   {
+    nome: "CodeMirror 6",
+    licenza: "MIT",
+    autori: "Marijn Haverbeke e altri",
+    uso: "Editor del codice Arduino (colori della sintassi, completamento)",
+    sito: "codemirror.net",
+    npm: ["@codemirror/state", "@codemirror/view", "@codemirror/commands", "@codemirror/language", "@codemirror/lang-cpp", "@codemirror/autocomplete", "@lezer/highlight"],
+  },
+  {
     nome: "react-konva",
     licenza: "MIT",
     autori: "Anton Lavrenov",
