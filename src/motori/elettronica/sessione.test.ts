@@ -149,8 +149,8 @@ describe("sessione Elettronica", () => {
     const st = s.oscilloscopi.XSC1;
     // Ultimo periodo: ampiezza 2 V sul canale A; su B il filtro (fc ≈ 1 kHz) attenua di circa 3 dB.
     const ultimi = st.t.length - 100;
-    const maxA = Math.max(...st.a.slice(ultimi));
-    const maxB = Math.max(...st.b.slice(ultimi));
+    const maxA = Math.max(...st.canali[0].slice(ultimi));
+    const maxB = Math.max(...st.canali[1].slice(ultimi));
     expect(maxA).toBeCloseTo(2, 1);
     expect(maxB / maxA).toBeGreaterThan(0.65);
     expect(maxB / maxA).toBeLessThan(0.76);
@@ -185,5 +185,25 @@ describe("sessione Elettronica", () => {
       { tipo: "R", id: "RL", a: "out", b: "0", ohm: 10 },
     ]);
     expect(s.tensioni.out).toBeCloseTo(2, 2);
+  });
+});
+
+describe("storia degli strumenti", () => {
+  it("con le basi dei tempi lunghe si usa la registrazione lenta (un campione ogni 2 ms)", async () => {
+    const { registrazionePer } = await import("./sessione");
+    const s = circuito(
+      [["V1", "generatore-dc", { tensione: 10 }], ["R1", "resistenza", { resistenza: 10000 }], ["C1", "condensatore", { capacita: 100e-6 }], ["GND", "massa"], ["XSC1", "oscilloscopio"]],
+      [["V1.+", "R1.1"], ["R1.2", "C1.1", "XSC1.A"], ["C1.2", "V1.-", "GND.0", "XSC1.COM"]],
+    );
+    // τ = 1 s: si simulano 3 s (i passi da 0,1 ms sono 30 000, la storia fine ne tiene 6000).
+    for (let k = 0; k < 75; k++) passoElettronica(s, 0.04);
+    expect(s.tempo).toBeGreaterThan(2.9);
+    const fine = registrazionePer(s.oscilloscopi.XSC1, 0.005);
+    expect(fine).toBe(s.oscilloscopi.XSC1);
+    const lenta = registrazionePer(s.oscilloscopi.XSC1, 1);
+    expect(lenta.t[0]).toBe(0);
+    // Dopo τ la tensione è il 63 % di 10 V.
+    const i = lenta.t.findIndex((t) => t >= 1);
+    expect(lenta.canali[0][i]).toBeCloseTo(6.32, 0);
   });
 });

@@ -52,8 +52,8 @@ export function DisegnoElettronica({ componente: c, aspetto, colori }: { compone
     case "pulsante":
       return aspetto?.chiuso ? (
         <Group listening={false}>
-          <Line points={[18, 22, 62, 22]} stroke={colori.foglio} strokeWidth={5} />
-          <Line points={[20, 30, 60, 30]} stroke={colori.attivo} strokeWidth={3} lineCap="round" />
+          <Line points={[18, 12, 62, 12]} stroke={colori.foglio} strokeWidth={5} />
+          <Line points={[20, 20, 60, 20]} stroke={colori.attivo} strokeWidth={3} lineCap="round" />
         </Group>
       ) : null;
     case "potenziometro": {

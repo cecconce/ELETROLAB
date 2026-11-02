@@ -1,0 +1,222 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "elettronica",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T05:53:18.220Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "V1",
+        "tipo": "generatore-dc",
+        "etichetta": "V1",
+        "x": 40,
+        "y": 100,
+        "larghezza": 40,
+        "altezza": 80,
+        "parametri": {
+          "tensione": 10
+        }
+      },
+      {
+        "id": "S1",
+        "tipo": "interruttore",
+        "etichetta": "S1",
+        "x": 100,
+        "y": 80,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "R1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 200,
+        "y": 80,
+        "larghezza": 80,
+        "altezza": 40,
+        "parametri": {
+          "resistenza": 10000
+        }
+      },
+      {
+        "id": "C1",
+        "tipo": "condensatore",
+        "etichetta": "C1",
+        "x": 260,
+        "y": 100,
+        "larghezza": 80,
+        "altezza": 40,
+        "parametri": {
+          "capacita": 0.0001
+        },
+        "rotazione": 90
+      },
+      {
+        "id": "R2",
+        "tipo": "resistenza",
+        "etichetta": "R2",
+        "x": 340,
+        "y": 100,
+        "larghezza": 80,
+        "altezza": 40,
+        "parametri": {
+          "resistenza": 1000
+        },
+        "rotazione": 90
+      },
+      {
+        "id": "S2",
+        "tipo": "pulsante",
+        "etichetta": "S2",
+        "x": 340,
+        "y": 180,
+        "larghezza": 80,
+        "altezza": 40,
+        "rotazione": 90
+      },
+      {
+        "id": "massa-7",
+        "tipo": "massa",
+        "etichetta": "",
+        "x": 260,
+        "y": 300,
+        "larghezza": 40,
+        "altezza": 40
+      },
+      {
+        "id": "XMM1",
+        "tipo": "multimetro",
+        "etichetta": "XMM1",
+        "x": 440,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 100,
+        "parametri": {
+          "modalita": "V"
+        }
+      },
+      {
+        "id": "XSC1",
+        "tipo": "oscilloscopio",
+        "etichetta": "XSC1",
+        "x": 440,
+        "y": 220,
+        "larghezza": 120,
+        "altezza": 100
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "V1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "S1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "S1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "R1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "C1",
+          "morsetto": "1"
+        },
+        "a": {
+          "componente": "R2",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "S2",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "massa-7",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "C1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "massa-7",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "V1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "massa-7",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "XMM1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "C1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "XMM1",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "massa-7",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "XSC1",
+          "morsetto": "A"
+        },
+        "a": {
+          "componente": "C1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "XSC1",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "massa-7",
+          "morsetto": "0"
+        }
+      }
+    ]
+  }
+}

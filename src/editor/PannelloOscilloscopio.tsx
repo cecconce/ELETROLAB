@@ -5,7 +5,7 @@
 // valore medio (trigger sul fronte di salita), così un segnale periodico sta
 // fermo sullo schermo come su uno strumento vero. "Blocca" congela l'immagine.
 import { useEffect, useRef, useState } from "react";
-import { scriviValore, type SessioneElettronica } from "../motori/elettronica";
+import { registrazionePer, scriviValore, type SessioneElettronica } from "../motori/elettronica";
 import { t } from "../testi";
 
 const BASI_TEMPI = [1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5, 1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 5e-3, 1e-2, 2e-2, 5e-2, 0.1, 0.2, 0.5, 1];
@@ -160,9 +160,10 @@ export function PannelloOscilloscopio({ sessione, id, sigla, indice = 0 }: { ses
     if (bloccato || !aperto) return;
     const ridisegna = () => {
       const s = sessione.current;
-      const storia = s?.oscilloscopi[id];
-      if (!canvas.current || !storia) return;
-      const m = disegna(canvas.current, storia, schermoRif.current);
+      const completa = s?.oscilloscopi[id];
+      if (!canvas.current || !completa) return;
+      const r = registrazionePer(completa, schermoRif.current.baseTempi * DIV_X);
+      const m = disegna(canvas.current, { t: r.t, a: r.canali[0], b: r.canali[1] }, schermoRif.current);
       setMisure((x) => (Math.abs(x.ppa - m.ppa) > 1e-6 || Math.abs(x.ppb - m.ppb) > 1e-6 ? m : x));
     };
     ridisegna();
@@ -231,10 +232,11 @@ export function PannelloAnalizzatore({ sessione, id, sigla, indice = 0 }: { sess
   useEffect(() => {
     if (!aperto || bloccato) return;
     const ridisegna = () => {
-      const storia = sessione.current?.analizzatori[id];
+      const completa = sessione.current?.analizzatori[id];
       const cv = canvas.current;
       const ctx = cv?.getContext("2d");
-      if (!cv || !ctx || !storia) return;
+      if (!cv || !ctx || !completa) return;
+      const storia = registrazionePer(completa, baseTempi * DIV_X);
       const w = cv.width;
       const h = cv.height;
       ctx.fillStyle = "#0b1a14";

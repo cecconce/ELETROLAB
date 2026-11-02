@@ -26,7 +26,7 @@ import {
   type Soluzione,
   type StatoTransitorio,
 } from "./simulatore";
-import { aggiornaDigitale, eDigitale, nuovoStatoDigitale, PIEDINI_DIGITALI, R_INGRESSO, R_USCITA, VCC_LOGICA, type Bit, type StatoDigitale } from "./digitale";
+import { aggiornaDigitale, eDigitale, nuovoStatoDigitale, PIEDINI_DIGITALI, R_INGRESSO, R_USCITA, VCC_LOGICA, type StatoDigitale } from "./digitale";
 
 /** Componente dello schema come lo vede il motore. */
 export interface ComponenteElettronico {
@@ -111,13 +111,13 @@ export interface SessioneElettronica {
   /** LED bruciati (restano bruciati fino al riavvio). */
   bruciati: Set<string>;
   /** Storia di ogni oscilloscopio: tempi e tensioni dei canali A e B. */
-  oscilloscopi: Record<string, { t: number[]; a: number[]; b: number[] }>;
+  oscilloscopi: Record<string, Storia>;
   /** Letture dei multimetri (valore e unità) o null se fuori scala. */
   letture: Record<string, { valore: number | null; unita: string }>;
   /** Stato dei componenti digitali (livelli di ingressi e uscite, memoria). */
   digitali: Record<string, StatoDigitale>;
   /** Storia di ogni analizzatore logico: tempi e livelli dei canali D0…D3. */
-  analizzatori: Record<string, { t: number[]; canali: Bit[][] }>;
+  analizzatori: Record<string, Storia>;
   /** Il circuito non ha la massa. */
   senzaMassa: boolean;
   /** Il calcolo non è riuscito a trovare una soluzione all'ultimo passo. */
@@ -126,6 +126,47 @@ export interface SessioneElettronica {
   inCorto: Set<string>;
   /** Cambia a ogni modifica visibile. */
   versione: number;
+}
+
+/**
+ * Storia dei campioni di uno strumento (oscilloscopio, analizzatore logico).
+ * Due registrazioni: quella "fine" con tutti i campioni degli ultimi passi
+ * (per i segnali veloci) e quella "lenta" con un campione ogni 2 ms per gli
+ * ultimi 12 s (per le basi dei tempi lunghe, come la carica di un condensatore).
+ */
+export interface Storia {
+  t: number[];
+  canali: number[][];
+  lenta: { t: number[]; canali: number[][] };
+}
+/** Distanza fra i campioni della registrazione lenta (s). */
+export const PASSO_STORIA_LENTA = 2e-3;
+
+function nuovaStoria(canali: number): Storia {
+  return { t: [], canali: Array.from({ length: canali }, () => []), lenta: { t: [], canali: Array.from({ length: canali }, () => []) } };
+}
+
+function aggiungi(r: { t: number[]; canali: number[][] }, tempo: number, valori: number[]) {
+  r.t.push(tempo);
+  valori.forEach((v, k) => r.canali[k].push(v));
+  // Si accorcia ogni tanto (non a ogni campione) per non spostare migliaia di valori a ogni passo.
+  if (r.t.length > CAMPIONI_OSCILLOSCOPIO * 1.25) {
+    const via = r.t.length - CAMPIONI_OSCILLOSCOPIO;
+    r.t.splice(0, via);
+    for (const c of r.canali) c.splice(0, via);
+  }
+}
+
+function registra(storia: Storia, tempo: number, valori: number[]) {
+  aggiungi(storia, tempo, valori);
+  const ultimo = storia.lenta.t[storia.lenta.t.length - 1];
+  if (ultimo === undefined || tempo - ultimo >= PASSO_STORIA_LENTA - 1e-12) aggiungi(storia.lenta, tempo, valori);
+}
+
+/** Registrazione da usare per mostrare `durata` secondi: la fine se basta, altrimenti la lenta. */
+export function registrazionePer(storia: Storia, durata: number): { t: number[]; canali: number[][] } {
+  const n = storia.t.length;
+  return n > 1 && storia.t[n - 1] - storia.t[0] >= durata * 1.5 ? storia : storia.lenta;
 }
 
 /** Nodo con la massa unificata: i morsetti del simbolo di massa valgono "0". */
@@ -274,9 +315,9 @@ export function avviaSessioneElettronica(componenti: ComponenteElettronico[], no
     soluzione: null,
     interazioni: { chiusi: new Set(), premuti: new Set(), posizioni: {} },
     bruciati: new Set(),
-    oscilloscopi: Object.fromEntries(componenti.filter((c) => c.tipo === "oscilloscopio").map((c) => [c.id, { t: [], a: [], b: [] }])),
+    oscilloscopi: Object.fromEntries(componenti.filter((c) => c.tipo === "oscilloscopio").map((c) => [c.id, nuovaStoria(2)])),
     digitali: Object.fromEntries(componenti.filter((c) => eDigitale(c.tipo)).map((c) => [c.id, nuovoStatoDigitale(c.tipo)])),
-    analizzatori: Object.fromEntries(componenti.filter((c) => c.tipo === "analizzatore-logico").map((c) => [c.id, { t: [], canali: [[], [], [], []] }])),
+    analizzatori: Object.fromEntries(componenti.filter((c) => c.tipo === "analizzatore-logico").map((c) => [c.id, nuovaStoria(4)])),
     letture: {},
     // La massa serve quando ci sono generatori (i circuiti solo digitali hanno la massa implicita).
     senzaMassa: componenti.some((c) => c.tipo.startsWith("generatore-") && c.tipo !== "generatore-clock") && !componenti.some((c) => c.tipo === "massa"),
@@ -298,16 +339,9 @@ function calcolaPasso(s: SessioneElettronica) {
   const n = nodoConMassa(s);
   for (const [id, storia] of Object.entries(s.oscilloscopi)) {
     const com = sol.tensioni[n(id, "COM")] ?? 0;
-    storia.t.push(s.tempo);
-    storia.a.push((sol.tensioni[n(id, "A")] ?? 0) - com);
-    storia.b.push((sol.tensioni[n(id, "B")] ?? 0) - com);
-    // Si accorcia ogni tanto (non a ogni campione) per non spostare migliaia di valori a ogni passo.
-    if (storia.t.length > CAMPIONI_OSCILLOSCOPIO * 1.25) {
-      const via = storia.t.length - CAMPIONI_OSCILLOSCOPIO;
-      storia.t.splice(0, via);
-      storia.a.splice(0, via);
-      storia.b.splice(0, via);
-    }
+    const a = (sol.tensioni[n(id, "A")] ?? 0) - com;
+    const b = (sol.tensioni[n(id, "B")] ?? 0) - com;
+    registra(storia, s.tempo, [a, b]);
   }
   // Componenti digitali: leggono gli ingressi e preparano le uscite del passo successivo.
   for (const c of s.componenti) {
@@ -318,19 +352,14 @@ function calcolaPasso(s: SessioneElettronica) {
       c.tipo === "interruttore-logico"
         ? s.interazioni.chiusi.has(c.id)
         : c.tipo === "generatore-clock"
-          ? (s.tempo * Math.max(0.01, num(c, "frequenza"))) % 1 < 0.5
+          ? // Parte da 0: il primo fronte di salita arriva dopo mezzo periodo.
+            (s.tempo * Math.max(0.01, num(c, "frequenza"))) % 1 >= 0.5
           : false;
     if (aggiornaDigitale(c.tipo, stato, tensioni, esterno)) s.versione++;
   }
   for (const [id, storia] of Object.entries(s.analizzatori)) {
     const ingressi = s.digitali[id]?.ingressi ?? {};
-    storia.t.push(s.tempo);
-    ["D0", "D1", "D2", "D3"].forEach((d, k) => storia.canali[k].push(ingressi[d] ?? 0));
-    if (storia.t.length > CAMPIONI_OSCILLOSCOPIO * 1.25) {
-      const via = storia.t.length - CAMPIONI_OSCILLOSCOPIO;
-      storia.t.splice(0, via);
-      for (const c of storia.canali) c.splice(0, via);
-    }
+    registra(storia, s.tempo, ["D0", "D1", "D2", "D3"].map((d) => ingressi[d] ?? 0));
   }
   // LED che superano la corrente massima: si bruciano.
   for (const c of s.componenti) {
@@ -381,11 +410,14 @@ function misuraResistenza(s: SessioneElettronica, id: string): number | null {
  * non più di PASSI_MASSIMI per volta (con segnali veloci il tempo simulato
  * scorre più lentamente di quello reale, come una moviola).
  */
-export function passoElettronica(s: SessioneElettronica, secondiReali: number): void {
+export function passoElettronica(s: SessioneElettronica, secondiReali: number, millisecondiMassimi = Infinity): void {
   const passi = Math.max(1, Math.min(PASSI_MASSIMI, Math.round(secondiReali / s.dt)));
+  const inizio = Date.now();
   for (let k = 0; k < passi; k++) {
     s.tempo += s.dt;
     calcolaPasso(s);
+    // Su un computer lento ci si ferma prima: il tempo simulato rallenta ma l'interfaccia resta pronta.
+    if (Date.now() - inizio > millisecondiMassimi) break;
   }
   aggiornaStrumenti(s);
   s.versione++;

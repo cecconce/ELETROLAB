@@ -1,0 +1,181 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "elettronica",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T05:53:18.219Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "V1",
+        "tipo": "generatore-dc",
+        "etichetta": "V1",
+        "x": 40,
+        "y": 100,
+        "larghezza": 40,
+        "altezza": 80,
+        "parametri": {
+          "tensione": 9
+        }
+      },
+      {
+        "id": "S1",
+        "tipo": "interruttore",
+        "etichetta": "S1",
+        "x": 120,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "R1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 220,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 40,
+        "parametri": {
+          "resistenza": 10000
+        }
+      },
+      {
+        "id": "Q1",
+        "tipo": "transistor-npn",
+        "etichetta": "Q1",
+        "x": 300,
+        "y": 180,
+        "larghezza": 60,
+        "altezza": 80,
+        "parametri": {
+          "beta": 100
+        }
+      },
+      {
+        "id": "D1",
+        "tipo": "led",
+        "etichetta": "D1",
+        "x": 320,
+        "y": 100,
+        "larghezza": 40,
+        "altezza": 80,
+        "parametri": {
+          "colore": "rosso"
+        }
+      },
+      {
+        "id": "R2",
+        "tipo": "resistenza",
+        "etichetta": "R2",
+        "x": 320,
+        "y": 20,
+        "larghezza": 80,
+        "altezza": 40,
+        "parametri": {
+          "resistenza": 470
+        },
+        "rotazione": 90
+      },
+      {
+        "id": "massa-7",
+        "tipo": "massa",
+        "etichetta": "",
+        "x": 40,
+        "y": 300,
+        "larghezza": 40,
+        "altezza": 40
+      },
+      {
+        "id": "XMM1",
+        "tipo": "multimetro",
+        "etichetta": "XMM1",
+        "x": 420,
+        "y": 160,
+        "larghezza": 80,
+        "altezza": 100,
+        "parametri": {
+          "modalita": "V"
+        }
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "V1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "R2",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "V1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "S1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "S1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "R1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "e"
+        },
+        "a": {
+          "componente": "massa-7",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "V1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "massa-7",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "XMM1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "c"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "XMM1",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "massa-7",
+          "morsetto": "0"
+        }
+      }
+    ]
+  }
+}

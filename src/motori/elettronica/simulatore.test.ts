@@ -9,14 +9,14 @@ describe("analisi DC", () => {
   it("partitore di tensione: 12 V su 1 kΩ + 2 kΩ → 8 V", () => {
     const s = analisiDC([V("V1", "a", "0", 12), R("R1", "a", "b", 1000), R("R2", "b", "0", 2000)]);
     expect(s.converge).toBe(true);
-    expect(s.tensioni.b).toBeCloseTo(8, 6);
-    expect(s.correnti.R1).toBeCloseTo(0.004, 8);
-    expect(s.correnti.V1).toBeCloseTo(0.004, 8);
+    expect(s.tensioni.b).toBeCloseTo(8, 4);
+    expect(s.correnti.R1).toBeCloseTo(0.004, 7);
+    expect(s.correnti.V1).toBeCloseTo(0.004, 7);
   });
 
   it("generatore di corrente su una resistenza: 2 mA × 1 kΩ = 2 V", () => {
     const s = analisiDC([{ tipo: "I", id: "I1", p: "a", n: "0", onda: { tipo: "continua", valore: 0.002 } }, R("R1", "a", "0", 1000)]);
-    expect(s.tensioni.a).toBeCloseTo(2, 6);
+    expect(s.tensioni.a).toBeCloseTo(2, 4);
   });
 
   it("diodo in conduzione diretta: circa 0,6–0,75 V ai capi", () => {

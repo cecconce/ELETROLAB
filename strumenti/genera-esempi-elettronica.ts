@@ -133,3 +133,105 @@ function scrivi(file: string, schema: Schema) {
   b.filo("U1.Q2", "XLA1.D3");
   scrivi("elettronica-contatore.elab", b.schema());
 }
+
+// 5. Alimentatore stabilizzato: ponte di Graetz, condensatore di filtro e regolatore 7805
+{
+  const b = costruttore();
+  b.posa("generatore-funzioni", 20, 120, { forma: "sinusoide", frequenza: 50, ampiezza: 15, offset: 0 });
+  // Ponte: diodi verticali con l'anodo in basso e il catodo in alto.
+  b.posa("diodo", 180, 40, undefined, 270);
+  b.posa("diodo", 260, 40, undefined, 270);
+  b.posa("diodo", 180, 200, undefined, 270);
+  b.posa("diodo", 260, 200, undefined, 270);
+  b.posa("condensatore", 340, 80, { capacita: 1000e-6 }, 90);
+  b.posa("regolatore", 420, 40, { tensione: 5 });
+  b.posa("resistenza", 540, 80, { resistenza: 470 }, 90);
+  b.posa("led", 540, 180, { colore: "verde" });
+  const gnd = b.posa("massa", 340, 320);
+  b.posa("oscilloscopio", 620, 180);
+  b.filo("XFG1.+", "D1.a");
+  b.filo("D1.a", "D3.k");
+  b.filo("XFG1.COM", "D2.a");
+  b.filo("D2.a", "D4.k");
+  b.filo("D1.k", "D2.k");
+  b.filo("D3.a", "D4.a");
+  b.filo("D4.a", `${gnd}.0`);
+  b.filo("D2.k", "C1.1");
+  b.filo("C1.2", `${gnd}.0`);
+  b.filo("C1.1", "U1.in");
+  b.filo("U1.gnd", `${gnd}.0`);
+  b.filo("U1.out", "R1.1");
+  b.filo("R1.2", "D5.a");
+  b.filo("D5.k", `${gnd}.0`);
+  b.filo("XSC1.A", "C1.1");
+  b.filo("XSC1.B", "U1.out");
+  b.filo("XSC1.COM", `${gnd}.0`);
+  scrivi("elettronica-alimentatore.elab", b.schema());
+}
+
+// 6. Transistor come interruttore: una piccola corrente di base accende il LED
+{
+  const b = costruttore();
+  b.posa("generatore-dc", 40, 100, { tensione: 9 });
+  b.posa("interruttore", 120, 200);
+  // RB finisce esattamente sulla base di Q1, il LED sul collettore, R2 sul LED.
+  b.posa("resistenza", 220, 200, { resistenza: 10000 });
+  b.posa("transistor-npn", 300, 180, { beta: 100 });
+  b.posa("led", 320, 100, { colore: "rosso" });
+  b.posa("resistenza", 320, 20, { resistenza: 470 }, 90);
+  const gnd = b.posa("massa", 40, 300);
+  b.posa("multimetro", 420, 160, { modalita: "V" });
+  b.filo("V1.+", "R2.1");
+  b.filo("V1.+", "S1.1");
+  b.filo("S1.2", "R1.1");
+  b.filo("Q1.e", `${gnd}.0`);
+  b.filo("V1.-", `${gnd}.0`);
+  b.filo("XMM1.+", "Q1.c");
+  b.filo("XMM1.COM", `${gnd}.0`);
+  scrivi("elettronica-transistor.elab", b.schema());
+}
+
+// 7. Amplificatore invertente con operazionale
+{
+  const b = costruttore();
+  b.posa("generatore-funzioni", 40, 120, { forma: "sinusoide", frequenza: 1000, ampiezza: 0.5, offset: 0 });
+  b.posa("resistenza", 160, 180, { resistenza: 1000 });
+  b.posa("operazionale", 240, 180, { saturazione: 12 });
+  b.posa("resistenza", 260, 100, { resistenza: 10000 });
+  const gnd = b.posa("massa", 220, 300);
+  b.posa("oscilloscopio", 400, 40);
+  b.filo("XFG1.+", "R1.1");
+  b.filo("R1.2", "R2.1");
+  b.filo("R2.2", "U1.out");
+  b.filo("U1.+", `${gnd}.0`);
+  b.filo("XFG1.COM", `${gnd}.0`);
+  b.filo("XSC1.A", "XFG1.+");
+  b.filo("XSC1.B", "U1.out");
+  b.filo("XSC1.COM", `${gnd}.0`);
+  scrivi("elettronica-amplificatore.elab", b.schema());
+}
+
+// 8. Carica e scarica di un condensatore (τ = R·C = 1 s)
+{
+  const b = costruttore();
+  b.posa("generatore-dc", 40, 100, { tensione: 10 });
+  b.posa("interruttore", 100, 80);
+  b.posa("resistenza", 200, 80, { resistenza: 10000 });
+  b.posa("condensatore", 260, 100, { capacita: 100e-6 }, 90);
+  b.posa("resistenza", 340, 100, { resistenza: 1000 }, 90);
+  b.posa("pulsante", 340, 180, undefined, 90);
+  const gnd = b.posa("massa", 260, 300);
+  b.posa("multimetro", 440, 60, { modalita: "V" });
+  b.posa("oscilloscopio", 440, 220);
+  b.filo("V1.+", "S1.1");
+  b.filo("S1.2", "R1.1");
+  b.filo("C1.1", "R2.1");
+  b.filo("S2.2", `${gnd}.0`);
+  b.filo("C1.2", `${gnd}.0`);
+  b.filo("V1.-", `${gnd}.0`);
+  b.filo("XMM1.+", "C1.1");
+  b.filo("XMM1.COM", `${gnd}.0`);
+  b.filo("XSC1.A", "C1.1");
+  b.filo("XSC1.COM", `${gnd}.0`);
+  scrivi("elettronica-condensatore.elab", b.schema());
+}

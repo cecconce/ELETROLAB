@@ -168,6 +168,34 @@
       "titolo": "Contatore con display a 7 segmenti",
       "descrizione": "Il generatore di clock dà un impulso al secondo; il contatore a 4 bit li conta in binario (Q0, Q1, Q2, Q3), il decodificatore BCD trasforma il numero nei segmenti da accendere e il display lo scrive. L'analizzatore logico mostra il clock e i primi tre bit: ogni bit cambia a metà velocità del precedente.",
       "prova": "Premi ▶ AVVIA: il display conta 0, 1, 2… (dopo il 9 mostra le lettere A–F, poi ricomincia). Nella finestra dell'analizzatore guarda come D1 (Q0) cambia a ogni impulso del clock (D0) e D2 (Q1) ogni due. Clic su S1 per azzerare (resta a 0 finché S1 è a 1). Ferma e porta la frequenza del clock a 5 Hz per contare più in fretta."
+    },
+    {
+      "file": "elettronica-alimentatore.elab",
+      "modulo": "elettronica",
+      "titolo": "Alimentatore stabilizzato (ponte, filtro e 7805)",
+      "descrizione": "Dalla tensione alternata a 5 V continui: il ponte di Graetz (D1–D4) raddrizza la sinusoide da 15 V di picco a 50 Hz, il condensatore da 1000 µF la livella (resta una piccola ondulazione) e il regolatore 7805 dà 5 V fissi. Il LED verde con la resistenza da 470 Ω è il carico.",
+      "prova": "Premi ▶ AVVIA. Nella finestra dell'oscilloscopio metti la base dei tempi a 10 ms/div e i canali a 5 V/div: il canale A (arancione) è la tensione dopo il condensatore, circa 13 V con una piccola ondulazione a 100 Hz; il canale B (azzurro) è l'uscita del 7805, 5 V fissi. Ferma, porta il condensatore a 47 µF e riavvia: l'ondulazione cresce molto."
+    },
+    {
+      "file": "elettronica-transistor.elab",
+      "modulo": "elettronica",
+      "titolo": "Transistor come interruttore",
+      "descrizione": "Il transistor Q1 comanda il LED: quando S1 si chiude, nella base entra una piccola corrente (attraverso la resistenza da 10 kΩ) e il transistor lascia passare fra collettore ed emettitore la corrente, molto più grande, che accende il LED. Il multimetro misura la tensione collettore-emettitore.",
+      "prova": "Premi ▶ AVVIA. Clic su S1: il LED si accende e il multimetro scende quasi a 0 V (transistor in saturazione: è un interruttore chiuso). Clic di nuovo su S1: il LED si spegne. Ferma e prova a mettere 1 MΩ come resistenza di base: la corrente di base è troppo poca e il LED resta debole."
+    },
+    {
+      "file": "elettronica-amplificatore.elab",
+      "modulo": "elettronica",
+      "titolo": "Amplificatore invertente con operazionale",
+      "descrizione": "L'operazionale U1 con R1 = 1 kΩ e R2 = 10 kΩ amplifica di 10 volte il segnale del generatore e lo capovolge: guadagno G = −R2/R1 = −10. Sull'oscilloscopio il canale A è l'ingresso (0,5 V di picco), il canale B l'uscita (5 V di picco, in opposizione di fase).",
+      "prova": "Premi ▶ AVVIA. Nell'oscilloscopio metti il canale A a 0,5 V/div e il B a 2 V/div: le onde sono capovolte una rispetto all'altra. Ferma, porta l'ampiezza del generatore a 2 V e riavvia: l'uscita dovrebbe arrivare a 20 V ma si ferma a 12 V (saturazione) e la sinusoide viene «tagliata»."
+    },
+    {
+      "file": "elettronica-condensatore.elab",
+      "modulo": "elettronica",
+      "titolo": "Carica e scarica di un condensatore",
+      "descrizione": "Chiudendo S1 il condensatore C1 da 100 µF si carica attraverso R1 da 10 kΩ: la costante di tempo τ = R·C = 1 s. Dopo τ la tensione è il 63 % di quella del generatore, dopo 5τ è praticamente carico. Il pulsante S2 lo scarica attraverso R2 da 1 kΩ (10 volte più in fretta).",
+      "prova": "Premi ▶ AVVIA e metti l'oscilloscopio a 1 s/div e 2 V/div. Clic su S1: guarda la curva di carica e il multimetro (circa 6,3 V dopo un secondo, quasi 10 V dopo cinque). Riapri S1: il condensatore resta carico. Tieni premuto S2: si scarica in pochi decimi di secondo."
     }
   ]
 }

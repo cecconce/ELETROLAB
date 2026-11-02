@@ -184,7 +184,7 @@ voce(
     altezza: 40,
     morsetti: [m("1", 0, 20), m("2", 80, 20)],
   },
-  svg(80, 40, `<path d="M0 30H24M56 30H80M20 22H60M40 22V6M32 6H48"/><circle cx="24" cy="30" r="2"/><circle cx="56" cy="30" r="2"/>`),
+  svg(80, 40, `<path d="M0 20H24M56 20H80M20 12H60M40 12V2M32 2H48"/><circle cx="24" cy="20" r="2"/><circle cx="56" cy="20" r="2"/>`),
 );
 voce(
   {

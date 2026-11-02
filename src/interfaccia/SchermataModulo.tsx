@@ -301,7 +301,8 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       const s = sessioneRif.current;
       if (!s) return;
       if (eSessioneElettronica(s)) {
-        passoElettronica(s, dt);
+        // Al massimo 30 ms di calcolo per scatto, così l'interfaccia resta reattiva.
+        passoElettronica(s, dt, 30);
         aggiornaSessione(s);
       } else if (eSessioneArduino(s)) {
         passoArduino(s, dt * 1000);

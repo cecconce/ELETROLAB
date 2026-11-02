@@ -100,7 +100,12 @@ interface Memoria {
   il: Record<string, number>;
 }
 
-const GMIN = 1e-12;
+/**
+ * Piccola conduttanza (1 GΩ) da ogni nodo verso massa: tiene definiti i punti
+ * "sospesi" (per esempio un generatore flottante con tutti i diodi del ponte
+ * interdetti), dove altrimenti il calcolo oscillerebbe senza fermarsi.
+ */
+const GMIN = 1e-9;
 const ITERAZIONI = 150;
 const TOLLERANZA_V = 1e-6;
 
@@ -126,17 +131,20 @@ function correnteDiodo(m: ModelloDiodo, vd: number): number {
 function correnteDiodoConRs(m: ModelloDiodo, v: number): number {
   const rs = m.rs ?? 0;
   if (rs <= 0) return correnteDiodo(m, v);
-  let basso = Math.min(v, -(m.bv ?? 1000) - 50);
-  let alto = Math.max(v, 2);
-  // Restringe subito l'intervallo: la giunzione non supera mai v (diretta) né scende sotto v (inversa).
-  if (v >= 0) basso = Math.min(0, v);
-  else alto = 0;
-  for (let k = 0; k < 80; k++) {
+  // Corrente piccola (diodo interdetto o appena in conduzione): la caduta su Rs è trascurabile.
+  const senzaRs = correnteDiodo(m, v);
+  if (Math.abs(senzaRs) * rs < 1e-7) return senzaRs;
+  // La giunzione sta fra 0 e v (in diretta) o fra v e 0 (in inversa).
+  let basso = Math.min(v, 0);
+  let alto = Math.max(v, 0);
+  for (let k = 0; k < 64; k++) {
     const vj = (basso + alto) / 2;
     if (vj + rs * correnteDiodo(m, vj) > v) alto = vj;
     else basso = vj;
   }
-  return (v - (basso + alto) / 2) / rs;
+  // La corrente si calcola dalla giunzione e non come (v − vj)/Rs: quella
+  // differenza, con correnti piccolissime, sarebbe solo rumore di arrotondamento.
+  return correnteDiodo(m, (basso + alto) / 2);
 }
 
 /**
@@ -398,7 +406,8 @@ function risolvi(elementi: readonly Elemento[], o: Opzioni): Soluzione & { vetto
       return vi + d;
     });
     v = nuovo;
-    if (massimo < TOLLERANZA_V) {
+    // Dopo molte iterazioni basta una precisione di 0,1 mV (succede vicino alle soglie dei diodi).
+    if (massimo < TOLLERANZA_V || (it > 40 && massimo < 1e-4)) {
       converge = true;
       break;
     }
