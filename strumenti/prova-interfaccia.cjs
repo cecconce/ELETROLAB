@@ -454,6 +454,12 @@ async function provaPlc(pagina, controlla, foto, apriEsempio) {
   await pagina.waitForTimeout(300);
   controlla((await valoreIo(pagina, "Q0.0")) === false, "rilasciando il pulsante Q0.0 torna a 0");
   await fermaSeServe();
+  await pagina.getByRole("button", { name: /Lista istruzioni/ }).click();
+  await pagina.waitForTimeout(200);
+  const lista = await pagina.getByTestId("lista-istruzioni").innerText();
+  controlla(/LD\s+I0\.0\s*\nST\s+Q0\.0/.test(lista), "lista istruzioni del segmento disegnato: LD I0.0 / ST Q0.0");
+  await pagina.keyboard.press("Escape");
+  await pagina.waitForTimeout(150);
 
   // --- Esempi del PLC ---
   const apri = async (file) => {

@@ -14,6 +14,7 @@ import {
   normalizzaOperando,
   operandiImpianto,
   operandoScrivibile,
+  type ProgrammaLadder,
   type RisultatoConversione,
 } from "../motori/plc";
 import type { Schema } from "./schema";
@@ -102,6 +103,26 @@ export function programmaDaSchema(schema: Schema): RisultatoConversione {
       ...(eContatoreLadder(c.tipo) ? { preset: c.preset ?? PRESET_CONTATORE_PREDEFINITO } : {}),
     }));
   return convertiLadder(elementi, schema.fili);
+}
+
+/**
+ * Programma dello schema con i commenti dei segmenti: a ogni segmento va la
+ * nota di testo più vicina disegnata sopra le sue uscite (e sotto il segmento
+ * precedente), come si scrive il titolo di un segmento nel Ladder.
+ */
+export function programmaConCommenti(schema: Schema): ProgrammaLadder {
+  const conversione = programmaDaSchema(schema);
+  const yDi = new Map(schema.componenti.map((c) => [c.id, c.y]));
+  const note = schema.componenti.filter((c) => c.tipo === TIPO_COMMENTO && c.etichetta.trim());
+  let sopra = -Infinity;
+  const segmenti = conversione.programma.segmenti.map((seg, i) => {
+    const ys = (conversione.usciteDeiSegmenti[i] ?? []).map((id) => yDi.get(id) ?? Infinity);
+    const cima = ys.length ? Math.min(...ys) : Infinity;
+    const candidate = note.filter((n) => n.y < cima && n.y > sopra).sort((a, b) => b.y - a.y);
+    sopra = Number.isFinite(cima) ? cima : sopra;
+    return candidate.length && !seg.commento ? { ...seg, commento: candidate[0].etichetta } : seg;
+  });
+  return { ...conversione.programma, segmenti };
 }
 
 /** Impianti animati dello schema, con gli operandi di ogni segnale (per la sessione). */

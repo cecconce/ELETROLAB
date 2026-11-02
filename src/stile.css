@@ -1036,6 +1036,26 @@ button.io-plc {
   flex-direction: column;
   gap: 8px;
 }
+/* Finestra Lista istruzioni del PLC */
+.finestra-lista-istruzioni {
+  width: min(560px, 94vw);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lista-istruzioni {
+  margin: 0;
+  max-height: 55vh;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #1e2329;
+  color: #e6edf3;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre;
+}
 .pulsanti-finestra {
   display: flex;
   flex-wrap: wrap;

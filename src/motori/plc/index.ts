@@ -5,3 +5,4 @@ export * from "./scansione";
 export * from "./rete";
 export * from "./sessione";
 export * from "./impianti";
+export * from "./listaIstruzioni";

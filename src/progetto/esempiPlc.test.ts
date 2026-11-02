@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { ESEMPI, ERRORI_ESEMPI } from "./caricaEsempi";
 import { apriEsempio } from "./esempi";
 import type { Schema } from "../editor/schema";
-import { impiantiDaSchema, programmaDaSchema } from "../editor/ladder";
+import { impiantiDaSchema, programmaConCommenti, programmaDaSchema } from "../editor/ladder";
+import { listaIstruzioni } from "../motori/plc/listaIstruzioni";
 import {
   avviaSessionePlc,
   clicGiuPlc,
@@ -180,5 +181,22 @@ describe("esempi PLC simulati", () => {
     expect(stato().auto).toBe(5);
     expect(stato().troppeAuto).toBe(false);
     expect(s.stato.contatori.C0.conteggio).toBe(5);
+  });
+});
+
+describe("lista istruzioni degli esempi", () => {
+  it("semaforo: i commenti disegnati diventano i titoli dei segmenti", () => {
+    const testo = listaIstruzioni(programmaConCommenti(schemaEsempio("plc-semaforo.elab")));
+    const titoli = testo.split("\n").filter((r) => r.startsWith("(* Segmento"));
+    expect(titoli).toHaveLength(6);
+    expect(titoli.every((r) => /^\(\* Segmento \d: .+ \*\)$/.test(r))).toBe(true);
+    expect(testo).toContain("CAL   T0(PT := T#5s)");
+  });
+  it("ogni esempio si traduce senza segmenti vuoti", () => {
+    for (const e of ESEMPI.filter((x) => x.modulo === "plc")) {
+      const testo = listaIstruzioni(programmaConCommenti(schemaEsempio(e.file)));
+      expect(testo, e.file).not.toMatch(/vuoto/);
+      expect(testo, e.file).toMatch(/^(LD|ST|S|R|CAL)/m);
+    }
   });
 });

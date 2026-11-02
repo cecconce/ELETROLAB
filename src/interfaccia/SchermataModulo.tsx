@@ -58,6 +58,7 @@ import {
 import { componentiDaSchemaElettronica, vistaDaSessioneElettronica } from "../editor/elettronica";
 import { PannelloAnalizzatore, PannelloBode, PannelloOscilloscopio } from "../editor/PannelloOscilloscopio";
 import { FinestraEsporta } from "./FinestraEsporta";
+import { FinestraListaIstruzioni } from "./FinestraListaIstruzioni";
 import { FinestraPreparaEsercizio, RiquadroConsegna, type EsitoMostrato } from "./Esercizio";
 import { MODULI_VERIFICABILI, verificaEsercizio } from "../progetto/verifica";
 import { componiTavola, stampaTavola, tavolaPdf, tavolaPng, type Cartiglio } from "../editor/esportazione";
@@ -238,6 +239,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   // --- Esportazione e stampa (PNG, PDF, stampante) con il cartiglio --------
   const esportatore = useRef<(() => HTMLCanvasElement | null) | null>(null);
   const [finestraEsporta, setFinestraEsporta] = useState(false);
+  const [finestraLista, setFinestraLista] = useState(false);
   const esporta = useCallback(
     async (formato: "png" | "pdf" | "stampa", cartiglio: Cartiglio) => {
       setFinestraEsporta(false);
@@ -463,6 +465,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       {finestraEsercizio && (
         <FinestraPreparaEsercizio schema={schema} onCambia={(nuovo) => cambiaSchema(nuovo)} onChiudi={() => setFinestraEsercizio(false)} verificabile={MODULI_VERIFICABILI.has(modulo.id)} />
       )}
+      {finestraLista && <FinestraListaIstruzioni schema={schema} onChiudi={() => setFinestraLista(false)} />}
       {finestraEsporta && (
         <FinestraEsporta
           titoloIniziale={nomeFile.replace(/\.elab$/i, "")}
@@ -512,6 +515,11 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           <button type="button" className="pulsante" onClick={() => setFinestraEsercizio(true)} title={t("esercizio.pulsanteTasti")} disabled={inSimulazione}>
             📝 {t("esercizio.pulsante")}
           </button>
+          {modulo.id === "plc" && (
+            <button type="button" className="pulsante" onClick={() => setFinestraLista(true)} title={t("lista.suggerimento")}>
+              📄 {t("lista.pulsante")}
+            </button>
+          )}
           <button type="button" className="pulsante" onClick={() => setFinestraEsporta(true)} title={t("esporta.tasti")}>
             🖨 {t("esporta.pulsante")}
           </button>
