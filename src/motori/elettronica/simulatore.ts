@@ -461,3 +461,156 @@ export function analisiTransitorio(
   }
   return campioni;
 }
+
+// ---------------------------------------------------------------- analisi in frequenza (AC)
+
+/** Numero complesso [parte reale, parte immaginaria]. */
+type Complesso = [number, number];
+
+function gaussComplesso(A: Complesso[][], b: Complesso[]): Complesso[] | null {
+  const n = b.length;
+  const M = A.map((r, i) => [...r.map((c) => [...c] as Complesso), [...b[i]] as Complesso]);
+  const mod = (c: Complesso) => Math.hypot(c[0], c[1]);
+  const div = (a: Complesso, d: Complesso): Complesso => {
+    const q = d[0] * d[0] + d[1] * d[1];
+    return [(a[0] * d[0] + a[1] * d[1]) / q, (a[1] * d[0] - a[0] * d[1]) / q];
+  };
+  const mul = (a: Complesso, c: Complesso): Complesso => [a[0] * c[0] - a[1] * c[1], a[0] * c[1] + a[1] * c[0]];
+  for (let c = 0; c < n; c++) {
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (mod(M[r][c]) > mod(M[p][c])) p = r;
+    if (mod(M[p][c]) < 1e-30) return null;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = c + 1; r < n; r++) {
+      const f = div(M[r][c], M[c][c]);
+      if (f[0] === 0 && f[1] === 0) continue;
+      for (let k = c; k <= n; k++) {
+        const m = mul(f, M[c][k]);
+        M[r][k] = [M[r][k][0] - m[0], M[r][k][1] - m[1]];
+      }
+    }
+  }
+  const x: Complesso[] = Array.from({ length: n }, () => [0, 0]);
+  for (let r = n - 1; r >= 0; r--) {
+    let s: Complesso = [...M[r][n]] as Complesso;
+    for (let k = r + 1; k < n; k++) {
+      const m = mul(M[r][k], x[k]);
+      s = [s[0] - m[0], s[1] - m[1]];
+    }
+    x[r] = div(s, M[r][r]);
+  }
+  return x;
+}
+
+/** Risposta di un nodo a una frequenza. */
+export interface PuntoAC {
+  frequenza: number;
+  /** Ampiezza della tensione del nodo rispetto al segnale d'ingresso (1 V). */
+  modulo: Record<string, number>;
+  /** Guadagno in decibel: 20·log10(modulo). */
+  db: Record<string, number>;
+  /** Fase in gradi. */
+  fase: Record<string, number>;
+}
+
+/** Frequenze distribuite in modo logaritmico (come sull'asse di un diagramma di Bode). */
+export function frequenzeLogaritmiche(da: number, a: number, perDecade = 20): number[] {
+  const decadi = Math.log10(a / da);
+  const n = Math.max(1, Math.round(decadi * perDecade));
+  return Array.from({ length: n + 1 }, (_, k) => da * 10 ** ((decadi * k) / n));
+}
+
+/**
+ * Analisi in frequenza per piccoli segnali: il generatore `ingresso` diventa
+ * un segnale sinusoidale di 1 V (o 1 A), gli altri generatori si spengono
+ * (tensione → corto, corrente → aperto). I dispositivi non lineari sono
+ * sostituiti dalla loro linearizzazione nel punto di lavoro DC.
+ */
+export function analisiAC(elementi: readonly Elemento[], ingresso: string, frequenze: readonly number[]): PuntoAC[] {
+  const dc = analisiDC(elementi);
+  const nodi = [...new Set(elementi.flatMap(nodiElemento))].filter((n) => n !== MASSA);
+  const indice = new Map(nodi.map((n, i) => [n, i]));
+  const generatori = elementi.filter((e) => e.tipo === "V");
+  const nV = nodi.length;
+  const N = nV + generatori.length;
+  // Jacobiani dei dispositivi non lineari nel punto di lavoro.
+  const jacobiani = elementi
+    .filter((e) => terminaliDi(e).length > 0)
+    .map((e) => {
+      const term = terminaliDi(e);
+      const vt = term.map((n) => dc.tensioni[n]);
+      const i0 = correntiNonLineari(e, vt);
+      const J = term.map(() => new Array<number>(term.length).fill(0));
+      for (let j = 0; j < term.length; j++) {
+        const vj = [...vt];
+        vj[j] += 1e-7;
+        const i1 = correntiNonLineari(e, vj);
+        for (let k = 0; k < term.length; k++) J[k][j] = (i1[k] - i0[k]) / 1e-7;
+      }
+      return { term, J };
+    });
+
+  return frequenze.map((f) => {
+    const w = 2 * Math.PI * f;
+    const A: Complesso[][] = Array.from({ length: N }, () => Array.from({ length: N }, () => [0, 0] as Complesso));
+    const b: Complesso[] = Array.from({ length: N }, () => [0, 0] as Complesso);
+    const Y = (a: string, c: string, y: Complesso) => {
+      const ia = indice.get(a);
+      const ic = indice.get(c);
+      const add = (r: number, k: number, s: number) => {
+        A[r][k] = [A[r][k][0] + s * y[0], A[r][k][1] + s * y[1]];
+      };
+      if (ia !== undefined) add(ia, ia, 1);
+      if (ic !== undefined) add(ic, ic, 1);
+      if (ia !== undefined && ic !== undefined) {
+        add(ia, ic, -1);
+        add(ic, ia, -1);
+      }
+    };
+    for (let k = 0; k < nV; k++) A[k][k][0] += GMIN;
+    for (const e of elementi) {
+      if (e.tipo === "R") Y(e.a, e.b, [1 / Math.max(e.ohm, 1e-6), 0]);
+      if (e.tipo === "C") Y(e.a, e.b, [0, w * e.farad]);
+      if (e.tipo === "L") Y(e.a, e.b, [1e-9, -1 / Math.max(w * e.henry, 1e-12)]);
+      if (e.tipo === "I" && e.id === ingresso) {
+        const ip = indice.get(e.p);
+        const iN = indice.get(e.n);
+        if (ip !== undefined) b[ip][0] += 1;
+        if (iN !== undefined) b[iN][0] -= 1;
+      }
+    }
+    for (const { term, J } of jacobiani)
+      for (let k = 0; k < term.length; k++)
+        for (let j = 0; j < term.length; j++) {
+          const rk = indice.get(term[k]);
+          const cj = indice.get(term[j]);
+          if (rk !== undefined && cj !== undefined) A[rk][cj][0] += J[k][j];
+        }
+    generatori.forEach((e, k) => {
+      if (e.tipo !== "V") return;
+      const riga = nV + k;
+      const ip = indice.get(e.p);
+      const iN = indice.get(e.n);
+      if (ip !== undefined) {
+        A[ip][riga][0] += 1;
+        A[riga][ip][0] += 1;
+      }
+      if (iN !== undefined) {
+        A[iN][riga][0] -= 1;
+        A[riga][iN][0] -= 1;
+      }
+      b[riga] = [e.id === ingresso ? 1 : 0, 0];
+    });
+    const x = gaussComplesso(A, b) ?? Array.from({ length: N }, () => [0, 0] as Complesso);
+    const modulo: Record<string, number> = { [MASSA]: 0 };
+    const db: Record<string, number> = { [MASSA]: -Infinity };
+    const fase: Record<string, number> = { [MASSA]: 0 };
+    nodi.forEach((n, i) => {
+      const [re, im] = x[i];
+      modulo[n] = Math.hypot(re, im);
+      db[n] = 20 * Math.log10(Math.max(modulo[n], 1e-15));
+      fase[n] = (Math.atan2(im, re) * 180) / Math.PI;
+    });
+    return { frequenza: f, modulo, db, fase };
+  });
+}
