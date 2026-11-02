@@ -44,6 +44,8 @@ export interface Protezione {
   cortocircuito: boolean;
   /** Interviene dopo un po' se il motore che alimenta è in sovraccarico. */
   sovraccarico: boolean;
+  /** Ha il tasto di prova: un clic lo fa scattare (differenziale), un altro lo riarma. */
+  tastoProva?: boolean;
 }
 
 /** Uscita di una sorgente: il morsetto `morsetto` porta il polo `polo`. */
@@ -107,6 +109,12 @@ export type ModelloComponente =
        * il conteggio del tempo è fatto da tempo.ts.
        */
       temporizzata?: "eccitazione" | "diseccitazione";
+      /**
+       * Solo per il relè passo-passo: ogni impulso sulla bobina (fronte di
+       * salita della tensione) fa cambiare stato ai contatti, che restano così
+       * fino all'impulso successivo (memoria in tempo.ts).
+       */
+      passoPasso?: boolean;
       /** Solo per i motori: come calcolare rotazione e verso. */
       motore?: TipoMotore;
     };
@@ -146,6 +154,21 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
   // PROTEZIONI qui sotto) è gestito dal simulatore e da tempo.ts.
   fusibile: { tipo: "conduttore", tratti: [["1", "2"]] },
   magnetotermico: { tipo: "conduttore", tratti: [["1", "2"]] },
+  // Bipolari degli impianti civili: fase e neutro protetti insieme.
+  "magnetotermico-2p": {
+    tipo: "conduttore",
+    tratti: [
+      ["1", "2"],
+      ["3", "4"],
+    ],
+  },
+  differenziale: {
+    tipo: "conduttore",
+    tratti: [
+      ["1", "2"],
+      ["3", "4"],
+    ],
+  },
   "rele-termico": { tipo: "conduttore", tratti: TRIPOLARE },
   // Organi di manovra: aperti a riposo, lo studente li chiude con un clic.
   sezionatore: { tipo: "contatto", tratti: TRIPOLARE, normalmenteChiuso: false, comando: { tipo: "manuale" } },
@@ -170,6 +193,18 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
     normalmenteChiuso: false,
     comando: { tipo: "manuale" },
   },
+  // Comandi degli impianti civili (frutti da incasso).
+  "interruttore-unipolare": { tipo: "contatto", tratti: [["L", "1"]], normalmenteChiuso: false, comando: { tipo: "manuale" } },
+  "interruttore-bipolare": {
+    tipo: "contatto",
+    tratti: [
+      ["1", "2"],
+      ["3", "4"],
+    ],
+    normalmenteChiuso: false,
+    comando: { tipo: "manuale" },
+  },
+  "pulsante-civile": { tipo: "contatto", tratti: [["L", "1"]], normalmenteChiuso: false, comando: { tipo: "pulsante" } },
   // A fungo: resta agganciato quando lo premi (comando a posizione mantenuta).
   "pulsante-emergenza": { tipo: "contatto", tratti: [["11", "12"]], normalmenteChiuso: true, comando: { tipo: "manuale" } },
   "selettore-nc": { tipo: "contatto", tratti: [["11", "12"]], normalmenteChiuso: true, comando: { tipo: "manuale" } },
@@ -181,6 +216,8 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
   // Bobine e contatti comandati.
   "bobina-contattore": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true },
   "bobina-rele": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true },
+  suoneria: { tipo: "carico", morsetti: ["X1", "X2"], bobina: false },
+  "rele-passo-passo": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true, passoPasso: true },
   "bobina-ritardata-eccitazione": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true, temporizzata: "eccitazione" },
   "bobina-ritardata-diseccitazione": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true, temporizzata: "diseccitazione" },
   "contatto-na": { tipo: "contatto", tratti: [["13", "14"]], normalmenteChiuso: false, comando: { tipo: "bobina" } },
@@ -216,4 +253,7 @@ export const PROTEZIONI: Readonly<Record<string, Protezione>> = {
   magnetotermico: { cortocircuito: true, sovraccarico: false },
   salvamotore: { cortocircuito: true, sovraccarico: true },
   "rele-termico": { cortocircuito: false, sovraccarico: true },
+  "magnetotermico-2p": { cortocircuito: true, sovraccarico: false },
+  // Magnetotermico differenziale («salvavita»): scatta per cortocircuito e con il tasto di prova T.
+  differenziale: { cortocircuito: true, sovraccarico: false, tastoProva: true },
 };

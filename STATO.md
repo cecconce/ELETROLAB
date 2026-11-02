@@ -4,25 +4,21 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 7 – Miglioramenti richiesti dopo il piano originale** — completata — in attesa di conferma
+**Fase 8 – Impianti più completi, Impianti + PLC nello stesso file, strumenti realistici** — in corso
 
-Il piano (Fasi 0–6) è completo e confermato. Pierluigi ha chiesto di continuare a migliorare il programma («vai avanti per altre 2 ore»); le attività sono scelte per avvicinare ancora di più il funzionamento ai programmi di riferimento e per completare quanto previsto dalla Fase 0.
+Fase 7 confermata da Pierluigi il 2026-11-02 («buono»). Richieste: il clone di CADe_SIMU manca di funzioni e dispositivi (per primi interruttori, deviatori, invertitori degli impianti civili); vista realistica con immagini più vere; Impianti e PLC devono lavorare insieme in un unico file; in Elettronica oscilloscopio, multimetro e generatore di funzioni realistici.
 
-### Attività (una per sessione, in ordine)
+### Attività (in ordine)
 
-- [x] 7.1 Finestra Informazioni senza istituto: solo lo sviluppatore (Pierluigi Ceccon), come richiesto.
-- [x] 7.2 Impianti: colore delle lampade di segnalazione (rossa, verde, gialla, bianca, blu) scelto nelle Proprietà, con la luce del colore giusto in simulazione e nella vista Realistica.
-- [x] 7.3 Arduino: editor del codice con evidenziazione della sintassi, numeri di riga e completamento delle funzioni Arduino (CodeMirror 6, previsto nella Fase 0).
-- [x] 7.4 Elettronica: plotter di Bode (strumento per la risposta in frequenza, usa l'analisi AC già nel motore).
-- [x] 7.4b Arduino: LED RGB, motore in continua, sensore di temperatura (TMP36) e interruttore a slitta come in Tinkercad, con l'esempio del termometro.
-- [x] 7.4c Arduino: display a 7 segmenti ed esempio del conteggio da 0 a 9.
-- [x] 7.4d Arduino: multimetro (V, A, Ω) come in Tinkercad, con l'esempio delle misure.
-- [x] 7.4e PLC: lista istruzioni (IL/AWL, IEC 61131-3) generata dal Ladder, in sola lettura.
-- [x] 7.4f Impianti: pulsante d'emergenza a fungo (NC, resta agganciato), simbolo e vista Realistica.
-- [x] 7.4g Impianti civili: deviatore e invertitore (contatti in scambio) con l'esempio della lampada comandata da tre punti.
-- [x] 7.4h Elettronica: wattmetro (potenza media in continua e in alternata).
-- [x] 7.4i Arduino: sensore di movimento (PIR) con l'esempio dell'allarme; sigle degli esempi numerate per lettera.
-- [x] 7.5 Verifica finale: build Actions, prova Playwright, resoconto.
+- [x] 8.1 Impianti civili completi: interruttore unipolare e bipolare, pulsante (campanello), relè passo-passo, suoneria, presa, magnetotermico 2P e differenziale con tasto di prova; esempi civili (punto luce interrotto, deviata, relè passo-passo).
+- [x] 8.2 Vista realistica degli Impianti rifatta con disegni più veri (volumi, ombre, materiali) per tutti gli apparecchi.
+- [ ] 8.3 PLC nello schema degli Impianti: componente PLC con ingressi I e uscite Q collegabili con i fili, programma Ladder nello stesso file, simulazione insieme; esempio.
+- [ ] 8.4 Elettronica: oscilloscopio, multimetro e generatore di funzioni con pannelli realistici (manopole, schermo, display).
+- [ ] 8.5 Verifica finale: build Actions, prova Playwright, resoconto.
+
+## Fase 7 – Miglioramenti dopo il piano (confermata il 2026-11-02)
+
+Attività 7.1–7.5 tutte completate; resoconto qui sotto.
 
 ## Resoconto della Fase 7 (2026-11-02)
 
@@ -314,7 +310,8 @@ Attività 1.1–1.10 tutte completate; resoconto qui sotto.
 | 4 | Elettronica con simulazione circuitale e strumenti virtuali | completata (confermata 2026-11-02) |
 | 5 | Arduino con breadboard ed editor codice/blocchi | completata (confermata 2026-11-02, anticipata prima della 4) |
 | 6 | Modalità esercizio, esportazioni, installer, README e LICENZE | completata (confermata 2026-11-02) |
-| 7 | Miglioramenti dopo il piano (lampade colorate, editor del codice, Bode, componenti Arduino, multimetro, lista istruzioni, impianti civili, wattmetro) | completata — in attesa di conferma |
+| 7 | Miglioramenti dopo il piano (lampade colorate, editor del codice, Bode, componenti Arduino, multimetro, lista istruzioni, impianti civili, wattmetro) | completata (confermata 2026-11-02) |
+| 8 | Impianti più completi, Impianti + PLC insieme, strumenti realistici | in corso |
 
 ## Regola
 
@@ -385,3 +382,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-02 — attività 7.4i: **sensore di movimento PIR** nel modulo Arduino (libreria a 21 voci; VCC, OUT, GND; uscita a 5 V quando c'è movimento, scelto con un clic in simulazione, con la cupola illuminata e la scritta «MOVIMENTO»). Nuovo esempio «Allarme con il sensore di movimento» (digitalRead, LED L, messaggio solo al cambio di stato). Il generatore degli esempi Arduino numera le sigle per lettera come l'editor (prima i LED di colori diversi erano tutti «D1» e il sensore di temperatura «U1» come la scheda; ora D1, D2, D3 e U2). 2 nuovi test; `npm test` 624 OK, build OK, prova Playwright.
 - 2026-11-02 — esempio «Potenza di una lampadina e wattmetro» (Elettronica: 12 V, lampadina 12 V – 1,2 W, il wattmetro indica 1,2 W) con test; README aggiornato con i componenti e gli strumenti nuovi (deviatori/invertitori, pulsante d'emergenza, lista istruzioni, componenti Arduino, wattmetro, plotter di Bode). `npm test` 625 OK, `prova-interfaccia` 118 controlli superati.
 - 2026-11-02 — attività 7.5 e chiusura della Fase 7: build Actions verdi (n. 59–64, 66, 68–70), `npm test` 625 OK, build OK, `prova-interfaccia` 118 controlli superati. Scritto il resoconto della Fase 7; fase in attesa di conferma.
+- 2026-11-02 — Fase 7 confermata da Pierluigi («buono»); scritte le attività della Fase 8 (richieste: più dispositivi CADe_SIMU a partire da interruttori/deviatori/invertitori, vista realistica più vera, Impianti e PLC nello stesso file, strumenti realistici in Elettronica). Attività 8.1: nuova categoria «Impianti civili» (libreria a 44 voci) con **interruttore unipolare**, **interruttore bipolare**, **pulsante civile**, **relè passo-passo** (nel motore: bobina con `passoPasso`, i contatti cambiano a ogni impulso e la memoria sta in `StatoImpianto.passoPassoChiusi`), deviatore e invertitore spostati qui; **suoneria**; **magnetotermico bipolare** e **magnetotermico differenziale** con tasto di prova T (un clic lo fa scattare, con il messaggio «è scattato perché hai premuto il tasto di prova», un altro lo riarma). Simboli CEI originali. Esempi «Impianto civile: salvavita, punto luce e campanello» e «Lampada da tre punti con il relè passo-passo». Attività 8.2: generatore dei disegni realistici riscritto: plastica con luce da sinistra, viti metalliche in rilievo con sede scura, spezzone di filo di rame, ombre, tasti e calotte in rilievo, targhette, moduli DIN, frutti civili, contattori con finestrella, motori con carcassa alettata; il test delle icone ammette le sfumature locali `url(#id)` ma nessun riferimento esterno. 7 nuovi test; `npm test` 632 OK, build OK, prove Playwright nelle due viste.

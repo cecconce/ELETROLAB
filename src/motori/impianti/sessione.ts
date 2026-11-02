@@ -69,7 +69,7 @@ function ricalcola(
   const motivi: Record<string, MotivoIntervento> = {};
   for (const id of stato.protezioniIntervenute) {
     const corto = risultato.interventi.find((x) => x.protezione === id);
-    motivi[id] = corto ? { motivo: "cortocircuito", poli: corto.poli } : (s.motivi?.[id] ?? { motivo: "sovraccarico" });
+    motivi[id] = corto && s.motivi?.[id]?.motivo !== "prova" ? { motivo: "cortocircuito", poli: corto.poli } : (s.motivi?.[id] ?? { motivo: "sovraccarico" });
   }
   return { ...s, stato, risultato, motivi };
 }
@@ -109,7 +109,13 @@ export function clicGiu(s: SessioneImpianto, id: string): SessioneImpianto {
       }
       return ricalcola({ ...s, azionati: s.azionati.includes(id) ? senza(s.azionati, id) : [...s.azionati, id] });
     case "riarmo":
-      return intervenuta ? ricalcola({ ...s, stato: riarma(s.stato, id) }) : s;
+      if (intervenuta) return ricalcola({ ...s, stato: riarma(s.stato, id) });
+      // Differenziale: il clic preme il tasto di prova T e lo fa scattare.
+      if (PROTEZIONI[tipo]?.tastoProva) {
+        const stato = { ...s.stato, protezioniIntervenute: [...s.stato.protezioniIntervenute, id] };
+        return ricalcola({ ...s, stato, motivi: { ...s.motivi, [id]: { motivo: "prova" } } });
+      }
+      return s;
     case "motore":
       return ricalcola({
         ...s,

@@ -245,6 +245,7 @@
   "problemi.stessoPolo": "Tutti i morsetti di {componente} sono collegati allo stesso polo ({polo}): non ci sarà mai tensione ai suoi capi. Un morsetto va verso la fase, l'altro verso il neutro (o un'altra fase).",
   "problemi.cortocircuito": "Cortocircuito fra {poli}! I due poli si toccano senza nessun utilizzatore in mezzo. I morsetti coinvolti sono cerchiati in arancione: ferma la simulazione e correggi i collegamenti.",
   "problemi.interventoCortocircuito": "{componente} è intervenuto per un cortocircuito fra {poli}. Correggi lo schema, poi clicca su {componente} per riarmarlo.",
+  "problemi.interventoProva": "{componente} è scattato perché hai premuto il tasto di prova T: il differenziale funziona e ha tolto tensione all'impianto. Clicca di nuovo su {componente} per riarmarlo.",
   "problemi.interventoSovraccarico": "{componente} è intervenuto perché il motore era in sovraccarico. Togli il sovraccarico (clic sul motore), poi clicca su {componente} per riarmarlo.",
   "problemi.oscillazione": "Il circuito oscilla: {bobine} continua a eccitarsi e diseccitarsi da solo (per esempio una bobina che apre il proprio contatto di alimentazione). Controlla i contatti collegati a questa bobina.",
   "problemi.oscillazionePiu": "Il circuito oscilla: {bobine} continuano a eccitarsi e diseccitarsi da sole, senza fermarsi mai. Controlla i contatti con cui queste bobine si comandano a vicenda.",

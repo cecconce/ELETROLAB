@@ -44,6 +44,20 @@
       "prova": "Premi ▶ AVVIA: la lampada è spenta. Clic su S1, S2 o S3, in qualsiasi ordine: ogni clic accende o spegne la lampada. Segui con il colore dei fili da dove passa la corrente."
     },
     {
+      "file": "impianto-civile.elab",
+      "modulo": "impianti",
+      "titolo": "Impianto civile: salvavita, punto luce e campanello",
+      "descrizione": "Il magnetotermico differenziale Q1 («salvavita») protegge l'impianto. L'interruttore S1 accende la lampada H1; il pulsante S2 fa suonare il campanello HA1 finché lo tieni premuto. Fase e neutro passano entrambi dal differenziale.",
+      "prova": "Premi ▶ AVVIA. Clic su S1: la lampada si accende. Tieni premuto S2: suona il campanello. Clic su Q1 per premere il tasto di prova T: il differenziale scatta e tutto si spegne; clic di nuovo su Q1 per riarmarlo."
+    },
+    {
+      "file": "rele-passo-passo.elab",
+      "modulo": "impianti",
+      "titolo": "Lampada da tre punti con il relè passo-passo",
+      "descrizione": "Tre pulsanti in parallelo (S1, S2, S3) mandano impulsi alla bobina del relè passo-passo KA1. A ogni impulso il contatto KA1 cambia stato e resta così: la lampada si accende e si spegne da qualsiasi pulsante. Rispetto a deviatori e invertitori servono solo pulsanti e due fili per punto.",
+      "prova": "Premi ▶ AVVIA. Premi e rilascia S1: la lampada si accende e resta accesa. Premi S2 o S3: si spegne. Ogni pressione cambia lo stato, da qualunque punto."
+    },
+    {
       "file": "esercizio-marcia-arresto.elab",
       "modulo": "impianti",
       "titolo": "Esercizio: completa la marcia/arresto",

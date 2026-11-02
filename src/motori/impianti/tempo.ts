@@ -32,6 +32,8 @@ export interface StatoImpianto {
   sovraccaricoDa: Record<string, number>;
   /** Protezioni intervenute (restano così fino al riarmo). */
   protezioniIntervenute: string[];
+  /** Relè passo-passo con i contatti commutati (cambiano a ogni impulso sulla bobina). */
+  passoPassoChiusi?: string[];
 }
 
 /** Azioni dello studente: le protezioni le gestisce lo stato. */
@@ -85,12 +87,34 @@ export function avanza(
     if (adesso - da >= TEMPO_INTERVENTO_TERMICO - EPSILON) intervenute.add(id);
   }
 
-  const risultato = simulaConProtezioni(
+  let passoPassoChiusi = stato.passoPassoChiusi ?? [];
+  let risultato = simulaConProtezioni(
     circuito,
     { ...azioni, protezioniIntervenute: intervenute },
     stato.bobineEccitate,
-    { scaduti, inRitardo },
+    { scaduti, inRitardo, passoPassoChiusi },
   );
+  // Relè passo-passo: a ogni impulso (bobina appena alimentata) i contatti cambiano stato;
+  // poi si ricalcola il circuito con i contatti nella nuova posizione.
+  const passoPasso = circuito.componenti.filter((c) => {
+    const m = MODELLI_IMPIANTI[c.tipo];
+    return m?.tipo === "carico" && m.passoPasso;
+  });
+  const impulsi = passoPasso.filter((c) => risultato.bobineEccitate.includes(c.id) && !stato.bobineEccitate.includes(c.id)).map((c) => c.id);
+  if (impulsi.length > 0) {
+    const chiusi = new Set(passoPassoChiusi);
+    for (const id of impulsi) {
+      if (chiusi.has(id)) chiusi.delete(id);
+      else chiusi.add(id);
+    }
+    passoPassoChiusi = [...chiusi];
+    risultato = simulaConProtezioni(
+      circuito,
+      { ...azioni, protezioniIntervenute: new Set(risultato.protezioniIntervenute) },
+      risultato.bobineEccitate,
+      { scaduti, inRitardo, passoPassoChiusi },
+    );
+  }
 
   // Aggiornamento della memoria dei temporizzatori.
   const eccitateOra = new Set(risultato.bobineEccitate);
@@ -119,6 +143,7 @@ export function avanza(
       diseccitataDa,
       sovraccaricoDa,
       protezioniIntervenute: risultato.protezioniIntervenute,
+      passoPassoChiusi,
     },
     risultato,
   };

@@ -287,5 +287,32 @@ describe("esempi pronti (2)", () => {
     }
     expect(problemiSessione(s)).toEqual([]);
   });
+
+  it("impianto civile: interruttore, campanello e tasto di prova del differenziale", () => {
+    const schema = schemaDi("impianto-civile.elab");
+    const acceso = (s: SessioneImpianto, id: string) => s.risultato.carichiAlimentati.includes(id);
+    let s = clicGiu(avviaSessione(schema), "S1");
+    expect(acceso(s, "H1")).toBe(true);
+    s = clicGiu(s, "S2");
+    expect(acceso(s, "HA1")).toBe(true);
+    s = clicSu(s, "S2");
+    expect(acceso(s, "HA1")).toBe(false);
+    s = clicGiu(s, "Q1");
+    expect(acceso(s, "H1")).toBe(false);
+    s = clicGiu(s, "Q1");
+    expect(acceso(s, "H1")).toBe(true);
+  });
+
+  it("relè passo-passo: ogni pulsante accende o spegne la lampada", () => {
+    const schema = schemaDi("rele-passo-passo.elab");
+    let s = avviaSessione(schema);
+    let atteso = false;
+    for (const p of ["S1", "S2", "S3", "S3", "S1"]) {
+      s = clicSu(clicGiu(s, p), p);
+      atteso = !atteso;
+      expect(spiaAccesa(s), `dopo ${p}`).toBe(atteso);
+    }
+    expect(problemiSessione(s)).toEqual([]);
+  });
 });
 

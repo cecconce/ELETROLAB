@@ -1368,7 +1368,7 @@ function ComandoRealisticoAzionato({ tipo }: { tipo: string }) {
         </Group>
       </Group>
     );
-  if (tipo === "deviatore" || tipo === "invertitore")
+  if (tipo === "deviatore" || tipo === "invertitore" || tipo === "interruttore-unipolare" || tipo === "interruttore-bipolare")
     // Tasto basculante premuto in basso.
     return (
       <Group listening={false}>

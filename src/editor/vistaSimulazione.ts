@@ -170,7 +170,7 @@ export function tipoUtilizzatore(tipo: string): "bobina" | "luce" | "suono" | "m
   if (m?.tipo !== "carico") return null;
   if (m.bobina) return "bobina";
   if (m.motore) return "motore";
-  if (tipo === "sirena") return "suono";
+  if (tipo === "sirena" || tipo === "suoneria") return "suono";
   return "luce";
 }
 

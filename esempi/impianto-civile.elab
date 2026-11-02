@@ -1,0 +1,187 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "impianti",
+  "programma": "0.1.0",
+  "salvato": "2026-10-27T00:00:00.000Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "rete-1f",
+        "tipo": "rete-monofase",
+        "etichetta": "",
+        "x": 100,
+        "y": 40,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "Q1",
+        "tipo": "differenziale",
+        "etichetta": "Q1",
+        "x": 100,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "S1",
+        "tipo": "interruttore-unipolare",
+        "etichetta": "S1",
+        "x": 100,
+        "y": 260,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "H1",
+        "tipo": "lampada",
+        "etichetta": "H1",
+        "x": 100,
+        "y": 400,
+        "larghezza": 40,
+        "altezza": 80,
+        "parametri": {
+          "colore": "giallo"
+        }
+      },
+      {
+        "id": "S2",
+        "tipo": "pulsante-civile",
+        "etichetta": "S2",
+        "x": 220,
+        "y": 260,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "HA1",
+        "tipo": "suoneria",
+        "etichetta": "HA1",
+        "x": 220,
+        "y": 400,
+        "larghezza": 40,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "3"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "S1",
+          "morsetto": "L"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "S2",
+          "morsetto": "L"
+        },
+        "medio": 230
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "S1",
+          "morsetto": "1"
+        },
+        "a": {
+          "componente": "H1",
+          "morsetto": "X1"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "S2",
+          "morsetto": "1"
+        },
+        "a": {
+          "componente": "HA1",
+          "morsetto": "X1"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "HA1",
+          "morsetto": "X2"
+        },
+        "a": {
+          "componente": "H1",
+          "morsetto": "X2"
+        },
+        "punti": [
+          {
+            "x": 240,
+            "y": 500
+          },
+          {
+            "x": 120,
+            "y": 500
+          }
+        ]
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "H1",
+          "morsetto": "X2"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "4"
+        },
+        "punti": [
+          {
+            "x": 120,
+            "y": 520
+          },
+          {
+            "x": 340,
+            "y": 520
+          },
+          {
+            "x": 340,
+            "y": 220
+          },
+          {
+            "x": 160,
+            "y": 220
+          }
+        ]
+      }
+    ]
+  }
+}

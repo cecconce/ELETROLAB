@@ -75,7 +75,8 @@ describe("file della libreria forniti con l'app", () => {
     for (const v of impianti.componenti) {
       const svg = ICONE_REALISTICHE.get(v.icona) ?? "";
       expect(svg, v.icona).toContain(`viewBox="0 0 ${v.larghezza} ${v.altezza}"`);
-      expect(svg, v.icona).not.toMatch(/<script|href=|url\(/i);
+      // Le sfumature locali url(#id) sono ammesse; nessun riferimento esterno.
+      expect(svg, v.icona).not.toMatch(/<script|href=|url\((?!#[a-zA-Z]\w*\))/i);
       expect(svg, v.icona).not.toMatch(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/);
     }
   });
@@ -156,7 +157,7 @@ describe("ricerca per nome", () => {
 
   it("raggruppa per categoria nell'ordine del file, senza categorie vuote", () => {
     const gruppi = raggruppaPerCategoria(imp, cercaComponenti(imp, "pulsante"));
-    expect(gruppi.map((g) => g.categoria.id)).toEqual(["comandi"]);
+    expect(gruppi.map((g) => g.categoria.id)).toEqual(["comandi", "civili"]);
     expect(raggruppaPerCategoria(imp, imp.componenti)[0].categoria.id).toBe("alimentazione");
   });
 });

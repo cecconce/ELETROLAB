@@ -1,195 +1,434 @@
 // Generatore dei disegni "realistici" del modulo Impianti elettrici (strumento
 // per chi sviluppa): scrive libreria/icone/realistico/<icona>.svg, uno per ogni
 // simbolo della libreria impianti, con lo stesso nome del file del simbolo.
-// Nell'editor si sceglie con il pulsante «Simboli / Realistico»: i disegni
+// Nell'editor si sceglie con il pulsante «Simboli / Realistica»: i disegni
 // hanno le stesse misure e i morsetti negli stessi punti dei simboli CEI, così
 // fili, collegamenti e simulazione funzionano allo stesso modo.
-// Sono disegni originali e stilizzati di apparecchi da quadro (moduli su guida
-// DIN, pulsanti, spie, motori), senza marchi.
+//
+// Sono disegni originali di apparecchi da quadro e da impianto civile (moduli su
+// guida DIN, pulsanti da 22 mm, frutti da incasso, contattori, motori), senza
+// marchi. Per sembrare "veri" usano sfumature (plastica illuminata da sinistra,
+// viti metalliche, tasti in rilievo), un'ombra sotto il corpo e i morsetti a
+// vite con lo spezzone di filo fino al punto di collegamento.
+//
+// Alcune parti mobili hanno posizioni fisse concordate con AreaDisegno.tsx
+// (ComandoRealisticoAzionato e indicatore del contattore), che le ridisegna
+// nella posizione azionata: manopola del selettore (11,40), leva
+// dell'interruttore (x 4–20, y 30–52), maniglia del sezionatore (40,40),
+// fungo d'emergenza (11,40), tasti basculanti dei frutti (12,23)–(12,42),
+// finestrella del contattore (16,33) e dei contatti principali (32,33),
+// calotta della lampada (20,40).
 //
 // Uso: npx vite-node strumenti/genera-icone-realistiche-impianti.ts
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const FONT = 'font-family="Segoe UI, Arial, sans-serif"';
-const svg = (w: number, h: number, corpo: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">\n${corpo}\n</svg>\n`;
+
+/** Sfumature comuni (ogni file SVG è un'immagine a sé, quindi gli id non si scontrano). */
+const DEFS = `<defs>
+<linearGradient id="pl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff"/><stop offset="0.6" stop-color="#eceff1"/><stop offset="1" stop-color="#c5cbd0"/></linearGradient>
+<linearGradient id="pg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9dde0"/><stop offset="0.6" stop-color="#b9c0c5"/><stop offset="1" stop-color="#8f979d"/></linearGradient>
+<linearGradient id="ps" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5d6971"/><stop offset="1" stop-color="#1f2428"/></linearGradient>
+<linearGradient id="inc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4248"/><stop offset="1" stop-color="#5f6a72"/></linearGradient>
+<radialGradient id="me" cx="0.35" cy="0.3" r="0.75"><stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#cfd5da"/><stop offset="1" stop-color="#7a848b"/></radialGradient>
+<linearGradient id="cr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f6f7"/><stop offset="0.5" stop-color="#aeb6bc"/><stop offset="1" stop-color="#e3e7ea"/></linearGradient>
+<linearGradient id="giallo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe66d"/><stop offset="1" stop-color="#e9b800"/></linearGradient>
+<linearGradient id="blu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3f8fe0"/><stop offset="1" stop-color="#0d47a1"/></linearGradient>
+<radialGradient id="vetro" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#ffffff"/><stop offset="0.35" stop-color="#e8eef2"/><stop offset="1" stop-color="#9eacb6"/></radialGradient>
+</defs>`;
+
+const svg = (w: number, h: number, corpo: string, extraDefs = "") =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">\n${DEFS}${extraDefs}\n${corpo}\n</svg>\n`;
 const scritta = (x: number, y: number, t: string, dim = 8, colore = "#263238", extra = "") =>
   `<text x="${x}" y="${y}" font-size="${dim}" text-anchor="middle" fill="${colore}" ${FONT} ${extra}>${t}</text>`;
 
-/** Morsetto a vite con il suo spezzone di filo verso il punto di collegamento (x, y). */
-const vite = (x: number, y: number, h: number) => {
-  const yv = y === 0 ? 7 : y === h ? h - 7 : y;
-  const filo = y === 0 ? `<path d="M${x} 0V${yv}" stroke="#8d6e63" stroke-width="2.4"/>` : y === h ? `<path d="M${x} ${h}V${yv}" stroke="#8d6e63" stroke-width="2.4"/>` : "";
-  return `${filo}<circle cx="${x}" cy="${yv}" r="4.2" fill="#cfd8dc" stroke="#546e7a" stroke-width="1"/><path d="M${x - 2.6} ${yv - 2.6}L${x + 2.6} ${yv + 2.6}" stroke="#546e7a" stroke-width="1.2"/>`;
-};
-/** Corpo di un modulo su guida DIN (grigio chiaro con bordo). */
-const modulo = (x: number, y: number, w: number, h: number, colore = "#eceff1") =>
-  `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${colore}" stroke="#78909c" stroke-width="1.2"/>` +
-  `<rect x="${x + 2}" y="${y + 2}" width="${w - 4}" height="3" rx="1.5" fill="#ffffff" opacity="0.7"/>`;
+/** Schiarisce (f > 0) o scurisce (f < 0) un colore #rrggbb. */
+function tono(colore: string, f: number): string {
+  const n = parseInt(colore.slice(1), 16);
+  const c = [n >> 16, (n >> 8) & 255, n & 255].map((v) => Math.round(f >= 0 ? v + (255 - v) * f : v * (1 + f)));
+  return `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+/** Sfumatura radiale "in rilievo" di un colore (tasti, calotte). */
+const rilievo = (id: string, colore: string) =>
+  `<defs><radialGradient id="${id}" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="${tono(colore, 0.55)}"/><stop offset="0.5" stop-color="${colore}"/><stop offset="1" stop-color="${tono(colore, -0.45)}"/></radialGradient></defs>`;
+
+/** Ombra morbida sotto un corpo rettangolare. */
+const ombra = (x: number, y: number, w: number, h: number, rx = 3) =>
+  `<rect x="${x + 2}" y="${y + 2.5}" width="${w}" height="${h}" rx="${rx}" fill="#000000" opacity="0.18"/>`;
+
+/** Vite di un morsetto con la sua sede scura. */
+const testaVite = (x: number, y: number, r = 3.6) =>
+  `<circle cx="${x}" cy="${y}" r="${r + 1.4}" fill="#2b3135"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#me)"/>` +
+  `<path d="M${x - r * 0.65} ${y}H${x + r * 0.65}M${x} ${y - r * 0.65}V${y + r * 0.65}" stroke="#5b646a" stroke-width="1.1"/>`;
+
+/** Morsetto a vite collegato al punto (x, y) del bordo con uno spezzone di filo di rame. */
+function morsetto(x: number, y: number, h: number): string {
+  const yv = y === 0 ? 7.5 : y === h ? h - 7.5 : y;
+  const filo = y === 0 || y === h ? `<path d="M${x} ${y}V${yv}" stroke="#b87333" stroke-width="2.6"/>` : "";
+  return filo + testaVite(x, yv);
+}
+/** Morsetto in un angolo (frutti civili): il filo arriva in diagonale. */
+function morsettoAngolo(x: number, y: number, w: number, h: number): string {
+  const xv = x === 0 ? 6.5 : x === w ? w - 6.5 : x;
+  const yv = y === 0 ? 7.5 : y === h ? h - 7.5 : y;
+  return `<path d="M${x} ${y}L${xv} ${yv}" stroke="#b87333" stroke-width="2.6"/>${testaVite(xv, yv)}`;
+}
+
+/** Corpo di un modulo su guida DIN: plastica chiara, sedi dei morsetti più scure in alto e in basso. */
+function corpoDin(x: number, y: number, w: number, h: number, materiale = "url(#pl)"): string {
+  return (
+    ombra(x, y, w, h) +
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${materiale}" stroke="#8a9399" stroke-width="1"/>` +
+    `<rect x="${x + 2}" y="${y + 2}" width="${w - 4}" height="9" rx="2" fill="url(#inc)" opacity="0.35"/>` +
+    `<rect x="${x + 2}" y="${y + h - 11}" width="${w - 4}" height="9" rx="2" fill="url(#inc)" opacity="0.35"/>` +
+    `<path d="M${x + 1.5} ${y + 14}H${x + w - 1.5}M${x + 1.5} ${y + h - 14}H${x + w - 1.5}" stroke="#ffffff" stroke-width="0.8" opacity="0.8"/>`
+  );
+}
 /** Apparecchio verticale 40×80 con i morsetti in alto (20,0) e in basso (20,80). */
-const verticale = (interno: string, colore?: string) => svg(40, 80, `${modulo(6, 12, 28, 56, colore)}${vite(20, 0, 80)}${vite(20, 80, 80)}${interno}`);
-/** Tripolare 80×80 (o più largo) con morsetti in alto e in basso a x = 20, 40, 60. */
-const tripolare = (w: number, interno: string) =>
-  svg(w, 80, `${modulo(6, 12, w - 12, 56)}${[20, 40, 60].map((x) => vite(x, 0, 80) + vite(x, 80, 80)).join("")}${interno}`);
+const verticale = (interno: string, materiale?: string, defsExtra = "") =>
+  svg(40, 80, `${corpoDin(6, 9, 28, 62, materiale)}${morsetto(20, 0, 80)}${morsetto(20, 80, 80)}${interno}`, defsExtra);
+/** Apparecchio largo con morsetti in alto e in basso nelle posizioni date. */
+const largo = (w: number, xs: number[], interno: string, defsExtra = "", materiale?: string) =>
+  svg(w, 80, `${corpoDin(5, 9, w - 10, 62, materiale)}${xs.map((x) => morsetto(x, 0, 80) + morsetto(x, 80, 80)).join("")}${interno}`, defsExtra);
+
+/** Leva di un interruttore automatico (in alto = chiuso «I»). */
+const levaAutomatico = (x: number, colore = "#263238") =>
+  `<rect x="${x - 6}" y="27" width="12" height="26" rx="2" fill="#1d2226"/>` +
+  `<rect x="${x - 4.5}" y="29" width="9" height="12" rx="2" fill="${colore}" stroke="#000" stroke-opacity="0.4"/>` +
+  `<rect x="${x - 3.5}" y="30" width="3" height="10" rx="1.5" fill="#ffffff" opacity="0.25"/>`;
+/** Finestrella con il segno dello stato e la targhetta dei dati. */
+const targa = (x: number, y: number, w: number, testo: string) =>
+  `<rect x="${x}" y="${y}" width="${w}" height="9" rx="1.5" fill="#ffffff" stroke="#9aa3a9" stroke-width="0.6"/>${scritta(x + w / 2, y + 7, testo, 6.2, "#263238", 'font-weight="bold"')}`;
 
 const icone: Record<string, string> = {};
 
-// --- Alimentazione: morsettiere colorate secondo i colori dei conduttori.
+// ============================================================ Alimentazione
+/** Morsettiera su guida: un blocchetto colorato per conduttore, con la vite e il filo verso il basso. */
 const morsettiera = (w: number, morsetti: [number, string, string][]) =>
   svg(
     w,
     40,
-    `<rect x="4" y="4" width="${w - 8}" height="24" rx="3" fill="#455a64" stroke="#263238"/>` +
-      morsetti.map(([x, nome, colore]) => `<rect x="${x - 8}" y="7" width="16" height="18" rx="2" fill="${colore}"/>${scritta(x, 19, nome, 7, "#ffffff", 'font-weight="bold"')}<path d="M${x} 25V40" stroke="${colore}" stroke-width="3"/>`).join(""),
+    ombra(3, 2, w - 6, 26, 2) +
+      `<rect x="3" y="2" width="${w - 6}" height="26" rx="2" fill="#9aa3a9"/>` +
+      morsetti
+        .map(
+          ([x, nome, colore]) =>
+            `<rect x="${x - 9}" y="3" width="18" height="24" rx="1.5" fill="${colore}" stroke="${tono(colore, -0.4)}"/>` +
+            `<rect x="${x - 7.5}" y="4" width="4" height="22" fill="#ffffff" opacity="0.18"/>` +
+            testaVite(x, 10, 3.2) +
+            scritta(x, 24, nome, 7, "#ffffff", 'font-weight="bold"') +
+            `<path d="M${x} 27V40" stroke="${colore}" stroke-width="3.2"/>`,
+        )
+        .join(""),
   );
-icone["rete-trifase.svg"] = morsettiera(80, [[20, "L1", "#6d4c41"], [40, "L2", "#212121"], [60, "L3", "#757575"]]);
-icone["rete-monofase.svg"] = morsettiera(60, [[20, "L", "#6d4c41"], [40, "N", "#1e88e5"]]);
+icone["rete-trifase.svg"] = morsettiera(80, [[20, "L1", "#7a5230"], [40, "L2", "#2b2b2b"], [60, "L3", "#808890"]]);
+icone["rete-monofase.svg"] = morsettiera(60, [[20, "L", "#7a5230"], [40, "N", "#1e6fd0"]]);
 icone["alimentatore-cc.svg"] = svg(
   60,
   40,
-  `<rect x="3" y="2" width="54" height="26" rx="3" fill="#cfd8dc" stroke="#546e7a"/>${scritta(30, 12, "24 V DC", 7, "#263238", 'font-weight="bold"')}` +
-    `<circle cx="20" cy="21" r="4" fill="#e53935"/><circle cx="40" cy="21" r="4" fill="#212121"/><path d="M20 25V40" stroke="#e53935" stroke-width="3"/><path d="M40 25V40" stroke="#212121" stroke-width="3"/>`,
+  ombra(3, 1, 54, 28) +
+    `<rect x="3" y="1" width="54" height="28" rx="3" fill="url(#pg)" stroke="#6c757b"/>` +
+    [8, 13, 18, 42, 47, 52].map((x) => `<path d="M${x} 4V12" stroke="#6c757b" stroke-width="1.6" stroke-linecap="round"/>`).join("") +
+    scritta(30, 11, "24V DC", 6.5, "#1f2428", 'font-weight="bold"') +
+    `<circle cx="30" cy="17" r="2" fill="#2ecc40" stroke="#1b7a26" stroke-width="0.6"/>` +
+    testaVite(20, 22, 3) +
+    testaVite(40, 22, 3) +
+    `<path d="M20 26V40" stroke="#d32f2f" stroke-width="3.2"/><path d="M40 26V40" stroke="#212121" stroke-width="3.2"/>` +
+    scritta(13, 25, "+", 7, "#d32f2f", 'font-weight="bold"') +
+    scritta(47, 25, "−", 7, "#212121", 'font-weight="bold"'),
 );
 
-// --- Protezioni e manovra.
+// ============================================================ Protezioni e manovra
 icone["fusibile.svg"] = verticale(
-  `<rect x="11" y="22" width="18" height="36" rx="4" fill="#fafafa" stroke="#90a4ae"/><rect x="15" y="28" width="10" height="24" rx="2" fill="#b3e5fc" opacity="0.8"/>` +
-    `<path d="M20 29V51" stroke="#ffb300" stroke-width="1.2"/><circle cx="20" cy="55" r="2" fill="#e53935"/>${scritta(20, 19, "10A", 6)}`,
+  // Sezionatore portafusibili: sportello incernierato con la cartuccia che si vede dalla finestra.
+  `<rect x="10" y="20" width="20" height="40" rx="3" fill="url(#pg)" stroke="#6c757b"/>` +
+    `<rect x="14" y="25" width="12" height="26" rx="2" fill="#f7f3e8" stroke="#a49a80"/>` +
+    `<rect x="14" y="25" width="12" height="4" fill="url(#cr)"/><rect x="14" y="47" width="12" height="4" fill="url(#cr)"/>` +
+    `<path d="M20 30V46" stroke="#e0a000" stroke-width="1"/>` +
+    scritta(20, 58, "10 A", 5.5, "#263238", 'font-weight="bold"') +
+    `<rect x="17" y="17" width="6" height="4" rx="1" fill="#37474f"/>`,
 );
-const levaDin = (colore: string, testo: string) =>
-  verticale(`<rect x="13" y="30" width="14" height="20" rx="2" fill="#37474f"/><rect x="15" y="32" width="10" height="9" rx="1.5" fill="${colore}"/>${scritta(20, 24, testo, 7, "#263238", 'font-weight="bold"')}${scritta(20, 62, "I-ON", 5, "#e53935")}`);
-icone["magnetotermico.svg"] = levaDin("#1e88e5", "C16");
-icone["contatto-termico-nc.svg"] = verticale(`<rect x="10" y="30" width="20" height="20" rx="2" fill="#cfd8dc"/>${scritta(20, 38, "95", 7)}${scritta(20, 48, "96", 7)}<circle cx="20" cy="58" r="3" fill="#e53935"/>${scritta(20, 24, "NC", 7, "#e53935", 'font-weight="bold"')}`);
-icone["contatto-termico-na.svg"] = verticale(`<rect x="10" y="30" width="20" height="20" rx="2" fill="#cfd8dc"/>${scritta(20, 38, "97", 7)}${scritta(20, 48, "98", 7)}<circle cx="20" cy="58" r="3" fill="#43a047"/>${scritta(20, 24, "NA", 7, "#43a047", 'font-weight="bold"')}`);
-icone["sezionatore.svg"] = tripolare(
+icone["magnetotermico.svg"] = verticale(`${targa(10, 17, 20, "C16")}${levaAutomatico(20)}${scritta(20, 59, "I ON", 5, "#c62828", 'font-weight="bold"')}${scritta(20, 66, "6 kA", 4.5, "#455a64")}`);
+icone["magnetotermico-2p.svg"] = largo(
   80,
-  `<rect x="18" y="22" width="44" height="36" rx="3" fill="#fdd835" stroke="#f9a825"/><circle cx="40" cy="40" r="13" fill="#c62828"/><rect x="36" y="25" width="8" height="30" rx="3" fill="#e53935" stroke="#b71c1c"/>${scritta(26, 56, "0", 7)}${scritta(54, 30, "I", 7)}`,
+  [20, 60],
+  `${targa(14, 17, 52, "C16  2P")}<rect x="12" y="27" width="56" height="26" rx="2" fill="#1d2226"/>` +
+    `<rect x="14" y="29" width="52" height="12" rx="2" fill="#263238"/><rect x="15" y="30" width="50" height="3" rx="1.5" fill="#ffffff" opacity="0.2"/>` +
+    scritta(40, 61, "I ON", 6, "#c62828", 'font-weight="bold"'),
 );
-icone["salvamotore.svg"] = svg(
+icone["differenziale.svg"] = largo(
+  80,
+  [20, 60],
+  `${targa(10, 17, 38, "C16  30mA")}<rect x="10" y="27" width="40" height="26" rx="2" fill="#1d2226"/>` +
+    `<rect x="12" y="29" width="36" height="12" rx="2" fill="#0d47a1"/><rect x="13" y="30" width="34" height="3" rx="1.5" fill="#ffffff" opacity="0.25"/>` +
+    // Tasto di prova T giallo e targhetta IΔn.
+    `<rect x="55" y="27" width="16" height="16" rx="2" fill="#1d2226"/><rect x="57" y="29" width="12" height="12" rx="2" fill="url(#giallo)" stroke="#a07c00"/>` +
+    scritta(63, 38, "T", 8, "#3e2f00", 'font-weight="bold"') +
+    scritta(63, 52, "IΔn", 6, "#263238", 'font-weight="bold"') +
+    scritta(30, 61, "I ON", 6, "#c62828", 'font-weight="bold"'),
+);
+icone["sezionatore.svg"] = largo(
+  80,
+  [20, 40, 60],
+  // Interruttore di manovra rotativo: piastra gialla, maniglia rossa (verticale = aperto "0").
+  `<rect x="18" y="20" width="44" height="40" rx="3" fill="url(#giallo)" stroke="#b08900"/>` +
+    scritta(26, 57, "0", 7, "#3e2f00", 'font-weight="bold"') +
+    scritta(55, 28, "I", 7, "#3e2f00", 'font-weight="bold"') +
+    `<circle cx="40" cy="40" r="13.5" fill="#000" opacity="0.2"/><circle cx="40" cy="40" r="13" fill="#c62828"/>` +
+    `<rect x="36" y="25" width="8" height="30" rx="3.5" fill="#e53935" stroke="#8e1b1b"/><rect x="37.5" y="26.5" width="2.5" height="27" rx="1.2" fill="#ffffff" opacity="0.3"/>`,
+  "",
+  "url(#pg)",
+);
+icone["salvamotore.svg"] = largo(
   100,
-  80,
-  `${modulo(6, 12, 88, 56)}${[20, 40, 60].map((x) => vite(x, 0, 80) + vite(x, 80, 80)).join("")}` +
-    `<circle cx="34" cy="40" r="10" fill="#cfd8dc" stroke="#78909c"/><path d="M34 32V40L40 44" stroke="#37474f" stroke-width="1.5"/>${scritta(34, 60, "2,5–4 A", 6)}` +
-    `<circle cx="70" cy="31" r="7" fill="#43a047" stroke="#2e7d32"/>${scritta(70, 34, "I", 8, "#ffffff", 'font-weight="bold"')}<circle cx="70" cy="50" r="7" fill="#e53935" stroke="#b71c1c"/>${scritta(70, 53, "O", 8, "#ffffff", 'font-weight="bold"')}`,
+  [20, 40, 60],
+  `<circle cx="32" cy="40" r="11" fill="url(#cr)" stroke="#6c757b"/><circle cx="32" cy="40" r="8" fill="url(#pl)" stroke="#9aa3a9"/>` +
+    `<path d="M32 33V40" stroke="#c62828" stroke-width="2" stroke-linecap="round"/>` +
+    scritta(32, 60, "2,5–4 A", 5.5, "#263238", 'font-weight="bold"') +
+    rilievoTasto(72, 30, "#2e9e44", "I") +
+    rilievoTasto(72, 50, "#d32f2f", "O"),
+  rilievo("tI", "#2e9e44") + rilievo("tO", "#d32f2f"),
 );
-icone["rele-termico.svg"] = tripolare(
+/** Tasto rotondo in rilievo con una lettera (usa la sfumatura t<lettera>). */
+function rilievoTasto(x: number, y: number, colore: string, lettera: string): string {
+  return `<circle cx="${x}" cy="${y}" r="8" fill="#1d2226"/><circle cx="${x}" cy="${y}" r="6.5" fill="url(#t${lettera})" stroke="${tono(colore, -0.5)}" stroke-width="0.6"/>${scritta(x, y + 3, lettera, 7.5, "#ffffff", 'font-weight="bold"')}`;
+}
+icone["rele-termico.svg"] = largo(
   80,
-  `<circle cx="30" cy="40" r="10" fill="#cfd8dc" stroke="#78909c"/><path d="M30 32V40L36 43" stroke="#37474f" stroke-width="1.5"/><rect x="48" y="30" width="16" height="12" rx="3" fill="#1e88e5"/>${scritta(56, 38, "R", 7, "#ffffff", 'font-weight="bold"')}${scritta(56, 56, "95 96", 5)}`,
+  [20, 40, 60],
+  `<circle cx="28" cy="38" r="10" fill="url(#cr)" stroke="#6c757b"/><circle cx="28" cy="38" r="7" fill="url(#pl)"/><path d="M28 32V38L33 40" stroke="#37474f" stroke-width="1.6" stroke-linecap="round"/>` +
+    `<rect x="46" y="28" width="18" height="14" rx="3" fill="url(#blu)" stroke="#0a3070"/>` +
+    scritta(55, 38, "R", 8, "#ffffff", 'font-weight="bold"') +
+    scritta(55, 54, "95 96 97 98", 4.6, "#263238") +
+    scritta(28, 58, "1,6–2,5 A", 5, "#263238"),
+  "",
+  "url(#pg)",
 );
+/** Contatto ausiliario del relè termico. */
+const contattoTermico = (colore: string, testo: string, numeri: string) =>
+  verticale(
+    `<rect x="10" y="22" width="20" height="36" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+      scritta(20, 34, testo, 7.5, colore, 'font-weight="bold"') +
+      scritta(20, 45, numeri, 5.5, "#263238") +
+      `<rect x="13" y="50" width="14" height="4" rx="1.5" fill="${colore}"/>`,
+  );
+icone["contatto-termico-nc.svg"] = contattoTermico("#d32f2f", "NC", "95-96");
+icone["contatto-termico-na.svg"] = contattoTermico("#2e9e44", "NA", "97-98");
 
-// --- Comandi: il tasto (o la leva, la manopola) sta a sinistra, come l'azionatore nel simbolo.
-const pulsante = (colore: string, bordo: string, segno: string) =>
+// ============================================================ Comandi (pulsanti da 22 mm, leve, selettori)
+/** Pulsante da quadro: ghiera metallica, tasto colorato in rilievo a sinistra, blocchetto contatti a destra. */
+const pulsante = (colore: string, segno: string, contatto: string) =>
   verticale(
-    `<circle cx="9" cy="40" r="10" fill="#cfd8dc" stroke="#78909c"/><circle cx="9" cy="40" r="7.5" fill="${colore}" stroke="${bordo}" stroke-width="1.2"/>` +
-      `<ellipse cx="7" cy="37" rx="3" ry="2" fill="#ffffff" opacity="0.5"/>${scritta(9, 43, segno, 8, "#ffffff", 'font-weight="bold"')}` +
-      `<rect x="22" y="28" width="9" height="24" rx="2" fill="#cfd8dc"/>`,
-    "#eceff1",
+    `<rect x="22" y="24" width="10" height="32" rx="2" fill="url(#pg)" stroke="#6c757b"/>${scritta(27, 52, contatto, 4.5, "#263238")}` +
+      `<circle cx="11" cy="40" r="11" fill="#000" opacity="0.18"/><circle cx="10.5" cy="39.5" r="10.5" fill="url(#cr)" stroke="#5f686e" stroke-width="0.8"/>` +
+      `<circle cx="10.5" cy="39.5" r="7.6" fill="url(#tasto)" stroke="${tono(colore, -0.5)}" stroke-width="0.8"/>` +
+      scritta(10.5, 42.5, segno, 8, "#ffffff", 'font-weight="bold"'),
+    "url(#pl)",
+    rilievo("tasto", colore),
   );
-icone["pulsante-na.svg"] = pulsante("#43a047", "#2e7d32", "I");
-icone["pulsante-nc.svg"] = pulsante("#e53935", "#b71c1c", "O");
-// Fungo d'emergenza: testa rossa grande su una base gialla, a sinistra come gli altri tasti.
+icone["pulsante-na.svg"] = pulsante("#2e9e44", "I", "13-14");
+icone["pulsante-nc.svg"] = pulsante("#d32f2f", "O", "11-12");
+// Fungo d'emergenza: testa rossa grande su una base gialla.
 icone["pulsante-emergenza.svg"] = verticale(
-  `<circle cx="11" cy="40" r="11" fill="#fdd835" stroke="#f9a825"/><circle cx="11" cy="40" r="8.5" fill="#e53935" stroke="#b71c1c" stroke-width="1.2"/>` +
-    `<ellipse cx="8" cy="36" rx="3.5" ry="2.2" fill="#ffffff" opacity="0.45"/><rect x="24" y="28" width="8" height="24" rx="2" fill="#cfd8dc"/>`,
-  "#eceff1",
+  `<rect x="22" y="24" width="10" height="32" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+    `<circle cx="11" cy="40" r="11" fill="url(#giallo)" stroke="#a07c00"/>` +
+    `<circle cx="11.5" cy="40.5" r="9" fill="#000" opacity="0.25"/><circle cx="11" cy="40" r="8.5" fill="url(#fungo)" stroke="#7f0000" stroke-width="0.8"/>`,
+  "url(#pl)",
+  rilievo("fungo", "#e01b1b"),
 );
-// Impianti civili: frutto bianco con il tasto basculante; morsetti a vite anche agli angoli.
-const viteAngolo = (x: number, y: number) => {
-  const xv = x === 0 ? 6 : 34;
-  const yv = y === 0 ? 7 : 73;
-  return `<path d="M${x} ${y}L${xv} ${yv}" stroke="#8d6e63" stroke-width="2.4"/><circle cx="${xv}" cy="${yv}" r="4.2" fill="#cfd8dc" stroke="#546e7a" stroke-width="1"/><path d="M${xv - 2.6} ${yv - 2.6}L${xv + 2.6} ${yv + 2.6}" stroke="#546e7a" stroke-width="1.2"/>`;
-};
-const frutto = (morsetti: string, segno: string) =>
-  svg(
-    40,
-    80,
-    `<rect x="5" y="14" width="30" height="52" rx="4" fill="#fafafa" stroke="#90a4ae" stroke-width="1.2"/>` +
-      `<rect x="9" y="20" width="22" height="40" rx="3" fill="#ffffff" stroke="#b0bec5"/><path d="M9 40H31" stroke="#cfd8dc"/>` +
-      `<rect x="12" y="23" width="16" height="15" rx="2" fill="#eceff1"/>${scritta(20, 54, segno, 7, "#546e7a", 'font-weight="bold"')}${morsetti}`,
-  );
-icone["deviatore.svg"] = frutto(`${vite(20, 0, 80)}${viteAngolo(0, 80)}${viteAngolo(40, 80)}`, "⇄");
-icone["invertitore.svg"] = frutto(`${viteAngolo(0, 0)}${viteAngolo(40, 0)}${viteAngolo(0, 80)}${viteAngolo(40, 80)}`, "✕");
-const selettore = (colore: string) =>
+const selettore = (colore: string, contatto: string) =>
   verticale(
-    `<circle cx="11" cy="40" r="10" fill="#37474f" stroke="#212121"/><rect x="9" y="31" width="4" height="18" rx="2" fill="#eceff1" transform="rotate(-30 11 40)"/>` +
-      `${scritta(26, 30, "0", 7)}${scritta(28, 54, "1", 7)}<circle cx="26" cy="42" r="2.5" fill="${colore}"/>`,
+    `<rect x="22" y="24" width="10" height="32" rx="2" fill="url(#pg)" stroke="#6c757b"/>${scritta(27, 52, contatto, 4.5, "#263238")}` +
+      `<circle cx="11" cy="40" r="10.5" fill="url(#cr)" stroke="#5f686e" stroke-width="0.8"/><circle cx="11" cy="40" r="8" fill="url(#ps)"/>` +
+      `<rect x="9" y="31" width="4" height="18" rx="2" fill="#eceff1" transform="rotate(-30 11 40)"/>` +
+      scritta(20, 27, "0", 6, "#263238", 'font-weight="bold"') +
+      scritta(21, 58, "1", 6, "#263238", 'font-weight="bold"') +
+      `<circle cx="27" cy="30" r="2" fill="${colore}"/>`,
   );
-icone["selettore.svg"] = selettore("#43a047");
-icone["selettore-nc.svg"] = selettore("#e53935");
-const interruttore = (colore: string, testo: string) =>
+icone["selettore.svg"] = selettore("#2e9e44", "13-14");
+icone["selettore-nc.svg"] = selettore("#d32f2f", "11-12");
+const interruttoreLeva = (colore: string, testo: string) =>
   verticale(
-    `<rect x="4" y="30" width="16" height="22" rx="3" fill="#455a64"/><rect x="8" y="22" width="8" height="18" rx="3" fill="#eceff1" stroke="#90a4ae" transform="rotate(-20 12 40)"/>` +
-      `${scritta(27, 36, testo, 6, colore, 'font-weight="bold"')}<circle cx="27" cy="46" r="2.5" fill="${colore}"/>`,
+    `<rect x="4" y="30" width="16" height="22" rx="3" fill="url(#ps)"/>` +
+      `<rect x="8" y="22" width="8" height="18" rx="3" fill="url(#cr)" stroke="#6c757b" transform="rotate(-20 12 40)"/>` +
+      `<rect x="22" y="24" width="10" height="32" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+      scritta(27, 35, testo, 5.5, colore, 'font-weight="bold"') +
+      `<circle cx="27" cy="46" r="2.2" fill="${colore}"/>`,
   );
-icone["interruttore-na.svg"] = interruttore("#43a047", "NA");
-icone["interruttore-nc.svg"] = interruttore("#e53935", "NC");
+icone["interruttore-na.svg"] = interruttoreLeva("#2e9e44", "NA");
+icone["interruttore-nc.svg"] = interruttoreLeva("#d32f2f", "NC");
 const finecorsa = (colore: string) =>
   verticale(
-    `<rect x="12" y="26" width="18" height="30" rx="2" fill="#b0bec5" stroke="#78909c"/><path d="M12 40L2 30" stroke="#455a64" stroke-width="3" stroke-linecap="round"/>` +
-      `<circle cx="3" cy="29" r="4.5" fill="#212121" stroke="#9e9e9e" stroke-width="1.2"/><circle cx="21" cy="50" r="2.5" fill="${colore}"/>`,
+    `<rect x="12" y="24" width="20" height="34" rx="2" fill="url(#cr)" stroke="#5f686e"/>` +
+      `<rect x="15" y="44" width="14" height="10" rx="1.5" fill="url(#pg)"/>` +
+      `<path d="M14 38L3 28" stroke="#37474f" stroke-width="3.4" stroke-linecap="round"/>` +
+      `<circle cx="3" cy="28" r="5" fill="#1d2226"/><circle cx="3" cy="28" r="3.2" fill="#545e65"/>` +
+      `<circle cx="22" cy="31" r="2.4" fill="${colore}"/>`,
   );
-icone["finecorsa-na.svg"] = finecorsa("#43a047");
-icone["finecorsa-nc.svg"] = finecorsa("#e53935");
+icone["finecorsa-na.svg"] = finecorsa("#2e9e44");
+icone["finecorsa-nc.svg"] = finecorsa("#d32f2f");
 icone["sensore-prossimita.svg"] = verticale(
-  `<rect x="12" y="20" width="16" height="40" rx="2" fill="#78909c"/>` +
-    [24, 29, 34, 39, 44, 49].map((y) => `<path d="M12 ${y}H28" stroke="#546e7a" stroke-width="1"/>`).join("") +
-    `<rect x="11" y="56" width="18" height="8" rx="2" fill="#1e88e5"/><circle cx="20" cy="17" r="3" fill="#ffb300"/>`,
+  // Sensore cilindrico filettato M18 con faccia sensibile blu e LED giallo.
+  `<rect x="12" y="18" width="16" height="42" rx="2" fill="url(#cr)" stroke="#5f686e"/>` +
+    Array.from({ length: 9 }, (_, i) => `<path d="M12 ${22 + i * 4}H28" stroke="#7a848b" stroke-width="0.9"/>`).join("") +
+    `<rect x="10" y="30" width="20" height="5" rx="1" fill="url(#cr)" stroke="#5f686e"/>` +
+    `<rect x="11" y="56" width="18" height="8" rx="2" fill="url(#blu)"/>` +
+    `<circle cx="20" cy="15.5" r="2.6" fill="#ffc107" stroke="#9a7300" stroke-width="0.6"/>`,
 );
 
-// --- Contattori e relè.
-const contattore = (testo: string, colore = "#eceff1") =>
+// ============================================================ Impianti civili (frutti da incasso)
+/** Frutto modulare bianco con tasto basculante (o pulsante) e morsetti nelle posizioni date. */
+function frutto(morsetti: string, tasto: string, defsExtra = ""): string {
+  return svg(
+    40,
+    80,
+    ombra(5, 13, 30, 54, 4) +
+      `<rect x="5" y="13" width="30" height="54" rx="4" fill="url(#pl)" stroke="#9aa3a9"/>` +
+      `<rect x="9" y="19" width="22" height="42" rx="3" fill="#f7f8f9" stroke="#c5cbd0"/>` +
+      tasto +
+      morsetti,
+    defsExtra,
+  );
+}
+/** Tasto basculante: metà alta in rilievo (posizione di riposo), metà bassa in ombra. */
+const basculante = (segno: string) =>
+  `<rect x="12" y="23" width="16" height="15" rx="2" fill="#ffffff" stroke="#c9cfd4"/><rect x="12" y="42" width="16" height="15" rx="2" fill="#e3e7ea" stroke="#c9cfd4"/>` +
+  `<path d="M12 40H28" stroke="#b9c0c5" stroke-width="1"/>` +
+  scritta(20, 53, segno, 7, "#6c757b", 'font-weight="bold"');
+icone["interruttore-unipolare.svg"] = frutto(`${morsetto(20, 0, 80)}${morsetto(20, 80, 80)}`, basculante("I"));
+icone["interruttore-bipolare.svg"] = frutto(
+  `${morsettoAngolo(0, 0, 40, 80)}${morsettoAngolo(40, 0, 40, 80)}${morsettoAngolo(0, 80, 40, 80)}${morsettoAngolo(40, 80, 40, 80)}`,
+  basculante("I I"),
+);
+icone["deviatore.svg"] = frutto(`${morsetto(20, 0, 80)}${morsettoAngolo(0, 80, 40, 80)}${morsettoAngolo(40, 80, 40, 80)}`, basculante("⇅"));
+icone["invertitore.svg"] = frutto(
+  `${morsettoAngolo(0, 0, 40, 80)}${morsettoAngolo(40, 0, 40, 80)}${morsettoAngolo(0, 80, 40, 80)}${morsettoAngolo(40, 80, 40, 80)}`,
+  basculante("✕"),
+);
+icone["pulsante-civile.svg"] = frutto(
+  `${morsetto(20, 0, 80)}${morsetto(20, 80, 80)}`,
+  // Tasto pieno con il simbolo del campanello.
+  `<rect x="12" y="23" width="16" height="34" rx="2" fill="#ffffff" stroke="#c9cfd4"/>` +
+    `<path d="M16 46C16 37 17.5 34 20 34C22.5 34 24 37 24 46Z" fill="none" stroke="#6c757b" stroke-width="1.3"/><path d="M15 46H25" stroke="#6c757b" stroke-width="1.3"/><circle cx="20" cy="48.5" r="1.3" fill="#6c757b"/>`,
+);
+
+// ============================================================ Contattori e relè
+/** Contattore / relè visto di fronte: corpo grigio, finestrella dell'indicatore e targhetta. */
+const contattore = (testo: string) =>
   verticale(
-    `<rect x="9" y="22" width="22" height="36" rx="2" fill="#cfd8dc" stroke="#90a4ae"/><rect x="14" y="30" width="12" height="14" rx="1.5" fill="#455a64"/><rect x="16" y="33" width="8" height="5" fill="#9e9e9e"/>` +
-      `${scritta(20, 54, testo, 7, "#263238", 'font-weight="bold"')}${scritta(12, 19, "A1", 5)}${scritta(28, 66, "A2", 5)}`,
-    colore,
+    `<rect x="9" y="20" width="22" height="40" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+      `<rect x="13" y="29" width="14" height="13" rx="1.5" fill="#1d2226"/><rect x="16" y="33" width="8" height="5" fill="#8d969c"/>` +
+      targa(11, 46, 18, testo) +
+      scritta(13, 18, "A1", 5, "#37474f", 'font-weight="bold"') +
+      scritta(27, 67, "A2", 5, "#37474f", 'font-weight="bold"'),
   );
 icone["bobina.svg"] = contattore("K");
+icone["rele-passo-passo.svg"] = verticale(
+  // Relè a impulsi su guida DIN: leva manuale e il segno del passo-passo.
+  `${targa(10, 17, 20, "KA")}<rect x="13" y="28" width="14" height="18" rx="2" fill="#1d2226"/><rect x="15" y="30" width="10" height="8" rx="1.5" fill="url(#cr)"/>` +
+    `<path d="M13 58H17V54H21V50H25" stroke="#37474f" stroke-width="1.3" fill="none"/>` +
+    "",
+);
 const timer = (testo: string) =>
-  verticale(`<circle cx="20" cy="38" r="10" fill="#ffffff" stroke="#78909c"/><path d="M20 31V38L25 41" stroke="#e53935" stroke-width="1.6" stroke-linecap="round"/>${scritta(20, 58, testo, 6, "#263238", 'font-weight="bold"')}${scritta(12, 19, "A1", 5)}${scritta(28, 66, "A2", 5)}`);
-icone["bobina-ritardata-eccitazione.svg"] = timer("ON-delay");
-icone["bobina-ritardata-diseccitazione.svg"] = timer("OFF-delay");
+  verticale(
+    `<circle cx="20" cy="37" r="10.5" fill="url(#cr)" stroke="#5f686e"/><circle cx="20" cy="37" r="8" fill="url(#pl)"/>` +
+      Array.from({ length: 8 }, (_, i) => {
+        const a = ((i * 36 - 126) * Math.PI) / 180;
+        return `<path d="M${20 + Math.cos(a) * 6.5} ${37 + Math.sin(a) * 6.5}L${20 + Math.cos(a) * 8} ${37 + Math.sin(a) * 8}" stroke="#37474f" stroke-width="0.8"/>`;
+      }).join("") +
+      `<path d="M20 37L25 33" stroke="#c62828" stroke-width="1.8" stroke-linecap="round"/>` +
+      `<circle cx="20" cy="37" r="1.6" fill="#37474f"/>` +
+      targa(9, 51, 22, testo) +
+      `<circle cx="13" cy="20" r="1.8" fill="#2ecc40"/>`,
+  );
+icone["bobina-ritardata-eccitazione.svg"] = timer("ON-del");
+icone["bobina-ritardata-diseccitazione.svg"] = timer("OFF-del");
+/** Contatto ausiliario frontale (blocchetto agganciato al contattore). */
 const ausiliario = (colore: string, testo: string, numeri: string) =>
-  verticale(`<rect x="11" y="24" width="18" height="32" rx="2" fill="#cfd8dc"/>${scritta(20, 36, testo, 7, colore, 'font-weight="bold"')}${scritta(20, 48, numeri, 5)}<rect x="14" y="51" width="12" height="3" rx="1" fill="${colore}"/>`);
-icone["contatto-na.svg"] = ausiliario("#43a047", "NA", "13-14");
-icone["contatto-nc.svg"] = ausiliario("#e53935", "NC", "21-22");
+  verticale(
+    `<rect x="10" y="22" width="20" height="36" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+      scritta(20, 35, testo, 7.5, colore, 'font-weight="bold"') +
+      scritta(20, 46, numeri, 5.5, "#263238") +
+      `<rect x="13" y="50" width="14" height="4" rx="1.5" fill="${colore}"/>`,
+  );
+icone["contatto-na.svg"] = ausiliario("#2e9e44", "NA", "13-14");
+icone["contatto-nc.svg"] = ausiliario("#d32f2f", "NC", "21-22");
 const ausiliarioTempo = (colore: string, testo: string) =>
-  verticale(`<circle cx="20" cy="34" r="7" fill="#ffffff" stroke="#78909c"/><path d="M20 29V34L23 36" stroke="#37474f" stroke-width="1.2"/>${scritta(20, 52, testo, 7, colore, 'font-weight="bold"')}`);
-icone["contatto-temporizzato-na.svg"] = ausiliarioTempo("#43a047", "NA");
-icone["contatto-temporizzato-nc.svg"] = ausiliarioTempo("#e53935", "NC");
-icone["contatti-principali.svg"] = tripolare(
+  verticale(
+    `<rect x="10" y="22" width="20" height="36" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+      `<circle cx="20" cy="33" r="6" fill="url(#pl)" stroke="#6c757b"/><path d="M20 29V33L23 35" stroke="#37474f" stroke-width="1.1"/>` +
+      scritta(20, 50, testo, 7, colore, 'font-weight="bold"'),
+  );
+icone["contatto-temporizzato-na.svg"] = ausiliarioTempo("#2e9e44", "NA");
+icone["contatto-temporizzato-nc.svg"] = ausiliarioTempo("#d32f2f", "NC");
+icone["contatti-principali.svg"] = largo(
   80,
-  `<rect x="16" y="22" width="48" height="36" rx="3" fill="#cfd8dc" stroke="#90a4ae"/><rect x="28" y="30" width="24" height="14" rx="2" fill="#455a64"/><rect x="32" y="33" width="16" height="5" fill="#9e9e9e"/>${scritta(40, 54, "1-2 3-4 5-6", 6)}`,
+  [20, 40, 60],
+  `<rect x="14" y="20" width="52" height="40" rx="3" fill="url(#pg)" stroke="#6c757b"/>` +
+    `<rect x="28" y="29" width="24" height="13" rx="2" fill="#1d2226"/><rect x="32" y="33" width="16" height="5" fill="#8d969c"/>` +
+    targa(20, 46, 40, "1-2  3-4  5-6") +
+    scritta(20, 18, "1", 5, "#37474f") +
+    scritta(40, 18, "3", 5, "#37474f") +
+    scritta(60, 18, "5", 5, "#37474f"),
 );
 
-// --- Utilizzatori.
-icone["lampada.svg"] = verticale(
-  `<circle cx="20" cy="40" r="13" fill="#90a4ae" stroke="#546e7a"/><circle cx="20" cy="40" r="10" fill="#c8e6c9" stroke="#81c784"/><ellipse cx="17" cy="36" rx="4" ry="3" fill="#ffffff" opacity="0.6"/>`,
-  "#eceff1",
+// ============================================================ Utilizzatori
+// Spia da quadro: ghiera cromata e calotta in vetro (il colore della luce lo disegna l'editor).
+icone["lampada.svg"] = svg(
+  40,
+  80,
+  `${morsetto(20, 0, 80)}${morsetto(20, 80, 80)}` +
+    `<rect x="14" y="16" width="12" height="48" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+    `<circle cx="20.8" cy="40.8" r="14" fill="#000" opacity="0.2"/><circle cx="20" cy="40" r="14" fill="url(#cr)" stroke="#5f686e"/>` +
+    `<circle cx="20" cy="40" r="10.5" fill="url(#vetro)" stroke="#7a848b" stroke-width="0.8"/>` +
+    `<ellipse cx="16.5" cy="35.5" rx="4" ry="2.6" fill="#ffffff" opacity="0.75"/>`,
 );
-icone["sirena.svg"] = verticale(
-  `<path d="M12 30H18L28 22V58L18 50H12Z" fill="#e53935" stroke="#b71c1c"/><path d="M31 32Q35 40 31 48" fill="none" stroke="#e53935" stroke-width="1.5"/>`,
+icone["sirena.svg"] = svg(
+  40,
+  80,
+  `${morsetto(20, 0, 80)}${morsetto(20, 80, 80)}` +
+    `<rect x="14" y="16" width="12" height="48" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+    ombra(7, 26, 20, 28, 3) +
+    `<path d="M8 32H15L28 22V58L15 48H8Z" fill="url(#rosso)" stroke="#7f0000"/>` +
+    `<path d="M31 31Q36 40 31 49M34 28Q41 40 34 52" fill="none" stroke="#d32f2f" stroke-width="1.4" stroke-linecap="round"/>`,
+  rilievo("rosso", "#e53935"),
 );
-/** Motore visto di fronte: carcassa con alette, copriventola a griglia (centro come il cerchio del simbolo) e scatola morsetti in alto. */
-const motore = (cy: number, r: number, morsettiAlti: number[], morsettiBassi: number[], targa: string) =>
+icone["suoneria.svg"] = svg(
+  40,
+  80,
+  `${morsetto(20, 0, 80)}${morsetto(20, 80, 80)}` +
+    // Campanello a calotta: base scura e coppa metallica lucida.
+    `<rect x="9" y="50" width="22" height="8" rx="2" fill="url(#ps)"/>` +
+    `<circle cx="20.8" cy="38.8" r="14" fill="#000" opacity="0.18"/><circle cx="20" cy="38" r="14" fill="url(#ottone)" stroke="#7a5a12"/>` +
+    `<circle cx="20" cy="38" r="3" fill="#7a5a12"/><ellipse cx="15" cy="32" rx="5" ry="3" fill="#ffffff" opacity="0.5"/>` +
+    `<path d="M20 18V24M20 52V62" stroke="#37474f" stroke-width="2"/>`,
+  rilievo("ottone", "#d9a520"),
+);
+/** Motore visto di fronte: carcassa con alette, copriventola a griglia e scatola morsetti. */
+const motore = (cy: number, r: number, morsettiAlti: number[], morsettiBassi: number[], marca: string) =>
   svg(
     80,
     80,
-    morsettiAlti.map((x) => vite(x, 0, 80)).join("") +
-      morsettiBassi.map((x) => vite(x, 80, 80)).join("") +
-      `<rect x="12" y="10" width="56" height="10" rx="2" fill="#546e7a"/>` +
-      `<circle cx="40" cy="${cy}" r="${r + 4}" fill="#1565c0" stroke="#0d47a1" stroke-width="1.5"/>` +
-      Array.from({ length: 12 }, (_, i) => {
-        const a = (i * 30 * Math.PI) / 180;
-        return `<path d="M${40 + Math.cos(a) * (r - 1)} ${cy + Math.sin(a) * (r - 1)}L${40 + Math.cos(a) * (r + 4)} ${cy + Math.sin(a) * (r + 4)}" stroke="#0d47a1" stroke-width="1.2"/>`;
+    morsettiAlti.map((x) => morsetto(x, 0, 80)).join("") +
+      morsettiBassi.map((x) => morsetto(x, 80, 80)).join("") +
+      `<rect x="14" y="9" width="52" height="12" rx="2" fill="url(#ps)"/>` +
+      `<circle cx="${41.5}" cy="${cy + 2}" r="${r + 5}" fill="#000" opacity="0.2"/>` +
+      `<circle cx="40" cy="${cy}" r="${r + 5}" fill="url(#carcassa)" stroke="#0a3070" stroke-width="1.2"/>` +
+      Array.from({ length: 16 }, (_, i) => {
+        const a = (i * 22.5 * Math.PI) / 180;
+        return `<path d="M${40 + Math.cos(a) * (r - 0.5)} ${cy + Math.sin(a) * (r - 0.5)}L${40 + Math.cos(a) * (r + 5)} ${cy + Math.sin(a) * (r + 5)}" stroke="#0a3070" stroke-width="1.3"/>`;
       }).join("") +
-      `<circle cx="40" cy="${cy}" r="${r - 2}" fill="#37474f"/>` +
-      Array.from({ length: 5 }, (_, i) => `<circle cx="40" cy="${cy}" r="${(r - 4) * (1 - i / 5)}" fill="none" stroke="#78909c" stroke-width="0.8"/>`).join("") +
-      `<circle cx="40" cy="${cy}" r="3" fill="#b0bec5"/>${scritta(40, cy + r - 4, targa, 6, "#eceff1", 'font-weight="bold"')}`,
+      `<circle cx="40" cy="${cy}" r="${r - 1.5}" fill="url(#ps)"/>` +
+      Array.from({ length: 6 }, (_, i) => `<circle cx="40" cy="${cy}" r="${(r - 3.5) * (1 - i / 6)}" fill="none" stroke="#8b969d" stroke-width="0.9"/>`).join("") +
+      `<path d="M${40 - r + 3} ${cy}H${40 + r - 3}M40 ${cy - r + 3}V${cy + r - 3}" stroke="#8b969d" stroke-width="0.9"/>` +
+      `<circle cx="40" cy="${cy}" r="3.2" fill="url(#me)"/>` +
+      `<rect x="${40 - 11}" y="${cy + r - 9}" width="22" height="7" rx="1" fill="#eceff1" opacity="0.9"/>${scritta(40, cy + r - 3.6, marca, 5.6, "#0d47a1", 'font-weight="bold"')}`,
+    `<defs><radialGradient id="carcassa" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#5aa0ea"/><stop offset="0.6" stop-color="#1565c0"/><stop offset="1" stop-color="#0a3a85"/></radialGradient></defs>`,
   );
-icone["motore-trifase.svg"] = motore(50, 22, [20, 40, 60], [], "3~");
-icone["motore-trifase-6.svg"] = motore(40, 20, [20, 40, 60], [20, 40, 60], "3~ Y/Δ");
-icone["motore-monofase.svg"] = motore(50, 22, [20, 60], [], "1~");
-icone["motore-cc.svg"] = motore(50, 22, [20, 60], [], "DC");
+icone["motore-trifase.svg"] = motore(50, 21, [20, 40, 60], [], "3~");
+icone["motore-trifase-6.svg"] = motore(40, 19, [20, 40, 60], [20, 40, 60], "3~ Y/Δ");
+icone["motore-monofase.svg"] = motore(50, 21, [20, 60], [], "1~");
+icone["motore-cc.svg"] = motore(50, 21, [20, 60], [], "DC");
 
 // --- Scrittura (con controllo: un disegno per ogni icona della libreria impianti, stesse misure).
 mkdirSync("libreria/icone/realistico", { recursive: true });

@@ -87,6 +87,8 @@ export interface StatoTemporizzatori {
   scaduti?: Iterable<string>;
   /** Temporizzatori ritardati alla diseccitazione non più alimentati, ma ancora nel tempo di ritardo. */
   inRitardo?: Iterable<string>;
+  /** Relè passo-passo con i contatti commutati (memoria tenuta da tempo.ts). */
+  passoPassoChiusi?: Iterable<string>;
 }
 
 /** Stato di un motore che gira. */
@@ -219,6 +221,7 @@ interface StatoComandi {
   sovraccarichi: ReadonlySet<string>;
   scaduti: ReadonlySet<string>;
   inRitardo: ReadonlySet<string>;
+  passoPasso: ReadonlySet<string>;
   /** Bobine eccitate all'inizio del calcolo (per il ritardo alla diseccitazione). */
   precedenti: ReadonlySet<string>;
 }
@@ -356,6 +359,8 @@ function valuta(p: Preparato, comandi: StatoComandi, eccitate: ReadonlySet<strin
 /** Contatti della bobina commutati? Per i temporizzatori conta il ritardo. */
 function bobinaCommutata(b: ComponenteNoto, comandi: StatoComandi, eccitata: boolean): boolean {
   if (b.m.tipo !== "carico") return false;
+  // Relè passo-passo: i contatti seguono la memoria, non la tensione sulla bobina.
+  if (b.m.passoPasso) return comandi.passoPasso.has(b.c.id);
   const tempo = tempoDi(b.c);
   switch (b.m.temporizzata) {
     case "eccitazione":
@@ -484,6 +489,7 @@ export function simula(
     sovraccarichi: new Set(ingressi.sovraccarichi ?? []),
     scaduti: new Set(temporizzatori.scaduti ?? []),
     inRitardo: new Set(temporizzatori.inRitardo ?? []),
+    passoPasso: new Set(temporizzatori.passoPassoChiusi ?? []),
     precedenti: new Set(eccitate),
   };
 

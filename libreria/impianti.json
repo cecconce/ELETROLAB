@@ -15,6 +15,10 @@
       "nome": "Comandi e sensori"
     },
     {
+      "id": "civili",
+      "nome": "Impianti civili"
+    },
+    {
       "id": "contattori",
       "nome": "Contattori e relè"
     },
@@ -168,6 +172,86 @@
         {
           "id": "2",
           "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "magnetotermico-2p",
+      "nome": "Magnetotermico bipolare",
+      "categoria": "protezioni",
+      "sigla": "Q",
+      "descrizione": "Interruttore automatico a due poli (fase e neutro), il generale di un impianto civile: interviene in caso di cortocircuito e apre entrambi i poli. Dopo l'intervento: clic per riarmarlo.",
+      "paroleChiave": [
+        "magnetotermico",
+        "bipolare",
+        "2P",
+        "generale",
+        "automatico",
+        "civile"
+      ],
+      "icona": "magnetotermico-2p.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "3",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "4",
+          "x": 60,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "differenziale",
+      "nome": "Magnetotermico differenziale (salvavita)",
+      "categoria": "protezioni",
+      "sigla": "Q",
+      "descrizione": "Il «salvavita»: protegge le persone dalle scosse aprendo fase e neutro se una parte della corrente si disperde verso terra, e interviene anche per cortocircuito. In simulazione: clic per premere il tasto di prova T (scatta); un altro clic per riarmarlo.",
+      "paroleChiave": [
+        "differenziale",
+        "salvavita",
+        "RCD",
+        "tasto di prova",
+        "civile",
+        "protezione"
+      ],
+      "icona": "differenziale.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "3",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "4",
+          "x": 60,
           "y": 80
         }
       ]
@@ -584,9 +668,77 @@
       ]
     },
     {
+      "id": "interruttore-unipolare",
+      "nome": "Interruttore (civile)",
+      "categoria": "civili",
+      "sigla": "S",
+      "descrizione": "Interruttore unipolare da incasso degli impianti civili: interrompe la fase (morsetto L) verso la lampada (morsetto 1). Un clic lo accende, un altro lo spegne; resta nella posizione scelta.",
+      "paroleChiave": [
+        "interruttore",
+        "unipolare",
+        "civile",
+        "punto luce",
+        "frutto"
+      ],
+      "icona": "interruttore-unipolare.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "L",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "1",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "interruttore-bipolare",
+      "nome": "Interruttore bipolare",
+      "categoria": "civili",
+      "sigla": "S",
+      "descrizione": "Interruttore a due poli: apre e chiude insieme fase e neutro (1-2 e 3-4). Si usa per carichi come scaldabagni e forni, dove si vuole staccare tutto. Un clic per chiuderlo, un altro per aprirlo.",
+      "paroleChiave": [
+        "interruttore",
+        "bipolare",
+        "due poli",
+        "civile",
+        "scaldabagno"
+      ],
+      "icona": "interruttore-bipolare.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "3",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "2",
+          "x": 0,
+          "y": 80
+        },
+        {
+          "id": "4",
+          "x": 40,
+          "y": 80
+        }
+      ]
+    },
+    {
       "id": "deviatore",
       "nome": "Deviatore",
-      "categoria": "comandi",
+      "categoria": "civili",
       "sigla": "S",
       "descrizione": "Commutatore a tre morsetti degli impianti civili: il comune C è collegato al morsetto 1 oppure al 2, e ci resta. Con due deviatori si accende e si spegne una lampada da due punti (impianto «deviato»). In simulazione: un clic per spostarlo.",
       "paroleChiave": [
@@ -621,7 +773,7 @@
     {
       "id": "invertitore",
       "nome": "Invertitore",
-      "categoria": "comandi",
+      "categoria": "civili",
       "sigla": "S",
       "descrizione": "Commutatore a quattro morsetti degli impianti civili: a riposo collega 1-3 e 2-4, azionato li incrocia (1-4 e 2-3). Messo fra due deviatori permette di comandare una lampada da tre o più punti (impianto «invertito»). In simulazione: un clic per spostarlo.",
       "paroleChiave": [
@@ -653,6 +805,64 @@
         {
           "id": "4",
           "x": 40,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "pulsante-civile",
+      "nome": "Pulsante (civile)",
+      "categoria": "civili",
+      "sigla": "S",
+      "descrizione": "Pulsante da incasso degli impianti civili (per esempio del campanello o del relè passo-passo): chiude il circuito fra L e 1 solo finché lo tieni premuto.",
+      "paroleChiave": [
+        "pulsante",
+        "campanello",
+        "civile",
+        "frutto",
+        "passo-passo"
+      ],
+      "icona": "pulsante-civile.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "L",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "1",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "rele-passo-passo",
+      "nome": "Relè passo-passo (bobina)",
+      "categoria": "civili",
+      "sigla": "KA",
+      "descrizione": "Relè a impulsi degli impianti civili: ogni volta che la bobina riceve un impulso (da uno qualsiasi dei pulsanti in parallelo) i suoi contatti cambiano stato e restano così fino all'impulso successivo. I contatti si posano a parte con la stessa sigla (KA1). Serve per accendere una lampada da tanti punti con dei semplici pulsanti.",
+      "paroleChiave": [
+        "passo-passo",
+        "relè a impulsi",
+        "telerruttore",
+        "civile",
+        "più punti"
+      ],
+      "icona": "rele-passo-passo.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "A1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "A2",
+          "x": 20,
           "y": 80
         }
       ]
@@ -1166,6 +1376,34 @@
         "suoneria"
       ],
       "icona": "sirena.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "X1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "X2",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "suoneria",
+      "nome": "Suoneria (campanello)",
+      "categoria": "utilizzatori",
+      "sigla": "HA",
+      "descrizione": "Campanello degli impianti civili: suona finché è alimentato, di solito con un pulsante in serie.",
+      "paroleChiave": [
+        "suoneria",
+        "campanello",
+        "civile",
+        "suono"
+      ],
+      "icona": "suoneria.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [

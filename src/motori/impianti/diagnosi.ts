@@ -35,6 +35,7 @@ export type CodiceProblema =
   | "cortocircuito"
   | "interventoCortocircuito"
   | "interventoSovraccarico"
+  | "interventoProva"
   | "oscillazione";
 
 export interface Problema {
@@ -54,7 +55,7 @@ export interface Problema {
 }
 
 /** Motivo per cui una protezione è intervenuta (lo ricorda la sessione). */
-export type MotivoIntervento = { motivo: "cortocircuito"; poli: Polo[] } | { motivo: "sovraccarico" };
+export type MotivoIntervento = { motivo: "cortocircuito"; poli: Polo[] } | { motivo: "sovraccarico" } | { motivo: "prova" };
 
 /** Union-find minimale (come nel simulatore, ma qui tutti i tratti sono chiusi). */
 class Insiemi {
@@ -243,7 +244,9 @@ export function diagnosiRisultato(
     problemi.push(
       motivo.motivo === "cortocircuito"
         ? { codice: "interventoCortocircuito", gravita: "avviso", componenti: [id], morsetti: [], poli: [...motivo.poli] }
-        : { codice: "interventoSovraccarico", gravita: "avviso", componenti: [id], morsetti: [] },
+        : motivo.motivo === "prova"
+          ? { codice: "interventoProva", gravita: "avviso", componenti: [id], morsetti: [] }
+          : { codice: "interventoSovraccarico", gravita: "avviso", componenti: [id], morsetti: [] },
     );
   }
   return problemi;

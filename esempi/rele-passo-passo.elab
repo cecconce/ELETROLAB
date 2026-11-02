@@ -1,0 +1,257 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "impianti",
+  "programma": "0.1.0",
+  "salvato": "2026-10-27T00:00:00.000Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "rete-1f",
+        "tipo": "rete-monofase",
+        "etichetta": "",
+        "x": 100,
+        "y": 40,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "Q1",
+        "tipo": "magnetotermico-2p",
+        "etichetta": "Q1",
+        "x": 100,
+        "y": 120,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "S1",
+        "tipo": "pulsante-civile",
+        "etichetta": "S1",
+        "x": 100,
+        "y": 260,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "S2",
+        "tipo": "pulsante-civile",
+        "etichetta": "S2",
+        "x": 180,
+        "y": 260,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "S3",
+        "tipo": "pulsante-civile",
+        "etichetta": "S3",
+        "x": 260,
+        "y": 260,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "KA1",
+        "tipo": "rele-passo-passo",
+        "etichetta": "KA1",
+        "x": 180,
+        "y": 400,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "KA1-contatto",
+        "tipo": "contatto-na",
+        "etichetta": "KA1",
+        "x": 380,
+        "y": 260,
+        "larghezza": 40,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "13": "13",
+          "14": "14"
+        }
+      },
+      {
+        "id": "H1",
+        "tipo": "lampada",
+        "etichetta": "H1",
+        "x": 380,
+        "y": 400,
+        "larghezza": 40,
+        "altezza": 80,
+        "parametri": {
+          "colore": "giallo"
+        }
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "3"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "S1",
+          "morsetto": "L"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "S2",
+          "morsetto": "L"
+        },
+        "medio": 230
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "S3",
+          "morsetto": "L"
+        },
+        "medio": 230
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "Q1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "KA1-contatto",
+          "morsetto": "13"
+        },
+        "medio": 230
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "S1",
+          "morsetto": "1"
+        },
+        "a": {
+          "componente": "KA1",
+          "morsetto": "A1"
+        },
+        "medio": 370
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "S2",
+          "morsetto": "1"
+        },
+        "a": {
+          "componente": "KA1",
+          "morsetto": "A1"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "S3",
+          "morsetto": "1"
+        },
+        "a": {
+          "componente": "KA1",
+          "morsetto": "A1"
+        },
+        "medio": 370
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "KA1-contatto",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "H1",
+          "morsetto": "X1"
+        }
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "H1",
+          "morsetto": "X2"
+        },
+        "a": {
+          "componente": "KA1",
+          "morsetto": "A2"
+        },
+        "punti": [
+          {
+            "x": 400,
+            "y": 500
+          },
+          {
+            "x": 200,
+            "y": 500
+          }
+        ]
+      },
+      {
+        "id": "filo-12",
+        "da": {
+          "componente": "KA1",
+          "morsetto": "A2"
+        },
+        "a": {
+          "componente": "Q1",
+          "morsetto": "4"
+        },
+        "punti": [
+          {
+            "x": 200,
+            "y": 520
+          },
+          {
+            "x": 480,
+            "y": 520
+          },
+          {
+            "x": 480,
+            "y": 220
+          },
+          {
+            "x": 160,
+            "y": 220
+          }
+        ]
+      }
+    ]
+  }
+}

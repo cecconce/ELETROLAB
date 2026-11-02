@@ -98,6 +98,8 @@ export function testoProblema(p: Problema, schema: Schema, libreria: Libreria): 
       return t("problemi.cortocircuito", { poli });
     case "interventoCortocircuito":
       return t("problemi.interventoCortocircuito", { componente: principale, poli });
+    case "interventoProva":
+      return t("problemi.interventoProva", { componente: principale });
     case "interventoSovraccarico":
       return t("problemi.interventoSovraccarico", { componente: principale });
     case "oscillazione":

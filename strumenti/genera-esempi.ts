@@ -347,7 +347,77 @@ function lampadaTrePunti(): Schema {
   return b.schema();
 }
 
+/**
+ * Esempio 7 (impianto civile): magnetotermico differenziale generale, punto
+ * luce comandato da un interruttore e campanello con il suo pulsante.
+ */
+function impiantoCivile(): Schema {
+  const b = costruttore();
+  b.posa("rete-1f", "rete-monofase", "", 100, 40); // L in x=120, N in x=140
+  b.posa("Q1", "differenziale", "Q1", 100, 120); // 1-2 fase (x=120), 3-4 neutro (x=160)
+  b.posa("S1", "interruttore-unipolare", "S1", 100, 260);
+  b.posa("H1", "lampada", "H1", 100, 400, { parametri: { colore: "giallo" } });
+  b.posa("S2", "pulsante-civile", "S2", 220, 260);
+  b.posa("HA1", "suoneria", "HA1", 220, 400);
+  b.filo("rete-1f:L", "Q1:1");
+  b.filo("rete-1f:N", "Q1:3");
+  b.filo("Q1:2", "S1:L");
+  b.filo("Q1:2", "S2:L", 230);
+  b.filo("S1:1", "H1:X1");
+  b.filo("S2:1", "HA1:X1");
+  b.filo("HA1:X2", "H1:X2", undefined, [
+    { x: 240, y: 500 },
+    { x: 120, y: 500 },
+  ]);
+  b.filo("H1:X2", "Q1:4", undefined, [
+    { x: 120, y: 520 },
+    { x: 340, y: 520 },
+    { x: 340, y: 220 },
+    { x: 160, y: 220 },
+  ]);
+  return b.schema();
+}
+
+/**
+ * Esempio 8 (impianto civile): lampada comandata da tre pulsanti con il relè
+ * passo-passo KA1: ogni impulso cambia lo stato del suo contatto.
+ */
+function relePassoPasso(): Schema {
+  const b = costruttore();
+  b.posa("rete-1f", "rete-monofase", "", 100, 40);
+  b.posa("Q1", "magnetotermico-2p", "Q1", 100, 120);
+  b.posa("S1", "pulsante-civile", "S1", 100, 260);
+  b.posa("S2", "pulsante-civile", "S2", 180, 260);
+  b.posa("S3", "pulsante-civile", "S3", 260, 260);
+  b.posa("KA1", "rele-passo-passo", "KA1", 180, 400);
+  b.posa("KA1-contatto", "contatto-na", "KA1", 380, 260);
+  b.posa("H1", "lampada", "H1", 380, 400, { parametri: { colore: "giallo" } });
+  b.filo("rete-1f:L", "Q1:1");
+  b.filo("rete-1f:N", "Q1:3");
+  b.filo("Q1:2", "S1:L");
+  b.filo("Q1:2", "S2:L", 230);
+  b.filo("Q1:2", "S3:L", 230);
+  b.filo("Q1:2", "KA1-contatto:13", 230);
+  b.filo("S1:1", "KA1:A1", 370);
+  b.filo("S2:1", "KA1:A1");
+  b.filo("S3:1", "KA1:A1", 370);
+  b.filo("KA1-contatto:14", "H1:X1");
+  b.filo("H1:X2", "KA1:A2", undefined, [
+    { x: 400, y: 500 },
+    { x: 200, y: 500 },
+  ]);
+  b.filo("KA1:A2", "Q1:4", undefined, [
+    { x: 200, y: 520 },
+    { x: 480, y: 520 },
+    { x: 480, y: 220 },
+    { x: 160, y: 220 },
+  ]);
+  return b.schema();
+}
+
 const ESEMPI: Record<string, () => Schema> = {
+  "impianto-civile.elab": impiantoCivile,
+  "rele-passo-passo.elab": relePassoPasso,
   "lampada-tre-punti.elab": lampadaTrePunti,
   "marcia-arresto.elab": marciaArresto,
   "comando-piu-punti.elab": comandoPiuPunti,
