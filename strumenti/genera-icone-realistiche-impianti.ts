@@ -276,6 +276,31 @@ icone["sensore-prossimita.svg"] = verticale(
     `<circle cx="20" cy="15.5" r="2.6" fill="#ffc107" stroke="#9a7300" stroke-width="0.6"/>`,
 );
 
+// Sensori di processo: corpo metallico con il loro organo di misura.
+icone["galleggiante.svg"] = verticale(
+  `<rect x="12" y="20" width="16" height="22" rx="2" fill="url(#cr)" stroke="#5f686e"/><path d="M14 40L6 60" stroke="#37474f" stroke-width="2"/>` +
+    `<ellipse cx="6" cy="62" rx="5.5" ry="4" fill="#e65100" stroke="#8a3000"/><path d="M2 62H10" stroke="#ffffff" stroke-width="0.8" opacity="0.5"/>` +
+    `<path d="M10 56Q14 54 18 56T26 56T34 56" fill="none" stroke="#1e88e5" stroke-width="1.4"/>`,
+);
+icone["pressostato.svg"] = verticale(
+  `<rect x="11" y="18" width="18" height="26" rx="2" fill="url(#pg)" stroke="#6c757b"/>` +
+    `<circle cx="20" cy="31" r="7" fill="#ffffff" stroke="#37474f"/><path d="M20 31L24 27" stroke="#c62828" stroke-width="1.4" stroke-linecap="round"/>` +
+    `<rect x="17" y="44" width="6" height="10" fill="url(#cr)" stroke="#5f686e"/><rect x="15" y="54" width="10" height="5" rx="1" fill="#b87333"/>` +
+    scritta(20, 24, "bar", 3.8, "#37474f"),
+);
+icone["termostato.svg"] = verticale(
+  `<rect x="10" y="18" width="20" height="30" rx="3" fill="#fafafa" stroke="#9aa3a9"/>` +
+    `<circle cx="20" cy="31" r="8" fill="url(#cr)" stroke="#5f686e"/><circle cx="20" cy="31" r="5.5" fill="#ffffff"/><path d="M20 31L20 26.5" stroke="#d84315" stroke-width="1.5" stroke-linecap="round"/>` +
+    scritta(20, 45, "°C", 5.5, "#d84315", 'font-weight="bold"') +
+    `<rect x="18.5" y="48" width="3" height="12" rx="1.5" fill="url(#cr)"/><circle cx="20" cy="61" r="2.6" fill="#d84315"/>`,
+);
+icone["fotocellula.svg"] = verticale(
+  `<rect x="10" y="20" width="20" height="38" rx="3" fill="url(#ps)"/>` +
+    `<rect x="12" y="26" width="16" height="12" rx="2" fill="#2b1414"/><circle cx="20" cy="32" r="4" fill="#d32f2f" opacity="0.85"/><circle cx="18.5" cy="30.5" r="1.3" fill="#ffffff" opacity="0.7"/>` +
+    `<path d="M2 32H9" stroke="#e53935" stroke-width="1.2" stroke-dasharray="2 1.5"/>` +
+    `<circle cx="20" cy="50" r="2" fill="#ffc107"/>`,
+);
+
 // ============================================================ Impianti civili (frutti da incasso)
 /** Frutto modulare bianco con tasto basculante (o pulsante) e morsetti nelle posizioni date. */
 function frutto(morsetti: string, tasto: string, defsExtra = ""): string {

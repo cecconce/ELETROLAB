@@ -94,3 +94,23 @@ describe("impianti civili", () => {
     expect(accesa(s)).toBe(true);
   });
 });
+
+describe("sensori di processo", () => {
+  it("galleggiante, pressostato e fotocellula chiudono quando azionati, il termostato apre", () => {
+    for (const [tipo, a, b, chiusoARiposo] of [
+      ["galleggiante", "13", "14", false],
+      ["pressostato", "13", "14", false],
+      ["fotocellula", "13", "14", false],
+      ["termostato", "11", "12", true],
+    ] as const) {
+      const c: Circuito = {
+        componenti: [comp("RM", "rete-monofase", ""), comp("B1", tipo), comp("H1", "lampada")],
+        fili: [filo("RM:L", `B1:${a}`), filo(`B1:${b}`, "H1:X1"), filo("H1:X2", "RM:N")],
+      };
+      const s = avviaSessione(c);
+      expect(accesa(s), tipo).toBe(chiusoARiposo);
+      expect(azioneClic(tipo)).toBe("manuale");
+      expect(accesa(clicGiu(s, "B1")), tipo).toBe(!chiusoARiposo);
+    }
+  });
+});

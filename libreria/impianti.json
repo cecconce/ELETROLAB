@@ -869,7 +869,8 @@
           "x": 20,
           "y": 80
         }
-      ]
+      ],
+      "comandaContatti": true
     },
     {
       "id": "finecorsa-na",
@@ -941,6 +942,120 @@
         "presenza"
       ],
       "icona": "sensore-prossimita.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "galleggiante",
+      "nome": "Interruttore a galleggiante (livello)",
+      "categoria": "comandi",
+      "sigla": "SL",
+      "descrizione": "Contatto comandato da un galleggiante: si chiude quando il liquido nel serbatoio raggiunge il livello del galleggiante. In simulazione: clic per alzare o abbassare il livello.",
+      "paroleChiave": [
+        "galleggiante",
+        "livello",
+        "serbatoio",
+        "pompa",
+        "acqua"
+      ],
+      "icona": "galleggiante.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "pressostato",
+      "nome": "Pressostato",
+      "categoria": "comandi",
+      "sigla": "SP",
+      "descrizione": "Contatto comandato dalla pressione (aria compressa, acqua): si chiude quando la pressione supera il valore impostato. In simulazione: clic per far salire o scendere la pressione.",
+      "paroleChiave": [
+        "pressostato",
+        "pressione",
+        "compressore",
+        "autoclave"
+      ],
+      "icona": "pressostato.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "termostato",
+      "nome": "Termostato",
+      "categoria": "comandi",
+      "sigla": "ST",
+      "descrizione": "Contatto comandato dalla temperatura: chiuso quando fa freddo, si apre quando la temperatura supera quella impostata (per esempio per spegnere un riscaldatore). In simulazione: clic per scaldare o raffreddare.",
+      "paroleChiave": [
+        "termostato",
+        "temperatura",
+        "riscaldamento",
+        "caldaia"
+      ],
+      "icona": "termostato.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "11",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "12",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "fotocellula",
+      "nome": "Fotocellula (sensore di presenza)",
+      "categoria": "comandi",
+      "sigla": "B",
+      "descrizione": "Sensore che si chiude quando un oggetto interrompe il raggio di luce (cancelli, nastri trasportatori, porte automatiche). In simulazione: clic per mettere o togliere l'ostacolo.",
+      "paroleChiave": [
+        "fotocellula",
+        "fotoelettrico",
+        "presenza",
+        "cancello",
+        "raggio"
+      ],
+      "icona": "fotocellula.svg",
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [

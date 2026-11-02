@@ -204,6 +204,11 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
     normalmenteChiuso: false,
     comando: { tipo: "manuale" },
   },
+  // Sensori di processo a posizione mantenuta (livello, pressione, temperatura, presenza).
+  galleggiante: { tipo: "contatto", tratti: [["13", "14"]], normalmenteChiuso: false, comando: { tipo: "manuale" } },
+  pressostato: { tipo: "contatto", tratti: [["13", "14"]], normalmenteChiuso: false, comando: { tipo: "manuale" } },
+  termostato: { tipo: "contatto", tratti: [["11", "12"]], normalmenteChiuso: true, comando: { tipo: "manuale" } },
+  fotocellula: { tipo: "contatto", tratti: [["13", "14"]], normalmenteChiuso: false, comando: { tipo: "manuale" } },
   // Comandi degli impianti civili (frutti da incasso).
   "interruttore-unipolare": { tipo: "contatto", tratti: [["L", "1"]], normalmenteChiuso: false, comando: { tipo: "manuale" } },
   "interruttore-bipolare": {
