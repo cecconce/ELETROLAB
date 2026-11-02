@@ -7,6 +7,7 @@
 //
 // Uso: npx vite-node strumenti/genera-libreria-elettronica.ts
 import { readFileSync, writeFileSync } from "node:fs";
+import { disegnoGeneratore, disegnoMultimetro, disegnoOscilloscopio } from "./disegni-strumenti-elettronica";
 
 const FONT = 'font-family="Segoe UI, Arial, sans-serif"';
 const svg = (w: number, h: number, corpo: string) =>
@@ -617,6 +618,10 @@ voce(
 );
 
 // ---------------------------------------------------------------- Scrittura
+// Strumenti da banco: disegni realistici al posto dei simboli a tratto (Fase 8).
+icone["multimetro.svg"] = disegnoMultimetro();
+icone["generatore-funzioni.svg"] = disegnoGeneratore();
+icone["oscilloscopio.svg"] = disegnoOscilloscopio();
 for (const [nome, contenuto] of Object.entries(icone)) writeFileSync(`libreria/icone/${nome}`, contenuto);
 for (const v of voci) readFileSync(`libreria/icone/${v.icona}`);
 const libreria = {

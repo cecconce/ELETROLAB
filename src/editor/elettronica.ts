@@ -147,7 +147,7 @@ export function testoLettura(l: { valore: number | null; unita: string } | undef
 /** Che cosa fa un clic durante la simulazione. */
 function clicElettronica(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante") return "pulsante";
-  if (tipo === "interruttore" || tipo === "interruttore-logico" || tipo === "potenziometro") return "manuale";
+  if (tipo === "interruttore" || tipo === "interruttore-logico" || tipo === "potenziometro" || tipo === "multimetro") return "manuale";
   return null;
 }
 
@@ -162,6 +162,7 @@ export function vistaDaSessioneElettronica(s: SessioneElettronica, schema: Schem
     if (c.tipo === "led") elettronica.bruciato = s.bruciati.has(c.id);
     if (c.tipo === "potenziometro") elettronica.posizione = s.interazioni.posizioni[c.id] ?? 0.5;
     if (c.tipo === "multimetro" || c.tipo === "wattmetro") elettronica.lettura = testoLettura(s.letture[c.id]);
+    if (m && c.tipo === "multimetro") elettronica.modalita = String(m.parametri.modalita ?? "V");
     const digitale = s.digitali[c.id];
     if (digitale) {
       elettronica.livelli = { ...digitale.ingressi, ...digitale.uscite };

@@ -60,7 +60,7 @@ describe("file della libreria forniti con l'app", () => {
         // Arduino sono disegni realistici a colori fissi (come i componenti veri).
         if (m.id !== "arduino") expect(svg, v.icona).toContain("currentColor");
         // Le icone sono originali e senza script o risorse esterne.
-        expect(svg).not.toMatch(/<script|href=|url\(/i);
+        expect(svg).not.toMatch(/<script|href=|url\((?!#[a-zA-Z]\w*\))/i);
         // XML valido: una "&" non scritta come &amp; rende l'immagine illeggibile (e il foglio non si disegna).
         expect(svg, v.icona).not.toMatch(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/);
       }

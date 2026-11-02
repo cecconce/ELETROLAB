@@ -86,6 +86,25 @@ describe("sessione Elettronica", () => {
     expect(ac.letture.XWM1.valore!).toBeLessThan(5.4);
   });
 
+  it("multimetro: un clic gira la manopola (V → A → Ω) senza cambiare lo schema", () => {
+    const parametri = { modalita: "V" };
+    const s = circuito(
+      [["V1", "generatore-dc", { tensione: 10 }], ["R1", "resistenza", { resistenza: 1000 }], ["GND", "massa"], ["XMM1", "multimetro", parametri]],
+      [["V1.+", "R1.1", "XMM1.+"], ["R1.2", "V1.-", "GND.0", "XMM1.COM"]],
+    );
+    expect(s.letture.XMM1.unita).toBe("V");
+    clicGiuElettronica(s, "XMM1");
+    passoElettronica(s, 0.001);
+    expect(s.letture.XMM1.unita).toBe("A");
+    clicGiuElettronica(s, "XMM1");
+    passoElettronica(s, 0.001);
+    expect(s.letture.XMM1.unita).toBe("Ω");
+    clicGiuElettronica(s, "XMM1", true);
+    passoElettronica(s, 0.001);
+    expect(s.letture.XMM1.unita).toBe("A");
+    expect(parametri.modalita).toBe("V"); // i parametri dello schema non vengono toccati
+  });
+
   it("l'ohmmetro misura le resistenze (anche in un circuito alimentato, a generatori spenti)", () => {
     const s = circuito(
       [["V1", "generatore-dc", { tensione: 10 }], ["R1", "resistenza", { resistenza: 1000 }], ["R2", "resistenza", { resistenza: 1000 }], ["GND", "massa"], ["XMM1", "multimetro", { modalita: "Ω" }]],

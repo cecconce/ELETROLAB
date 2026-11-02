@@ -4,6 +4,7 @@
 // ciascun canale. La traccia parte quando il canale A sale attraverso il suo
 // valore medio (trigger sul fronte di salita), così un segnale periodico sta
 // fermo sullo schermo come su uno strumento vero. "Blocca" congela l'immagine.
+import { Manopola } from "./Manopola";
 import { useEffect, useRef, useState } from "react";
 import { registrazionePer, rispostaBode, scriviValore, type RispostaBode, type SessioneElettronica, type Storia } from "../motori/elettronica";
 import { t } from "../testi";
@@ -121,6 +122,15 @@ function disegna(canvas: HTMLCanvasElement, storia: { t: number[]; a: number[]; 
   ctx.moveTo(w / 2 + 0.5, 0);
   ctx.lineTo(w / 2 + 0.5, h);
   ctx.stroke();
+  // Scritte sullo schermo, come sugli oscilloscopi digitali: volt/divisione dei canali e base dei tempi.
+  ctx.font = "bold 11px Consolas, monospace";
+  ctx.fillStyle = COLORE_A;
+  ctx.fillText(`CH1 ${scriviValore(schermo.voltA, "V")}`, 6, h - 6);
+  ctx.fillStyle = COLORE_B;
+  ctx.fillText(`CH2 ${scriviValore(schermo.voltB, "V")}`, 110, h - 6);
+  ctx.fillStyle = "#e8f5e9";
+  ctx.fillText(`M ${scriviValore(schermo.baseTempi, "s")}`, w - 86, h - 6);
+  ctx.shadowBlur = 6;
   const durata = schermo.baseTempi * DIV_X;
   const { inizio, da } = finestraTraccia(storia, durata);
   let pp = { ppa: 0, ppb: 0 };
@@ -130,6 +140,7 @@ function disegna(canvas: HTMLCanvasElement, storia: { t: number[]; a: number[]; 
   ] as const) {
     const valori = storia[canale];
     ctx.strokeStyle = colore;
+    ctx.shadowColor = colore; // bagliore del fosforo
     ctx.lineWidth = 2;
     ctx.beginPath();
     let min = Infinity;
@@ -152,6 +163,7 @@ function disegna(canvas: HTMLCanvasElement, storia: { t: number[]; a: number[]; 
     const ampiezza = Number.isFinite(max - min) ? max - min : 0;
     pp = canale === "a" ? { ...pp, ppa: ampiezza } : { ...pp, ppb: ampiezza };
   }
+  ctx.shadowBlur = 0;
   return pp;
 }
 
@@ -220,22 +232,10 @@ export function PannelloOscilloscopio({ sessione, id, sigla, indice = 0 }: { ses
     return () => window.clearInterval(timer);
   }, [sessione, id, bloccato, aperto, schermo]);
 
-  const scelta = (etichetta: string, valori: number[], valore: number, unita: string, onCambia: (v: number) => void, colore?: string) => (
-    <label className="osc-scelta" style={colore ? { borderColor: colore } : undefined}>
-      <span>{etichetta}</span>
-      <select value={valore} onChange={(e) => onCambia(Number(e.target.value))}>
-        {valori.map((v) => (
-          <option key={v} value={v}>
-            {scriviValore(v, unita)}
-            {t("elettronica.oscilloscopio.perDivisione")}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
+  const perDiv = (unita: string) => (v: number) => `${scriviValore(v, unita)}${t("elettronica.oscilloscopio.perDivisione")}`;
 
   return (
-    <section className="pannello-oscilloscopio" style={stile} aria-label={t("elettronica.oscilloscopio.titolo", { sigla })} data-testid={`oscilloscopio-${sigla}`}>
+    <section className="pannello-oscilloscopio strumento-reale" style={stile} aria-label={t("elettronica.oscilloscopio.titolo", { sigla })} data-testid={`oscilloscopio-${sigla}`}>
       <header onMouseDown={suGiu} title={t("elettronica.oscilloscopio.sposta")}>
         <strong>📈 {t("elettronica.oscilloscopio.titolo", { sigla })}</strong>
         {aperto && (
@@ -249,17 +249,25 @@ export function PannelloOscilloscopio({ sessione, id, sigla, indice = 0 }: { ses
       </header>
       {aperto && (
         <div className="osc-corpo">
-          <canvas ref={canvas} width={360} height={216} className="osc-schermo" />
+          {/* Schermo con la cornice, come su un oscilloscopio da banco. */}
+          <div className="osc-cornice">
+            <canvas ref={canvas} width={360} height={216} className="osc-schermo" />
+          </div>
+          {/* Pannello comandi: manopole VOLTS/DIV dei due canali e TIME/DIV, tasti AUTO e RUN/STOP. */}
           <div className="osc-comandi">
-            {scelta(t("elettronica.oscilloscopio.baseTempi"), BASI_TEMPI, schermo.baseTempi, "s", (baseTempi) => setSchermo((s) => ({ ...s, baseTempi })))}
-            {scelta(t("elettronica.oscilloscopio.canaleA"), VOLT_DIV, schermo.voltA, "V", (voltA) => setSchermo((s) => ({ ...s, voltA })), COLORE_A)}
-            {scelta(t("elettronica.oscilloscopio.canaleB"), VOLT_DIV, schermo.voltB, "V", (voltB) => setSchermo((s) => ({ ...s, voltB })), COLORE_B)}
-            <button type="button" className="pulsante piccolo" onClick={auto} title={t("elettronica.oscilloscopio.autoSuggerimento")}>
-              {t("elettronica.oscilloscopio.auto")}
-            </button>
-            <button type="button" className="pulsante piccolo" onClick={() => setBloccato((b) => !b)}>
-              {bloccato ? t("elettronica.oscilloscopio.riprendi") : t("elettronica.oscilloscopio.ferma")}
-            </button>
+            <div className="osc-manopole">
+              <Manopola etichetta={t("elettronica.oscilloscopio.canaleA")} valori={VOLT_DIV} valore={schermo.voltA} scrivi={perDiv("V")} onCambia={(voltA) => setSchermo((s) => ({ ...s, voltA }))} colore={COLORE_A} />
+              <Manopola etichetta={t("elettronica.oscilloscopio.canaleB")} valori={VOLT_DIV} valore={schermo.voltB} scrivi={perDiv("V")} onCambia={(voltB) => setSchermo((s) => ({ ...s, voltB }))} colore={COLORE_B} />
+            </div>
+            <Manopola etichetta={t("elettronica.oscilloscopio.baseTempi")} valori={BASI_TEMPI} valore={schermo.baseTempi} scrivi={perDiv("s")} onCambia={(baseTempi) => setSchermo((s) => ({ ...s, baseTempi }))} dimensione={62} />
+            <div className="osc-tasti">
+              <button type="button" className="tasto-strumento" onClick={auto} title={t("elettronica.oscilloscopio.autoSuggerimento")}>
+                {t("elettronica.oscilloscopio.auto")}
+              </button>
+              <button type="button" className={bloccato ? "tasto-strumento fermo" : "tasto-strumento in-corsa"} onClick={() => setBloccato((b) => !b)}>
+                {bloccato ? t("elettronica.oscilloscopio.riprendi") : t("elettronica.oscilloscopio.ferma")}
+              </button>
+            </div>
           </div>
         </div>
       )}

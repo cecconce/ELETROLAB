@@ -69,12 +69,15 @@ export function DisegnoElettronica({ componente: c, aspetto, colori }: { compone
       );
     }
     case "multimetro": {
-      const modo = String(valoreParametro(c.parametri, c.tipo, "modalita"));
+      // Display a cristalli liquidi e indice della manopola sulla funzione scelta (V −50°, A 0°, Ω +50°).
+      const modo = e?.modalita ?? String(valoreParametro(c.parametri, c.tipo, "modalita"));
+      const gradi = modo === "A" ? 0 : modo === "Ω" ? 50 : -50;
+      const a = ((gradi - 90) * Math.PI) / 180;
       return (
         <Group listening={false}>
-          <Rect x={13} y={13} width={54} height={24} fill="#c5d6b4" cornerRadius={2} />
-          <Text x={13} y={17} width={52} align="right" text={e?.lettura ?? "– – –"} fontSize={e?.lettura && e.lettura.length > 8 ? 10 : 12} fontStyle="bold" fill="#1b2a12" fontFamily="Consolas, monospace" />
-          <Text x={28} y={50} width={24} align="center" text={modo} fontSize={11} fontStyle="bold" fill={colori.testo} fontFamily={FONT} />
+          <Text x={13} y={14} width={52} align="right" text={e?.lettura ?? (aspetto ? "– – –" : "")} fontSize={e?.lettura && e.lettura.length > 8 ? 10 : 13} fontStyle="bold" fill="#1b2a12" fontFamily="Consolas, monospace" />
+          <Text x={15} y={29} width={30} text={modo === "Ω" ? "OHM" : modo === "A" ? "DC A" : "DC V"} fontSize={6} fill="#1b2a12" fontFamily={FONT} />
+          <Line points={[40, 57, 40 + Math.cos(a) * 10, 57 + Math.sin(a) * 10]} stroke="#ffffff" strokeWidth={2.4} lineCap="round" />
         </Group>
       );
     }
@@ -88,9 +91,9 @@ export function DisegnoElettronica({ componente: c, aspetto, colori }: { compone
     case "generatore-funzioni":
       return (
         <Group listening={false}>
-          <Rect x={13} y={13} width={54} height={26} fill={colori.foglio} />
-          <Text x={13} y={14} width={54} align="center" text={etichettaValore(c.tipo, c.parametri).split(" ")[0]} fontSize={13} fill={colori.testo} fontFamily={FONT} />
-          <Text x={9} y={28} width={62} align="center" text={etichettaValore(c.tipo, c.parametri).split(" ").slice(1, 3).join(" ")} fontSize={8} fill={colori.testo} fontFamily={FONT} />
+          {/* Display del generatore: forma d'onda e frequenza in grande, ampiezza sotto (colori di un display a LED). */}
+          <Text x={12} y={11} width={56} align="center" text={etichettaValore(c.tipo, c.parametri).split(" ")[0]} fontSize={12} fontStyle="bold" fill="#4dd0e1" fontFamily="Consolas, monospace" />
+          <Text x={12} y={25} width={56} align="center" text={etichettaValore(c.tipo, c.parametri).split(" ").slice(1, 3).join(" ")} fontSize={8} fill="#80deea" fontFamily="Consolas, monospace" />
         </Group>
       );
     case "interruttore-logico": {

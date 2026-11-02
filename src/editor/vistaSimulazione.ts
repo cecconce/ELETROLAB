@@ -79,6 +79,8 @@ export interface AspettoComponente {
     bruciato?: boolean;
     posizione?: number;
     lettura?: string;
+    /** Multimetro: funzione attuale (si cambia anche con un clic in simulazione). */
+    modalita?: string;
     /** Componenti digitali: livello logico di ingressi e uscite; contatore: conteggio. */
     livelli?: Record<string, 0 | 1>;
     conteggio?: number;

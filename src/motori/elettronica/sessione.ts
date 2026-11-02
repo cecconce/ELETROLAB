@@ -87,7 +87,7 @@ function num(c: ComponenteElettronico, nome: string): number {
   if (typeof v === "number" && Number.isFinite(v)) return v;
   return typeof p === "number" ? p : 0;
 }
-function testo(c: ComponenteElettronico, nome: string): string {
+export function testo(c: ComponenteElettronico, nome: string): string {
   const v = c.parametri[nome];
   return typeof v === "string" ? v : String(PARAMETRI_PREDEFINITI[c.tipo]?.[nome] ?? "");
 }
@@ -464,6 +464,14 @@ export function clicGiuElettronica(s: SessioneElettronica, id: string, indietro 
   if (c.tipo === "interruttore" || c.tipo === "interruttore-logico") {
     if (s.interazioni.chiusi.has(id)) s.interazioni.chiusi.delete(id);
     else s.interazioni.chiusi.add(id);
+  } else if (c.tipo === "multimetro") {
+    // Il clic gira la manopola: V → A → Ω (indietro: al contrario). Copia dei parametri, lo schema non cambia.
+    const funzioni = ["V", "A", "Ω"];
+    const i = Math.max(0, funzioni.indexOf(testo(c, "modalita")));
+    c.parametri = { ...c.parametri, modalita: funzioni[(i + (indietro ? 2 : 1)) % 3] };
+    aggiornaStrumenti(s);
+    s.versione++;
+    return;
   } else if (c.tipo === "pulsante") s.interazioni.premuti.add(id);
   else if (c.tipo === "potenziometro") {
     const p = s.interazioni.posizioni[id] ?? 0.5;

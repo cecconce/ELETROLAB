@@ -1251,3 +1251,97 @@ button.io-plc {
   color: #ffffff;
   font-weight: 600;
 }
+
+/* Oscilloscopio con l'aspetto di uno strumento da banco (Fase 8). */
+.pannello-oscilloscopio.strumento-reale {
+  background: linear-gradient(180deg, #5f666d 0%, #464c52 55%, #3a3f44 100%);
+  color: #eceff1;
+  border: 2px solid #2a2e32;
+  border-radius: 12px;
+  padding: 8px 12px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.strumento-reale header strong {
+  letter-spacing: 0.04em;
+}
+.strumento-reale header .pulsante {
+  background: #2f3438;
+  color: #eceff1;
+  border-color: #1d2124;
+}
+.strumento-reale .osc-cornice {
+  padding: 8px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1d2124, #101315);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.strumento-reale .osc-schermo {
+  border: none;
+  border-radius: 4px;
+  display: block;
+  box-shadow: 0 0 18px rgba(80, 220, 150, 0.12);
+}
+.strumento-reale .osc-comandi {
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2d3236, #23272a);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.osc-manopole {
+  display: flex;
+  gap: 6px;
+}
+.manopola {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  user-select: none;
+}
+.manopola svg {
+  cursor: pointer;
+  outline: none;
+}
+.manopola svg:focus-visible {
+  filter: drop-shadow(0 0 3px #64b5f6);
+}
+.manopola-etichetta {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+.manopola-valore {
+  font-family: Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.osc-tasti {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+.tasto-strumento {
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 5px;
+  border: 1px solid #111;
+  color: #f5f5f5;
+  background: linear-gradient(180deg, #6b737a, #3d4348);
+  box-shadow: 0 2px 0 #111, inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+}
+.tasto-strumento:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #111;
+}
+.tasto-strumento.in-corsa {
+  background: linear-gradient(180deg, #43a047, #2e7d32);
+}
+.tasto-strumento.fermo {
+  background: linear-gradient(180deg, #e53935, #b71c1c);
+}
