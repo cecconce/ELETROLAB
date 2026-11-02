@@ -159,6 +159,14 @@ export function elementiCircuito(
         el.push({ tipo: "generatore", id: `${c.id}:out`, nodo: n("OUT"), volt: 0.5 + 0.01 * gradi, ohm: 100 });
         break;
       }
+      case "sensore-pir": {
+        // Uscita digitale: 5 V quando «vede» un movimento (scelto con un clic), altrimenti 0 V.
+        // Funziona solo se alimentato (VCC a 5 V rispetto a GND): il controllo si fa nell'aspetto.
+        const movimento = (interazioni.posizioni[c.id] ?? 0) >= 0.5;
+        R(`${c.id}:alim`, n("VCC"), n("GND"), 10000);
+        el.push({ tipo: "generatore", id: `${c.id}:out`, nodo: n("OUT"), volt: movimento ? 5 : 0, ohm: 100 });
+        break;
+      }
       case "interruttore-slitta": {
         // Il centrale va a sinistra (1) o a destra (2) secondo la posizione della levetta.
         const destra = (interazioni.posizioni[c.id] ?? 0) >= 0.5;

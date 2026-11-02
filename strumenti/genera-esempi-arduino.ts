@@ -39,7 +39,10 @@ function costruttore() {
       const n = (conta.get(tipo) ?? 0) + 1;
       conta.set(tipo, n);
       const id = `${tipo}-${n}`;
-      componenti.push({ id, tipo, etichetta: v.sigla ? `${v.sigla}${n}` : "", x, y, larghezza: v.larghezza, altezza: v.altezza, ...extra });
+      // Sigle numerate per lettera (D1, D2… anche fra LED di colori diversi), come fa l'editor.
+      const k = (conta.get(`sigla:${v.sigla}`) ?? 0) + 1;
+      conta.set(`sigla:${v.sigla}`, k);
+      componenti.push({ id, tipo, etichetta: v.sigla ? `${v.sigla}${k}` : "", x, y, larghezza: v.larghezza, altezza: v.altezza, ...extra });
       return id;
     },
     /** LED con l'anodo nel foro indicato (il catodo cade due colonne più a destra). */
@@ -514,6 +517,47 @@ void setup() {
 }
 
 void loop() {
+}
+`),
+  );
+}
+
+// 11. Allarme con il sensore di movimento
+{
+  const b = costruttore();
+  alimenta(b);
+  // Sensore con i piedini nei fori e20 (VCC), e21 (OUT), e22 (GND).
+  const f = foro("e20");
+  b.posa("sensore-pir", f.x - 20, f.y - 80);
+  b.filo("a20", "Ap20");
+  b.filo("a22", "Am22");
+  b.filo("b21", "U:D2", ARANCIONE);
+  scrivi(
+    "arduino-movimento.elab",
+    b.schema(`// Allarme: quando il sensore PIR vede un movimento si accende il LED «L»
+// (pin 13) e il monitor seriale lo scrive, una volta sola per ogni movimento.
+
+const int SENSORE = 2;
+int prima = LOW;   // stato letto al giro precedente
+
+void setup() {
+  pinMode(SENSORE, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Allarme pronto");
+}
+
+void loop() {
+  int ora = digitalRead(SENSORE);
+  digitalWrite(LED_BUILTIN, ora);
+  if (ora == HIGH && prima == LOW) {
+    Serial.println("Movimento rilevato!");
+  }
+  if (ora == LOW && prima == HIGH) {
+    Serial.println("Nessun movimento");
+  }
+  prima = ora;
+  delay(100);
 }
 `),
   );

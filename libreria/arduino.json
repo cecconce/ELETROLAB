@@ -2818,6 +2818,40 @@
       "icona": "ard-tmp36.svg"
     },
     {
+      "id": "sensore-pir",
+      "nome": "Sensore di movimento (PIR)",
+      "categoria": "ingressi",
+      "sigla": "U",
+      "descrizione": "Sensore a infrarossi passivi: l'uscita OUT va a HIGH quando vede muoversi una persona davanti, altrimenti resta LOW. Piedini: VCC a 5V, OUT a un pin digitale (lo leggi con digitalRead), GND a GND. In simulazione: clic per simulare il movimento (un altro clic per fermarlo).",
+      "paroleChiave": [
+        "pir",
+        "movimento",
+        "presenza",
+        "infrarossi",
+        "allarme"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "VCC",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "OUT",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "GND",
+          "x": 60,
+          "y": 80
+        }
+      ],
+      "icona": "ard-sensore-pir.svg"
+    },
+    {
       "id": "interruttore-slitta",
       "nome": "Interruttore a slitta",
       "categoria": "ingressi",

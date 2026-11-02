@@ -140,7 +140,7 @@ void loop() {
 /** Che cosa fa un clic sui componenti del banco durante la simulazione. */
 function clicArduino(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante") return "pulsante";
-  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro") return "manuale";
+  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro" || tipo === "sensore-pir") return "manuale";
   return null;
 }
 
@@ -161,6 +161,7 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.bruciato = a.bruciato ?? false;
     }
     if (c.tipo === "potenziometro") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0.5;
+    if (c.tipo === "sensore-pir") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
     if (c.tipo === "interruttore-slitta") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
     if (c.tipo === "tmp36") arduino.temperatura = s.interazioni.temperature[c.id] ?? TEMPERATURA_PREDEFINITA;
     if (c.tipo === "motore-dc") arduino.velocita = a.velocita ?? 0;

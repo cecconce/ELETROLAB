@@ -207,7 +207,7 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false)
     // Il selettore passa alla funzione seguente (o precedente con il clic destro).
     const n = FUNZIONI_MULTIMETRO.length;
     s.interazioni.posizioni[id] = (indiceFunzioneMultimetro(s.interazioni, c) + (indietro ? n - 1 : 1)) % n;
-  } else if (c.tipo === "interruttore-slitta") {
+  } else if (c.tipo === "interruttore-slitta" || c.tipo === "sensore-pir") {
     s.interazioni.posizioni[id] = (s.interazioni.posizioni[id] ?? 0) >= 0.5 ? 0 : 1;
   } else if (c.tipo === "fotoresistenza") {
     const livelli = [0, 0.25, 0.5, 0.75, 1];

@@ -216,6 +216,15 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
     }
     case "motore-dc":
       return <MotoreDc velocita={a?.velocita ?? 0} />;
+    case "sensore-pir":
+      // Movimento rilevato: la cupola si illumina e compare la scritta.
+      return inSimulazione && (a?.posizione ?? 0) >= 0.5 ? (
+        <Group listening={false}>
+          <Circle x={40} y={38} radius={24} fill="#ffcc80" opacity={0.45} shadowColor="#ff9800" shadowBlur={20} shadowOpacity={1} />
+          <Rect x={0} y={-18} width={80} height={16} cornerRadius={4} fill="#e65100" />
+          <Text x={0} y={-15} width={80} align="center" text="MOVIMENTO" fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+        </Group>
+      ) : null;
     case "tmp36":
       return a?.temperatura !== undefined ? (
         <Group listening={false}>

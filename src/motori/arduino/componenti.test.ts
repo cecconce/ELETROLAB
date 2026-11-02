@@ -214,6 +214,14 @@ describe("componenti aggiunti: LED RGB, motore, sensore di temperatura, interrut
     expect(testoMultimetro("Ω", 4700)).toBe("4,70 kΩ");
     expect(testoMultimetro("V", 0)).toBe("0,00 V");
   });
+  it("sensore di movimento: OUT a HIGH solo con il movimento", () => {
+    const comp: ComponenteArduino[] = [U, { id: "P", tipo: "sensore-pir" }];
+    const fili = { "U.5V": "p", "P.VCC": "p", "P.OUT": "o", "U.D2": "o", "P.GND": "m", "U.GND1": "m" };
+    const fermo = calcola(comp, fili, { D2: { modo: "INPUT", livello: 0 } });
+    expect(letturaDigitale(fermo.r, "o")).toBe(0);
+    const mosso = calcola(comp, fili, { D2: { modo: "INPUT", livello: 0 } }, { ...nessuna, posizioni: { P: 1 } });
+    expect(letturaDigitale(mosso.r, "o")).toBe(1);
+  });
   it("motore in continua: gira con il verso della tensione, fermo senza", () => {
     const comp: ComponenteArduino[] = [U, { id: "M", tipo: "motore-dc" }];
     const avanti = calcola(comp, { "U.5V": "p", "M.+": "p", "M.-": "m", "U.GND1": "m" }, {});

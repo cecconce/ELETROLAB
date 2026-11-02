@@ -184,6 +184,13 @@
       "prova": "Premi ▶ AVVIA: XMM1 indica circa 1,9 V, XMM2 circa 12 mA. Calcola (5 − 1,9) / 220 e confronta. Clic su un multimetro per cambiare funzione (V → A → Ω); ferma la simulazione, metti una resistenza da 1k nelle Proprietà e misura di nuovo."
     },
     {
+      "file": "arduino-movimento.elab",
+      "modulo": "arduino",
+      "titolo": "Allarme con il sensore di movimento",
+      "descrizione": "Il sensore di movimento (PIR) porta la sua uscita a HIGH quando vede muoversi qualcuno: il programma la legge con digitalRead sul pin 2, accende il LED «L» e scrive sul monitor seriale solo quando lo stato cambia (riconoscimento del fronte, con la variabile «prima»).",
+      "prova": "Premi ▶ AVVIA: il monitor scrive «Allarme pronto». Clic sul sensore: compare «MOVIMENTO», si accende il LED L e il monitor scrive «Movimento rilevato!» una volta sola. Un altro clic: «Nessun movimento»."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

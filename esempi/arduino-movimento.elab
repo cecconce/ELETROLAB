@@ -1,0 +1,101 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T11:25:03.187Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "sensore-pir-1",
+        "tipo": "sensore-pir",
+        "etichetta": "U2",
+        "x": 880,
+        "y": 80,
+        "larghezza": 80,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a20"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap20"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a22"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am22"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "b21"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D2"
+        },
+        "colore": "#ef6c00"
+      }
+    ],
+    "codice": "// Allarme: quando il sensore PIR vede un movimento si accende il LED «L»\n// (pin 13) e il monitor seriale lo scrive, una volta sola per ogni movimento.\n\nconst int SENSORE = 2;\nint prima = LOW;   // stato letto al giro precedente\n\nvoid setup() {\n  pinMode(SENSORE, INPUT);\n  pinMode(LED_BUILTIN, OUTPUT);\n  Serial.begin(9600);\n  Serial.println(\"Allarme pronto\");\n}\n\nvoid loop() {\n  int ora = digitalRead(SENSORE);\n  digitalWrite(LED_BUILTIN, ora);\n  if (ora == HIGH && prima == LOW) {\n    Serial.println(\"Movimento rilevato!\");\n  }\n  if (ora == LOW && prima == HIGH) {\n    Serial.println(\"Nessun movimento\");\n  }\n  prima = ora;\n  delay(100);\n}\n"
+  }
+}

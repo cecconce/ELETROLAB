@@ -521,6 +521,38 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------------- Sensore di movimento PIR
+voce(
+  {
+    id: "sensore-pir",
+    nome: "Sensore di movimento (PIR)",
+    categoria: "ingressi",
+    sigla: "U",
+    descrizione: "Sensore a infrarossi passivi: l'uscita OUT va a HIGH quando vede muoversi una persona davanti, altrimenti resta LOW. Piedini: VCC a 5V, OUT a un pin digitale (lo leggi con digitalRead), GND a GND. In simulazione: clic per simulare il movimento (un altro clic per fermarlo).",
+    paroleChiave: ["pir", "movimento", "presenza", "infrarossi", "allarme"],
+    larghezza: 80,
+    altezza: 80,
+    morsetti: [
+      { id: "VCC", x: 20, y: 80 },
+      { id: "OUT", x: 40, y: 80 },
+      { id: "GND", x: 60, y: 80 },
+    ],
+  },
+  svg(
+    80,
+    80,
+    [
+      ...[20, 40, 60].map((x) => `<line x1="${x}" y1="80" x2="${x}" y2="58" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+      `<rect x="4" y="44" width="72" height="16" rx="2" fill="#2e7d32"/>`,
+      `<path d="M18 46 A22 22 0 0 1 62 46 Z" fill="#f5f5f5" stroke="#bdbdbd"/>`,
+      `<path d="M24 40 Q40 22 56 40" fill="none" stroke="#e0e0e0" stroke-width="1.5"/><path d="M30 44 Q40 32 50 44" fill="none" stroke="#e0e0e0" stroke-width="1.5"/>`,
+      testo(20, 56, "VCC", 5, "#ffffff"),
+      testo(40, 56, "OUT", 5, "#ffffff"),
+      testo(60, 56, "GND", 5, "#ffffff"),
+    ].join("\n"),
+  ),
+);
+
 // ---------------------------------------------------------------- Interruttore a slitta
 voce(
   {

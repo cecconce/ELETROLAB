@@ -31,7 +31,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(10);
+    expect(arduino).toHaveLength(11);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -166,5 +166,24 @@ describe("esempio del multimetro", () => {
     clicSuArduino(s, id1);
     aspetta(s, 100);
     expect(vistaDaSessioneArduino(s, schema, lib).componenti[id1].arduino!.funzione).toBe("Ω");
+  });
+});
+
+describe("esempio del sensore di movimento", () => {
+  it("scrive il movimento una volta sola e accende il LED L", () => {
+    const { schema, s } = apri("arduino-movimento.elab");
+    aspetta(s, 500);
+    expect(s.errore).toBeNull();
+    expect(s.seriale).toContain("Allarme pronto");
+    expect(s.pin.D13?.livello ?? 0).toBe(0);
+    const pir = id(schema, "sensore-pir");
+    clicGiuArduino(s, pir);
+    aspetta(s, 1000);
+    expect(s.pin.D13?.livello).toBe(1);
+    expect(s.seriale.match(/Movimento rilevato!/g)).toHaveLength(1);
+    clicGiuArduino(s, pir);
+    aspetta(s, 500);
+    expect(s.pin.D13?.livello).toBe(0);
+    expect(s.seriale.trim().split("\n").pop()).toContain("Nessun movimento");
   });
 });
