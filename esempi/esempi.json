@@ -174,7 +174,7 @@
       "modulo": "elettronica",
       "titolo": "Alimentatore stabilizzato (ponte, filtro e 7805)",
       "descrizione": "Dalla tensione alternata a 5 V continui: il ponte di Graetz (D1–D4) raddrizza la sinusoide da 15 V di picco a 50 Hz, il condensatore da 1000 µF la livella (resta una piccola ondulazione) e il regolatore 7805 dà 5 V fissi. Il LED verde con la resistenza da 470 Ω è il carico.",
-      "prova": "Premi ▶ AVVIA. Nella finestra dell'oscilloscopio metti la base dei tempi a 10 ms/div e i canali a 5 V/div: il canale A (arancione) è la tensione dopo il condensatore, circa 13 V con una piccola ondulazione a 100 Hz; il canale B (azzurro) è l'uscita del 7805, 5 V fissi. Ferma, porta il condensatore a 47 µF e riavvia: l'ondulazione cresce molto."
+      "prova": "Premi ▶ AVVIA: l'oscilloscopio si regola da solo (o premi ⟲ Auto; a mano: 10 ms/div e 5 V/div). Il canale A (arancione) è la tensione dopo il condensatore, circa 13 V con una piccola ondulazione a 100 Hz; il canale B (azzurro) è l'uscita del 7805, 5 V fissi. Ferma, porta il condensatore a 47 µF e riavvia: l'ondulazione cresce molto."
     },
     {
       "file": "elettronica-transistor.elab",
@@ -184,18 +184,25 @@
       "prova": "Premi ▶ AVVIA. Clic su S1: il LED si accende e il multimetro scende quasi a 0 V (transistor in saturazione: è un interruttore chiuso). Clic di nuovo su S1: il LED si spegne. Ferma e prova a mettere 1 MΩ come resistenza di base: la corrente di base è troppo poca e il LED resta debole."
     },
     {
+      "file": "elettronica-multivibratore.elab",
+      "modulo": "elettronica",
+      "titolo": "Multivibratore astabile (LED lampeggianti)",
+      "descrizione": "Il circuito classico dei lampeggiatori: due transistor collegati «a croce» con due condensatori si accendono a turno, da soli, senza nessun comando. Quando Q1 conduce, C1 tiene spento Q2 finché non si ricarica attraverso la resistenza di base da 22 kΩ, poi i ruoli si scambiano. Ogni semiperiodo dura circa 0,7 · R · C.",
+      "prova": "Premi ▶ AVVIA: il LED rosso e quello verde lampeggiano alternati (circa 0,7 s e 0,5 s, perché i condensatori sono diversi). Ferma, porta C1 e C2 a 10 µF e riavvia: lampeggiano molto più in fretta. Prova anche a cambiare le resistenze di base."
+    },
+    {
       "file": "elettronica-amplificatore.elab",
       "modulo": "elettronica",
       "titolo": "Amplificatore invertente con operazionale",
       "descrizione": "L'operazionale U1 con R1 = 1 kΩ e R2 = 10 kΩ amplifica di 10 volte il segnale del generatore e lo capovolge: guadagno G = −R2/R1 = −10. Sull'oscilloscopio il canale A è l'ingresso (0,5 V di picco), il canale B l'uscita (5 V di picco, in opposizione di fase).",
-      "prova": "Premi ▶ AVVIA. Nell'oscilloscopio metti il canale A a 0,5 V/div e il B a 2 V/div: le onde sono capovolte una rispetto all'altra. Ferma, porta l'ampiezza del generatore a 2 V e riavvia: l'uscita dovrebbe arrivare a 20 V ma si ferma a 12 V (saturazione) e la sinusoide viene «tagliata»."
+      "prova": "Premi ▶ AVVIA: l'oscilloscopio si regola da solo (⟲ Auto) e mostra le due onde capovolte una rispetto all'altra, l'uscita (B) 10 volte più grande. Ferma, porta l'ampiezza del generatore a 2 V e riavvia: l'uscita dovrebbe arrivare a 20 V ma si ferma a 12 V (saturazione) e la sinusoide viene «tagliata»."
     },
     {
       "file": "elettronica-condensatore.elab",
       "modulo": "elettronica",
       "titolo": "Carica e scarica di un condensatore",
       "descrizione": "Chiudendo S1 il condensatore C1 da 100 µF si carica attraverso R1 da 10 kΩ: la costante di tempo τ = R·C = 1 s. Dopo τ la tensione è il 63 % di quella del generatore, dopo 5τ è praticamente carico. Il pulsante S2 lo scarica attraverso R2 da 1 kΩ (10 volte più in fretta).",
-      "prova": "Premi ▶ AVVIA e metti l'oscilloscopio a 1 s/div e 2 V/div. Clic su S1: guarda la curva di carica e il multimetro (circa 6,3 V dopo un secondo, quasi 10 V dopo cinque). Riapri S1: il condensatore resta carico. Tieni premuto S2: si scarica in pochi decimi di secondo."
+      "prova": "Premi ▶ AVVIA e clic su S1: guarda il multimetro (circa 6,3 V dopo un secondo, quasi 10 V dopo cinque) e premi ⟲ Auto nell'oscilloscopio per vedere la curva di carica (base dei tempi 1 s/div). Riapri S1: il condensatore resta carico. Tieni premuto S2: si scarica in pochi decimi di secondo."
     }
   ]
 }

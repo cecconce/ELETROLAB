@@ -235,3 +235,35 @@ function scrivi(file: string, schema: Schema) {
   b.filo("XSC1.COM", `${gnd}.0`);
   scrivi("elettronica-condensatore.elab", b.schema());
 }
+
+// 9. Multivibratore astabile: due transistor che si accendono a turno (LED lampeggianti)
+{
+  const b = costruttore();
+  b.posa("generatore-dc", 20, 140, { tensione: 9 });
+  b.posa("resistenza", 100, 40, { resistenza: 470 }, 90); // R1: LED1
+  b.posa("resistenza", 180, 40, { resistenza: 22000 }, 90); // R2: base di Q1
+  b.posa("resistenza", 260, 40, { resistenza: 22000 }, 90); // R3: base di Q2
+  b.posa("resistenza", 340, 40, { resistenza: 470 }, 90); // R4: LED2
+  b.posa("led", 100, 120, { colore: "rosso" });
+  b.posa("led", 340, 120, { colore: "verde" });
+  b.posa("transistor-npn", 80, 200, { beta: 100 });
+  b.posa("transistor-npn", 320, 200, { beta: 100 });
+  // Capacità diverse: i due semiperiodi sono diversi (e l'oscillazione parte subito).
+  b.posa("condensatore", 160, 160, { capacita: 47e-6 });
+  b.posa("condensatore", 160, 240, { capacita: 33e-6 });
+  const gnd = b.posa("massa", 220, 340);
+  b.filo("V1.+", "R1.1");
+  b.filo("R1.1", "R2.1");
+  b.filo("R2.1", "R3.1");
+  b.filo("R3.1", "R4.1");
+  b.filo("R2.2", "Q1.b");
+  b.filo("R3.2", "Q2.b");
+  b.filo("Q1.c", "C1.1");
+  b.filo("C1.2", "Q2.b");
+  b.filo("Q2.c", "C2.2");
+  b.filo("C2.1", "Q1.b");
+  b.filo("Q1.e", `${gnd}.0`);
+  b.filo("Q2.e", `${gnd}.0`);
+  b.filo("V1.-", `${gnd}.0`);
+  scrivi("elettronica-multivibratore.elab", b.schema());
+}

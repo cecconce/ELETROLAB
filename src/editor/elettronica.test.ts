@@ -96,3 +96,32 @@ describe("modulo Elettronica nell'editor", () => {
     expect(piatto.inizio).toBeCloseTo(t[t.length - 1] - 2e-3, 6);
   });
 });
+
+describe("regolazione automatica dell'oscilloscopio", () => {
+  it("sinusoide da 1 kHz e 2 V: 1 ms/div circa e 1 V/div", async () => {
+    const { regolazioneAutomatica } = await import("./PannelloOscilloscopio");
+    const t: number[] = [];
+    const a: number[] = [];
+    const b: number[] = [];
+    for (let k = 0; k < 2000; k++) {
+      t.push(k * 1e-5);
+      a.push(2 * Math.sin(2 * Math.PI * 1000 * k * 1e-5));
+      b.push(0.3 * Math.sin(2 * Math.PI * 1000 * k * 1e-5));
+    }
+    const storia = { t, canali: [a, b], lenta: { t, canali: [a, b] } };
+    const r = regolazioneAutomatica(storia, { baseTempi: 1, voltA: 5, voltB: 5 });
+    expect(r.baseTempi).toBe(5e-4); // 10 div × 0,5 ms = 5 periodi ≥ 2,5
+    expect(r.voltA).toBe(1);
+    expect(r.voltB).toBe(0.1);
+  });
+  it("tensione che cresce lentamente: base dei tempi lunga", async () => {
+    const { regolazioneAutomatica } = await import("./PannelloOscilloscopio");
+    const t = Array.from({ length: 500 }, (_, k) => k * 2e-3);
+    const a = t.map((x) => 10 * (1 - Math.exp(-x)));
+    const storia = { t, canali: [a, t.map(() => 0)], lenta: { t, canali: [a, t.map(() => 0)] } };
+    const r = regolazioneAutomatica(storia, { baseTempi: 5e-4, voltA: 1, voltB: 1 });
+    expect(r.baseTempi).toBe(1);
+    expect(r.voltA).toBe(2); // 6,3 V in 3,6 divisioni
+    expect(r.voltB).toBe(1); // segnale nullo: resta com'era
+  });
+});

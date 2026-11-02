@@ -5,7 +5,7 @@
 // valore medio (trigger sul fronte di salita), così un segnale periodico sta
 // fermo sullo schermo come su uno strumento vero. "Blocca" congela l'immagine.
 import { useEffect, useRef, useState } from "react";
-import { registrazionePer, scriviValore, type SessioneElettronica } from "../motori/elettronica";
+import { registrazionePer, scriviValore, type SessioneElettronica, type Storia } from "../motori/elettronica";
 import { t } from "../testi";
 
 const BASI_TEMPI = [1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5, 1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 5e-3, 1e-2, 2e-2, 5e-2, 0.1, 0.2, 0.5, 1];
@@ -52,6 +52,44 @@ export function finestraTraccia(storia: { t: number[]; a: number[] }, durata: nu
   let i = n - 1;
   while (i > 0 && storia.t[i - 1] >= inizio) i--;
   return { inizio, da: i };
+}
+
+/**
+ * Regolazione automatica (come il tasto AUTOSET degli oscilloscopi veri):
+ * - volt/divisione: il più piccolo che fa stare il segnale in 3,6 divisioni
+ *   sopra o sotto il centro (segnali quasi nulli: si lascia com'era);
+ * - base dei tempi: se il canale A è periodico, circa due periodi e mezzo
+ *   sullo schermo; se varia lentamente (carica di un condensatore) 1 s/div.
+ */
+export function regolazioneAutomatica(storia: Storia, attuale: StatoSchermo): StatoSchermo {
+  const scala = (valori: number[], prima: number) => {
+    const massimo = valori.reduce((m, v) => Math.max(m, Math.abs(v)), 0);
+    if (massimo < 0.05) return prima;
+    return VOLT_DIV.find((v) => massimo <= 3.6 * v) ?? VOLT_DIV[VOLT_DIV.length - 1];
+  };
+  const lenta = storia.lenta;
+  // Fronti di salita del canale A attraverso il suo valore medio (registrazione fine).
+  const a = storia.canali[0];
+  let min = Infinity;
+  let max = -Infinity;
+  for (const v of a) {
+    min = Math.min(min, v);
+    max = Math.max(max, v);
+  }
+  const livelloA = (min + max) / 2;
+  const fronti: number[] = [];
+  if (max - min > 1e-3) for (let k = 1; k < a.length; k++) if (a[k - 1] < livelloA && a[k] >= livelloA) fronti.push(storia.t[k]);
+  let baseTempi = attuale.baseTempi;
+  if (fronti.length >= 3) {
+    const periodo = (fronti[fronti.length - 1] - fronti[0]) / (fronti.length - 1);
+    baseTempi = BASI_TEMPI.find((b) => b * DIV_X >= 2.5 * periodo) ?? BASI_TEMPI[BASI_TEMPI.length - 1];
+  } else {
+    // Non periodico: se nella registrazione lenta il segnale cambia, base lunga.
+    const la = lenta.canali[0];
+    const varia = la.length > 1 && Math.max(...la) - Math.min(...la) > 0.05;
+    if (varia) baseTempi = 1;
+  }
+  return { baseTempi, voltA: scala(lenta.canali[0], attuale.voltA), voltB: scala(lenta.canali[1], attuale.voltB) };
 }
 
 function disegna(canvas: HTMLCanvasElement, storia: { t: number[]; a: number[]; b: number[] }, schermo: StatoSchermo): { ppa: number; ppb: number } {
@@ -156,6 +194,17 @@ export function PannelloOscilloscopio({ sessione, id, sigla, indice = 0 }: { ses
   const schermoRif = useRef(schermo);
   schermoRif.current = schermo;
 
+  const auto = () => {
+    const storia = sessione.current?.oscilloscopi[id];
+    if (storia) setSchermo((attuale) => regolazioneAutomatica(storia, attuale));
+  };
+  // Poco dopo l'avvio la regolazione automatica parte da sola, così il segnale si vede subito.
+  useEffect(() => {
+    const timer = window.setTimeout(auto, 700);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (bloccato || !aperto) return;
     const ridisegna = () => {
@@ -205,6 +254,9 @@ export function PannelloOscilloscopio({ sessione, id, sigla, indice = 0 }: { ses
             {scelta(t("elettronica.oscilloscopio.baseTempi"), BASI_TEMPI, schermo.baseTempi, "s", (baseTempi) => setSchermo((s) => ({ ...s, baseTempi })))}
             {scelta(t("elettronica.oscilloscopio.canaleA"), VOLT_DIV, schermo.voltA, "V", (voltA) => setSchermo((s) => ({ ...s, voltA })), COLORE_A)}
             {scelta(t("elettronica.oscilloscopio.canaleB"), VOLT_DIV, schermo.voltB, "V", (voltB) => setSchermo((s) => ({ ...s, voltB })), COLORE_B)}
+            <button type="button" className="pulsante piccolo" onClick={auto} title={t("elettronica.oscilloscopio.autoSuggerimento")}>
+              {t("elettronica.oscilloscopio.auto")}
+            </button>
             <button type="button" className="pulsante piccolo" onClick={() => setBloccato((b) => !b)}>
               {bloccato ? t("elettronica.oscilloscopio.riprendi") : t("elettronica.oscilloscopio.ferma")}
             </button>

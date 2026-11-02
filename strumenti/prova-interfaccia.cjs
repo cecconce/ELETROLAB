@@ -16,6 +16,9 @@
 // animati), leggendo lo stato dal pannello "Ingressi e uscite". Infine il
 // modulo Arduino: Blink montato da zero sulla breadboard con i blocchi, e gli
 // esempi pronti (LED, pulsante, potenziometro, servo, display, ultrasuoni).
+// Per ultimo il modulo Elettronica: generatore → resistenza → LED disegnato da
+// zero, poi gli 8 esempi (multimetro, oscilloscopio, porte logiche, contatore,
+// alimentatore, transistor, operazionale, condensatore).
 // Lo stato di lampade, bobine e motori si legge dal disegno Konva (colori e
 // rotazioni delle forme), quindi la prova non dipende dai pixel dello schermo.
 // Al termine stampa l'esito di ogni controllo ed esce con codice 1 se uno fallisce.
@@ -295,6 +298,9 @@ async function collega(pagina, a, b) {
 
   // === Modulo Arduino ========================================================
   await provaArduino(pagina, controlla, foto, apriEsempio);
+
+  // === Modulo Elettronica ====================================================
+  await provaElettronica(pagina, controlla, foto, apriEsempio);
 
   controlla(errori.length === 0, `nessun errore nella console${errori.length ? ": " + errori.join(" | ") : ""}`);
   await browser.close();
@@ -622,5 +628,182 @@ async function provaArduino(pagina, controlla, foto, apriEsempio) {
   await apri("arduino-ultrasuoni.elab");
   await pagina.waitForTimeout(700);
   controlla((await pagina.locator(".monitor-testo").innerText()).includes("Distanza: 50 cm"), "il monitor seriale mostra la distanza");
+  await ferma();
+}
+
+// --- Modulo Elettronica --------------------------------------------------------
+
+async function provaElettronica(pagina, controlla, foto, apriEsempio) {
+  const ferma = async () => {
+    const p = pagina.locator(".pulsante-simulazione");
+    if ((await p.innerText()).includes("FERMA")) await p.click();
+  };
+  const avvia = async () => {
+    await pagina.locator(".pulsante-simulazione").click();
+    await pagina.waitForTimeout(400);
+  };
+  const nessunProblema = async () => (await pagina.locator(".pannello-problemi-vuoto").count()) > 0;
+  const testiKonva = () => pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+  /** Centro (pagina) del disegno del componente con la sigla data. */
+  const centro = (sigla) =>
+    pagina.evaluate((sigla) => {
+      const st = window.Konva.stages[0];
+      const t = st.find("Text").find((x) => x.text() === sigla);
+      if (!t) return null;
+      const comp = t.getParent().getParent();
+      const r = comp.findOne(".disegno").getClientRect();
+      const c = st.container().getBoundingClientRect();
+      return { x: c.left + r.x + r.width / 2, y: c.top + r.y + r.height / 2 };
+    }, sigla);
+  const clic = async (sigla) => {
+    const c = await centro(sigla);
+    await pagina.mouse.click(c.x, c.y);
+    await pagina.waitForTimeout(300);
+  };
+  /** Morsetti (pagina) entro `raggio` pixel dal punto, dal più alto al più basso. */
+  const morsettiVicini = (x, y, raggio) =>
+    pagina.evaluate(
+      ([x, y, raggio]) => {
+        const st = window.Konva.stages[0];
+        const c = st.container().getBoundingClientRect();
+        return st
+          .find("Circle")
+          .filter((k) => k.hitStrokeWidth() === 14)
+          .map((k) => {
+            const p = k.getAbsolutePosition();
+            return { x: c.left + p.x, y: c.top + p.y };
+          })
+          .filter((p) => Math.hypot(p.x - x, p.y - y) <= raggio)
+          .sort((a, b) => a.y - b.y || a.x - b.x);
+      },
+      [x, y, raggio],
+    );
+  const ledAcceso = (colore) => pagina.evaluate((c) => window.Konva.stages[0].find("Circle").some((k) => k.fill() === c && k.shadowBlur() > 0), colore);
+
+  // --- Circuito disegnato da zero: generatore → resistenza → LED → massa ---
+  console.log("Elettronica: circuito disegnato da zero");
+  await ferma();
+  await pagina.getByText("Schermata iniziale").click().catch(() => {});
+  await pagina.waitForTimeout(300);
+  await pagina.getByText("Elettronica", { exact: true }).first().click();
+  await pagina.waitForTimeout(600);
+  await pagina.getByText("Nuovo", { exact: true }).click();
+  await pagina.waitForTimeout(500);
+  const tela = await pagina.locator("canvas").first().boundingBox();
+  const posa = async (nome, x, y) => {
+    await pagina.locator(".libreria").getByPlaceholder(/Cerca/).fill(nome);
+    await pagina.waitForTimeout(100);
+    await pagina.locator(".libreria").getByText(nome, { exact: true }).first().click();
+    await pagina.mouse.click(tela.x + x, tela.y + y);
+    await pagina.waitForTimeout(250);
+    await pagina.keyboard.press("Escape");
+    await pagina.locator(".libreria").getByPlaceholder(/Cerca/).fill("");
+    return { x: tela.x + x, y: tela.y + y };
+  };
+  const pV = await posa("Generatore di tensione continua", 200, 200);
+  const pR = await posa("Resistenza", 360, 120);
+  const pD = await posa("LED", 520, 220);
+  const pG = await posa("Massa (0 V)", 200, 380);
+  const mV = await morsettiVicini(pV.x, pV.y, 50);
+  const mR = await morsettiVicini(pR.x, pR.y, 50);
+  const mD = await morsettiVicini(pD.x, pD.y, 50);
+  const mG = await morsettiVicini(pG.x, pG.y, 30);
+  controlla(mV.length === 2 && mR.length === 2 && mD.length === 2 && mG.length === 1, "morsetti di generatore, resistenza, LED e massa trovati");
+  await collega(pagina, mV[0], mR[0]);
+  await collega(pagina, mR[1], mD[0]);
+  await collega(pagina, mD[1], mG[0]);
+  await collega(pagina, mV[1], mG[0]);
+  await foto("22-elettronica-da-zero");
+  await avvia();
+  controlla(await nessunProblema(), "circuito disegnato: nessun problema");
+  controlla(await ledAcceso("#ff3b30"), "il LED in serie alla resistenza si accende");
+  controlla((await testiKonva()).includes("5 V") && (await testiKonva()).includes("1 kΩ"), "accanto ai simboli i valori 5 V e 1 kΩ");
+  await ferma();
+
+  // --- Esempi ---
+  const apri = async (file) => {
+    await ferma();
+    await apriEsempio(pagina, file);
+    await pagina.getByText("Adatta alla finestra").click();
+    await pagina.waitForTimeout(200);
+    await avvia();
+    controlla(await nessunProblema(), `${file}: nessun problema all'avvio`);
+  };
+  const misureOsc = async () => {
+    const t = await pagina.locator(".osc-misure").first().innerText();
+    const m = /A: ([\d,]+) (m?)V.*B: ([\d,]+) (m?)V/.exec(t);
+    const n = (v, p) => Number(v.replace(",", ".")) / (p === "m" ? 1000 : 1);
+    return m ? { a: n(m[1], m[2]), b: n(m[3], m[4]) } : null;
+  };
+
+  console.log("Elettronica: partitore");
+  await apri("elettronica-partitore.elab");
+  controlla((await testiKonva()).includes("6 V"), "il multimetro indica 6 V");
+
+  console.log("Elettronica: filtro RC");
+  await apri("elettronica-filtro-rc.elab");
+  await pagina.waitForTimeout(2500);
+  const rc = await misureOsc();
+  controlla(rc && rc.a > 3.8 && rc.a < 4.2 && rc.b / rc.a > 0.65 && rc.b / rc.a < 0.77, `oscilloscopio: uscita circa 71 % dell'ingresso (${JSON.stringify(rc)})`);
+  await foto("23-elettronica-filtro");
+
+  console.log("Elettronica: porte logiche");
+  await apri("elettronica-porte-logiche.elab");
+  await clic("S1");
+  await clic("S2");
+  await pagina.waitForTimeout(300);
+  const livelli = (await testiKonva()).filter((t) => t === "0" || t === "1").join("");
+  controlla(livelli === "11110", `con S1 = S2 = 1: AND 1, OR 1, XOR 0 (${livelli})`);
+  await clic("S2");
+  await pagina.waitForTimeout(300);
+  const livelli2 = (await testiKonva()).filter((t) => t === "0" || t === "1").join("");
+  controlla(livelli2 === "10011", `con S1 = 1 e S2 = 0: AND 0, OR 1, XOR 1 (${livelli2})`);
+
+  console.log("Elettronica: contatore");
+  await apri("elettronica-contatore.elab");
+  await pagina.waitForTimeout(2800);
+  const conteggio = Number((await testiKonva()).find((t) => /^\d+$/.test(t) && t !== "0") ?? 0);
+  controlla(conteggio >= 1 && conteggio <= 4, `il contatore conta gli impulsi del clock (${conteggio})`);
+  controlla((await pagina.locator("[data-testid='analizzatore-XLA1']").count()) === 1, "si apre la finestra dell'analizzatore logico");
+  await foto("24-elettronica-contatore");
+
+  console.log("Elettronica: transistor");
+  await apri("elettronica-transistor.elab");
+  controlla(!(await ledAcceso("#ff3b30")), "a S1 aperto il LED è spento");
+  await clic("S1");
+  await pagina.waitForTimeout(300);
+  controlla(await ledAcceso("#ff3b30"), "chiudendo S1 il transistor accende il LED");
+
+  console.log("Elettronica: multivibratore");
+  await apri("elettronica-multivibratore.elab");
+  let rosso = false;
+  let verde = false;
+  for (let k = 0; k < 16 && !(rosso && verde); k++) {
+    rosso ||= (await ledAcceso("#ff3b30")) && !(await ledAcceso("#34c759"));
+    verde ||= (await ledAcceso("#34c759")) && !(await ledAcceso("#ff3b30"));
+    await pagina.waitForTimeout(250);
+  }
+  controlla(rosso && verde, "multivibratore: il LED rosso e quello verde si accendono a turno");
+  await foto("26-elettronica-multivibratore");
+
+  console.log("Elettronica: amplificatore");
+  await apri("elettronica-amplificatore.elab");
+  await pagina.waitForTimeout(2000);
+  const amp = await misureOsc();
+  controlla(amp && amp.b / amp.a > 9 && amp.b / amp.a < 11, `guadagno dell'amplificatore circa 10 (${JSON.stringify(amp)})`);
+
+  console.log("Elettronica: alimentatore");
+  await apri("elettronica-alimentatore.elab");
+  await pagina.waitForTimeout(2500);
+  controlla(await ledAcceso("#34c759"), "il LED verde alimentato dal 7805 è acceso");
+  controlla(await nessunProblema(), "alimentatore: nessun problema dopo qualche secondo");
+
+  console.log("Elettronica: condensatore");
+  await apri("elettronica-condensatore.elab");
+  await clic("S1");
+  await pagina.waitForTimeout(2500);
+  const v = (await testiKonva()).map((t) => /^([\d,]+) V$/.exec(t)).filter(Boolean).map((m) => Number(m[1].replace(",", ".")));
+  controlla(v.some((x) => x > 3 && x < 10), `il condensatore si sta caricando (${v.join(" / ")})`);
+  await foto("25-elettronica-condensatore");
   await ferma();
 }

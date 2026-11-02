@@ -29,9 +29,9 @@ const scorri = (s: SessioneElettronica, secondi: number) => {
 const massimo = (v: number[]) => Math.max(...v);
 
 describe("esempi del modulo Elettronica", () => {
-  it("il catalogo ha 8 esempi di Elettronica con descrizione e «Come provarlo»", () => {
+  it("il catalogo ha 9 esempi di Elettronica con descrizione e «Come provarlo»", () => {
     const el = ESEMPI.filter((e) => e.modulo === "elettronica");
-    expect(el).toHaveLength(8);
+    expect(el).toHaveLength(9);
     for (const e of el) expect(e.prova.length).toBeGreaterThan(40);
   });
 
@@ -102,6 +102,19 @@ describe("esempi del modulo Elettronica", () => {
     scorri(s, 0.1);
     expect(luminosita(s, led)).toBeGreaterThan(0.5);
     expect(s.letture.XMM1.valore!).toBeLessThan(0.3);
+  });
+
+  it("multivibratore: i due LED si accendono a turno", () => {
+    const { s } = apri("elettronica-multivibratore.elab");
+    const [d1, d2] = ["D1", "D2"].map((id) => s.componenti.find((c) => c.id === id)!);
+    const stati = new Set<string>();
+    for (let k = 0; k < 60; k++) {
+      passoElettronica(s, 0.05);
+      stati.add(`${luminosita(s, d1) > 0.5 ? 1 : 0}${luminosita(s, d2) > 0.5 ? 1 : 0}`);
+    }
+    // In 3 s si vedono sia «solo il rosso» sia «solo il verde».
+    expect(stati.has("10")).toBe(true);
+    expect(stati.has("01")).toBe(true);
   });
 
   it("amplificatore invertente: uscita 10 volte l'ingresso", () => {
