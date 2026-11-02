@@ -4,7 +4,7 @@ import type { Schema } from "../editor/schema";
 import { ESEMPI } from "./caricaEsempi";
 import { apriEsempio } from "./esempi";
 import { leggiProgetto, serializzaProgetto } from "./formato";
-import { verificaElettronica, verificaEsercizio, verificaImpianto, verificaPlc } from "./verifica";
+import { verificaArduino, verificaElettronica, verificaEsercizio, verificaImpianto, verificaPlc } from "./verifica";
 
 function esempio(file: string): Schema {
   const e = ESEMPI.find((x) => x.file === file)!;
@@ -110,6 +110,21 @@ describe("verifica degli esercizi — Elettronica", () => {
   });
 });
 
+describe("verifica degli esercizi — Arduino", () => {
+  it("pulsante e LED: uguale → giusto; programma con il LED al contrario → spiegato; filo mancante → spiegato", () => {
+    const sol = esempio("arduino-pulsante.elab");
+    const soluzione = { componenti: sol.componenti, fili: sol.fili, codice: sol.codice };
+    expect(verificaArduino(sol, soluzione).riuscito).toBe(true);
+    const codiceSbagliato = sol.codice!.replace(/digitalWrite\((\w+), HIGH\)/, "digitalWrite($1, TEMP)").replace(/digitalWrite\((\w+), LOW\)/, "digitalWrite($1, HIGH)").replace("TEMP", "LOW");
+    expect(codiceSbagliato).not.toBe(sol.codice);
+    const r = verificaArduino({ ...sol, codice: codiceSbagliato }, soluzione);
+    expect(r.riuscito).toBe(false);
+    expect(r.righe.join(" ")).toMatch(/dovrebbe essere/);
+    const r2 = verificaArduino({ ...sol, fili: sol.fili.slice(1) }, soluzione);
+    expect(r2.riuscito).toBe(false);
+  });
+});
+
 describe("esercizio nel file .elab", () => {
   it("consegna e soluzione si salvano (soluzione codificata) e si rileggono", () => {
     const soluzione = esempio("marcia-arresto.elab");
@@ -127,6 +142,6 @@ describe("esercizio nel file .elab", () => {
     expect(verificaEsercizio("impianti", { ...r.progetto.schema, fili: soluzione.fili })?.riuscito).toBe(true);
   });
   it("nei moduli senza verifica automatica restituisce null", () => {
-    expect(verificaEsercizio("arduino", { componenti: [], fili: [], esercizio: { consegna: "x", soluzione: { componenti: [], fili: [] } } })).toBeNull();
+    expect(verificaEsercizio("sconosciuto", { componenti: [], fili: [], esercizio: { consegna: "x", soluzione: { componenti: [], fili: [] } } })).toBeNull();
   });
 });

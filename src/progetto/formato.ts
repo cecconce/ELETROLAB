@@ -171,7 +171,10 @@ export function leggiProgetto(testo: string): EsitoLettura {
     if (testo !== null) {
       try {
         const grezza = JSON.parse(testo) as unknown;
-        if (eOggetto(grezza)) esercizio.soluzione = leggiComponentiEFili(grezza, []);
+        if (eOggetto(grezza)) {
+          esercizio.soluzione = leggiComponentiEFili(grezza, []);
+          if (eTesto(grezza.codice)) esercizio.soluzione.codice = grezza.codice;
+        }
       } catch {
         // soluzione rovinata: l'esercizio resta senza verifica automatica
       }

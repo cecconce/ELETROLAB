@@ -98,7 +98,14 @@ export function FinestraPreparaEsercizio({ schema, onCambia, onChiudi, verificab
             type="button"
             className="pulsante"
             disabled={schema.componenti.length === 0}
-            onClick={() => onCambia(conConsegna({ ...schema, esercizio: { consegna, soluzione: { componenti: schema.componenti, fili: schema.fili } } }))}
+            onClick={() =>
+              onCambia(
+                conConsegna({
+                  ...schema,
+                  esercizio: { consegna, soluzione: { componenti: schema.componenti, fili: schema.fili, ...(schema.codice !== undefined ? { codice: schema.codice } : {}) } },
+                }),
+              )
+            }
           >
             {t("esercizio.registraSoluzione")}
           </button>

@@ -291,5 +291,5 @@ export interface Esercizio {
   /** Testo della consegna (cosa deve fare lo studente). */
   consegna: string;
   /** Schema completo e funzionante del docente. */
-  soluzione?: { componenti: ComponenteSchema[]; fili: Filo[] };
+  soluzione?: { componenti: ComponenteSchema[]; fili: Filo[]; codice?: string };
 }

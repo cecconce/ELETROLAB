@@ -1,4 +1,4 @@
-// Verifica automatica degli esercizi (moduli Impianti elettrici, PLC ed Elettronica).
+// Verifica automatica degli esercizi (tutti e quattro i moduli).
 //
 // Idea: lo schema dello studente "funziona" se si comporta come la soluzione
 // del docente. Il programma prova i due schemi con la stessa sequenza di
@@ -22,7 +22,8 @@ import {
   scriviValore,
   type SessioneElettronica,
 } from "../motori/elettronica";
-import { nodiDaSchema } from "../editor/arduino";
+import { componentiDaSchema, nodiDaSchema, SKETCH_PREDEFINITO, vistaDaSessioneArduino } from "../editor/arduino";
+import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, passoArduino, type SessioneArduino } from "../motori/arduino";
 import { componentiDaSchemaElettronica } from "../editor/elettronica";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { vocePerTipo } from "../editor/libreria";
@@ -280,8 +281,74 @@ export function verificaElettronica(studente: Schema, soluzione: Pick<Schema, "c
   return { riuscito: righe.length === 0, righe: righe.length ? righe : [t("verifica.tutteUguali", { prove: azioni.length })], prove: azioni.length };
 }
 
+// ---------------------------------------------------------------- Arduino
+
+/**
+ * Arduino: si eseguono i due programmi sui due banchi per 1 s, poi si preme
+ * ogni pulsante (0,6 s premuto, 0,6 s rilasciato) e si guardano ogni 0,25 s
+ * LED (spento / acceso, con quattro livelli di luminosità per il PWM), LED «L»
+ * della scheda, servo (a 10° di precisione), buzzer, display e monitor seriale.
+ */
+export function verificaArduino(studente: Schema, soluzione: NonNullable<NonNullable<Schema["esercizio"]>["soluzione"]>): EsitoVerifica {
+  const libreria = libreriaDelModulo("arduino");
+  const morsettiDi = (tipo: string) => vocePerTipo(libreria, tipo)?.morsetti;
+  const OSSERVATI = (tipo: string) => tipo.startsWith("led-") || tipo === "servo" || tipo === "buzzer" || tipo === "lcd" || tipo === "arduino-uno";
+  const nome = (c: { etichetta: string; tipo: string; id: string }) => c.etichetta || c.id;
+  const osservati = soluzione.componenti.filter((c) => OSSERVATI(c.tipo));
+  const pulsanti = soluzione.componenti.filter((c) => c.tipo === "pulsante").map(nome);
+  const trova = (schema: Pick<Schema, "componenti">, n: string, tipo: string) => schema.componenti.find((c) => nome(c) === n && c.tipo === tipo)?.id;
+  const mancanti = [...osservati, ...soluzione.componenti.filter((c) => c.tipo === "pulsante")].filter((c) => !trova(studente, nome(c), c.tipo));
+  if (mancanti.length > 0) return { riuscito: false, prove: 0, righe: [...new Set(mancanti.map((m) => t("verifica.manca", { sigla: nome(m) })))] };
+  const azioni: Azione[] = [{ tipo: "attendi", secondi: 1 }, ...pulsanti.map((p) => ({ tipo: "premi" as const, sigla: p })), { tipo: "attendi", secondi: 1 }];
+  const esegui = (schema: Schema, codice: string) => {
+    const s: SessioneArduino = avviaSessioneArduino(codice, componentiDaSchema(schema), nodiDaSchema(schema, morsettiDi));
+    const osservazioni: Record<string, string>[] = [];
+    const descrittori: Azione[] = [];
+    const osserva = () => {
+      const v = vistaDaSessioneArduino(s, schema, libreria).componenti;
+      const o: Record<string, string> = {};
+      for (const c of osservati) {
+        const id = trova(schema, nome(c), c.tipo);
+        const a = id ? v[id]?.arduino : undefined;
+        if (!a) continue;
+        const n = nome(c);
+        if (c.tipo.startsWith("led-")) o[n] = a.bruciato ? t("verifica.bruciato") : (a.luminosita ?? 0) < 0.1 ? t("verifica.spento") : `${t("verifica.acceso")} ${Math.round((a.luminosita ?? 0) * 4) * 25}%`;
+        else if (c.tipo === "servo") o[n] = a.angolo === undefined ? "–" : `${Math.round(a.angolo / 10) * 10}°`;
+        else if (c.tipo === "buzzer") o[n] = a.suona ? t("verifica.suona") : t("verifica.muta");
+        else if (c.tipo === "lcd") o[n] = `«${(a.righe ?? []).join(" / ").trim()}»`;
+        else if (c.tipo === "arduino-uno") o[`LED L (${n})`] = a.ledL ? t("verifica.acceso") : t("verifica.spento");
+      }
+      o[t("verifica.monitorSeriale")] = `«${s.seriale.trim().split("\n").slice(-1)[0] ?? ""}»`;
+      return o;
+    };
+    const scorri = (ms: number, azione: Azione) => {
+      for (let tempo = 0; tempo < ms; tempo += 250) {
+        for (let k = 0; k < 5; k++) passoArduino(s, 50);
+        osservazioni.push(osserva());
+        descrittori.push(azione);
+      }
+    };
+    for (const a of azioni) {
+      if (a.tipo === "attendi") scorri(a.secondi * 1000, a);
+      else {
+        const id = trova(schema, a.sigla, "pulsante");
+        if (id) clicGiuArduino(s, id);
+        scorri(600, a);
+        if (id) clicSuArduino(s, id);
+        scorri(600, { tipo: "attendi", secondi: 0.6 });
+      }
+    }
+    if (s.errore) osservazioni.push({ [t("verifica.programma")]: s.errore.message });
+    return { osservazioni, descrittori };
+  };
+  const attese = esegui({ componenti: soluzione.componenti, fili: soluzione.fili }, soluzione.codice ?? SKETCH_PREDEFINITO);
+  const ottenute = esegui(studente, studente.codice ?? SKETCH_PREDEFINITO);
+  const righe = confronta(attese.descrittori, attese.osservazioni, ottenute.osservazioni);
+  return { riuscito: righe.length === 0, righe: righe.length ? righe : [t("verifica.tutteUguali", { prove: attese.osservazioni.length })], prove: attese.osservazioni.length };
+}
+
 /** Moduli in cui la verifica automatica è disponibile. */
-export const MODULI_VERIFICABILI = new Set(["impianti", "plc", "elettronica"]);
+export const MODULI_VERIFICABILI = new Set(["impianti", "plc", "elettronica", "arduino"]);
 
 export function verificaEsercizio(modulo: string, studente: Schema): EsitoVerifica | null {
   const soluzione = studente.esercizio?.soluzione;
@@ -289,5 +356,6 @@ export function verificaEsercizio(modulo: string, studente: Schema): EsitoVerifi
   if (modulo === "impianti") return verificaImpianto(studente, soluzione);
   if (modulo === "plc") return verificaPlc(studente, soluzione);
   if (modulo === "elettronica") return verificaElettronica(studente, soluzione);
+  if (modulo === "arduino") return verificaArduino(studente, soluzione);
   return null;
 }

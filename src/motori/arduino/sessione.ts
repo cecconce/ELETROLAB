@@ -91,18 +91,23 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
   const cambia = () => {
     s.sporco = true;
   };
+  /** Cambia lo stato di un pin; il circuito si ricalcola solo se è cambiato davvero (loop() riscrive spesso lo stesso valore). */
+  const imposta = (pin: string, nuovo: StatoPin) => {
+    const prima = s.pin[pin];
+    if (prima && prima.modo === nuovo.modo && prima.livello === nuovo.livello) return;
+    s.pin[pin] = nuovo;
+    cambia();
+  };
   const hw: Hardware = {
     pinMode(pin, modo) {
       const prima = s.pin[pin];
-      s.pin[pin] = { modo, livello: modo === "OUTPUT" ? (prima?.livello ?? 0) : 0 };
-      cambia();
+      imposta(pin, { modo, livello: modo === "OUTPUT" ? (prima?.livello ?? 0) : 0 });
     },
     digitalWrite(pin, livello) {
       const p = s.pin[pin] ?? { modo: "INPUT", livello: 0 };
       // Come sulla scheda vera: digitalWrite(HIGH) su un ingresso attiva il pull-up.
-      if (p.modo === "OUTPUT") s.pin[pin] = { modo: "OUTPUT", livello };
-      else s.pin[pin] = { modo: livello ? "INPUT_PULLUP" : "INPUT", livello: 0 };
-      cambia();
+      if (p.modo === "OUTPUT") imposta(pin, { modo: "OUTPUT", livello });
+      else imposta(pin, { modo: livello ? "INPUT_PULLUP" : "INPUT", livello: 0 });
     },
     digitalRead(pin) {
       if (s.sporco) ricalcola(s);
@@ -115,8 +120,7 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     analogWrite(pin, valore) {
       // Sui pin senza PWM analogWrite accende (≥128) o spegne, come sulla scheda.
       const livello = PIN_PWM.has(pin) ? valore / 255 : valore >= 128 ? 1 : 0;
-      s.pin[pin] = { modo: "OUTPUT", livello };
-      cambia();
+      imposta(pin, { modo: "OUTPUT", livello });
     },
     tone(pin, frequenza) {
       s.toni[pin] = frequenza;
