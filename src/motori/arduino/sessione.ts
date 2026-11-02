@@ -14,6 +14,8 @@ import {
   letturaAnalogica,
   letturaDigitale,
   PIN_PWM,
+  TEMPERATURA_PREDEFINITA,
+  TEMPERATURE,
   type AspettoArduino,
   type ComponenteArduino,
   type Interazioni,
@@ -47,7 +49,7 @@ export interface SessioneArduino {
   seriale: string;
   ingressoSeriale: number[];
   distanze: Record<string, number>;
-  interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number> };
+  interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number>; temperature: Record<string, number> };
   risultato: RisultatoCircuito;
   aspetto: Record<string, AspettoArduino>;
   sporco: boolean;
@@ -82,7 +84,7 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     distanze: {},
     seriale: "",
     ingressoSeriale: [],
-    interazioni: { premuti: new Set(), posizioni: {}, luce: {} },
+    interazioni: { premuti: new Set(), posizioni: {}, luce: {}, temperature: {} },
     risultato: risolviCircuito([]),
     aspetto: {},
     sporco: true,
@@ -194,6 +196,12 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false)
     s.distanze[id] = DISTANZE[Math.min(DISTANZE.length - 1, Math.max(0, i + (indietro ? -1 : 1)))];
     s.versione++;
     return;
+  } else if (c.tipo === "tmp36") {
+    const ora = s.interazioni.temperature[id] ?? TEMPERATURA_PREDEFINITA;
+    const i = Math.max(0, TEMPERATURE.indexOf(ora));
+    s.interazioni.temperature[id] = TEMPERATURE[Math.min(TEMPERATURE.length - 1, Math.max(0, i + (indietro ? -1 : 1)))];
+  } else if (c.tipo === "interruttore-slitta") {
+    s.interazioni.posizioni[id] = (s.interazioni.posizioni[id] ?? 0) >= 0.5 ? 0 : 1;
   } else if (c.tipo === "fotoresistenza") {
     const livelli = [0, 0.25, 0.5, 0.75, 1];
     const ora = s.interazioni.luce[id] ?? 0.5;

@@ -31,7 +31,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono i 7 esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(7);
+    expect(arduino).toHaveLength(8);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -110,5 +110,19 @@ describe("esempi Arduino", () => {
     aspetta(s, 700);
     expect(s.seriale).toMatch(/Distanza: 10 cm/);
     expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.5);
+  });
+});
+
+describe("esempio del termometro", () => {
+  it("scrive la temperatura e accende il LED L sopra i 30 °C", () => {
+    const { schema, s } = apri("arduino-temperatura.elab");
+    aspetta(s, 700);
+    expect(s.errore).toBeNull();
+    expect(s.seriale).toContain("Temperatura: 20 C");
+    const sensore = id(schema, "tmp36");
+    for (let k = 0; k < 3; k++) clicGiuArduino(s, sensore);
+    aspetta(s, 1200);
+    expect(s.seriale.trim().split("\n").pop()).toContain("Temperatura: 35 C");
+    expect(s.pin.D13?.livello).toBe(1);
   });
 });

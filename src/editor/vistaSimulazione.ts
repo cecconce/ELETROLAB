@@ -56,6 +56,12 @@ export interface AspettoComponente {
     retro?: number;
     /** Sensore a ultrasuoni: distanza dell'ostacolo (cm). */
     distanza?: number;
+    /** LED RGB: luminosità di rosso, verde e blu. */
+    rgb?: [number, number, number];
+    /** Sensore di temperatura (°C). */
+    temperatura?: number;
+    /** Motore in continua: velocità −1…1. */
+    velocita?: number;
   };
   /** Elettronica: LED e lampadine (0…1), LED bruciato, cursore del potenziometro, display del multimetro. */
   elettronica?: {

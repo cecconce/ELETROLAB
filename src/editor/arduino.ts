@@ -7,6 +7,7 @@
 // - i componenti con i loro parametri (colore del LED, valore della resistenza).
 import {
   DISTANZA_PREDEFINITA,
+  TEMPERATURA_PREDEFINITA,
   gruppoForo,
   nomePin,
   pinCollegato,
@@ -66,7 +67,7 @@ export function nodiDaSchema(schema: Schema, morsettiDi: MorsettiDelTipo): NodoD
 export function componentiDaSchema(schema: Schema): ComponenteArduino[] {
   return schema.componenti.map((c) => {
     const led = /^led-(\w+)$/.exec(c.tipo);
-    if (led) return { id: c.id, tipo: "led", colore: led[1] };
+    if (led && c.tipo !== "led-rgb") return { id: c.id, tipo: "led", colore: led[1] };
     return { id: c.id, tipo: c.tipo, ...(c.valore !== undefined ? { valore: c.valore } : {}) };
   });
 }
@@ -137,7 +138,7 @@ void loop() {
 /** Che cosa fa un clic sui componenti del banco durante la simulazione. */
 function clicArduino(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante") return "pulsante";
-  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni") return "manuale";
+  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta") return "manuale";
   return null;
 }
 
@@ -147,11 +148,17 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
   for (const c of schema.componenti) {
     const a = s.aspetto[c.id] ?? {};
     const arduino: NonNullable<AspettoComponente["arduino"]> = {};
-    if (c.tipo.startsWith("led-")) {
+    if (c.tipo === "led-rgb") {
+      arduino.rgb = a.rgb ?? [0, 0, 0];
+      arduino.bruciato = a.bruciato ?? false;
+    } else if (c.tipo.startsWith("led-")) {
       arduino.luminosita = a.luminosita ?? 0;
       arduino.bruciato = a.bruciato ?? false;
     }
     if (c.tipo === "potenziometro") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0.5;
+    if (c.tipo === "interruttore-slitta") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
+    if (c.tipo === "tmp36") arduino.temperatura = s.interazioni.temperature[c.id] ?? TEMPERATURA_PREDEFINITA;
+    if (c.tipo === "motore-dc") arduino.velocita = a.velocita ?? 0;
     if (c.tipo === "fotoresistenza") arduino.luce = s.interazioni.luce[c.id] ?? 0.5;
     if (c.tipo === "servo") {
       const pin = pinCollegato(s, c.id, "SIG");

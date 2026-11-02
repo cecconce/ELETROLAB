@@ -154,3 +154,41 @@ describe("breadboard", () => {
     expect(r.tensioni.g).toBeCloseTo(0);
   });
 });
+
+describe("componenti aggiunti: LED RGB, motore, sensore di temperatura, interruttore a slitta", () => {
+  const U = { id: "U", tipo: "arduino-uno" };
+  it("LED RGB: si accendono solo i colori comandati (rosso + blu = viola)", () => {
+    const comp: ComponenteArduino[] = [U, { id: "R1", tipo: "resistenza", valore: 220 }, { id: "R2", tipo: "resistenza", valore: 220 }, { id: "R3", tipo: "resistenza", valore: 220 }, { id: "L", tipo: "led-rgb" }];
+    const fili = { "U.D9": "a", "R1.1": "a", "R1.2": "r", "L.R": "r", "U.D10": "b", "R2.1": "b", "R2.2": "g", "L.G": "g", "U.D11": "c", "R3.1": "c", "R3.2": "bl", "L.B": "bl", "L.K": "m", "U.GND1": "m" };
+    const { aspetto } = calcola(comp, fili, { D9: { modo: "OUTPUT", livello: 1 }, D10: { modo: "OUTPUT", livello: 0 }, D11: { modo: "OUTPUT", livello: 1 } });
+    const [r, g, b] = aspetto.L.rgb!;
+    expect(r).toBeGreaterThan(0.5);
+    expect(g).toBe(0);
+    expect(b).toBeGreaterThan(0.2);
+  });
+  it("motore in continua: gira con il verso della tensione, fermo senza", () => {
+    const comp: ComponenteArduino[] = [U, { id: "M", tipo: "motore-dc" }];
+    const avanti = calcola(comp, { "U.5V": "p", "M.+": "p", "M.-": "m", "U.GND1": "m" }, {});
+    expect(avanti.aspetto.M.velocita).toBeGreaterThan(0.9);
+    const indietro = calcola(comp, { "U.5V": "p", "M.-": "p", "M.+": "m", "U.GND1": "m" }, {});
+    expect(indietro.aspetto.M.velocita).toBeLessThan(-0.9);
+    const fermo = calcola(comp, { "M.+": "p", "M.-": "m", "U.GND1": "m" }, {});
+    expect(fermo.aspetto.M.velocita).toBe(0);
+  });
+  it("sensore di temperatura: 0,5 V + 10 mV/°C letti con analogRead", () => {
+    const comp: ComponenteArduino[] = [U, { id: "T", tipo: "tmp36" }];
+    const fili = { "U.5V": "p", "T.VCC": "p", "T.OUT": "o", "U.A0": "o", "T.GND": "m", "U.GND1": "m" };
+    const a20 = calcola(comp, fili, {});
+    expect(letturaAnalogica(a20.r, "o")).toBe(143); // 0,7 V → 143
+    const a40 = calcola(comp, fili, {}, { ...nessuna, temperature: { T: 40 } });
+    expect(letturaAnalogica(a40.r, "o")).toBe(184); // 0,9 V
+  });
+  it("interruttore a slitta: il centrale passa da un lato all'altro", () => {
+    const comp: ComponenteArduino[] = [U, { id: "S", tipo: "interruttore-slitta" }];
+    const fili = { "U.5V": "p", "S.1": "p", "S.2": "m", "U.GND1": "m", "S.C": "c", "U.D2": "c" };
+    const sinistra = calcola(comp, fili, { D2: { modo: "INPUT", livello: 0 } });
+    expect(letturaDigitale(sinistra.r, "c")).toBe(1);
+    const destra = calcola(comp, fili, { D2: { modo: "INPUT", livello: 0 } }, { ...nessuna, posizioni: { S: 1 } });
+    expect(letturaDigitale(destra.r, "c")).toBe(0);
+  });
+});

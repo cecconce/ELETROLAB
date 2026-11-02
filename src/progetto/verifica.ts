@@ -292,7 +292,7 @@ export function verificaElettronica(studente: Schema, soluzione: Pick<Schema, "c
 export function verificaArduino(studente: Schema, soluzione: NonNullable<NonNullable<Schema["esercizio"]>["soluzione"]>): EsitoVerifica {
   const libreria = libreriaDelModulo("arduino");
   const morsettiDi = (tipo: string) => vocePerTipo(libreria, tipo)?.morsetti;
-  const OSSERVATI = (tipo: string) => tipo.startsWith("led-") || tipo === "servo" || tipo === "buzzer" || tipo === "lcd" || tipo === "arduino-uno";
+  const OSSERVATI = (tipo: string) => tipo.startsWith("led-") || tipo === "servo" || tipo === "buzzer" || tipo === "lcd" || tipo === "arduino-uno" || tipo === "motore-dc";
   const nome = (c: { etichetta: string; tipo: string; id: string }) => c.etichetta || c.id;
   const osservati = soluzione.componenti.filter((c) => OSSERVATI(c.tipo));
   const pulsanti = soluzione.componenti.filter((c) => c.tipo === "pulsante").map(nome);
@@ -312,7 +312,9 @@ export function verificaArduino(studente: Schema, soluzione: NonNullable<NonNull
         const a = id ? v[id]?.arduino : undefined;
         if (!a) continue;
         const n = nome(c);
-        if (c.tipo.startsWith("led-")) o[n] = a.bruciato ? t("verifica.bruciato") : (a.luminosita ?? 0) < 0.1 ? t("verifica.spento") : `${t("verifica.acceso")} ${Math.round((a.luminosita ?? 0) * 4) * 25}%`;
+        if (c.tipo === "led-rgb") o[n] = a.bruciato ? t("verifica.bruciato") : (a.rgb ?? [0, 0, 0]).map((x, k) => `${"RGB"[k]} ${Math.round(x * 4) * 25}%`).join(" ");
+        else if (c.tipo === "motore-dc") o[n] = !a.velocita ? t("verifica.fermo") : `${t(a.velocita > 0 ? "verifica.giraOrario" : "verifica.giraAntiorario")} ${Math.round(Math.abs(a.velocita) * 4) * 25}%`;
+        else if (c.tipo.startsWith("led-")) o[n] = a.bruciato ? t("verifica.bruciato") : (a.luminosita ?? 0) < 0.1 ? t("verifica.spento") : `${t("verifica.acceso")} ${Math.round((a.luminosita ?? 0) * 4) * 25}%`;
         else if (c.tipo === "servo") o[n] = a.angolo === undefined ? "–" : `${Math.round(a.angolo / 10) * 10}°`;
         else if (c.tipo === "buzzer") o[n] = a.suona ? t("verifica.suona") : t("verifica.muta");
         else if (c.tipo === "lcd") o[n] = `«${(a.righe ?? []).join(" / ").trim()}»`;

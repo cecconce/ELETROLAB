@@ -380,3 +380,40 @@ void loop() {
 `),
   );
 }
+
+// 8. Termometro con il sensore di temperatura
+{
+  const b = costruttore();
+  alimenta(b);
+  // Sensore con i piedini nei fori e20 (+5V), e21 (uscita), e22 (GND).
+  const f = foro("e20");
+  b.posa("tmp36", f.x, f.y - 60);
+  b.filo("a20", "Ap20");
+  b.filo("a22", "Am22");
+  b.filo("b21", "U:A0", ARANCIONE);
+  scrivi(
+    "arduino-temperatura.elab",
+    b.schema(`// Termometro: legge il sensore di temperatura, scrive i gradi sul
+// monitor seriale e accende il LED «L» (pin 13) sopra i 30 °C.
+// Il sensore dà 0,5 V a 0 °C e 10 mV in più per ogni grado.
+
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  long millivolt = analogRead(A0);       // 0…1023
+  millivolt = millivolt * 5000 / 1023;   // in millivolt (0…5000)
+  int gradi = (millivolt - 500 + 5) / 10;   // +5 per arrotondare al grado
+
+  Serial.print("Temperatura: ");
+  Serial.print(gradi);
+  Serial.println(" C");
+
+  digitalWrite(LED_BUILTIN, gradi > 30);
+  delay(500);
+}
+`),
+  );
+}

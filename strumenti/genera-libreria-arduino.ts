@@ -425,6 +425,130 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------------- LED RGB (catodo comune)
+voce(
+  {
+    id: "led-rgb",
+    nome: "LED RGB",
+    categoria: "uscite",
+    sigla: "D",
+    descrizione: "Tre LED (rosso, verde, blu) nello stesso involucro con il catodo in comune (gamba più lunga, al GND). Ogni colore va a un pin attraverso una resistenza da 220 Ω; con analogWrite mescoli i colori.",
+    paroleChiave: ["led", "rgb", "colori", "tricolore"],
+    larghezza: 60,
+    altezza: 80,
+    morsetti: [
+      { id: "R", x: 0, y: 80 },
+      { id: "K", x: 20, y: 80 },
+      { id: "G", x: 40, y: 80 },
+      { id: "B", x: 60, y: 80 },
+    ],
+  },
+  svg(
+    60,
+    80,
+    [
+      `<path d="M22 44 V60 L0 72 V80" fill="none" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      `<path d="M27 44 V66 L20 72 V80" fill="none" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      `<path d="M33 44 V64 L40 72 V80" fill="none" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      `<path d="M38 44 V58 L60 72 V80" fill="none" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      `<rect x="13" y="40" width="34" height="6" rx="1.5" fill="#eceff1" stroke="#00000055"/>`,
+      `<path d="M15 42 V22 A15 15 0 0 1 45 22 V42 Z" fill="#f5f5f5" fill-opacity="0.9" stroke="#00000055"/>`,
+      `<circle cx="24" cy="28" r="3" fill="#e53935"/><circle cx="30" cy="22" r="3" fill="#43a047"/><circle cx="36" cy="28" r="3" fill="#1e88e5"/>`,
+      testo(0, 66, "R", 7, "#757575", 'font-weight="bold"'),
+      testo(46, 66, "G", 7, "#757575", 'font-weight="bold"'),
+      testo(56, 64, "B", 7, "#757575", 'font-weight="bold"'),
+    ].join("\n"),
+  ),
+);
+
+// ---------------------------------------------------------------- Motore in corrente continua
+voce(
+  {
+    id: "motore-dc",
+    nome: "Motore in corrente continua",
+    categoria: "uscite",
+    sigla: "M",
+    descrizione: "Piccolo motore: gira quando fra i due morsetti c'è tensione, più veloce con più tensione; invertendo i fili gira al contrario. Un pin di Arduino non basta a farlo girare forte: di solito si comanda con un transistor.",
+    paroleChiave: ["motore", "dc", "cc", "ventola", "ruota"],
+    larghezza: 80,
+    altezza: 80,
+    morsetti: [
+      { id: "+", x: 20, y: 80 },
+      { id: "-", x: 60, y: 80 },
+    ],
+  },
+  svg(
+    80,
+    80,
+    [
+      `<line x1="20" y1="58" x2="20" y2="80" stroke="#e53935" stroke-width="2.5"/><line x1="60" y1="58" x2="60" y2="80" stroke="#212121" stroke-width="2.5"/>`,
+      `<rect x="10" y="10" width="60" height="50" rx="10" fill="#b0bec5" stroke="#607d8b" stroke-width="2"/>`,
+      `<rect x="16" y="16" width="48" height="38" rx="6" fill="#cfd8dc"/>`,
+      `<circle cx="40" cy="35" r="10" fill="#eceff1" stroke="#90a4ae"/>`,
+      `<rect x="38" y="0" width="4" height="12" fill="#9e9e9e"/>`,
+      testo(40, 39, "M", 9, "#455a64", 'font-weight="bold"'),
+      testo(13, 72, "+", 9, "#e53935", 'font-weight="bold"'),
+    ].join("\n"),
+  ),
+);
+
+// ---------------------------------------------------------------- Sensore di temperatura
+voce(
+  {
+    id: "tmp36",
+    nome: "Sensore di temperatura",
+    categoria: "ingressi",
+    sigla: "U",
+    descrizione: "Dà una tensione che cresce con la temperatura: 0,5 V a 0 °C e 10 mV in più per ogni grado (0,75 V a 25 °C). Piedini: +5V, uscita (verso un ingresso analogico), GND. In simulazione: clic a destra scalda, a sinistra raffredda.",
+    paroleChiave: ["temperatura", "tmp36", "termometro", "sensore"],
+    larghezza: 40,
+    altezza: 60,
+    morsetti: [
+      { id: "VCC", x: 0, y: 60 },
+      { id: "OUT", x: 20, y: 60 },
+      { id: "GND", x: 40, y: 60 },
+    ],
+  },
+  svg(
+    40,
+    60,
+    [
+      ...[0, 20, 40].map((x) => `<line x1="${x}" y1="60" x2="${x === 0 ? 12 : x === 40 ? 28 : 20}" y2="34" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+      `<path d="M6 34 V14 A14 14 0 0 1 34 14 V34 Z" fill="#212121"/>`,
+      testo(20, 24, "TMP", 7, "#e0e0e0", 'font-weight="bold"'),
+    ].join("\n"),
+  ),
+);
+
+// ---------------------------------------------------------------- Interruttore a slitta
+voce(
+  {
+    id: "interruttore-slitta",
+    nome: "Interruttore a slitta",
+    categoria: "ingressi",
+    sigla: "S",
+    descrizione: "Deviatore a tre piedini: il piedino centrale è collegato a quello di sinistra o a quello di destra secondo la posizione della levetta, e ci resta. In simulazione: clic per spostare la levetta.",
+    paroleChiave: ["interruttore", "deviatore", "slitta", "switch"],
+    larghezza: 40,
+    altezza: 40,
+    morsetti: [
+      { id: "1", x: 0, y: 40 },
+      { id: "C", x: 20, y: 40 },
+      { id: "2", x: 40, y: 40 },
+    ],
+  },
+  svg(
+    40,
+    40,
+    [
+      ...[0, 20, 40].map((x) => `<line x1="${x}" y1="40" x2="${x === 0 ? 6 : x === 40 ? 34 : 20}" y2="26" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+      `<rect x="2" y="8" width="36" height="20" rx="3" fill="#424242"/>`,
+      `<rect x="6" y="13" width="28" height="10" rx="2" fill="#212121"/>`,
+      `<rect x="7" y="10" width="12" height="16" rx="2" fill="#bdbdbd" stroke="#757575"/>`,
+    ].join("\n"),
+  ),
+);
+
 const libreria = {
   versione: 1,
   modulo: "arduino",

@@ -5,6 +5,8 @@
 // - in simulazione: LED accesi con l'alone (più o meno forte secondo la
 //   corrente) o bruciati, pulsante premuto, luce sulla fotoresistenza, note
 //   del buzzer, LED «L» e «ON» della scheda.
+import { useEffect, useRef } from "react";
+import Konva from "konva";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
 import { fasceResistenza, scriviOhm } from "./arduino";
 import type { ComponenteSchema } from "./schema";
@@ -17,7 +19,7 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
   const a = aspetto?.arduino;
   const inSimulazione = aspetto !== undefined;
   const led = /^led-(\w+)$/.exec(c.tipo);
-  if (led) {
+  if (led && c.tipo !== "led-rgb") {
     const colore = COLORE_LED[led[1]] ?? "#ff3b30";
     if (a?.bruciato) {
       return (
@@ -155,7 +157,75 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
           {a?.ledL && <Rect x={120} y={80} width={10} height={6} fill="#ffab00" shadowColor="#ffab00" shadowBlur={10} shadowOpacity={1} />}
         </Group>
       );
+    case "led-rgb": {
+      if (a?.bruciato)
+        return (
+          <Group listening={false}>
+            <Circle x={30} y={28} radius={15} fill="#424242" opacity={0.85} />
+            <Text x={-20} y={-14} width={100} align="center" text="BRUCIATO" fontSize={10} fontStyle="bold" fill="#d32f2f" fontFamily={FONT} />
+          </Group>
+        );
+      const [r, g, b] = a?.rgb ?? [0, 0, 0];
+      const l = Math.max(r, g, b);
+      if (l <= 0) return null;
+      // Colore mescolato come lo vede l'occhio: ogni canale in proporzione alla sua luminosità.
+      const colore = `rgb(${Math.round((255 * r) / l)}, ${Math.round((255 * g) / l)}, ${Math.round((255 * b) / l)})`;
+      return (
+        <Group listening={false}>
+          <Circle x={30} y={28} radius={14 + 12 * l} fill={colore} opacity={0.2 + 0.4 * l} shadowColor={colore} shadowBlur={30 * l} shadowOpacity={1} />
+          <Circle x={30} y={28} radius={11} fill={colore} opacity={0.5 + 0.4 * l} />
+        </Group>
+      );
+    }
+    case "motore-dc":
+      return <MotoreDc velocita={a?.velocita ?? 0} />;
+    case "tmp36":
+      return a?.temperatura !== undefined ? (
+        <Group listening={false}>
+          <Rect x={-6} y={-18} width={52} height={16} cornerRadius={4} fill="#263238" />
+          <Text x={-6} y={-15} width={52} align="center" text={`${a.temperatura} °C`} fontSize={11} fontStyle="bold" fill={a.temperatura >= 30 ? "#ff8a65" : a.temperatura <= 5 ? "#81d4fa" : "#ffffff"} fontFamily={FONT} />
+        </Group>
+      ) : null;
+    case "interruttore-slitta":
+      // Levetta spostata a destra (centrale collegato al piedino 2).
+      return (a?.posizione ?? 0) >= 0.5 ? (
+        <Group listening={false}>
+          <Rect x={6} y={13} width={28} height={10} cornerRadius={2} fill="#212121" />
+          <Rect x={21} y={10} width={12} height={16} cornerRadius={2} fill="#bdbdbd" stroke="#757575" />
+        </Group>
+      ) : null;
     default:
       return null;
   }
+}
+
+/**
+ * Motorino in continua: l'albero (un disco con una tacca) gira tanto più in
+ * fretta quanto più tensione riceve, nel verso dato dal segno.
+ */
+function MotoreDc({ velocita }: { velocita: number }) {
+  const disco = useRef<Konva.Group>(null);
+  useEffect(() => {
+    const g = disco.current;
+    if (!g || velocita === 0) return;
+    const animazione = new Konva.Animation((frame) => {
+      if (frame) g.rotation(g.rotation() + velocita * frame.timeDiff * 1.2);
+    }, g.getLayer());
+    animazione.start();
+    return () => {
+      animazione.stop();
+    };
+  }, [velocita]);
+  return (
+    <Group listening={false}>
+      <Group ref={disco} x={40} y={35}>
+        <Circle radius={10} fill={velocita !== 0 ? "#fff59d" : "#eceff1"} stroke="#90a4ae" />
+        <Line points={[0, 0, 0, -10]} stroke="#e53935" strokeWidth={3} lineCap="round" />
+        <Line points={[0, 0, 8, 6]} stroke="#455a64" strokeWidth={2} lineCap="round" />
+      </Group>
+      {velocita !== 0 && (
+        <Text x={-10} y={-16} width={100} align="center" text={`${velocita > 0 ? "↻" : "↺"} ${Math.round(Math.abs(velocita) * 100)} %`} fontSize={11} fontStyle="bold" fill="#2e7d32" fontFamily={FONT} />
+      )}
+    </Group>
+  );
 }

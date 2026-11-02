@@ -60,7 +60,15 @@ export interface Interazioni {
   posizioni: Readonly<Record<string, number>>;
   /** Fotoresistenze: luce 0 (buio) … 1 (pieno sole). */
   luce: Readonly<Record<string, number>>;
+  /** Sensori di temperatura: gradi Celsius (se manca vale TEMPERATURA_PREDEFINITA). */
+  temperature?: Readonly<Record<string, number>>;
 }
+
+/** Temperatura iniziale dei sensori (°C) e passo del clic. */
+export const TEMPERATURA_PREDEFINITA = 20;
+export const TEMPERATURE = [-10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+/** Resistenza dell'avvolgimento del motorino in continua (Ω). */
+export const R_MOTORE_DC = 20;
 
 /** Nodo elettrico di un morsetto (calcolato dall'editor: fili, fori della breadboard, piedini infilati). */
 export type NodoDi = (componente: string, morsetto: string) => string;
@@ -102,6 +110,28 @@ export function elementiCircuito(
       case "led":
         el.push({ tipo: "diodo", id: c.id, anodo: n("A"), catodo: n("K"), vf: SOGLIA_LED[c.colore ?? "rosso"] ?? 1.8, ron: 15 });
         break;
+      case "led-rgb":
+        // Tre LED con il catodo in comune.
+        el.push({ tipo: "diodo", id: `${c.id}:R`, anodo: n("R"), catodo: n("K"), vf: SOGLIA_LED.rosso, ron: 15 });
+        el.push({ tipo: "diodo", id: `${c.id}:G`, anodo: n("G"), catodo: n("K"), vf: SOGLIA_LED.verde, ron: 15 });
+        el.push({ tipo: "diodo", id: `${c.id}:B`, anodo: n("B"), catodo: n("K"), vf: SOGLIA_LED.blu, ron: 15 });
+        break;
+      case "motore-dc":
+        R(c.id, n("+"), n("-"), R_MOTORE_DC);
+        break;
+      case "tmp36": {
+        // Uscita 10 mV/°C con 0,5 V a 0 °C (rispetto a massa) e un piccolo assorbimento dall'alimentazione.
+        const gradi = interazioni.temperature?.[c.id] ?? TEMPERATURA_PREDEFINITA;
+        R(`${c.id}:alim`, n("VCC"), n("GND"), 20000);
+        el.push({ tipo: "generatore", id: `${c.id}:out`, nodo: n("OUT"), volt: 0.5 + 0.01 * gradi, ohm: 100 });
+        break;
+      }
+      case "interruttore-slitta": {
+        // Il centrale va a sinistra (1) o a destra (2) secondo la posizione della levetta.
+        const destra = (interazioni.posizioni[c.id] ?? 0) >= 0.5;
+        R(`${c.id}:chiuso`, n("C"), n(destra ? "2" : "1"), 0.05);
+        break;
+      }
       case "pulsante": {
         // Due coppie di piedini sempre unite; premendo si uniscono le coppie.
         R(`${c.id}:1`, n("1a"), n("1b"), 1e-3);
@@ -154,6 +184,10 @@ export interface AspettoArduino {
   alimentato?: boolean;
   /** Corrente nel componente (A), utile per i messaggi. */
   corrente?: number;
+  /** LED RGB: luminosità dei tre colori 0…1. */
+  rgb?: [number, number, number];
+  /** Motore in continua: velocità −1…1 (il segno è il verso). */
+  velocita?: number;
 }
 
 export function aspettoComponenti(componenti: readonly ComponenteArduino[], nodoDi: NodoDi, r: RisultatoCircuito): Record<string, AspettoArduino> {
@@ -166,6 +200,17 @@ export function aspettoComponenti(componenti: readonly ComponenteArduino[], nodo
       // ignorano le correnti minuscole di un circuito lasciato aperto).
       const visibile = i >= CORRENTE_LED_MINIMA;
       aspetto[c.id] = { luminosita: visibile ? Math.min(1, i / CORRENTE_LED_PIENA) : 0, bruciato: i > CORRENTE_LED_BRUCIATO, corrente: i };
+    } else if (c.tipo === "led-rgb") {
+      const lum = (k: string) => {
+        const i = r.correnti[`${c.id}:${k}`] ?? 0;
+        return i >= CORRENTE_LED_MINIMA ? Math.min(1, i / CORRENTE_LED_PIENA) : 0;
+      };
+      const imax = Math.max(...["R", "G", "B"].map((k) => r.correnti[`${c.id}:${k}`] ?? 0));
+      aspetto[c.id] = { rgb: [lum("R"), lum("G"), lum("B")], bruciato: imax > CORRENTE_LED_BRUCIATO, corrente: imax };
+    } else if (c.tipo === "motore-dc") {
+      const volt = v(nodoDi(c.id, "+")) - v(nodoDi(c.id, "-"));
+      const velocita = Math.abs(volt) < 0.5 ? 0 : Math.max(-1, Math.min(1, volt / 5));
+      aspetto[c.id] = { velocita, alimentato: velocita !== 0, corrente: Math.abs(volt) / R_MOTORE_DC };
     } else if (c.tipo === "buzzer") {
       aspetto[c.id] = { alimentato: v(nodoDi(c.id, "+")) - v(nodoDi(c.id, "-")) > 1 };
     } else if (c.tipo === "servo") {

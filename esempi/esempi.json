@@ -156,6 +156,13 @@
       "prova": "Premi ▶ AVVIA e guarda il monitor seriale. Clic sulla parte sinistra del sensore per avvicinare l'ostacolo, sulla destra per allontanarlo: sotto i 20 cm il LED si accende."
     },
     {
+      "file": "arduino-temperatura.elab",
+      "modulo": "arduino",
+      "titolo": "Termometro con il sensore di temperatura",
+      "descrizione": "Il sensore di temperatura dà una tensione che cresce di 10 mV per grado (0,5 V a 0 °C): il programma la legge con analogRead, la trasforma in gradi e la scrive sul monitor seriale; sopra i 30 °C accende il LED «L» della scheda.",
+      "prova": "Premi ▶ AVVIA: sul monitor seriale compare «Temperatura: 20 C». Clic a destra del sensore per scaldarlo (+5 °C a ogni clic), a sinistra per raffreddarlo: sopra i 30 °C si accende il LED L. Prova a cambiare la soglia nel programma."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

@@ -1,0 +1,101 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T10:43:25.456Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "tmp36-1",
+        "tipo": "tmp36",
+        "etichetta": "U1",
+        "x": 900,
+        "y": 100,
+        "larghezza": 40,
+        "altezza": 60
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a20"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap20"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a22"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am22"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "b21"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A0"
+        },
+        "colore": "#ef6c00"
+      }
+    ],
+    "codice": "// Termometro: legge il sensore di temperatura, scrive i gradi sul\n// monitor seriale e accende il LED «L» (pin 13) sopra i 30 °C.\n// Il sensore dà 0,5 V a 0 °C e 10 mV in più per ogni grado.\n\nvoid setup() {\n  pinMode(LED_BUILTIN, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  long millivolt = analogRead(A0);       // 0…1023\n  millivolt = millivolt * 5000 / 1023;   // in millivolt (0…5000)\n  int gradi = (millivolt - 500 + 5) / 10;   // +5 per arrotondare al grado\n\n  Serial.print(\"Temperatura: \");\n  Serial.print(gradi);\n  Serial.println(\" C\");\n\n  digitalWrite(LED_BUILTIN, gradi > 30);\n  delay(500);\n}\n"
+  }
+}

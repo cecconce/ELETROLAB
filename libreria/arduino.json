@@ -2712,6 +2712,139 @@
         }
       ],
       "icona": "ard-ultrasuoni.svg"
+    },
+    {
+      "id": "led-rgb",
+      "nome": "LED RGB",
+      "categoria": "uscite",
+      "sigla": "D",
+      "descrizione": "Tre LED (rosso, verde, blu) nello stesso involucro con il catodo in comune (gamba più lunga, al GND). Ogni colore va a un pin attraverso una resistenza da 220 Ω; con analogWrite mescoli i colori.",
+      "paroleChiave": [
+        "led",
+        "rgb",
+        "colori",
+        "tricolore"
+      ],
+      "larghezza": 60,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "R",
+          "x": 0,
+          "y": 80
+        },
+        {
+          "id": "K",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "G",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "B",
+          "x": 60,
+          "y": 80
+        }
+      ],
+      "icona": "ard-led-rgb.svg"
+    },
+    {
+      "id": "motore-dc",
+      "nome": "Motore in corrente continua",
+      "categoria": "uscite",
+      "sigla": "M",
+      "descrizione": "Piccolo motore: gira quando fra i due morsetti c'è tensione, più veloce con più tensione; invertendo i fili gira al contrario. Un pin di Arduino non basta a farlo girare forte: di solito si comanda con un transistor.",
+      "paroleChiave": [
+        "motore",
+        "dc",
+        "cc",
+        "ventola",
+        "ruota"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "+",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "-",
+          "x": 60,
+          "y": 80
+        }
+      ],
+      "icona": "ard-motore-dc.svg"
+    },
+    {
+      "id": "tmp36",
+      "nome": "Sensore di temperatura",
+      "categoria": "ingressi",
+      "sigla": "U",
+      "descrizione": "Dà una tensione che cresce con la temperatura: 0,5 V a 0 °C e 10 mV in più per ogni grado (0,75 V a 25 °C). Piedini: +5V, uscita (verso un ingresso analogico), GND. In simulazione: clic a destra scalda, a sinistra raffredda.",
+      "paroleChiave": [
+        "temperatura",
+        "tmp36",
+        "termometro",
+        "sensore"
+      ],
+      "larghezza": 40,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "VCC",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "OUT",
+          "x": 20,
+          "y": 60
+        },
+        {
+          "id": "GND",
+          "x": 40,
+          "y": 60
+        }
+      ],
+      "icona": "ard-tmp36.svg"
+    },
+    {
+      "id": "interruttore-slitta",
+      "nome": "Interruttore a slitta",
+      "categoria": "ingressi",
+      "sigla": "S",
+      "descrizione": "Deviatore a tre piedini: il piedino centrale è collegato a quello di sinistra o a quello di destra secondo la posizione della levetta, e ci resta. In simulazione: clic per spostare la levetta.",
+      "paroleChiave": [
+        "interruttore",
+        "deviatore",
+        "slitta",
+        "switch"
+      ],
+      "larghezza": 40,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "C",
+          "x": 20,
+          "y": 40
+        },
+        {
+          "id": "2",
+          "x": 40,
+          "y": 40
+        }
+      ],
+      "icona": "ard-interruttore-slitta.svg"
     }
   ]
 }
