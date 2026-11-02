@@ -335,5 +335,20 @@ describe("esempi pronti (2)", () => {
     expect(k1Eccitato(s)).toBe(false);
     expect(problemiSessione(s)).toEqual([]);
   });
+
+  it("pneumatica: S1 fa uscire lo stelo, a fine corsa rientra da solo", () => {
+    const schema = schemaDi("cilindro-andata-ritorno.elab");
+    const posizione = (s: SessioneImpianto) => s.stato.cilindri?.A1?.posizione ?? 0;
+    let s = avviaSessione(schema);
+    s = clicSu(clicGiu(s, "S1"), "S1");
+    s = passo(s, 0.8);
+    expect(posizione(s)).toBeGreaterThan(0.4);
+    s = passo(s, 0.8);
+    // Arrivato in fondo: KA2 toglie l'autoritenuta e lo stelo torna indietro.
+    s = passo(s, 2);
+    expect(posizione(s)).toBe(0);
+    expect(s.risultato.bobineEccitate).toEqual([]);
+    expect(problemiSessione(s)).toEqual([]);
+  });
 });
 

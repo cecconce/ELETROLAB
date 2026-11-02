@@ -91,6 +91,8 @@ export interface StatoTemporizzatori {
   inRitardo?: Iterable<string>;
   /** Relè passo-passo con i contatti commutati (memoria tenuta da tempo.ts). */
   passoPassoChiusi?: Iterable<string>;
+  /** Cilindri pneumatici: posizione dello stelo per sigla (0 = dentro, 1 = fuori). */
+  posizioniCilindri?: Readonly<Record<string, number>>;
 }
 
 /** Stato di un motore che gira. */
@@ -225,6 +227,7 @@ interface StatoComandi {
   inRitardo: ReadonlySet<string>;
   passoPasso: ReadonlySet<string>;
   uscitePlc: ReadonlySet<string>;
+  cilindri: Readonly<Record<string, number>>;
   /** Bobine eccitate all'inizio del calcolo (per il ritardo alla diseccitazione). */
   precedenti: ReadonlySet<string>;
 }
@@ -249,6 +252,11 @@ function contattoChiuso(n: ComponenteNoto, comandi: StatoComandi, sigleEccitate:
     case "termico":
       azionato = sigla !== "" && comandi.termici.has(sigla);
       break;
+    case "cilindro": {
+      const pos = comandi.cilindri[sigla];
+      azionato = pos !== undefined && (n.m.comando.fine === "fuori" ? pos >= 1 - 1e-9 : pos <= 1e-9);
+      break;
+    }
   }
   // Contatto NC: chiuso a riposo, si apre se azionato. NA: il contrario.
   return n.m.normalmenteChiuso ? !azionato : azionato;
@@ -497,6 +505,7 @@ export function simula(
     inRitardo: new Set(temporizzatori.inRitardo ?? []),
     passoPasso: new Set(temporizzatori.passoPassoChiusi ?? []),
     uscitePlc: new Set(ingressi.uscitePlc ?? []),
+    cilindri: temporizzatori.posizioniCilindri ?? {},
     precedenti: new Set(eccitate),
   };
 

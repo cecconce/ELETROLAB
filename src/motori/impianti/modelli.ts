@@ -66,7 +66,9 @@ export type Comando =
   /** Contatto azionato dalla bobina con la stessa sigla (K1, KA1, KT1…). */
   | { tipo: "bobina" }
   /** Contatto del relè termico con la stessa sigla: commuta quando il relè interviene. */
-  | { tipo: "termico" };
+  | { tipo: "termico" }
+  /** Finecorsa del cilindro pneumatico con la stessa sigla: azionato quando lo stelo è tutto fuori o tutto dentro. */
+  | { tipo: "cilindro"; fine: "fuori" | "dentro" };
 
 /** Coppia di morsetti fra cui un conduttore o un contatto chiude il circuito. */
 export type Tratto = readonly [string, string];
@@ -122,9 +124,18 @@ export type ModelloComponente =
        * il programma Ladder le porta a 1 (vedi sessione.ts).
        */
       plc?: { ingressi: readonly string[]; comune: string; uscite: readonly string[] };
+      /**
+       * Solo per il cilindro pneumatico con elettrovalvola 5/2 monostabile:
+       * con la bobina alimentata lo stelo esce, senza rientra (molla della
+       * valvola), in `corsa` secondi (posizione in tempo.ts).
+       */
+      cilindro?: { corsa: number };
       /** Solo per i motori: come calcolare rotazione e verso. */
       motore?: TipoMotore;
     };
+
+/** Tempo che impiega lo stelo del cilindro pneumatico a uscire o a rientrare (s). */
+export const TEMPO_CORSA_CILINDRO = 1.5;
 
 /** Morsetti del PLC posato nello schema elettrico: 8 ingressi e 6 uscite a relè. */
 export const INGRESSI_PLC: readonly string[] = Array.from({ length: 8 }, (_, i) => `I0.${i}`);
@@ -233,6 +244,10 @@ export const MODELLI_IMPIANTI: Readonly<Record<string, ModelloComponente>> = {
   "bobina-contattore": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true },
   "bobina-rele": { tipo: "carico", morsetti: ["A1", "A2"], bobina: true },
   suoneria: { tipo: "carico", morsetti: ["X1", "X2"], bobina: false },
+  // Pneumatica (semplificata): cilindro a doppio effetto con la sua elettrovalvola e i due finecorsa.
+  cilindro: { tipo: "carico", morsetti: ["A1", "A2"], bobina: false, cilindro: { corsa: TEMPO_CORSA_CILINDRO } },
+  "finecorsa-cilindro-fuori": { tipo: "contatto", tratti: [["13", "14"]], normalmenteChiuso: false, comando: { tipo: "cilindro", fine: "fuori" } },
+  "finecorsa-cilindro-dentro": { tipo: "contatto", tratti: [["13", "14"]], normalmenteChiuso: false, comando: { tipo: "cilindro", fine: "dentro" } },
   plc: {
     tipo: "carico",
     morsetti: ["L", "N"],

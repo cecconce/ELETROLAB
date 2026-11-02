@@ -27,6 +27,10 @@
       "nome": "PLC (automazione)"
     },
     {
+      "id": "pneumatica",
+      "nome": "Pneumatica"
+    },
+    {
       "id": "utilizzatori",
       "nome": "Utilizzatori"
     }
@@ -1320,6 +1324,95 @@
           "id": "Q0.5",
           "x": 160,
           "y": 120
+        }
+      ]
+    },
+    {
+      "id": "cilindro",
+      "nome": "Cilindro pneumatico con elettrovalvola",
+      "categoria": "pneumatica",
+      "sigla": "A",
+      "descrizione": "Cilindro a doppio effetto comandato da un'elettrovalvola 5/2 monostabile: quando la bobina (A1-A2) è alimentata lo stelo esce, quando non lo è rientra spinto dalla molla della valvola. La corsa dura circa 1,5 secondi. I finecorsa a1 (stelo fuori) e a0 (stelo dentro) si posano a parte con la stessa sigla del cilindro.",
+      "paroleChiave": [
+        "cilindro",
+        "pneumatica",
+        "elettrovalvola",
+        "stelo",
+        "pistone",
+        "aria compressa",
+        "5/2"
+      ],
+      "icona": "cilindro.svg",
+      "larghezza": 200,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "A1",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "A2",
+          "x": 20,
+          "y": 60
+        }
+      ]
+    },
+    {
+      "id": "finecorsa-cilindro-fuori",
+      "nome": "Finecorsa del cilindro: stelo fuori (a1)",
+      "categoria": "pneumatica",
+      "sigla": "A",
+      "descrizione": "Contatto NA che si chiude quando lo stelo del cilindro con la stessa sigla (A1…) è uscito del tutto. Serve per far partire la fase successiva di un ciclo.",
+      "paroleChiave": [
+        "finecorsa",
+        "cilindro",
+        "a1",
+        "fuori",
+        "sensore magnetico"
+      ],
+      "icona": "finecorsa-cilindro-fuori.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "finecorsa-cilindro-dentro",
+      "nome": "Finecorsa del cilindro: stelo dentro (a0)",
+      "categoria": "pneumatica",
+      "sigla": "A",
+      "descrizione": "Contatto NA che si chiude quando lo stelo del cilindro con la stessa sigla (A1…) è rientrato del tutto (a riposo è chiuso).",
+      "paroleChiave": [
+        "finecorsa",
+        "cilindro",
+        "a0",
+        "dentro",
+        "sensore magnetico"
+      ],
+      "icona": "finecorsa-cilindro-dentro.svg",
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "13",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "14",
+          "x": 20,
+          "y": 80
         }
       ]
     },

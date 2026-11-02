@@ -65,6 +65,13 @@
       "prova": "Premi ▶ AVVIA e clic su Q1. Premi S1: sul PLC si accende il LED di I0.0, poi quello di Q0.0, K1 si eccita e il motore gira. Premi S0 per fermarlo. Passa alla scheda «🔢 Programma PLC» (anche durante la simulazione) per vedere il Ladder con i contatti che si accendono."
     },
     {
+      "file": "cilindro-andata-ritorno.elab",
+      "modulo": "impianti",
+      "titolo": "Pneumatica: cilindro con andata e ritorno automatici",
+      "descrizione": "Ciclo semiautomatico di un cilindro a doppio effetto. Il pulsante S1 eccita il relè KA1, che si autoalimenta e alimenta l'elettrovalvola: lo stelo esce. Quando arriva in fondo, il finecorsa a1 eccita KA2, il cui contatto NC toglie l'autoritenuta a KA1: la valvola si diseccita e lo stelo rientra da solo.",
+      "prova": "Premi ▶ AVVIA e premi S1: lo stelo del cilindro A1 esce (circa 1,5 s), arrivato in fondo il finecorsa a1 si chiude e lo stelo torna indietro. Premi di nuovo S1 per ripetere il ciclo."
+    },
+    {
       "file": "esercizio-marcia-arresto.elab",
       "modulo": "impianti",
       "titolo": "Esercizio: completa la marcia/arresto",

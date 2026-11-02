@@ -454,7 +454,51 @@ function plcNelloSchema(): Schema {
   return { ...b.schema(), plc: { componenti: ladder, fili } };
 }
 
+/**
+ * Esempio 10 (pneumatica): ciclo automatico di andata e ritorno di un
+ * cilindro. S1 avvia: KA1 si autoalimenta ed eccita l'elettrovalvola, lo
+ * stelo esce; arrivato in fondo il finecorsa a1 eccita KA2, il cui contatto
+ * NC toglie l'autoritenuta a KA1: la valvola si diseccita e lo stelo rientra.
+ */
+function cilindroAndataRitorno(): Schema {
+  const b = costruttore();
+  b.posa("rete-1f", "rete-monofase", "", 100, 40); // L in x=120, N in x=140
+  b.posa("S1", "pulsante-na", "S1", 100, 160);
+  b.posa("KA1-autoritenuta", "contatto-na", "KA1", 180, 160);
+  b.posa("KA2-nc", "contatto-nc", "KA2", 100, 280);
+  b.posa("KA1", "bobina-rele", "KA1", 100, 400);
+  b.posa("KA1-valvola", "contatto-na", "KA1", 260, 160);
+  b.posa("A1", "cilindro", "A1", 260, 280); // bobina A1 in (280,280), A2 in (280,340)
+  b.posa("a1", "finecorsa-cilindro-fuori", "A1", 520, 160);
+  b.posa("KA2", "bobina-rele", "KA2", 520, 400);
+  b.filo("rete-1f:L", "S1:13");
+  b.filo("rete-1f:L", "KA1-autoritenuta:13", 120);
+  b.filo("rete-1f:L", "KA1-valvola:13", 120);
+  b.filo("rete-1f:L", "a1:13", 120);
+  b.filo("S1:14", "KA2-nc:21");
+  b.filo("KA1-autoritenuta:14", "KA2-nc:21", 260);
+  b.filo("KA2-nc:22", "KA1:A1");
+  b.filo("KA1-valvola:14", "A1:A1");
+  b.filo("a1:14", "KA2:A1");
+  b.filo("A1:A2", "KA1:A2", undefined, [
+    { x: 280, y: 500 },
+    { x: 120, y: 500 },
+  ]);
+  b.filo("KA2:A2", "KA1:A2", undefined, [
+    { x: 540, y: 500 },
+    { x: 120, y: 500 },
+  ]);
+  b.filo("KA1:A2", "rete-1f:N", undefined, [
+    { x: 120, y: 520 },
+    { x: 640, y: 520 },
+    { x: 640, y: 100 },
+    { x: 140, y: 100 },
+  ]);
+  return b.schema();
+}
+
 const ESEMPI: Record<string, () => Schema> = {
+  "cilindro-andata-ritorno.elab": cilindroAndataRitorno,
   "plc-nello-schema.elab": plcNelloSchema,
   "impianto-civile.elab": impiantoCivile,
   "rele-passo-passo.elab": relePassoPasso,

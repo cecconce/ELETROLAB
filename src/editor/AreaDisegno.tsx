@@ -1325,6 +1325,13 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori, realistico
       {aspetto.azionato && !ePulsante(c.tipo) && aspetto.clic === "manuale" && utilizzatore === null && testo(`● ${t("simulazione.azionato")}`, -18, colori.azionato)}
       {realistico && aspetto.azionato && <ComandoRealisticoAzionato tipo={c.tipo} />}
       {aspetto.plcSchema && <LedPlc stato={aspetto.plcSchema} />}
+      {aspetto.cilindro !== undefined && aspetto.cilindro > 0 && (
+        // Stelo del cilindro che esce (fino a 40 unità oltre il fondello).
+        <Group listening={false}>
+          <Rect x={150} y={27} width={10 + 36 * aspetto.cilindro} height={6} fill="#cfd5da" stroke="#5f686e" strokeWidth={0.8} cornerRadius={1} />
+          <Rect x={156 + 36 * aspetto.cilindro} y={23} width={6} height={14} fill="#90a4ae" stroke="#455a64" strokeWidth={0.8} cornerRadius={1} />
+        </Group>
+      )}
       {realistico && (c.tipo === "contatti-principali" ? aspetto.chiuso : utilizzatore === "bobina" && aspetto.alimentato) && (
         // Indicatore meccanico del contattore: finestrella verde con "I" quando è chiuso.
         <Group listening={false}>

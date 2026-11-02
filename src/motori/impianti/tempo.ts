@@ -10,7 +10,7 @@
 //
 // L'interfaccia chiama `avanza` a intervalli regolari (es. ogni 50 ms) e
 // subito dopo ogni clic dello studente (con dt = 0).
-import { MODELLI_IMPIANTI, PROTEZIONI, TEMPO_INTERVENTO_TERMICO } from "./modelli";
+import { MODELLI_IMPIANTI, PROTEZIONI, TEMPO_CORSA_CILINDRO, TEMPO_INTERVENTO_TERMICO } from "./modelli";
 import {
   simulaConProtezioni,
   tempoDi,
@@ -34,6 +34,8 @@ export interface StatoImpianto {
   protezioniIntervenute: string[];
   /** Relè passo-passo con i contatti commutati (cambiano a ogni impulso sulla bobina). */
   passoPassoChiusi?: string[];
+  /** Cilindri pneumatici: posizione dello stelo (0 dentro, 1 fuori) e se l'elettrovalvola è alimentata. */
+  cilindri?: Record<string, { posizione: number; alimentato: boolean }>;
 }
 
 /** Azioni dello studente: le protezioni le gestisce lo stato. */
@@ -87,12 +89,28 @@ export function avanza(
     if (adesso - da >= TEMPO_INTERVENTO_TERMICO - EPSILON) intervenute.add(id);
   }
 
+  // Cilindri: lo stelo si muove verso la posizione voluta dall'elettrovalvola (stato del calcolo precedente).
+  const cilindri: Record<string, { posizione: number; alimentato: boolean }> = {};
+  const cilindriDelCircuito = circuito.componenti.filter((c) => {
+    const m = MODELLI_IMPIANTI[c.tipo];
+    return m?.tipo === "carico" && m.cilindro;
+  });
+  for (const c of cilindriDelCircuito) {
+    const m = MODELLI_IMPIANTI[c.tipo];
+    const corsa = m?.tipo === "carico" && m.cilindro ? m.cilindro.corsa : TEMPO_CORSA_CILINDRO;
+    const prima = stato.cilindri?.[c.id] ?? { posizione: 0, alimentato: false };
+    const verso = prima.alimentato ? 1 : -1;
+    const posizione = Math.min(1, Math.max(0, prima.posizione + (verso * Math.max(0, dt)) / corsa));
+    cilindri[c.id] = { posizione: Math.abs(posizione - Math.round(posizione)) < 1e-6 ? Math.round(posizione) : posizione, alimentato: prima.alimentato };
+  }
+  const posizioniPerSigla = (): Record<string, number> =>
+    Object.fromEntries(cilindriDelCircuito.filter((c) => c.etichetta.trim() !== "").map((c) => [c.etichetta.trim(), cilindri[c.id].posizione]));
   let passoPassoChiusi = stato.passoPassoChiusi ?? [];
   let risultato = simulaConProtezioni(
     circuito,
     { ...azioni, protezioniIntervenute: intervenute },
     stato.bobineEccitate,
-    { scaduti, inRitardo, passoPassoChiusi },
+    { scaduti, inRitardo, passoPassoChiusi, posizioniCilindri: posizioniPerSigla() },
   );
   // Relè passo-passo: a ogni impulso (bobina appena alimentata) i contatti cambiano stato;
   // poi si ricalcola il circuito con i contatti nella nuova posizione.
@@ -112,9 +130,10 @@ export function avanza(
       circuito,
       { ...azioni, protezioniIntervenute: new Set(risultato.protezioniIntervenute) },
       risultato.bobineEccitate,
-      { scaduti, inRitardo, passoPassoChiusi },
+      { scaduti, inRitardo, passoPassoChiusi, posizioniCilindri: posizioniPerSigla() },
     );
   }
+  for (const c of cilindriDelCircuito) cilindri[c.id].alimentato = risultato.carichiAlimentati.includes(c.id);
 
   // Aggiornamento della memoria dei temporizzatori.
   const eccitateOra = new Set(risultato.bobineEccitate);
@@ -144,6 +163,7 @@ export function avanza(
       sovraccaricoDa,
       protezioniIntervenute: risultato.protezioniIntervenute,
       passoPassoChiusi,
+      ...(cilindriDelCircuito.length > 0 ? { cilindri } : {}),
     },
     risultato,
   };
@@ -165,6 +185,13 @@ export function prossimoEvento(circuito: Circuito, stato: StatoImpianto): number
     if (t !== undefined) attese.push(da + t - stato.tempo);
   }
   for (const da of Object.values(stato.sovraccaricoDa)) attese.push(da + TEMPO_INTERVENTO_TERMICO - stato.tempo);
+  // Cilindri in movimento: quando lo stelo arriva a fine corsa i finecorsa commutano.
+  for (const [id, cil] of Object.entries(stato.cilindri ?? {})) {
+    const m = MODELLI_IMPIANTI[circuito.componenti.find((c) => c.id === id)?.tipo ?? ""];
+    const corsa = m?.tipo === "carico" && m.cilindro ? m.cilindro.corsa : TEMPO_CORSA_CILINDRO;
+    if (cil.alimentato && cil.posizione < 1) attese.push((1 - cil.posizione) * corsa);
+    if (!cil.alimentato && cil.posizione > 0) attese.push(cil.posizione * corsa);
+  }
   const future = attese.filter((x) => x > EPSILON);
   return future.length > 0 ? Math.min(...future) : null;
 }

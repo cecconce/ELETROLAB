@@ -427,6 +427,33 @@ icone["contatti-principali.svg"] = largo(
   );
 }
 
+// ============================================================ Pneumatica
+// Cilindro con elettrovalvola: bobina nera con LED, corpo valvola in alluminio
+// azzurro, tubi blu, canna cromata; lo stelo (y 27–33) lo allunga l'editor in simulazione.
+icone["cilindro.svg"] = svg(
+  200,
+  60,
+  morsetto(20, 0, 60) +
+    morsetto(20, 60, 60) +
+    `<rect x="9" y="12" width="22" height="36" rx="3" fill="url(#ps)"/><circle cx="20" cy="40" r="2" fill="#ffc107"/>${scritta(20, 25, "24V", 5, "#eceff1")}` +
+    ombra(31, 16, 58, 28, 3) +
+    `<rect x="31" y="16" width="58" height="28" rx="3" fill="url(#blu)" stroke="#0a3070"/>` +
+    [42, 60, 78].map((x) => `<circle cx="${x}" cy="40" r="2.4" fill="#0a3070"/>`).join("") +
+    scritta(60, 30, "5/2", 7, "#eceff1", 'font-weight="bold"') +
+    `<path d="M50 16V8H106V16M70 16V4H146V16" fill="none" stroke="#1e6fd0" stroke-width="3" stroke-linecap="round"/>` +
+    ombra(96, 16, 56, 28, 4) +
+    `<rect x="96" y="16" width="56" height="28" rx="4" fill="url(#cr)" stroke="#5f686e"/>` +
+    `<rect x="94" y="14" width="8" height="32" rx="2" fill="url(#pg)" stroke="#5f686e"/><rect x="146" y="14" width="8" height="32" rx="2" fill="url(#pg)" stroke="#5f686e"/>` +
+    `<rect x="154" y="27" width="6" height="6" rx="1" fill="url(#cr)" stroke="#5f686e"/>`,
+);
+const finecorsaCilindro = (testo: string) =>
+  verticale(
+    `<rect x="11" y="24" width="18" height="30" rx="3" fill="url(#ps)"/><rect x="13" y="28" width="14" height="6" rx="1" fill="#212121"/>` +
+      `<circle cx="20" cy="31" r="1.8" fill="#ffc107"/>${scritta(20, 46, testo, 8, "#eceff1", 'font-weight="bold"')}`,
+  );
+icone["finecorsa-cilindro-fuori.svg"] = finecorsaCilindro("a1");
+icone["finecorsa-cilindro-dentro.svg"] = finecorsaCilindro("a0");
+
 // ============================================================ Utilizzatori
 // Spia da quadro: ghiera cromata e calotta in vetro (il colore della luce lo disegna l'editor).
 icone["lampada.svg"] = svg(

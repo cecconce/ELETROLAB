@@ -42,6 +42,8 @@ export interface AspettoComponente {
   motore?: StatoMotore;
   /** PLC posato nello schema elettrico: alimentato, ingressi e uscite a 1 (per i LED). */
   plcSchema?: { acceso: boolean; ingressi: string[]; uscite: string[] };
+  /** Cilindro pneumatico: posizione dello stelo 0 (dentro) … 1 (fuori). */
+  cilindro?: number;
   /** PLC: valore da scrivere sotto il blocco (tempo trascorso, conteggio). */
   valore?: string;
   /** PLC: stato dell'impianto animato da disegnare (nastro, semaforo, cancello…). */
@@ -126,6 +128,7 @@ export function vistaDaSessione(sessione: SessioneImpianto, fili: readonly Filo[
       intervenuta: intervenute.has(c.id),
       sovraccarico: sovraccarichi.has(c.id),
       ...(r.motori[c.id] ? { motore: r.motori[c.id] } : {}),
+      ...(sessione.stato.cilindri?.[c.id] ? { cilindro: sessione.stato.cilindri[c.id].posizione } : {}),
       ...(c.tipo === "plc" && sessione.plc?.id === c.id
         ? { plcSchema: { acceso: plcAlimentato(sessione), ingressi: ingressiPlcAttivi(sessione), uscite: uscitePlcAttive(sessione) } }
         : c.tipo === "plc"
@@ -181,7 +184,7 @@ export function tipoUtilizzatore(tipo: string): "bobina" | "luce" | "suono" | "m
   const m = MODELLI_IMPIANTI[tipo];
   if (m?.tipo !== "carico") return null;
   if (m.bobina) return "bobina";
-  if (m.plc) return null;
+  if (m.plc || m.cilindro) return null;
   if (m.motore) return "motore";
   if (tipo === "sirena" || tipo === "suoneria") return "suono";
   return "luce";

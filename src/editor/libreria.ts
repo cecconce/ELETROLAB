@@ -310,6 +310,10 @@ export function componenteDaVoce(
         })
       : [];
     etichetta = bobine.length > 0 ? bobine[bobine.length - 1].etichetta : "";
+  } else if (voce.id.startsWith("finecorsa-cilindro")) {
+    // Il finecorsa prende la sigla dell'ultimo cilindro posato (A1…), come i contatti con la loro bobina.
+    const cilindri = schema.componenti.filter((c) => c.tipo === "cilindro");
+    etichetta = cilindri.length > 0 ? cilindri[cilindri.length - 1].etichetta : "A1";
   } else if (libreria?.modulo === "plc") {
     // Nel PLC la sigla è l'operando: I0.0, Q0.0, T0, C0…
     // (il commento parte con il nome della voce, da riscrivere nelle Proprietà)

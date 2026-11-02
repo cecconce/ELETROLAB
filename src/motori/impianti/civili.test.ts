@@ -2,7 +2,7 @@
 // magnetotermico bipolare e differenziale con il tasto di prova.
 import { describe, expect, it } from "vitest";
 import type { Circuito, ComponenteCircuito, FiloCircuito } from "./simulatore";
-import { avviaSessione, azioneClic, clicGiu, clicSu } from "./sessione";
+import { avviaSessione, azioneClic, clicGiu, clicSu, passo } from "./sessione";
 import { problemiSessione } from "./index";
 
 const filo = (da: string, a: string): FiloCircuito => {
@@ -112,5 +112,45 @@ describe("sensori di processo", () => {
       expect(azioneClic(tipo)).toBe("manuale");
       expect(accesa(clicGiu(s, "B1")), tipo).toBe(!chiusoARiposo);
     }
+  });
+});
+
+describe("pneumatica", () => {
+  it("cilindro con elettrovalvola: lo stelo esce in 1,5 s, i finecorsa lo segnalano, poi rientra", () => {
+    const c: Circuito = {
+      componenti: [
+        comp("RM", "rete-monofase", ""),
+        comp("S1", "selettore"),
+        comp("A1", "cilindro"),
+        comp("a1", "finecorsa-cilindro-fuori", "A1"),
+        comp("a0", "finecorsa-cilindro-dentro", "A1"),
+        comp("H1", "lampada"),
+        comp("H2", "lampada"),
+      ],
+      fili: [
+        filo("RM:L", "S1:13"),
+        filo("S1:14", "A1:A1"),
+        filo("A1:A2", "RM:N"),
+        filo("RM:L", "a1:13"),
+        filo("a1:14", "H1:X1"),
+        filo("H1:X2", "RM:N"),
+        filo("RM:L", "a0:13"),
+        filo("a0:14", "H2:X1"),
+        filo("H2:X2", "RM:N"),
+      ],
+    };
+    let s = avviaSessione(c);
+    expect(problemiSessione(s)).toEqual([]);
+    expect(accesa(s, "H2")).toBe(true); // stelo dentro
+    s = clicGiu(s, "S1");
+    s = passo(s, 0.75);
+    expect(s.stato.cilindri?.A1.posizione).toBeCloseTo(0.5, 2);
+    expect(accesa(s, "H1") || accesa(s, "H2")).toBe(false); // a metà corsa
+    s = passo(s, 1);
+    expect(s.stato.cilindri?.A1.posizione).toBe(1);
+    expect(accesa(s, "H1")).toBe(true);
+    s = passo(clicGiu(s, "S1"), 2);
+    expect(s.stato.cilindri?.A1.posizione).toBe(0);
+    expect(accesa(s, "H2")).toBe(true);
   });
 });

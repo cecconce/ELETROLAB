@@ -1,0 +1,280 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "impianti",
+  "programma": "0.1.0",
+  "salvato": "2026-10-27T00:00:00.000Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "rete-1f",
+        "tipo": "rete-monofase",
+        "etichetta": "",
+        "x": 100,
+        "y": 40,
+        "larghezza": 60,
+        "altezza": 40
+      },
+      {
+        "id": "S1",
+        "tipo": "pulsante-na",
+        "etichetta": "S1",
+        "x": 100,
+        "y": 160,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "KA1-autoritenuta",
+        "tipo": "contatto-na",
+        "etichetta": "KA1",
+        "x": 180,
+        "y": 160,
+        "larghezza": 40,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "13": "13",
+          "14": "14"
+        }
+      },
+      {
+        "id": "KA2-nc",
+        "tipo": "contatto-nc",
+        "etichetta": "KA2",
+        "x": 100,
+        "y": 280,
+        "larghezza": 40,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "21": "11",
+          "22": "12"
+        }
+      },
+      {
+        "id": "KA1",
+        "tipo": "bobina-rele",
+        "etichetta": "KA1",
+        "x": 100,
+        "y": 400,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "KA1-valvola",
+        "tipo": "contatto-na",
+        "etichetta": "KA1",
+        "x": 260,
+        "y": 160,
+        "larghezza": 40,
+        "altezza": 80,
+        "numeriMorsetti": {
+          "13": "23",
+          "14": "24"
+        }
+      },
+      {
+        "id": "A1",
+        "tipo": "cilindro",
+        "etichetta": "A1",
+        "x": 260,
+        "y": 280,
+        "larghezza": 200,
+        "altezza": 60
+      },
+      {
+        "id": "a1",
+        "tipo": "finecorsa-cilindro-fuori",
+        "etichetta": "A1",
+        "x": 520,
+        "y": 160,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "KA2",
+        "tipo": "bobina-rele",
+        "etichetta": "KA2",
+        "x": 520,
+        "y": 400,
+        "larghezza": 40,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "S1",
+          "morsetto": "13"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "KA1-autoritenuta",
+          "morsetto": "13"
+        },
+        "medio": 120
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "KA1-valvola",
+          "morsetto": "13"
+        },
+        "medio": 120
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "rete-1f",
+          "morsetto": "L"
+        },
+        "a": {
+          "componente": "a1",
+          "morsetto": "13"
+        },
+        "medio": 120
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "S1",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "KA2-nc",
+          "morsetto": "21"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "KA1-autoritenuta",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "KA2-nc",
+          "morsetto": "21"
+        },
+        "medio": 260
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "KA2-nc",
+          "morsetto": "22"
+        },
+        "a": {
+          "componente": "KA1",
+          "morsetto": "A1"
+        }
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "KA1-valvola",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "A1",
+          "morsetto": "A1"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "a1",
+          "morsetto": "14"
+        },
+        "a": {
+          "componente": "KA2",
+          "morsetto": "A1"
+        }
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "A1",
+          "morsetto": "A2"
+        },
+        "a": {
+          "componente": "KA1",
+          "morsetto": "A2"
+        },
+        "punti": [
+          {
+            "x": 280,
+            "y": 500
+          },
+          {
+            "x": 120,
+            "y": 500
+          }
+        ]
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "KA2",
+          "morsetto": "A2"
+        },
+        "a": {
+          "componente": "KA1",
+          "morsetto": "A2"
+        },
+        "punti": [
+          {
+            "x": 540,
+            "y": 500
+          },
+          {
+            "x": 120,
+            "y": 500
+          }
+        ]
+      },
+      {
+        "id": "filo-12",
+        "da": {
+          "componente": "KA1",
+          "morsetto": "A2"
+        },
+        "a": {
+          "componente": "rete-1f",
+          "morsetto": "N"
+        },
+        "punti": [
+          {
+            "x": 120,
+            "y": 520
+          },
+          {
+            "x": 640,
+            "y": 520
+          },
+          {
+            "x": 640,
+            "y": 100
+          },
+          {
+            "x": 140,
+            "y": 100
+          }
+        ]
+      }
+    ]
+  }
+}
