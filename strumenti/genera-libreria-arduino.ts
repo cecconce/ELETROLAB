@@ -17,6 +17,7 @@ import {
   Y_RIGHE,
   foriBreadboard,
 } from "../src/motori/arduino/breadboard";
+import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI } from "../src/editor/segmenti7";
 
 const FONT = 'font-family="Segoe UI, Arial, sans-serif"';
 const svg = (w: number, h: number, corpo: string) =>
@@ -545,6 +546,48 @@ voce(
       `<rect x="2" y="8" width="36" height="20" rx="3" fill="#424242"/>`,
       `<rect x="6" y="13" width="28" height="10" rx="2" fill="#212121"/>`,
       `<rect x="7" y="10" width="12" height="16" rx="2" fill="#bdbdbd" stroke="#757575"/>`,
+    ].join("\n"),
+  ),
+);
+
+// ---------------------------------------------------------------- Display a 7 segmenti
+voce(
+  {
+    id: "display-sette-segmenti",
+    nome: "Display a 7 segmenti",
+    categoria: "uscite",
+    sigla: "DS",
+    descrizione: "Otto LED a forma di segmento (a…g e il punto) con il catodo in comune (COM, al GND). Montalo a cavallo del solco della breadboard e collega ogni segmento a un pin con una resistenza da 220 Ω: accendendo i segmenti giusti scrivi le cifre da 0 a 9.",
+    paroleChiave: ["display", "7 segmenti", "sette segmenti", "cifre", "numeri"],
+    larghezza: 80,
+    altezza: 100,
+    morsetti: [
+      { id: "g", x: 0, y: 0 },
+      { id: "f", x: 20, y: 0 },
+      { id: "COM1", x: 40, y: 0 },
+      { id: "a", x: 60, y: 0 },
+      { id: "b", x: 80, y: 0 },
+      { id: "e", x: 0, y: 100 },
+      { id: "d", x: 20, y: 100 },
+      { id: "COM2", x: 40, y: 100 },
+      { id: "c", x: 60, y: 100 },
+      { id: "dp", x: 80, y: 100 },
+    ],
+  },
+  svg(
+    80,
+    100,
+    [
+      ...[0, 20, 40, 60, 80].flatMap((x) => [
+        `<line x1="${x}" y1="0" x2="${Math.min(74, Math.max(6, x))}" y2="10" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+        `<line x1="${x}" y1="100" x2="${Math.min(74, Math.max(6, x))}" y2="90" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      ]),
+      `<rect x="4" y="8" width="72" height="84" rx="3" fill="#2b2b2b" stroke="#111"/>`,
+      `<rect x="10" y="13" width="60" height="74" rx="2" fill="#3a3a3a"/>`,
+      ...Object.values(RETTANGOLI_SEGMENTI).map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="#5a4646"/>`),
+      `<circle cx="${PUNTO_DECIMALE[0]}" cy="${PUNTO_DECIMALE[1]}" r="${PUNTO_DECIMALE[2]}" fill="#5a4646"/>`,
+      ...["g", "f", "C", "a", "b"].map((t, i) => testo(Math.min(70, Math.max(10, i * 20)), 17, t, 6, "#9e9e9e")),
+      ...["e", "d", "C", "c", "dp"].map((t, i) => testo(Math.min(70, Math.max(10, i * 20)), 88, t, 6, "#9e9e9e")),
     ].join("\n"),
   ),
 );

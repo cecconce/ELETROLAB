@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 import Konva from "konva";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
 import { fasceResistenza, scriviOhm } from "./arduino";
+import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI, SEGMENTI } from "./segmenti7";
 import type { ComponenteSchema } from "./schema";
 import type { AspettoComponente } from "./vistaSimulazione";
 
@@ -174,6 +175,30 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         <Group listening={false}>
           <Circle x={30} y={28} radius={14 + 12 * l} fill={colore} opacity={0.2 + 0.4 * l} shadowColor={colore} shadowBlur={30 * l} shadowOpacity={1} />
           <Circle x={30} y={28} radius={11} fill={colore} opacity={0.5 + 0.4 * l} />
+        </Group>
+      );
+    }
+    case "display-sette-segmenti": {
+      if (a?.bruciato)
+        return (
+          <Group listening={false}>
+            <Rect x={10} y={13} width={60} height={74} fill="#212121" opacity={0.85} />
+            <Text x={-10} y={-14} width={100} align="center" text="BRUCIATO" fontSize={10} fontStyle="bold" fill="#d32f2f" fontFamily={FONT} />
+          </Group>
+        );
+      const lum = a?.segmenti ?? [];
+      if (!lum.some((l) => l > 0)) return null;
+      // Segmenti accesi in rosso, con un alone proporzionale alla corrente.
+      return (
+        <Group listening={false}>
+          {SEGMENTI.map((seg, k) => {
+            const l = lum[k] ?? 0;
+            if (l <= 0) return null;
+            const ombra = { fill: "#ff3b30", opacity: 0.45 + 0.55 * l, shadowColor: "#ff3b30", shadowBlur: 10 * l, shadowOpacity: 1 };
+            if (seg === "dp") return <Circle key={seg} x={PUNTO_DECIMALE[0]} y={PUNTO_DECIMALE[1]} radius={PUNTO_DECIMALE[2]} {...ombra} />;
+            const [x, y, w, h] = RETTANGOLI_SEGMENTI[seg];
+            return <Rect key={seg} x={x} y={y} width={w} height={h} cornerRadius={2} {...ombra} />;
+          })}
         </Group>
       );
     }

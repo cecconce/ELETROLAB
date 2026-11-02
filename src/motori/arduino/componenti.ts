@@ -116,6 +116,11 @@ export function elementiCircuito(
         el.push({ tipo: "diodo", id: `${c.id}:G`, anodo: n("G"), catodo: n("K"), vf: SOGLIA_LED.verde, ron: 15 });
         el.push({ tipo: "diodo", id: `${c.id}:B`, anodo: n("B"), catodo: n("K"), vf: SOGLIA_LED.blu, ron: 15 });
         break;
+      case "display-sette-segmenti":
+        // Otto LED rossi con i catodi uniti; i due piedini COM sono collegati dentro.
+        R(`${c.id}:COM`, n("COM1"), n("COM2"), 1e-3);
+        for (const seg of SEGMENTI_DISPLAY) el.push({ tipo: "diodo", id: `${c.id}:${seg}`, anodo: n(seg), catodo: n("COM1"), vf: SOGLIA_LED.rosso, ron: 15 });
+        break;
       case "motore-dc":
         R(c.id, n("+"), n("-"), R_MOTORE_DC);
         break;
@@ -172,6 +177,9 @@ export function elementiCircuito(
   return el;
 }
 
+/** Segmenti del display nell'ordine dei valori di `AspettoArduino.segmenti`. */
+export const SEGMENTI_DISPLAY = ["a", "b", "c", "d", "e", "f", "g", "dp"] as const;
+
 const limita01 = (v: number) => Math.min(1, Math.max(0, v));
 
 /** Aspetto di un componente dopo il calcolo del circuito. */
@@ -186,6 +194,8 @@ export interface AspettoArduino {
   corrente?: number;
   /** LED RGB: luminosità dei tre colori 0…1. */
   rgb?: [number, number, number];
+  /** Display a 7 segmenti: luminosità di a, b, c, d, e, f, g, dp (0…1). */
+  segmenti?: number[];
   /** Motore in continua: velocità −1…1 (il segno è il verso). */
   velocita?: number;
 }
@@ -207,6 +217,14 @@ export function aspettoComponenti(componenti: readonly ComponenteArduino[], nodo
       };
       const imax = Math.max(...["R", "G", "B"].map((k) => r.correnti[`${c.id}:${k}`] ?? 0));
       aspetto[c.id] = { rgb: [lum("R"), lum("G"), lum("B")], bruciato: imax > CORRENTE_LED_BRUCIATO, corrente: imax };
+    } else if (c.tipo === "display-sette-segmenti") {
+      const correnti = SEGMENTI_DISPLAY.map((k) => r.correnti[`${c.id}:${k}`] ?? 0);
+      const imax = Math.max(...correnti);
+      aspetto[c.id] = {
+        segmenti: correnti.map((i) => (i >= CORRENTE_LED_MINIMA ? Math.min(1, i / CORRENTE_LED_PIENA) : 0)),
+        bruciato: imax > CORRENTE_LED_BRUCIATO,
+        corrente: imax,
+      };
     } else if (c.tipo === "motore-dc") {
       const volt = v(nodoDi(c.id, "+")) - v(nodoDi(c.id, "-"));
       const velocita = Math.abs(volt) < 0.5 ? 0 : Math.max(-1, Math.min(1, volt / 5));

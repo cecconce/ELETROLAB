@@ -1,0 +1,231 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T10:52:56.127Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "display-sette-segmenti-1",
+        "tipo": "display-sette-segmenti",
+        "etichetta": "DS1",
+        "x": 780,
+        "y": 140,
+        "larghezza": 80,
+        "altezza": 100
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 700,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "resistenza-2",
+        "tipo": "resistenza",
+        "etichetta": "R2",
+        "x": 720,
+        "y": 100,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "resistenza-3",
+        "tipo": "resistenza",
+        "etichetta": "R3",
+        "x": 840,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "resistenza-4",
+        "tipo": "resistenza",
+        "etichetta": "R4",
+        "x": 860,
+        "y": 100,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "resistenza-5",
+        "tipo": "resistenza",
+        "etichetta": "R5",
+        "x": 700,
+        "y": 280,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "resistenza-6",
+        "tipo": "resistenza",
+        "etichetta": "R6",
+        "x": 720,
+        "y": 240,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "resistenza-7",
+        "tipo": "resistenza",
+        "etichetta": "R7",
+        "x": 840,
+        "y": 280,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a16"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am16"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D2"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "e21"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D3"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "e22"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D4"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "f21"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D5"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "f11"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D6"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "f10"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D7"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "e11"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D8"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "e10"
+        },
+        "colore": "#ef6c00"
+      }
+    ],
+    "codice": "// Conta da 0 a 9 sul display a 7 segmenti (catodo comune al GND).\n// I segmenti a, b, c, d, e, f, g sono collegati ai pin 2…8,\n// ognuno con la sua resistenza da 220 Ω.\n//\n//    aaa\n//   f   b\n//    ggg\n//   e   c\n//    ddd\n\nconst int PRIMO_PIN = 2;\n\n// Per ogni cifra, i segmenti da accendere: un bit per segmento\n// (bit 0 = a, bit 1 = b, … bit 6 = g). Esempio: 1 → b e c → 2 + 4 = 6.\nbyte cifre[10] = {63, 6, 91, 79, 102, 109, 125, 7, 127, 111};\n\nvoid setup() {\n  for (int s = 0; s < 7; s++) {\n    pinMode(PRIMO_PIN + s, OUTPUT);\n  }\n  Serial.begin(9600);\n}\n\nvoid mostra(int numero) {\n  for (int s = 0; s < 7; s++) {\n    int acceso = (cifre[numero] >> s) & 1;\n    digitalWrite(PRIMO_PIN + s, acceso);\n  }\n}\n\nvoid loop() {\n  for (int n = 0; n <= 9; n++) {\n    mostra(n);\n    Serial.println(n);\n    delay(1000);\n  }\n}\n"
+  }
+}

@@ -29,9 +29,9 @@ const id = (schema: Schema, tipo: string) => schema.componenti.find((c) => c.tip
 const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspetto[id(schema, tipo)]?.luminosita ?? 0;
 
 describe("esempi Arduino", () => {
-  it("ci sono i 7 esempi, tutti senza errori né problemi all'avvio", () => {
+  it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(8);
+    expect(arduino).toHaveLength(9);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -124,5 +124,24 @@ describe("esempio del termometro", () => {
     aspetta(s, 1200);
     expect(s.seriale.trim().split("\n").pop()).toContain("Temperatura: 35 C");
     expect(s.pin.D13?.livello).toBe(1);
+  });
+});
+
+describe("esempio del display a 7 segmenti", () => {
+  it("conta da 0 a 9 accendendo i segmenti giusti", () => {
+    const { schema, s } = apri("arduino-7-segmenti.elab");
+    const display = id(schema, "display-sette-segmenti");
+    const accesi = () => (s.aspetto[display]?.segmenti ?? []).map((l, k) => (l > 0.3 ? "abcdefgP"[k] : "")).join("");
+    aspetta(s, 500);
+    expect(s.errore).toBeNull();
+    expect(accesi()).toBe("abcdef"); // 0
+    aspetta(s, 1000);
+    expect(accesi()).toBe("bc"); // 1
+    aspetta(s, 1000);
+    expect(accesi()).toBe("abdeg"); // 2
+    aspetta(s, 6000);
+    expect(accesi()).toBe("abcdefg"); // 8
+    expect(s.seriale).toMatch(/^0\n1\n2\n/);
+    expect(s.aspetto[display]?.bruciato).toBe(false);
   });
 });

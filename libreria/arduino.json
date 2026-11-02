@@ -2845,6 +2845,75 @@
         }
       ],
       "icona": "ard-interruttore-slitta.svg"
+    },
+    {
+      "id": "display-sette-segmenti",
+      "nome": "Display a 7 segmenti",
+      "categoria": "uscite",
+      "sigla": "DS",
+      "descrizione": "Otto LED a forma di segmento (a…g e il punto) con il catodo in comune (COM, al GND). Montalo a cavallo del solco della breadboard e collega ogni segmento a un pin con una resistenza da 220 Ω: accendendo i segmenti giusti scrivi le cifre da 0 a 9.",
+      "paroleChiave": [
+        "display",
+        "7 segmenti",
+        "sette segmenti",
+        "cifre",
+        "numeri"
+      ],
+      "larghezza": 80,
+      "altezza": 100,
+      "morsetti": [
+        {
+          "id": "g",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "f",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "COM1",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "a",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "b",
+          "x": 80,
+          "y": 0
+        },
+        {
+          "id": "e",
+          "x": 0,
+          "y": 100
+        },
+        {
+          "id": "d",
+          "x": 20,
+          "y": 100
+        },
+        {
+          "id": "COM2",
+          "x": 40,
+          "y": 100
+        },
+        {
+          "id": "c",
+          "x": 60,
+          "y": 100
+        },
+        {
+          "id": "dp",
+          "x": 80,
+          "y": 100
+        }
+      ],
+      "icona": "ard-display-sette-segmenti.svg"
     }
   ]
 }

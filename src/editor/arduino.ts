@@ -151,6 +151,9 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
     if (c.tipo === "led-rgb") {
       arduino.rgb = a.rgb ?? [0, 0, 0];
       arduino.bruciato = a.bruciato ?? false;
+    } else if (c.tipo === "display-sette-segmenti") {
+      arduino.segmenti = a.segmenti ?? [];
+      arduino.bruciato = a.bruciato ?? false;
     } else if (c.tipo.startsWith("led-")) {
       arduino.luminosita = a.luminosita ?? 0;
       arduino.bruciato = a.bruciato ?? false;

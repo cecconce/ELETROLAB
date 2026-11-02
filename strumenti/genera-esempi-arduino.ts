@@ -417,3 +417,71 @@ void loop() {
 `),
   );
 }
+
+// 9. Conteggio da 0 a 9 con il display a 7 segmenti
+{
+  const b = costruttore();
+  alimenta(b);
+  // Display a cavallo del solco: in alto g f COM a b (fori d14…d18), in basso e d COM c dp (g14…g18).
+  const f = foro("d14");
+  b.posa("display-sette-segmenti", f.x, f.y);
+  // Una resistenza da 220 Ω per ogni segmento, fra la colonna del segmento e una colonna libera.
+  b.resistenza("a10"); // g: colonne 10–14
+  b.resistenza("c11"); // f: colonne 11–15
+  b.resistenza("a17"); // a: colonne 17–21
+  b.resistenza("c18"); // b: colonne 18–22
+  b.resistenza("j10"); // e: colonne 10–14
+  b.resistenza("h11"); // d: colonne 11–15
+  b.resistenza("j17"); // c: colonne 17–21
+  // Catodo comune al GND.
+  b.filo("a16", "Am16");
+  // Pin 2…8 verso i segmenti a…g.
+  b.filo("U:D2", "e21", ARANCIONE); // a
+  b.filo("U:D3", "e22", GIALLO); // b
+  b.filo("U:D4", "f21", BLU); // c
+  b.filo("U:D5", "f11", ARANCIONE); // d
+  b.filo("U:D6", "f10", GIALLO); // e
+  b.filo("U:D7", "e11", BLU); // f
+  b.filo("U:D8", "e10", ARANCIONE); // g
+  scrivi(
+    "arduino-7-segmenti.elab",
+    b.schema(`// Conta da 0 a 9 sul display a 7 segmenti (catodo comune al GND).
+// I segmenti a, b, c, d, e, f, g sono collegati ai pin 2…8,
+// ognuno con la sua resistenza da 220 Ω.
+//
+//    aaa
+//   f   b
+//    ggg
+//   e   c
+//    ddd
+
+const int PRIMO_PIN = 2;
+
+// Per ogni cifra, i segmenti da accendere: un bit per segmento
+// (bit 0 = a, bit 1 = b, … bit 6 = g). Esempio: 1 → b e c → 2 + 4 = 6.
+byte cifre[10] = {63, 6, 91, 79, 102, 109, 125, 7, 127, 111};
+
+void setup() {
+  for (int s = 0; s < 7; s++) {
+    pinMode(PRIMO_PIN + s, OUTPUT);
+  }
+  Serial.begin(9600);
+}
+
+void mostra(int numero) {
+  for (int s = 0; s < 7; s++) {
+    int acceso = (cifre[numero] >> s) & 1;
+    digitalWrite(PRIMO_PIN + s, acceso);
+  }
+}
+
+void loop() {
+  for (int n = 0; n <= 9; n++) {
+    mostra(n);
+    Serial.println(n);
+    delay(1000);
+  }
+}
+`),
+  );
+}

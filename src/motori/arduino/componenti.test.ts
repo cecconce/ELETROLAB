@@ -166,6 +166,21 @@ describe("componenti aggiunti: LED RGB, motore, sensore di temperatura, interrut
     expect(g).toBe(0);
     expect(b).toBeGreaterThan(0.2);
   });
+  it("display a 7 segmenti: si accendono solo i segmenti alimentati, COM2 vale come COM1", () => {
+    const comp: ComponenteArduino[] = [U, { id: "R1", tipo: "resistenza", valore: 220 }, { id: "R2", tipo: "resistenza", valore: 220 }, { id: "DS", tipo: "display-sette-segmenti" }];
+    // Segmenti b e c (la cifra «1») da D2 e D3; il catodo comune a GND dal piedino in basso.
+    const fili = { "U.D2": "x", "R1.1": "x", "R1.2": "sb", "DS.b": "sb", "U.D3": "y", "R2.1": "y", "R2.2": "sc", "DS.c": "sc", "DS.COM2": "m", "U.GND1": "m" };
+    const { aspetto } = calcola(comp, fili, { D2: { modo: "OUTPUT", livello: 1 }, D3: { modo: "OUTPUT", livello: 1 } });
+    const lum = aspetto.DS.segmenti!;
+    expect(lum).toHaveLength(8);
+    expect(lum[1]).toBeGreaterThan(0.5); // b
+    expect(lum[2]).toBeGreaterThan(0.5); // c
+    expect(lum.filter((l) => l > 0)).toHaveLength(2);
+    expect(aspetto.DS.bruciato).toBe(false);
+    // Senza resistenza il segmento si brucia, come un LED.
+    const diretto = calcola(comp, { "U.D2": "sa", "DS.a": "sa", "DS.COM1": "m", "U.GND1": "m" }, { D2: { modo: "OUTPUT", livello: 1 } });
+    expect(diretto.aspetto.DS.bruciato).toBe(true);
+  });
   it("motore in continua: gira con il verso della tensione, fermo senza", () => {
     const comp: ComponenteArduino[] = [U, { id: "M", tipo: "motore-dc" }];
     const avanti = calcola(comp, { "U.5V": "p", "M.+": "p", "M.-": "m", "U.GND1": "m" }, {});

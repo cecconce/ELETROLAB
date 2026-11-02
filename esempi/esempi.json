@@ -163,6 +163,13 @@
       "prova": "Premi ▶ AVVIA: sul monitor seriale compare «Temperatura: 20 C». Clic a destra del sensore per scaldarlo (+5 °C a ogni clic), a sinistra per raffreddarlo: sopra i 30 °C si accende il LED L. Prova a cambiare la soglia nel programma."
     },
     {
+      "file": "arduino-7-segmenti.elab",
+      "modulo": "arduino",
+      "titolo": "Conteggio con il display a 7 segmenti",
+      "descrizione": "Il display a 7 segmenti è fatto di otto LED con il catodo in comune: i pin da 2 a 8 accendono i segmenti a…g, ognuno con la sua resistenza. Il programma conosce, per ogni cifra, quali segmenti accendere (un bit per segmento) e conta da 0 a 9, un numero al secondo.",
+      "prova": "Premi ▶ AVVIA: il display conta da 0 a 9 e il monitor seriale scrive lo stesso numero. Prova a togliere una resistenza (o a cambiare i numeri dell'array cifre) e guarda quali segmenti cambiano."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",
