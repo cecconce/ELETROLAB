@@ -338,5 +338,12 @@
   "verifica.senzaOsservati": "La soluzione del docente non ha LED, lampadine, sonde, display o multimetri da confrontare.",
   "verifica.monitorSeriale": "il monitor seriale",
   "verifica.programma": "il programma",
-  "proprieta.coloreLampada": "Colore della luce"
+  "proprieta.coloreLampada": "Colore della luce",
+  "elettronica.bode.titolo": "Plotter di Bode {sigla}",
+  "elettronica.bode.senzaGeneratore": "Serve un generatore di funzioni come segnale d'ingresso",
+  "elettronica.bode.taglio": "Frequenza di taglio (−3 dB) ≈ {f}",
+  "elettronica.bode.guadagno": "Guadagno (dB)",
+  "elettronica.bode.fase": "Sfasamento (°)",
+  "elettronica.bode.ricalcola": "Ricalcola",
+  "elettronica.bode.lettura": "{f}: {db} dB, {fase}°"
 }

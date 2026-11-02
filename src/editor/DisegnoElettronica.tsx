@@ -145,7 +145,7 @@ export function DisegnoElettronica({ componente: c, aspetto, colori }: { compone
 }
 
 /** Strumenti e generatori: la sigla sta sopra, il valore è già sul disegno. */
-const STRUMENTI = new Set(["multimetro", "oscilloscopio", "generatore-funzioni", "analizzatore-logico"]);
+const STRUMENTI = new Set(["multimetro", "oscilloscopio", "generatore-funzioni", "analizzatore-logico", "plotter-bode"]);
 
 /**
  * Sigla e valore del componente, sempre dritti: sopra e sotto per i

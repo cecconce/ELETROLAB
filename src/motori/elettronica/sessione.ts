@@ -26,6 +26,7 @@ import {
   type Soluzione,
   type StatoTransitorio,
 } from "./simulatore";
+import { analisiAC, frequenzeLogaritmiche } from "./simulatore";
 import { aggiornaDigitale, eDigitale, nuovoStatoDigitale, PIEDINI_DIGITALI, R_INGRESSO, R_USCITA, VCC_LOGICA, type StatoDigitale } from "./digitale";
 
 /** Componente dello schema come lo vede il motore. */
@@ -269,6 +270,10 @@ export function elementiDaComponenti(s: Pick<SessioneElettronica, "componenti" |
         el.push({ tipo: "R", id, a: m("+"), b: m("COM"), ohm: modo === "A" ? 0.01 : 1e7 });
         break;
       }
+      case "plotter-bode":
+        el.push({ tipo: "R", id: `${id}#IN`, a: m("IN"), b: m("COM"), ohm: 1e9 });
+        el.push({ tipo: "R", id: `${id}#OUT`, a: m("OUT"), b: m("COM"), ohm: 1e9 });
+        break;
       case "oscilloscopio":
         el.push({ tipo: "R", id: `${id}#A`, a: m("A"), b: m("COM"), ohm: 1e7 });
         el.push({ tipo: "R", id: `${id}#B`, a: m("B"), b: m("COM"), ohm: 1e7 });
@@ -472,4 +477,84 @@ export function luminosita(s: SessioneElettronica, c: ComponenteElettronico): nu
 /** Tensione di un nodo (rispetto a massa) nell'ultima soluzione. */
 export function tensioneMorsetto(s: SessioneElettronica, componente: string, morsetto: string): number {
   return s.soluzione?.tensioni[nodoConMassa(s)(componente, morsetto)] ?? 0;
+}
+
+/** Risposta in frequenza misurata dal plotter di Bode. */
+export interface RispostaBode {
+  frequenze: number[];
+  /** Guadagno OUT/IN in decibel. */
+  db: number[];
+  /** Sfasamento OUT rispetto a IN, in gradi (fra −180° e +180°). */
+  fase: number[];
+  /** Frequenza a cui il guadagno scende di 3 dB sotto il massimo (null se non succede). */
+  taglio: number | null;
+  /** Generatore usato come segnale d'ingresso. */
+  generatore: string;
+}
+
+/**
+ * Plotter di Bode: analisi in frequenza per piccoli segnali con il generatore
+ * di funzioni del circuito come ingresso (ampiezza unitaria), da `fmin` a
+ * `fmax`; si misura il rapporto fra le tensioni OUT e IN, entrambe rispetto
+ * al morsetto COM. Null se nel circuito non c'è un generatore di funzioni.
+ */
+export function rispostaBode(s: SessioneElettronica, id: string, fmin = 1, fmax = 1e6): RispostaBode | null {
+  const generatore = s.componenti.find((c) => c.tipo === "generatore-funzioni");
+  if (!generatore) return null;
+  const n = nodoConMassa(s);
+  const frequenze = frequenzeLogaritmiche(fmin, fmax, 20);
+  const punti = analisiAC(elementiDaComponenti(s), generatore.id, frequenze);
+  // Tensione complessa di un nodo dai valori polari dell'analisi.
+  const complesso = (p: (typeof punti)[number], nodo: string): [number, number] => {
+    if (nodo === MASSA) return [0, 0];
+    const r = p.modulo[nodo] ?? 0;
+    const a = ((p.fase[nodo] ?? 0) * Math.PI) / 180;
+    return [r * Math.cos(a), r * Math.sin(a)];
+  };
+  const db: number[] = [];
+  const fase: number[] = [];
+  for (const p of punti) {
+    const com = complesso(p, n(id, "COM"));
+    const vi = complesso(p, n(id, "IN"));
+    const vo = complesso(p, n(id, "OUT"));
+    const iRe = vi[0] - com[0];
+    const iIm = vi[1] - com[1];
+    const oRe = vo[0] - com[0];
+    const oIm = vo[1] - com[1];
+    const den = iRe * iRe + iIm * iIm;
+    if (den < 1e-30) {
+      db.push(-200);
+      fase.push(0);
+      continue;
+    }
+    const hRe = (oRe * iRe + oIm * iIm) / den;
+    const hIm = (oIm * iRe - oRe * iIm) / den;
+    db.push(20 * Math.log10(Math.max(Math.hypot(hRe, hIm), 1e-10)));
+    fase.push((Math.atan2(hIm, hRe) * 180) / Math.PI);
+  }
+  const massimo = Math.max(...db);
+  let taglio: number | null = null;
+  const iMax = db.indexOf(massimo);
+  for (let k = iMax + 1; k < db.length; k++) {
+    if (db[k] <= massimo - 3) {
+      // Interpolazione logaritmica fra i due punti vicini.
+      const f1 = Math.log10(frequenze[k - 1]);
+      const f2 = Math.log10(frequenze[k]);
+      const x = (massimo - 3 - db[k - 1]) / (db[k] - db[k - 1]);
+      taglio = 10 ** (f1 + x * (f2 - f1));
+      break;
+    }
+  }
+  if (taglio === null) {
+    for (let k = iMax - 1; k >= 0; k--) {
+      if (db[k] <= massimo - 3) {
+        const f1 = Math.log10(frequenze[k]);
+        const f2 = Math.log10(frequenze[k + 1]);
+        const x = (massimo - 3 - db[k]) / (db[k + 1] - db[k]);
+        taglio = 10 ** (f1 + x * (f2 - f1));
+        break;
+      }
+    }
+  }
+  return { frequenze, db, fase, taglio, generatore: generatore.id };
 }

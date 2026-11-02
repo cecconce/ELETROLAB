@@ -165,9 +165,9 @@
     {
       "file": "elettronica-filtro-rc.elab",
       "modulo": "elettronica",
-      "titolo": "Filtro RC passa-basso e oscilloscopio",
-      "descrizione": "Il generatore di funzioni dà una sinusoide da 1 kHz e 2 V di picco; la resistenza da 1 kΩ e il condensatore da 159 nF formano un filtro passa-basso con frequenza di taglio fc = 1/(2πRC) ≈ 1 kHz. L'oscilloscopio mostra sul canale A l'ingresso e sul canale B l'uscita, più piccola e in ritardo.",
-      "prova": "Premi ▶ AVVIA: si apre la finestra dell'oscilloscopio. A frequenza di taglio l'uscita (B, azzurra) è circa il 71 % dell'ingresso (A, arancione) e in ritardo di un ottavo di periodo. Ferma, porta la frequenza del generatore a 100 Hz (l'uscita è quasi uguale) o a 10 kHz (quasi zero) e riavvia: cambia la base dei tempi per vedere bene le onde."
+      "titolo": "Filtro RC passa-basso: oscilloscopio e plotter di Bode",
+      "descrizione": "Il generatore di funzioni dà una sinusoide da 1 kHz e 2 V di picco; la resistenza da 1 kΩ e il condensatore da 159 nF formano un filtro passa-basso con frequenza di taglio fc = 1/(2πRC) ≈ 1 kHz. L'oscilloscopio mostra sul canale A l'ingresso e sul canale B l'uscita, più piccola e in ritardo. Il plotter di Bode disegna la risposta in frequenza: guadagno piatto a 0 dB fino a circa 1 kHz, poi −20 dB ogni decade, e sfasamento da 0° a −90°.",
+      "prova": "Premi ▶ AVVIA: si apre la finestra dell'oscilloscopio. A frequenza di taglio l'uscita (B, azzurra) è circa il 71 % dell'ingresso (A, arancione) e in ritardo di un ottavo di periodo. Ferma, porta la frequenza del generatore a 100 Hz (l'uscita è quasi uguale) o a 10 kHz (quasi zero) e riavvia: cambia la base dei tempi per vedere bene le onde. Nella finestra del plotter di Bode passa con il mouse sulle curve per leggere guadagno e fase: la frequenza di taglio (−3 dB) è scritta in alto. Cambia il condensatore e premi «Ricalcola» dopo aver riavviato."
     },
     {
       "file": "elettronica-porte-logiche.elab",

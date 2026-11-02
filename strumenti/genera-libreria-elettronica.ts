@@ -575,6 +575,27 @@ voce(
   ),
 );
 
+voce(
+  {
+    id: "plotter-bode",
+    nome: "Plotter di Bode",
+    categoria: "strumenti",
+    sigla: "XBP",
+    descrizione: "Disegna la risposta in frequenza: di quanto il circuito amplifica o attenua (in dB) e di quanto sfasa l'uscita OUT rispetto all'ingresso IN, da 1 Hz a 1 MHz. Usa come segnale il generatore di funzioni del circuito; COM va alla massa.",
+    paroleChiave: ["Bode", "risposta in frequenza", "filtro", "guadagno", "decibel", "fase", "frequenza di taglio"],
+    larghezza: 120,
+    altezza: 100,
+    morsetti: [m("IN", 20, 100), m("OUT", 60, 100), m("COM", 100, 100)],
+  },
+  svg(
+    120,
+    100,
+    `<rect x="4" y="4" width="112" height="82" rx="6"/><rect x="12" y="12" width="96" height="50" rx="2"/>` +
+      `<path d="M20 20V56H102" stroke-width="1"/><path d="M22 26H58Q70 26 80 40T100 56" stroke-width="1.8"/>` +
+      `<path d="M20 86V100M60 86V100M100 86V100"/>${scritta(20, 80, "IN", 9)}${scritta(60, 80, "OUT", 9)}${scritta(100, 80, "COM", 8)}`,
+  ),
+);
+
 // ---------------------------------------------------------------- Scrittura
 for (const [nome, contenuto] of Object.entries(icone)) writeFileSync(`libreria/icone/${nome}`, contenuto);
 for (const v of voci) readFileSync(`libreria/icone/${v.icona}`);

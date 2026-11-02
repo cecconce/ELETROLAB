@@ -769,6 +769,10 @@ async function provaElettronica(pagina, controlla, foto, apriEsempio) {
   await pagina.waitForTimeout(2500);
   const rc = await misureOsc();
   controlla(rc && rc.a > 3.8 && rc.a < 4.2 && rc.b / rc.a > 0.65 && rc.b / rc.a < 0.77, `oscilloscopio: uscita circa 71 % dell'ingresso (${JSON.stringify(rc)})`);
+  const bode = await pagina.getByTestId("bode-XBP1").locator(".osc-misure").innerText();
+  const fTaglio = /≈ ([\d,]+) (k?)Hz/.exec(bode);
+  const fc = fTaglio ? Number(fTaglio[1].replace(",", ".")) * (fTaglio[2] === "k" ? 1000 : 1) : 0;
+  controlla(fc > 900 && fc < 1100, `plotter di Bode: frequenza di taglio circa 1 kHz (${bode})`);
   await foto("23-elettronica-filtro");
 
   console.log("Elettronica: porte logiche");

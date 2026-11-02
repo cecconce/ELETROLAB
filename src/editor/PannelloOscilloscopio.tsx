@@ -5,7 +5,7 @@
 // valore medio (trigger sul fronte di salita), così un segnale periodico sta
 // fermo sullo schermo come su uno strumento vero. "Blocca" congela l'immagine.
 import { useEffect, useRef, useState } from "react";
-import { registrazionePer, scriviValore, type SessioneElettronica, type Storia } from "../motori/elettronica";
+import { registrazionePer, rispostaBode, scriviValore, type RispostaBode, type SessioneElettronica, type Storia } from "../motori/elettronica";
 import { t } from "../testi";
 
 const BASI_TEMPI = [1e-6, 2e-6, 5e-6, 1e-5, 2e-5, 5e-5, 1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 5e-3, 1e-2, 2e-2, 5e-2, 0.1, 0.2, 0.5, 1];
@@ -364,6 +364,156 @@ export function PannelloAnalizzatore({ sessione, id, sigla, indice = 0 }: { sess
             <button type="button" className="pulsante piccolo" onClick={() => setBloccato((b) => !b)}>
               {bloccato ? t("elettronica.oscilloscopio.riprendi") : t("elettronica.oscilloscopio.ferma")}
             </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Finestra del plotter di Bode: guadagno (dB) in alto e sfasamento (gradi) in
+ * basso, con la frequenza su scala logaritmica (decadi). Passando con il mouse
+ * si leggono i valori; la frequenza di taglio (−3 dB) è scritta in alto.
+ * Si calcola all'avvio e con «Ricalcola» (per esempio dopo aver girato un
+ * potenziometro).
+ */
+export function PannelloBode({ sessione, id, sigla, indice = 0 }: { sessione: React.MutableRefObject<SessioneElettronica | null>; id: string; sigla: string; indice?: number }) {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const { stile, suGiu } = useSpostabile(indice);
+  const [aperto, setAperto] = useState(true);
+  const [risposta, setRisposta] = useState<RispostaBode | null | undefined>(undefined);
+  const [lettura, setLettura] = useState<string>("");
+  const calcola = () => {
+    const s = sessione.current;
+    if (s) setRisposta(rispostaBode(s, id));
+  };
+  useEffect(() => {
+    const timer = window.setTimeout(calcola, 50);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const W = 400;
+  const H = 260;
+  const SX = 44;
+  const area = { x: SX, w: W - SX - 8, alto: { y: 8, h: 112 }, basso: { y: 140, h: 100 } };
+  const xDi = (f: number, r: RispostaBode) => {
+    const a = Math.log10(r.frequenze[0]);
+    const b = Math.log10(r.frequenze[r.frequenze.length - 1]);
+    return area.x + ((Math.log10(f) - a) / (b - a)) * area.w;
+  };
+  useEffect(() => {
+    const cv = canvas.current;
+    const ctx = cv?.getContext("2d");
+    if (!cv || !ctx || !aperto) return;
+    ctx.fillStyle = "#0b1a14";
+    ctx.fillRect(0, 0, W, H);
+    if (!risposta) return;
+    const maxDb = Math.ceil(Math.max(...risposta.db, 0) / 10) * 10 + 5;
+    const minDb = Math.max(-100, Math.floor(Math.min(...risposta.db) / 10) * 10);
+    const yDb = (d: number) => area.alto.y + ((maxDb - Math.max(minDb, Math.min(maxDb, d))) / (maxDb - minDb)) * area.alto.h;
+    const yFase = (g: number) => area.basso.y + ((180 - g) / 360) * area.basso.h;
+    ctx.font = "10px Segoe UI, sans-serif";
+    ctx.strokeStyle = "rgba(120, 200, 160, 0.25)";
+    ctx.fillStyle = "rgba(200, 230, 210, 0.8)";
+    ctx.lineWidth = 1;
+    // Decadi
+    for (let e = Math.ceil(Math.log10(risposta.frequenze[0])); e <= Math.log10(risposta.frequenze[risposta.frequenze.length - 1]); e++) {
+      const x = xDi(10 ** e, risposta);
+      ctx.beginPath();
+      ctx.moveTo(x, area.alto.y);
+      ctx.lineTo(x, area.alto.y + area.alto.h);
+      ctx.moveTo(x, area.basso.y);
+      ctx.lineTo(x, area.basso.y + area.basso.h);
+      ctx.stroke();
+      ctx.fillText(scriviValore(10 ** e, "Hz"), x - 12, H - 4);
+    }
+    for (let d = maxDb - 5; d >= minDb; d -= 20) {
+      const y = yDb(d);
+      ctx.beginPath();
+      ctx.moveTo(area.x, y);
+      ctx.lineTo(area.x + area.w, y);
+      ctx.stroke();
+      ctx.fillText(`${d} dB`, 2, y + 3);
+    }
+    for (const g of [90, 0, -90]) {
+      const y = yFase(g);
+      ctx.beginPath();
+      ctx.moveTo(area.x, y);
+      ctx.lineTo(area.x + area.w, y);
+      ctx.stroke();
+      ctx.fillText(`${g}°`, 8, y + 3);
+    }
+    const traccia = (valori: number[], y: (v: number) => number, colore: string) => {
+      ctx.strokeStyle = colore;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      valori.forEach((v, k) => {
+        const x = xDi(risposta.frequenze[k], risposta);
+        if (k === 0) ctx.moveTo(x, y(v));
+        else ctx.lineTo(x, y(v));
+      });
+      ctx.stroke();
+    };
+    traccia(risposta.db, yDb, COLORE_A);
+    traccia(risposta.fase, yFase, COLORE_B);
+    if (risposta.taglio) {
+      const x = xDi(risposta.taglio, risposta);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x, area.alto.y);
+      ctx.lineTo(x, area.basso.y + area.basso.h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }, [risposta, aperto]);
+  const muovi = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!risposta) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * W;
+    let k = 0;
+    let migliore = Infinity;
+    risposta.frequenze.forEach((f, i) => {
+      const d = Math.abs(xDi(f, risposta) - x);
+      if (d < migliore) {
+        migliore = d;
+        k = i;
+      }
+    });
+    setLettura(t("elettronica.bode.lettura", { f: scriviValore(risposta.frequenze[k], "Hz"), db: risposta.db[k].toFixed(1).replace(".", ","), fase: Math.round(risposta.fase[k]) }));
+  };
+  return (
+    <section className="pannello-oscilloscopio" style={stile} aria-label={t("elettronica.bode.titolo", { sigla })} data-testid={`bode-${sigla}`}>
+      <header onMouseDown={suGiu} title={t("elettronica.oscilloscopio.sposta")}>
+        <strong>📉 {t("elettronica.bode.titolo", { sigla })}</strong>
+        <span className="osc-misure">
+          {risposta === null
+            ? t("elettronica.bode.senzaGeneratore")
+            : risposta?.taglio
+              ? t("elettronica.bode.taglio", { f: scriviValore(risposta.taglio, "Hz") })
+              : ""}
+        </span>
+        <button type="button" className="pulsante piccolo" onClick={() => setAperto((a) => !a)}>
+          {aperto ? t("elettronica.oscilloscopio.riduci") : t("elettronica.oscilloscopio.apri")}
+        </button>
+      </header>
+      {aperto && (
+        <div className="osc-corpo">
+          <canvas ref={canvas} width={W} height={H} className="osc-schermo" style={{ width: W, height: H }} onMouseMove={muovi} onMouseLeave={() => setLettura("")} />
+          <div className="osc-comandi">
+            <span className="osc-scelta" style={{ borderColor: COLORE_A }}>
+              <span>{t("elettronica.bode.guadagno")}</span>
+            </span>
+            <span className="osc-scelta" style={{ borderColor: COLORE_B }}>
+              <span>{t("elettronica.bode.fase")}</span>
+            </span>
+            <button type="button" className="pulsante piccolo" onClick={calcola}>
+              ⟲ {t("elettronica.bode.ricalcola")}
+            </button>
+            <p className="tenue" style={{ maxWidth: 130, fontSize: "0.8rem", margin: 0 }} data-testid="lettura-bode">
+              {lettura}
+            </p>
           </div>
         </div>
       )}

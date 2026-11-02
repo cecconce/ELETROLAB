@@ -207,3 +207,25 @@ describe("storia degli strumenti", () => {
     expect(lenta.canali[0][i]).toBeCloseTo(6.32, 0);
   });
 });
+
+describe("plotter di Bode", () => {
+  it("filtro RC passa-basso: −3 dB a 1 kHz circa, −20 dB/decade e sfasamento fino a −90°", async () => {
+    const { rispostaBode } = await import("./sessione");
+    const s = circuito(
+      [["XFG1", "generatore-funzioni", { frequenza: 1000, ampiezza: 1 }], ["R1", "resistenza", { resistenza: 1000 }], ["C1", "condensatore", { capacita: 159e-9 }], ["GND", "massa"], ["XBP1", "plotter-bode"]],
+      [["XFG1.+", "R1.1", "XBP1.IN"], ["R1.2", "C1.1", "XBP1.OUT"], ["C1.2", "XFG1.COM", "GND.0", "XBP1.COM"]],
+    );
+    const r = rispostaBode(s, "XBP1")!;
+    expect(r.taglio).toBeGreaterThan(900);
+    expect(r.taglio).toBeLessThan(1100);
+    expect(r.db[0]).toBeCloseTo(0, 1);
+    const i100k = r.frequenze.findIndex((f) => f >= 1e5);
+    expect(r.db[i100k]).toBeCloseTo(-40, 0);
+    expect(r.fase[i100k]).toBeLessThan(-85);
+  });
+  it("senza generatore di funzioni non c'è risposta", async () => {
+    const { rispostaBode } = await import("./sessione");
+    const s = circuito([["V1", "generatore-dc"], ["GND", "massa"], ["XBP1", "plotter-bode"]], [["V1.-", "GND.0", "XBP1.COM"]]);
+    expect(rispostaBode(s, "XBP1")).toBeNull();
+  });
+});

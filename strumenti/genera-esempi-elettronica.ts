@@ -92,6 +92,10 @@ function scrivi(file: string, schema: Schema) {
   b.filo("XSC1.A", "R1.1");
   b.filo("XSC1.B", "C1.1");
   b.filo("XSC1.COM", `${gnd}.0`);
+  b.posa("plotter-bode", 540, 60);
+  b.filo("XBP1.IN", "R1.1");
+  b.filo("XBP1.OUT", "C1.1");
+  b.filo("XBP1.COM", `${gnd}.0`);
   scrivi("elettronica-filtro-rc.elab", b.schema());
 }
 

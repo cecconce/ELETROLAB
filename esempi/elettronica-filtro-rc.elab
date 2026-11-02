@@ -3,7 +3,7 @@
   "versione": 1,
   "modulo": "elettronica",
   "programma": "0.1.0",
-  "salvato": "2026-11-02T06:14:39.600Z",
+  "salvato": "2026-11-02T10:35:20.730Z",
   "schema": {
     "componenti": [
       {
@@ -60,6 +60,15 @@
         "tipo": "oscilloscopio",
         "etichetta": "XSC1",
         "x": 380,
+        "y": 60,
+        "larghezza": 120,
+        "altezza": 100
+      },
+      {
+        "id": "XBP1",
+        "tipo": "plotter-bode",
+        "etichetta": "XBP1",
+        "x": 540,
         "y": 60,
         "larghezza": 120,
         "altezza": 100
@@ -136,6 +145,39 @@
         "id": "filo-7",
         "da": {
           "componente": "XSC1",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "massa-4",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "XBP1",
+          "morsetto": "IN"
+        },
+        "a": {
+          "componente": "R1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "XBP1",
+          "morsetto": "OUT"
+        },
+        "a": {
+          "componente": "C1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "XBP1",
           "morsetto": "COM"
         },
         "a": {

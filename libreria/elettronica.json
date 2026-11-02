@@ -1247,6 +1247,42 @@
         }
       ],
       "icona": "analizzatore-logico.svg"
+    },
+    {
+      "id": "plotter-bode",
+      "nome": "Plotter di Bode",
+      "categoria": "strumenti",
+      "sigla": "XBP",
+      "descrizione": "Disegna la risposta in frequenza: di quanto il circuito amplifica o attenua (in dB) e di quanto sfasa l'uscita OUT rispetto all'ingresso IN, da 1 Hz a 1 MHz. Usa come segnale il generatore di funzioni del circuito; COM va alla massa.",
+      "paroleChiave": [
+        "Bode",
+        "risposta in frequenza",
+        "filtro",
+        "guadagno",
+        "decibel",
+        "fase",
+        "frequenza di taglio"
+      ],
+      "larghezza": 120,
+      "altezza": 100,
+      "morsetti": [
+        {
+          "id": "IN",
+          "x": 20,
+          "y": 100
+        },
+        {
+          "id": "OUT",
+          "x": 60,
+          "y": 100
+        },
+        {
+          "id": "COM",
+          "x": 100,
+          "y": 100
+        }
+      ],
+      "icona": "plotter-bode.svg"
     }
   ]
 }

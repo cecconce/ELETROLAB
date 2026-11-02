@@ -56,7 +56,7 @@ import {
   type SessioneElettronica,
 } from "../motori/elettronica";
 import { componentiDaSchemaElettronica, vistaDaSessioneElettronica } from "../editor/elettronica";
-import { PannelloAnalizzatore, PannelloOscilloscopio } from "../editor/PannelloOscilloscopio";
+import { PannelloAnalizzatore, PannelloBode, PannelloOscilloscopio } from "../editor/PannelloOscilloscopio";
 import { FinestraEsporta } from "./FinestraEsporta";
 import { FinestraPreparaEsercizio, RiquadroConsegna, type EsitoMostrato } from "./Esercizio";
 import { MODULI_VERIFICABILI, verificaEsercizio } from "../progetto/verifica";
@@ -559,9 +559,11 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                 />
                 {modulo.id === "elettronica" &&
                   schema.componenti
-                    .filter((c) => c.tipo === "oscilloscopio" || c.tipo === "analizzatore-logico")
+                    .filter((c) => c.tipo === "oscilloscopio" || c.tipo === "analizzatore-logico" || c.tipo === "plotter-bode")
                     .map((c, i) =>
-                      c.tipo === "oscilloscopio" ? (
+                      c.tipo === "plotter-bode" ? (
+                        <PannelloBode key={c.id} indice={i} id={c.id} sigla={c.etichetta} sessione={sessioneRif as React.MutableRefObject<SessioneElettronica | null>} />
+                      ) : c.tipo === "oscilloscopio" ? (
                         <PannelloOscilloscopio
                           key={c.id}
                           indice={i}
