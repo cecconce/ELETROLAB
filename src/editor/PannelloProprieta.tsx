@@ -15,6 +15,8 @@ import { COLORI_FILI, colorePropostoFilo } from "./fili";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
 import type { Schema, Selezione } from "./schema";
+import { impostaParametro, PARAMETRI_ELETTRONICA, valoreParametro, type DefinizioneParametro } from "./elettronica";
+import { leggiValore, scriviValore } from "../motori/elettronica";
 
 export interface PropsPannelloProprieta {
   schema: Schema;
@@ -247,6 +249,16 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
         </label>
       )}
 
+      {libreria.modulo === "elettronica" &&
+        (PARAMETRI_ELETTRONICA[componente.tipo] ?? []).map((d) => (
+          <CampoParametro
+            key={`${componente.id}-${d.id}-${String(valoreParametro(componente.parametri, componente.tipo, d.id))}`}
+            definizione={d}
+            valore={valoreParametro(componente.parametri, componente.tipo, d.id)}
+            onCambia={(v) => onCambiaSchema(impostaParametro(schema, componente.id, d.id, v))}
+          />
+        ))}
+
       {componente.tipo === TIPO_COMMENTO && (
         <label className="proprieta-campo">
           <span>{t("proprieta.commento")}</span>
@@ -369,5 +381,71 @@ function CollegamentiImpianto({ schema, id, onCambiaSchema }: { schema: Schema; 
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * Campo di un parametro del modulo Elettronica: numero con i prefissi
+ * (4,7k · 100n · 10µ) che si applica con Invio o uscendo dal campo, oppure
+ * menu a tendina per le scelte (forma d'onda, colore, funzione del multimetro).
+ */
+function CampoParametro({ definizione: d, valore, onCambia }: { definizione: DefinizioneParametro; valore: number | string; onCambia: (v: number | string) => void }) {
+  const [errore, setErrore] = useState<string | null>(null);
+  if (d.tipo === "scelta") {
+    return (
+      <label className="proprieta-campo">
+        <span>{d.nome}</span>
+        <select value={String(valore)} onChange={(e) => onCambia(e.target.value)}>
+          {d.scelte.map((s) => (
+            <option key={s.valore} value={s.valore}>
+              {s.nome}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+  }
+  const mostrato = scriviValore(Number(valore), d.unita);
+  const applica = (campo: HTMLInputElement) => {
+    const v = leggiValore(campo.value);
+    if (v === null) {
+      setErrore(t("elettronica.parametroNonValido"));
+      return;
+    }
+    if ((d.minimo !== undefined && v < d.minimo) || (d.massimo !== undefined && v > d.massimo)) {
+      setErrore(t("elettronica.parametroFuoriLimiti", { minimo: scriviValore(d.minimo ?? -Infinity, d.unita), massimo: scriviValore(d.massimo ?? Infinity, d.unita) }));
+      return;
+    }
+    setErrore(null);
+    if (v !== valore) onCambia(v);
+    else campo.value = mostrato;
+  };
+  return (
+    <>
+      <label className="proprieta-campo">
+        <span>{d.nome}</span>
+        <input
+          type="text"
+          defaultValue={mostrato}
+          maxLength={16}
+          spellCheck={false}
+          aria-invalid={errore !== null}
+          title={t("elettronica.parametroNonValido")}
+          onBlur={(e) => applica(e.currentTarget)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") applica(e.currentTarget);
+            if (e.key === "Escape") {
+              e.currentTarget.value = mostrato;
+              setErrore(null);
+            }
+          }}
+        />
+      </label>
+      {errore && (
+        <p className="proprieta-avviso" role="alert">
+          {errore}
+        </p>
+      )}
+    </>
   );
 }

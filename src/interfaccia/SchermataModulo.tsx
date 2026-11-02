@@ -4,8 +4,8 @@
 // Un unico grande pulsante ▶ AVVIA / ■ FERMA (anche con F5), sempre nello
 // stesso punto dell'intestazione, avvia la simulazione: lo schema si blocca,
 // libreria e Proprietà si disattivano e lo studente interagisce cliccando i
-// componenti. Simulano i moduli Impianti elettrici e PLC; negli altri il
-// pulsante c'è (stessa posizione) ma è disattivato. Nel PLC, durante la
+// componenti. Simulano tutti e quattro i moduli. Nell'Elettronica, durante la
+// simulazione, ogni oscilloscopio apre la sua finestra sopra il foglio. Nel PLC, durante la
 // simulazione, il pannello "Ingressi e uscite" permette di commutare gli
 // ingressi e mostra lo stato di uscite, merker, temporizzatori e contatori.
 // Durante la simulazione, sotto il foglio, il pannello "Problemi nello schema"
@@ -47,6 +47,16 @@ import {
 } from "../motori/arduino";
 import { componentiDaSchema, nodiDaSchema, SKETCH_PREDEFINITO, vistaDaSessioneArduino } from "../editor/arduino";
 import { PannelloCodice } from "../editor/PannelloCodice";
+import {
+  avviaSessioneElettronica,
+  clicGiuElettronica,
+  clicSuElettronica,
+  passoElettronica,
+  rilasciaTuttiElettronica,
+  type SessioneElettronica,
+} from "../motori/elettronica";
+import { componentiDaSchemaElettronica, vistaDaSessioneElettronica } from "../editor/elettronica";
+import { PannelloOscilloscopio } from "../editor/PannelloOscilloscopio";
 import { vocePerTipo } from "../editor/libreria";
 import { PannelloIngressiPlc } from "../editor/PannelloIngressiPlc";
 import { problemiDaMostrare } from "../editor/messaggiProblemi";
@@ -89,11 +99,12 @@ const PASSO_MASSIMO_S = 60;
 
 /** Orologio della simulazione: si aggiorna da solo senza ridisegnare lo schema. */
 /** Sessione di simulazione di uno dei moduli simulabili. */
-type Sessione = SessioneImpianto | SessionePlc | SessioneArduino;
+type Sessione = SessioneImpianto | SessionePlc | SessioneArduino | SessioneElettronica;
 const eSessionePlc = (s: Sessione): s is SessionePlc => "conversione" in s;
 const eSessioneArduino = (s: Sessione): s is SessioneArduino => "esecutore" in s;
+const eSessioneElettronica = (s: Sessione): s is SessioneElettronica => "transitorio" in s;
 /** Secondi trascorsi dall'avvio, per l'orologio. */
-const tempoSessione = (s: Sessione | null) => (!s ? 0 : eSessioneArduino(s) ? tempoArduino(s) : s.stato.tempo);
+const tempoSessione = (s: Sessione | null) => (!s ? 0 : eSessioneArduino(s) ? tempoArduino(s) : eSessioneElettronica(s) ? s.tempo : s.stato.tempo);
 
 function OrologioSimulazione({ sessione }: { sessione: React.MutableRefObject<Sessione | null> }) {
   const [tempo, setTempo] = useState(0);
@@ -219,7 +230,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   // --- Simulazione --------------------------------------------------------
   // La sessione cambia a ogni scatto dell'orologio: vive in un ref e lo
   // schema viene ridisegnato solo quando cambia qualcosa di visibile.
-  const simulabile = modulo.id === "impianti" || modulo.id === "plc" || modulo.id === "arduino";
+  const simulabile = true;
   // Arduino: testo del monitor seriale e scheda mostrata a destra (Codice o Proprietà).
   const [seriale, setSeriale] = useState("");
   const [schedaDestra, setSchedaDestra] = useState<"codice" | "proprieta">("codice");
@@ -235,7 +246,9 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     (s: Sessione) => {
       sessioneRif.current = s;
       if (eSessioneArduino(s)) setSeriale((prima) => (prima === s.seriale ? prima : s.seriale));
-      const v = eSessioneArduino(s)
+      const v = eSessioneElettronica(s)
+        ? vistaDaSessioneElettronica(s, schema, libreria)
+        : eSessioneArduino(s)
         ? vistaDaSessioneArduino(s, schema, libreria)
         : eSessionePlc(s)
           ? vistaDaSessionePlc(s, schema)
@@ -256,7 +269,9 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     firmaRif.current = "";
     setSeriale("");
     aggiornaSessione(
-      modulo.id === "arduino"
+      modulo.id === "elettronica"
+        ? avviaSessioneElettronica(componentiDaSchemaElettronica(schema), nodiDaSchema(schema, morsettiDi))
+        : modulo.id === "arduino"
         ? avviaSessioneArduino(schema.codice ?? SKETCH_PREDEFINITO, componentiDaSchema(schema), nodiDaSchema(schema, morsettiDi))
         : modulo.id === "plc"
         ? avviaSessionePlc(
@@ -285,7 +300,10 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       ultimo = adesso;
       const s = sessioneRif.current;
       if (!s) return;
-      if (eSessioneArduino(s)) {
+      if (eSessioneElettronica(s)) {
+        passoElettronica(s, dt);
+        aggiornaSessione(s);
+      } else if (eSessioneArduino(s)) {
         passoArduino(s, dt * 1000);
         aggiornaSessione(s);
       } else aggiornaSessione(eSessionePlc(s) ? passoPlc(s, dt) : passo(s, dt));
@@ -300,7 +318,10 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     const rilascia = () => {
       const s = sessioneRif.current;
       if (!s) return;
-      if (eSessioneArduino(s)) {
+      if (eSessioneElettronica(s)) {
+        rilasciaTuttiElettronica(s);
+        aggiornaSessione(s);
+      } else if (eSessioneArduino(s)) {
         rilasciaTuttiArduino(s);
         aggiornaSessione(s);
       } else aggiornaSessione(eSessionePlc(s) ? rilasciaTuttiPlc(s) : rilasciaTutti(s));
@@ -321,17 +342,24 @@ export function SchermataModulo(props: PropsSchermataModulo) {
             onGiu: (id: string, punto?: { x: number; y: number }) => {
               const s = sessioneRif.current;
               if (!s) return;
-              if (eSessioneArduino(s)) {
-                // Manopole e luce: clic a destra del componente aumenta, a sinistra diminuisce.
-                const c = schema.componenti.find((x) => x.id === id);
-                clicGiuArduino(s, id, punto !== undefined && c !== undefined && punto.x < c.larghezza / 2);
+              const c = schema.componenti.find((x) => x.id === id);
+              // Manopole e luce: clic a destra del componente aumenta, a sinistra diminuisce.
+              const indietro = punto !== undefined && c !== undefined && punto.x < c.larghezza / 2;
+              if (eSessioneElettronica(s)) {
+                clicGiuElettronica(s, id, indietro);
+                aggiornaSessione(s);
+              } else if (eSessioneArduino(s)) {
+                clicGiuArduino(s, id, indietro);
                 aggiornaSessione(s);
               } else aggiornaSessione(eSessionePlc(s) ? clicGiuPlc(s, id, punto) : clicGiu(s, id));
             },
             onSu: (id: string) => {
               const s = sessioneRif.current;
               if (!s) return;
-              if (eSessioneArduino(s)) {
+              if (eSessioneElettronica(s)) {
+                clicSuElettronica(s, id);
+                aggiornaSessione(s);
+              } else if (eSessioneArduino(s)) {
                 clicSuArduino(s, id);
                 aggiornaSessione(s);
               } else aggiornaSessione(eSessionePlc(s) ? clicSuPlc(s, id) : clicSu(s, id));
@@ -437,6 +465,18 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                   aperto={problemiAperti}
                   onApri={setProblemiAperti}
                 />
+                {modulo.id === "elettronica" &&
+                  schema.componenti
+                    .filter((c) => c.tipo === "oscilloscopio")
+                    .map((c, i) => (
+                      <PannelloOscilloscopio
+                        key={c.id}
+                        indice={i}
+                        id={c.id}
+                        sigla={c.etichetta}
+                        sessione={sessioneRif as React.MutableRefObject<SessioneElettronica | null>}
+                      />
+                    ))}
                 {modulo.id === "plc" && sessioneRif.current && eSessionePlc(sessioneRif.current) && (
                   <PannelloIngressiPlc
                     sessione={sessioneRif.current}

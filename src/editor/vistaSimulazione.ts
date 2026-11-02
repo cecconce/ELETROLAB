@@ -57,6 +57,13 @@ export interface AspettoComponente {
     /** Sensore a ultrasuoni: distanza dell'ostacolo (cm). */
     distanza?: number;
   };
+  /** Elettronica: LED e lampadine (0…1), LED bruciato, cursore del potenziometro, display del multimetro. */
+  elettronica?: {
+    luminosita?: number;
+    bruciato?: boolean;
+    posizione?: number;
+    lettura?: string;
+  };
 }
 
 export interface VistaSimulazione {

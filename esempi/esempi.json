@@ -140,6 +140,20 @@
       "titolo": "Arduino – Sensore a ultrasuoni",
       "descrizione": "Il programma manda un impulso su TRIG, misura con pulseIn la durata dell'eco su ECHO e calcola la distanza in centimetri (durata / 58); sotto i 20 cm accende il LED.",
       "prova": "Premi ▶ AVVIA e guarda il monitor seriale. Clic sulla parte sinistra del sensore per avvicinare l'ostacolo, sulla destra per allontanarlo: sotto i 20 cm il LED si accende."
+    },
+    {
+      "file": "elettronica-partitore.elab",
+      "modulo": "elettronica",
+      "titolo": "Partitore di tensione e multimetro",
+      "descrizione": "Due resistenze in serie (1 kΩ e 2 kΩ) dividono la tensione del generatore da 9 V: sulla resistenza più grande cade la parte più grande. Formula: Vu = V · R2 / (R1 + R2) = 9 · 2 / 3 = 6 V.",
+      "prova": "Premi ▶ AVVIA: il multimetro XMM1 indica circa 6 V. Ferma la simulazione, seleziona R2 e cambia il valore nelle Proprietà (per esempio 1k: la misura diventa 4,5 V). Prova anche il multimetro in funzione Ω (a circuito spento misura le resistenze) o A (va messo in serie)."
+    },
+    {
+      "file": "elettronica-filtro-rc.elab",
+      "modulo": "elettronica",
+      "titolo": "Filtro RC passa-basso e oscilloscopio",
+      "descrizione": "Il generatore di funzioni dà una sinusoide da 1 kHz e 2 V di picco; la resistenza da 1 kΩ e il condensatore da 159 nF formano un filtro passa-basso con frequenza di taglio fc = 1/(2πRC) ≈ 1 kHz. L'oscilloscopio mostra sul canale A l'ingresso e sul canale B l'uscita, più piccola e in ritardo.",
+      "prova": "Premi ▶ AVVIA: si apre la finestra dell'oscilloscopio. A frequenza di taglio l'uscita (B, azzurra) è circa il 71 % dell'ingresso (A, arancione) e in ritardo di un ottavo di periodo. Ferma, porta la frequenza del generatore a 100 Hz (l'uscita è quasi uguale) o a 10 kHz (quasi zero) e riavvia: cambia la base dei tempi per vedere bene le onde."
     }
   ]
 }

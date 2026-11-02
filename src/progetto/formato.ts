@@ -69,6 +69,10 @@ function leggiComponente(v: unknown): ComponenteSchema | undefined {
   // Preset dei contatori del PLC (facoltativo, intero non negativo).
   if (eNumero(v.preset) && v.preset >= 0) c.preset = Math.round(v.preset);
   if (eNumero(v.valore) && v.valore > 0) c.valore = v.valore;
+  if (eOggetto(v.parametri)) {
+    const parametri = Object.fromEntries(Object.entries(v.parametri).filter((x): x is [string, number | string] => eNumero(x[1]) || eTesto(x[1])));
+    if (Object.keys(parametri).length > 0) c.parametri = parametri;
+  }
   if (v.rotazione === 90 || v.rotazione === 180 || v.rotazione === 270) c.rotazione = v.rotazione;
   // Operandi dei segnali degli impianti animati (solo testi).
   if (eOggetto(v.collegamenti)) {

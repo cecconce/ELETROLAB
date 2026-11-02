@@ -1,0 +1,148 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "elettronica",
+  "programma": "0.1.0",
+  "salvato": "2026-11-02T05:32:44.087Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "XFG1",
+        "tipo": "generatore-funzioni",
+        "etichetta": "XFG1",
+        "x": 40,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 80,
+        "parametri": {
+          "forma": "sinusoide",
+          "frequenza": 1000,
+          "ampiezza": 2,
+          "offset": 0
+        }
+      },
+      {
+        "id": "R1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 180,
+        "y": 200,
+        "larghezza": 80,
+        "altezza": 40,
+        "parametri": {
+          "resistenza": 1000
+        }
+      },
+      {
+        "id": "C1",
+        "tipo": "condensatore",
+        "etichetta": "C1",
+        "x": 280,
+        "y": 220,
+        "larghezza": 80,
+        "altezza": 40,
+        "parametri": {
+          "capacita": 1.59e-7
+        },
+        "rotazione": 90
+      },
+      {
+        "id": "massa-4",
+        "tipo": "massa",
+        "etichetta": "",
+        "x": 80,
+        "y": 320,
+        "larghezza": 40,
+        "altezza": 40
+      },
+      {
+        "id": "XSC1",
+        "tipo": "oscilloscopio",
+        "etichetta": "XSC1",
+        "x": 380,
+        "y": 60,
+        "larghezza": 120,
+        "altezza": 100
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "XFG1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "R1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "R1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "C1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "C1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "massa-4",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "XFG1",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "massa-4",
+          "morsetto": "0"
+        }
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "XSC1",
+          "morsetto": "A"
+        },
+        "a": {
+          "componente": "R1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "XSC1",
+          "morsetto": "B"
+        },
+        "a": {
+          "componente": "C1",
+          "morsetto": "1"
+        }
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "XSC1",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "massa-4",
+          "morsetto": "0"
+        }
+      }
+    ]
+  }
+}

@@ -41,6 +41,7 @@ import { numeroMorsetto } from "./associazioni";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
 import { DisegnoImpianto } from "./DisegnoImpianti";
 import { DisegnoArduino } from "./DisegnoArduino";
+import { DisegnoElettronica, EtichettaElettronica } from "./DisegnoElettronica";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { copiaSelezione, incolla, type Appunti } from "./appunti";
 import {
@@ -644,7 +645,9 @@ export function AreaDisegno({
                 const rot = trasformazioneRotazione(c);
                 const ruotato = rot.rotazione !== 0;
                 const ingombro = dimensioni(c);
-                const sigla = libreria.modulo === "arduino" ? "" : siglaMostrata(c);
+                // Nel banco Arduino niente sigle; nell'Elettronica sigla e valore si scrivono a parte.
+                const elettronica = libreria.modulo === "elettronica";
+                const sigla = libreria.modulo === "arduino" || elettronica ? "" : siglaMostrata(c);
                 return (
                   <Group
                     key={c.id}
@@ -700,7 +703,8 @@ export function AreaDisegno({
                       />
                     )}
                     {libreria.modulo === "arduino" && <DisegnoArduino componente={c} aspetto={aspetto} />}
-                    {aspetto && libreria.modulo !== "arduino" && (
+                    {elettronica && <DisegnoElettronica componente={c} aspetto={aspetto} colori={colori} />}
+                    {aspetto && libreria.modulo !== "arduino" && !elettronica && (
                       <AspettoInSimulazione
                         componente={c}
                         voce={vociPerTipo.get(c.tipo)}
@@ -709,6 +713,7 @@ export function AreaDisegno({
                       />
                     )}
                     </Group>
+                    {elettronica && <EtichettaElettronica componente={c} larghezza={ingombro.larghezza} altezza={ingombro.altezza} colori={colori} />}
                     {ruotato && sigla && (
                       <Text
                         text={sigla}
@@ -1039,7 +1044,7 @@ export function AreaDisegno({
           {t("editor.adatta")}
         </button>
         <span className={avviso ? "suggerimento avviso" : "suggerimento"} role="status" aria-live="polite">
-          {avviso ?? (inSimulazione ? t(libreria.modulo === "plc" ? "simulazione.suggerimentoPlc" : libreria.modulo === "arduino" ? "simulazione.suggerimentoArduino" : "simulazione.suggerimento") : filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
+          {avviso ?? (inSimulazione ? t(libreria.modulo === "plc" ? "simulazione.suggerimentoPlc" : libreria.modulo === "arduino" ? "simulazione.suggerimentoArduino" : libreria.modulo === "elettronica" ? "simulazione.suggerimentoElettronica" : "simulazione.suggerimento") : filoInCorso ? t("fili.inCorso") : t("editor.suggerimento"))}
         </span>
       </div>
     </div>

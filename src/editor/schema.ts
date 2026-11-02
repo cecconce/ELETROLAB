@@ -44,6 +44,12 @@ export interface ComponenteSchema {
   collegamenti?: Record<string, string>;
   /** Solo per le resistenze del modulo Arduino: valore in ohm (se manca 220 Ω). */
   valore?: number;
+  /**
+   * Solo nel modulo Elettronica: parametri del componente (resistenza,
+   * capacità, tensione, forma d'onda…). I parametri assenti valgono il
+   * valore predefinito del motore. Salvati nel file.
+   */
+  parametri?: Record<string, number | string>;
 }
 
 /** Un capo di un filo: il morsetto `morsetto` (es. "14") del componente `componente`. */

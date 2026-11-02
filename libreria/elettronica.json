@@ -2,10 +2,30 @@
   "versione": 1,
   "modulo": "elettronica",
   "categorie": [
-    { "id": "sorgenti", "nome": "Sorgenti" },
-    { "id": "passivi", "nome": "Componenti passivi" },
-    { "id": "semiconduttori", "nome": "Semiconduttori" },
-    { "id": "integrati", "nome": "Integrati e porte logiche" }
+    {
+      "id": "sorgenti",
+      "nome": "Sorgenti"
+    },
+    {
+      "id": "passivi",
+      "nome": "Componenti passivi"
+    },
+    {
+      "id": "comandi",
+      "nome": "Interruttori e lampadine"
+    },
+    {
+      "id": "semiconduttori",
+      "nome": "Semiconduttori"
+    },
+    {
+      "id": "integrati",
+      "nome": "Integrati e porte logiche"
+    },
+    {
+      "id": "strumenti",
+      "nome": "Strumenti virtuali"
+    }
   ],
   "componenti": [
     {
@@ -13,15 +33,88 @@
       "nome": "Generatore di tensione continua",
       "categoria": "sorgenti",
       "sigla": "V",
-      "descrizione": "Fornisce una tensione costante fra i morsetti + e −, come una pila o un alimentatore.",
-      "paroleChiave": ["pila", "batteria", "alimentatore", "DC", "tensione"],
-      "icona": "generatore-dc.svg",
+      "descrizione": "Fornisce una tensione costante fra i morsetti + e −, come una pila o un alimentatore da banco. La tensione si sceglie nelle Proprietà.",
+      "paroleChiave": [
+        "pila",
+        "batteria",
+        "alimentatore",
+        "DC",
+        "tensione",
+        "continua"
+      ],
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "+", "x": 20, "y": 0 },
-        { "id": "-", "x": 20, "y": 80 }
-      ]
+        {
+          "id": "+",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "-",
+          "x": 20,
+          "y": 80
+        }
+      ],
+      "icona": "generatore-dc.svg"
+    },
+    {
+      "id": "generatore-corrente",
+      "nome": "Generatore di corrente",
+      "categoria": "sorgenti",
+      "sigla": "I",
+      "descrizione": "Fa scorrere sempre la stessa corrente, qualunque sia il circuito collegato. La freccia indica il verso della corrente.",
+      "paroleChiave": [
+        "corrente",
+        "costante",
+        "ampere"
+      ],
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "+",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "-",
+          "x": 20,
+          "y": 80
+        }
+      ],
+      "icona": "generatore-corrente.svg"
+    },
+    {
+      "id": "generatore-funzioni",
+      "nome": "Generatore di funzioni",
+      "categoria": "strumenti",
+      "sigla": "XFG",
+      "descrizione": "Strumento che produce un segnale alternato: sinusoide, onda quadra o triangolare. Si scelgono forma, frequenza, ampiezza (di picco) e offset nelle Proprietà.",
+      "paroleChiave": [
+        "segnale",
+        "sinusoide",
+        "onda quadra",
+        "triangolare",
+        "frequenza",
+        "funzioni",
+        "alternata"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "+",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "COM",
+          "x": 60,
+          "y": 80
+        }
+      ],
+      "icona": "generatore-funzioni.svg"
     },
     {
       "id": "massa",
@@ -29,26 +122,82 @@
       "categoria": "sorgenti",
       "sigla": "",
       "descrizione": "Il punto di riferimento a 0 V: tutte le tensioni del circuito si misurano rispetto alla massa. Ogni circuito ne ha bisogno.",
-      "paroleChiave": ["GND", "terra", "riferimento", "zero"],
-      "icona": "massa.svg",
+      "paroleChiave": [
+        "GND",
+        "terra",
+        "riferimento",
+        "zero"
+      ],
       "larghezza": 40,
       "altezza": 40,
-      "morsetti": [{ "id": "0", "x": 20, "y": 0 }]
+      "morsetti": [
+        {
+          "id": "0",
+          "x": 20,
+          "y": 0
+        }
+      ],
+      "icona": "massa.svg"
     },
     {
       "id": "resistenza",
       "nome": "Resistenza",
       "categoria": "passivi",
       "sigla": "R",
-      "descrizione": "Si oppone al passaggio della corrente. Legge di Ohm: V = R · I.",
-      "paroleChiave": ["resistore", "ohm"],
-      "icona": "resistenza.svg",
+      "descrizione": "Si oppone al passaggio della corrente. Legge di Ohm: V = R · I. Il valore (in ohm, Ω) si sceglie nelle Proprietà.",
+      "paroleChiave": [
+        "resistore",
+        "ohm"
+      ],
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "1", "x": 0, "y": 20 },
-        { "id": "2", "x": 80, "y": 20 }
-      ]
+        {
+          "id": "1",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "2",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "resistenza.svg"
+    },
+    {
+      "id": "potenziometro",
+      "nome": "Potenziometro",
+      "categoria": "passivi",
+      "sigla": "P",
+      "descrizione": "Resistenza con un cursore (morsetto centrale) che si sposta: divide la tensione in parti regolabili. In simulazione: clic a destra aumenta, a sinistra diminuisce.",
+      "paroleChiave": [
+        "trimmer",
+        "regolabile",
+        "variabile",
+        "partitore",
+        "cursore"
+      ],
+      "larghezza": 80,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "2",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "3",
+          "x": 80,
+          "y": 40
+        }
+      ],
+      "icona": "potenziometro.svg"
     },
     {
       "id": "condensatore",
@@ -56,14 +205,26 @@
       "categoria": "passivi",
       "sigla": "C",
       "descrizione": "Accumula carica elettrica fra due armature. Blocca la corrente continua e lascia passare quella alternata. Si misura in farad (F).",
-      "paroleChiave": ["capacità", "farad"],
-      "icona": "condensatore.svg",
+      "paroleChiave": [
+        "capacità",
+        "farad",
+        "elettrolitico"
+      ],
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "1", "x": 0, "y": 20 },
-        { "id": "2", "x": 80, "y": 20 }
-      ]
+        {
+          "id": "1",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "2",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "condensatore.svg"
     },
     {
       "id": "induttore",
@@ -71,76 +232,389 @@
       "categoria": "passivi",
       "sigla": "L",
       "descrizione": "Bobina di filo che si oppone alle variazioni di corrente. Si misura in henry (H).",
-      "paroleChiave": ["bobina", "induttanza", "henry"],
-      "icona": "induttore.svg",
+      "paroleChiave": [
+        "bobina",
+        "induttanza",
+        "henry"
+      ],
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "1", "x": 0, "y": 20 },
-        { "id": "2", "x": 80, "y": 20 }
-      ]
+        {
+          "id": "1",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "2",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "induttore.svg"
+    },
+    {
+      "id": "interruttore",
+      "nome": "Interruttore",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Apre o chiude il circuito e resta nella posizione scelta. In simulazione si commuta con un clic.",
+      "paroleChiave": [
+        "deviatore",
+        "switch",
+        "acceso",
+        "spento"
+      ],
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "2",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "interruttore.svg"
+    },
+    {
+      "id": "pulsante",
+      "nome": "Pulsante",
+      "categoria": "comandi",
+      "sigla": "S",
+      "descrizione": "Chiude il circuito solo finché lo si tiene premuto (normalmente aperto). In simulazione si preme con il mouse.",
+      "paroleChiave": [
+        "tasto",
+        "NA",
+        "premere"
+      ],
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "2",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "pulsante.svg"
+    },
+    {
+      "id": "lampadina",
+      "nome": "Lampadina",
+      "categoria": "comandi",
+      "sigla": "H",
+      "descrizione": "Si accende quando la attraversa corrente: più potenza riceve, più è luminosa. Tensione e potenza nominali si scelgono nelle Proprietà.",
+      "paroleChiave": [
+        "lampada",
+        "luce",
+        "spia"
+      ],
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "2",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "lampadina.svg"
     },
     {
       "id": "diodo",
       "nome": "Diodo",
       "categoria": "semiconduttori",
       "sigla": "D",
-      "descrizione": "Lascia passare la corrente in un solo verso, dall'anodo al catodo (quello con la barra).",
-      "paroleChiave": ["raddrizzatore", "anodo", "catodo"],
-      "icona": "diodo.svg",
+      "descrizione": "Lascia passare la corrente in un solo verso, dall'anodo (A) al catodo (K, la sbarretta). In conduzione ai suoi capi ci sono circa 0,7 V.",
+      "paroleChiave": [
+        "raddrizzatore",
+        "1N4007",
+        "giunzione"
+      ],
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "A", "x": 0, "y": 20 },
-        { "id": "K", "x": 80, "y": 20 }
-      ]
+        {
+          "id": "a",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "k",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "diodo.svg"
+    },
+    {
+      "id": "zener",
+      "nome": "Diodo zener",
+      "categoria": "semiconduttori",
+      "sigla": "D",
+      "descrizione": "Diodo che, collegato al contrario, mantiene ai suoi capi una tensione quasi costante (tensione di zener): serve a stabilizzare.",
+      "paroleChiave": [
+        "stabilizzatore",
+        "zener",
+        "riferimento"
+      ],
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "a",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "k",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "zener.svg"
     },
     {
       "id": "led",
       "nome": "LED",
       "categoria": "semiconduttori",
       "sigla": "D",
-      "descrizione": "Diodo che emette luce quando è attraversato da corrente nel verso giusto. Va protetto con una resistenza in serie.",
-      "paroleChiave": ["luce", "diodo"],
-      "icona": "led.svg",
+      "descrizione": "Diodo che emette luce. Va sempre messo in serie a una resistenza: senza, la corrente è troppa e il LED si brucia. Anodo in alto, catodo in basso.",
+      "paroleChiave": [
+        "luce",
+        "spia",
+        "diodo luminoso"
+      ],
       "larghezza": 40,
       "altezza": 80,
       "morsetti": [
-        { "id": "A", "x": 20, "y": 0 },
-        { "id": "K", "x": 20, "y": 80 }
-      ]
+        {
+          "id": "a",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "k",
+          "x": 20,
+          "y": 80
+        }
+      ],
+      "icona": "led.svg"
     },
     {
       "id": "transistor-npn",
-      "nome": "Transistor BJT NPN",
+      "nome": "Transistor NPN",
       "categoria": "semiconduttori",
       "sigla": "Q",
-      "descrizione": "Una piccola corrente nella base (B) comanda una corrente molto più grande fra collettore (C) ed emettitore (E). Fa da interruttore o da amplificatore.",
-      "paroleChiave": ["BJT", "transistore", "amplificatore", "interruttore"],
-      "icona": "transistor-npn.svg",
+      "descrizione": "Una piccola corrente nella base (B) comanda una corrente molto più grande fra collettore (C) ed emettitore (E): Ic = β · Ib. Si usa come amplificatore o come interruttore.",
+      "paroleChiave": [
+        "BJT",
+        "BC547",
+        "2N2222",
+        "amplificatore",
+        "bipolare"
+      ],
       "larghezza": 60,
       "altezza": 80,
       "morsetti": [
-        { "id": "B", "x": 0, "y": 40 },
-        { "id": "C", "x": 40, "y": 0 },
-        { "id": "E", "x": 40, "y": 80 }
-      ]
+        {
+          "id": "b",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "c",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "e",
+          "x": 40,
+          "y": 80
+        }
+      ],
+      "icona": "transistor-npn.svg"
+    },
+    {
+      "id": "transistor-pnp",
+      "nome": "Transistor PNP",
+      "categoria": "semiconduttori",
+      "sigla": "Q",
+      "descrizione": "Come l'NPN ma con le correnti al contrario: l'emettitore va verso il positivo e il transistor conduce quando la base è più bassa dell'emettitore.",
+      "paroleChiave": [
+        "BJT",
+        "BC557",
+        "bipolare"
+      ],
+      "larghezza": 60,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "b",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "c",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "e",
+          "x": 40,
+          "y": 0
+        }
+      ],
+      "icona": "transistor-pnp.svg"
+    },
+    {
+      "id": "mosfet-n",
+      "nome": "MOSFET a canale N",
+      "categoria": "semiconduttori",
+      "sigla": "Q",
+      "descrizione": "Transistor comandato in tensione: quando il gate (G) supera di qualche volt il source (S), fra drain (D) e source passa corrente. Nel gate non entra corrente.",
+      "paroleChiave": [
+        "FET",
+        "IRF540",
+        "2N7000",
+        "interruttore",
+        "gate"
+      ],
+      "larghezza": 60,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "g",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "d",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "s",
+          "x": 40,
+          "y": 80
+        }
+      ],
+      "icona": "mosfet-n.svg"
+    },
+    {
+      "id": "mosfet-p",
+      "nome": "MOSFET a canale P",
+      "categoria": "semiconduttori",
+      "sigla": "Q",
+      "descrizione": "Come il canale N ma al contrario: il source va verso il positivo e il MOSFET conduce quando il gate è qualche volt più basso del source.",
+      "paroleChiave": [
+        "FET",
+        "IRF9540",
+        "gate"
+      ],
+      "larghezza": 60,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "g",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "d",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "s",
+          "x": 40,
+          "y": 0
+        }
+      ],
+      "icona": "mosfet-p.svg"
     },
     {
       "id": "operazionale",
       "nome": "Amplificatore operazionale",
       "categoria": "integrati",
       "sigla": "U",
-      "descrizione": "Amplifica la differenza di tensione fra l'ingresso + e l'ingresso −. Con poche resistenze diventa un amplificatore, un comparatore o un sommatore.",
-      "paroleChiave": ["op-amp", "amplificatore", "comparatore"],
-      "icona": "operazionale.svg",
+      "descrizione": "Amplifica moltissimo la differenza fra gli ingressi + e −. Con la retroazione (una resistenza dall'uscita al −) il guadagno lo decidono le resistenze. L'uscita non supera la tensione di saturazione.",
+      "paroleChiave": [
+        "op-amp",
+        "LM741",
+        "LM358",
+        "amplificatore",
+        "comparatore"
+      ],
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "-", "x": 0, "y": 20 },
-        { "id": "+", "x": 0, "y": 60 },
-        { "id": "out", "x": 80, "y": 40 }
-      ]
+        {
+          "id": "-",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "+",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 40
+        }
+      ],
+      "icona": "operazionale.svg"
+    },
+    {
+      "id": "regolatore",
+      "nome": "Regolatore di tensione (78xx)",
+      "categoria": "integrati",
+      "sigla": "U",
+      "descrizione": "Dà in uscita una tensione fissa (per esempio 5 V con il 7805) anche se l'ingresso cambia, purché l'ingresso sia almeno 2 V più alto dell'uscita.",
+      "paroleChiave": [
+        "7805",
+        "7812",
+        "stabilizzatore",
+        "alimentatore",
+        "LM7805"
+      ],
+      "larghezza": 80,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        },
+        {
+          "id": "gnd",
+          "x": 40,
+          "y": 60
+        }
+      ],
+      "icona": "regolatore.svg"
     },
     {
       "id": "porta-and",
@@ -148,15 +622,30 @@
       "categoria": "integrati",
       "sigla": "U",
       "descrizione": "L'uscita è 1 solo se tutti gli ingressi sono 1.",
-      "paroleChiave": ["logica", "digitale", "e"],
-      "icona": "porta-and.svg",
+      "paroleChiave": [
+        "logica",
+        "digitale"
+      ],
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "A", "x": 0, "y": 20 },
-        { "id": "B", "x": 0, "y": 60 },
-        { "id": "Y", "x": 80, "y": 40 }
-      ]
+        {
+          "id": "A",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "B",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Y",
+          "x": 80,
+          "y": 40
+        }
+      ],
+      "icona": "porta-and.svg"
     },
     {
       "id": "porta-or",
@@ -164,30 +653,119 @@
       "categoria": "integrati",
       "sigla": "U",
       "descrizione": "L'uscita è 1 se almeno un ingresso è 1.",
-      "paroleChiave": ["logica", "digitale", "o"],
-      "icona": "porta-or.svg",
+      "paroleChiave": [
+        "logica",
+        "digitale"
+      ],
       "larghezza": 80,
       "altezza": 80,
       "morsetti": [
-        { "id": "A", "x": 0, "y": 20 },
-        { "id": "B", "x": 0, "y": 60 },
-        { "id": "Y", "x": 80, "y": 40 }
-      ]
+        {
+          "id": "A",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "B",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Y",
+          "x": 80,
+          "y": 40
+        }
+      ],
+      "icona": "porta-or.svg"
     },
     {
       "id": "porta-not",
       "nome": "Porta NOT",
       "categoria": "integrati",
       "sigla": "U",
-      "descrizione": "Inverte il segnale: se l'ingresso è 1 l'uscita è 0, e viceversa.",
-      "paroleChiave": ["logica", "digitale", "invertitore", "negazione"],
-      "icona": "porta-not.svg",
+      "descrizione": "Inverte il segnale: 1 diventa 0 e 0 diventa 1.",
+      "paroleChiave": [
+        "logica",
+        "digitale"
+      ],
       "larghezza": 80,
       "altezza": 40,
       "morsetti": [
-        { "id": "A", "x": 0, "y": 20 },
-        { "id": "Y", "x": 80, "y": 20 }
-      ]
+        {
+          "id": "A",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "Y",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "porta-not.svg"
+    },
+    {
+      "id": "multimetro",
+      "nome": "Multimetro",
+      "categoria": "strumenti",
+      "sigla": "XMM",
+      "descrizione": "Misura tensioni (V, in parallelo al componente), correnti (A, in serie: il circuito passa dentro lo strumento) e resistenze (Ω, a circuito spento). La funzione si sceglie nelle Proprietà.",
+      "paroleChiave": [
+        "tester",
+        "voltmetro",
+        "amperometro",
+        "ohmmetro",
+        "misura"
+      ],
+      "larghezza": 80,
+      "altezza": 100,
+      "morsetti": [
+        {
+          "id": "+",
+          "x": 20,
+          "y": 100
+        },
+        {
+          "id": "COM",
+          "x": 60,
+          "y": 100
+        }
+      ],
+      "icona": "multimetro.svg"
+    },
+    {
+      "id": "oscilloscopio",
+      "nome": "Oscilloscopio a 2 canali",
+      "categoria": "strumenti",
+      "sigla": "XSC",
+      "descrizione": "Disegna come cambiano nel tempo le tensioni dei canali A e B rispetto al morsetto COM (da collegare alla massa). Durante la simulazione si apre la finestra con lo schermo, base dei tempi e volt/divisione.",
+      "paroleChiave": [
+        "grafico",
+        "forma d'onda",
+        "segnale",
+        "canale",
+        "traccia"
+      ],
+      "larghezza": 120,
+      "altezza": 100,
+      "morsetti": [
+        {
+          "id": "A",
+          "x": 20,
+          "y": 100
+        },
+        {
+          "id": "B",
+          "x": 60,
+          "y": 100
+        },
+        {
+          "id": "COM",
+          "x": 100,
+          "y": 100
+        }
+      ],
+      "icona": "oscilloscopio.svg"
     }
   ]
 }

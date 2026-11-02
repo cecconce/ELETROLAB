@@ -71,7 +71,9 @@ export type Elemento =
   | { tipo: "Q"; id: string; c: string; b: string; e: string; pnp: boolean; beta: number; is?: number }
   | { tipo: "M"; id: string; d: string; g: string; s: string; canaleP: boolean; vth: number; k: number }
   /** Operazionale ideale con uscita limitata fra le alimentazioni ±vsat. */
-  | { tipo: "OP"; id: string; piu: string; meno: string; uscita: string; vsat: number; guadagno?: number };
+  | { tipo: "OP"; id: string; piu: string; meno: string; uscita: string; vsat: number; guadagno?: number }
+  /** Regolatore di tensione a tre terminali (ingresso, massa, uscita). */
+  | { tipo: "REG"; id: string; ingresso: string; massa: string; uscita: string; vnom: number };
 
 /** Modelli tipici pronti. */
 export const DIODO_SILICIO: ModelloDiodo = { is: 1e-14, n: 1, rs: 0.1 };
@@ -107,8 +109,9 @@ const TOLLERANZA_V = 1e-6;
 /** Corrente del diodo (da anodo a catodo) con la tensione vd ai capi (esclusa Rs). */
 function correnteDiodo(m: ModelloDiodo, vd: number): number {
   const nvt = m.n * VT;
-  // Esponenziale "linearizzato" oltre 40·nVt, per non andare all'infinito.
-  const lim = 40 * nvt;
+  // Esponenziale "linearizzato" oltre la tensione a cui la corrente arriverebbe a 10 kA,
+  // per non andare all'infinito durante le iterazioni.
+  const lim = nvt * Math.log(1e4 / m.is);
   const esp = (x: number) => (x > lim ? Math.exp(lim / nvt) * (1 + (x - lim) / nvt) : Math.exp(x / nvt));
   let i = m.is * (esp(vd) - 1);
   // Breakdown inverso (zener): una seconda giunzione "al contrario" spostata di bv.
@@ -183,8 +186,19 @@ function correntiNonLineari(e: Elemento, v: number[]): number[] {
       // Modellata come generatore di corrente Norton con resistenza d'uscita di 1 Ω.
       const a = e.guadagno ?? 1e5;
       const vout = e.vsat * Math.tanh((a * (v[0] - v[1])) / e.vsat);
-      const iOut = (vout - v[2]) / 1;
+      // Corrente che entra nell'operazionale dall'uscita (negativa quando eroga).
+      const iOut = (v[2] - vout) / 1;
       return [0, 0, iOut];
+    }
+    case "REG": {
+      // Regolatore lineare (tipo 78xx): l'uscita insegue vnom sopra la massa, ma
+      // non può superare l'ingresso meno la caduta minima (2 V). La corrente
+      // erogata viene presa dall'ingresso.
+      const [vin, vg, vo] = v;
+      const obiettivo = vg + Math.min(e.vnom, Math.max(0, vin - vg - 2));
+      const iu = (vo - obiettivo) / 0.05;
+      const erogata = Math.max(0, -iu);
+      return [erogata, -(erogata + iu), iu];
     }
     default:
       return [];
@@ -201,6 +215,8 @@ function terminaliDi(e: Elemento): string[] {
       return [e.d, e.g, e.s];
     case "OP":
       return [e.piu, e.meno, e.uscita];
+    case "REG":
+      return [e.ingresso, e.massa, e.uscita];
     default:
       return [];
   }
@@ -270,6 +286,7 @@ function risolvi(elementi: readonly Elemento[], o: Opzioni): Soluzione & { vetto
   const tens = (x: number[], n: string) => (n === MASSA ? 0 : x[indice.get(n)!]);
   let converge = false;
   let x: number[] = new Array<number>(N).fill(0);
+  const nonLineari = new Set(elementi.flatMap((e) => terminaliDi(e).map((n) => indice.get(n)).filter((k): k is number => k !== undefined)));
 
   for (let it = 0; it < ITERAZIONI; it++) {
     const A = Array.from({ length: N }, () => new Array<number>(N).fill(0));
@@ -372,10 +389,11 @@ function risolvi(elementi: readonly Elemento[], o: Opzioni): Soluzione & { vetto
     const sol = gauss(A, b);
     if (!sol) break;
     x = sol;
-    // Limitazione del passo: al massimo 0,5 V per iterazione sui nodi (evita che gli esponenziali esplodano).
+    // Limitazione del passo: al massimo 0,5 V per iterazione sui nodi dei dispositivi
+    // non lineari (evita che gli esponenziali esplodano); gli altri nodi vanno subito al valore.
     let massimo = 0;
     const nuovo = v.map((vi, k) => {
-      const d = Math.max(-0.5, Math.min(0.5, x[k] - vi));
+      const d = nonLineari.has(k) ? Math.max(-0.5, Math.min(0.5, x[k] - vi)) : x[k] - vi;
       massimo = Math.max(massimo, Math.abs(x[k] - vi));
       return vi + d;
     });
@@ -403,7 +421,7 @@ function risolvi(elementi: readonly Elemento[], o: Opzioni): Soluzione & { vetto
     if (term.length) {
       const i = correntiNonLineari(e, term.map((n) => tensioni[n]));
       if (e.tipo === "D") correnti[e.id] = i[0];
-      const nomi = e.tipo === "Q" ? ["c", "b", "e"] : e.tipo === "M" ? ["d", "g", "s"] : e.tipo === "OP" ? ["piu", "meno", "uscita"] : ["a", "k"];
+      const nomi = e.tipo === "Q" ? ["c", "b", "e"] : e.tipo === "M" ? ["d", "g", "s"] : e.tipo === "OP" ? ["piu", "meno", "uscita"] : e.tipo === "REG" ? ["ingresso", "massa", "uscita"] : ["a", "k"];
       terminali[e.id] = Object.fromEntries(nomi.map((nome, j) => [nome, i[j]]));
     }
   }
@@ -444,22 +462,37 @@ export function analisiTransitorio(
   passo: number,
   registra?: { nodi?: string[]; correnti?: string[] },
 ): Campione[] {
-  const memoria: Memoria = { vc: {}, il: {} };
+  const stato = nuovoStatoTransitorio();
   const campioni: Campione[] = [];
-  let iniziali: Record<string, number> | undefined;
   const passi = Math.max(1, Math.round(durata / passo));
   for (let k = 0; k <= passi; k++) {
     const t = k * passo;
-    const s = risolvi(elementi, { t, dt: passo, memoria, iniziali });
-    iniziali = s.vettore;
-    for (const e of elementi) {
-      if (e.tipo === "C") memoria.vc[e.id] = s.tensioni[e.a] - s.tensioni[e.b];
-      if (e.tipo === "L") memoria.il[e.id] = s.correnti[e.id];
-    }
+    const s = passoTransitorio(elementi, t, passo, stato);
     const filtra = <T>(r: Record<string, T>, chiavi?: string[]) => (chiavi ? Object.fromEntries(chiavi.map((c) => [c, r[c]])) : r);
     campioni.push({ t, tensioni: filtra(s.tensioni, registra?.nodi), correnti: filtra(s.correnti, registra?.correnti) });
   }
   return campioni;
+}
+
+/** Memoria del transitorio fra un passo e l'altro (cariche, correnti, ultima soluzione). */
+export interface StatoTransitorio {
+  memoria: Memoria;
+  iniziali?: Record<string, number>;
+}
+
+export function nuovoStatoTransitorio(): StatoTransitorio {
+  return { memoria: { vc: {}, il: {} } };
+}
+
+/** Calcola il circuito all'istante t (passo dt) e aggiorna la memoria di condensatori e induttori. */
+export function passoTransitorio(elementi: readonly Elemento[], t: number, dt: number, stato: StatoTransitorio): Soluzione {
+  const s = risolvi(elementi, { t, dt, memoria: stato.memoria, iniziali: stato.iniziali });
+  stato.iniziali = s.vettore;
+  for (const e of elementi) {
+    if (e.tipo === "C") stato.memoria.vc[e.id] = s.tensioni[e.a] - s.tensioni[e.b];
+    if (e.tipo === "L") stato.memoria.il[e.id] = s.correnti[e.id];
+  }
+  return s;
 }
 
 // ---------------------------------------------------------------- analisi in frequenza (AC)
