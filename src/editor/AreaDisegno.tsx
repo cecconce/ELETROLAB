@@ -1283,6 +1283,13 @@ function AspettoInSimulazione({ componente: c, voce, aspetto, colori, realistico
       )}
       {aspetto.azionato && !ePulsante(c.tipo) && aspetto.clic === "manuale" && utilizzatore === null && testo(`● ${t("simulazione.azionato")}`, -18, colori.azionato)}
       {realistico && aspetto.azionato && <ComandoRealisticoAzionato tipo={c.tipo} />}
+      {realistico && (c.tipo === "contatti-principali" ? aspetto.chiuso : utilizzatore === "bobina" && aspetto.alimentato) && (
+        // Indicatore meccanico del contattore: finestrella verde con "I" quando è chiuso.
+        <Group listening={false}>
+          <Rect x={c.tipo === "contatti-principali" ? 32 : 16} y={33} width={c.tipo === "contatti-principali" ? 16 : 8} height={5} fill="#43a047" />
+          {testo("I", 22, "#43a047")}
+        </Group>
+      )}
       {aspetto.motore && (
         <MotoreInMarcia
           {...centroMotore(c.tipo, w, h)}
