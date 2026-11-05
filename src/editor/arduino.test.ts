@@ -195,9 +195,12 @@ describe("vista e problemi del banco", () => {
     const sess = avviaSessioneArduino(SKETCH_PREDEFINITO, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
     passoArduino(sess, 200);
     const p = problemiArduino(sess, s, lib);
-    expect(p).toHaveLength(1);
-    expect(p[0].testo).toMatch(/LED verde si è bruciato: ci passano \d+ mA/);
-    expect(p[0].componenti).toEqual(["L"]);
+    // Due avvisi: il LED bruciato e la corrente eccessiva sul pin 13.
+    expect(p).toHaveLength(2);
+    const led = p.find((x) => x.chiave === "bruciato-L")!;
+    expect(led.testo).toMatch(/LED verde si è bruciato: ci passano \d+ mA/);
+    expect(led.componenti).toEqual(["L"]);
+    expect(p.find((x) => x.chiave === "corrente-D13")!.testo).toMatch(/Dal pin 13 passano \d+ mA/);
   });
 
   it("senza scheda: avviso; errore nel codice: riga e spiegazione", async () => {
@@ -324,5 +327,28 @@ describe("transistor, diodo e alimentatore sul banco", () => {
     // (5 − 0,7) / 1000 ≈ 4,3 mA in diretta, niente al contrario.
     expect(banco(false)).toBeCloseTo(0.0043, 4);
     expect(banco(true)).toBe(0);
+  });
+});
+
+describe("corrente sui pin", () => {
+  it("pin a HIGH collegato direttamente a GND: cortocircuito; 5V con troppo carico: avviso", async () => {
+    const { problemiArduino } = await import("./arduino");
+    let s: Schema = { componenti: [comp("U", "arduino-uno", 0, 0), comp("L", "lampadina", 600, 0)], fili: [] };
+    s = filo(s, "U/D9", "U/GND1");
+    // Lampadina da 12 V sul 5V: 5 V / 120 Ω ≈ 42 mA, nessun problema per il 5V.
+    s = filo(s, "U/5V", "L/1");
+    s = filo(s, "L/2", "U/GND2");
+    const sess = avviaSessioneArduino("void setup() { pinMode(9, OUTPUT); digitalWrite(9, HIGH); }\nvoid loop() {}", componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    passoArduino(sess, 50);
+    const p = problemiArduino(sess, s, lib);
+    expect(p.find((x) => x.chiave === "corrente-D9")!.testo).toMatch(/in cortocircuito/);
+    expect(p.map((x) => x.chiave)).not.toContain("corrente-5V");
+    // Una resistenza da 5 Ω sul 5V: 1 A, oltre i 500 mA dell'USB.
+    let t: Schema = { componenti: [comp("U", "arduino-uno", 0, 0), comp("R", "resistenza", 600, 0, { valore: 5 })], fili: [] };
+    t = filo(t, "U/5V", "R/1");
+    t = filo(t, "R/2", "U/GND1");
+    const sess2 = avviaSessioneArduino("void setup() {}\nvoid loop() {}", componentiDaSchema(t), nodiDaSchema(t, morsettiDi));
+    passoArduino(sess2, 50);
+    expect(problemiArduino(sess2, t, lib).find((x) => x.chiave === "corrente-5V")!.testo).toMatch(/Il pin 5V deve dare \d+ mA/);
   });
 });

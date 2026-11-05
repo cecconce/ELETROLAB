@@ -15,6 +15,8 @@ export const PIN_PWM = new Set(["D3", "D5", "D6", "D9", "D10", "D11"]);
 
 /** Resistenza d'uscita di un pin (limita la corrente come un pin vero). */
 export const R_USCITA_PIN = 25;
+/** Resistenza interna del pin 5V (regolatore e porta USB). */
+export const R_5V = 0.05;
 /** Resistenza di pull-up interna (INPUT_PULLUP). */
 export const R_PULLUP = 20000;
 /** Sopra questa corrente un LED si brucia (A). */
@@ -252,7 +254,7 @@ export function elementiCircuito(
     switch (c.tipo) {
       case "arduino-uno": {
         for (const g of ["GND1", "GND2", "GND3"]) R(`${c.id}:${g}`, n(g), MASSA, 1e-3);
-        el.push({ tipo: "generatore", id: `${c.id}:5V`, nodo: n("5V"), volt: 5, ohm: 0.05 });
+        el.push({ tipo: "generatore", id: `${c.id}:5V`, nodo: n("5V"), volt: 5, ohm: R_5V });
         el.push({ tipo: "generatore", id: `${c.id}:3V3`, nodo: n("3V3"), volt: 3.3, ohm: 0.2 });
         for (const p of [...PIN_DIGITALI, ...PIN_ANALOGICI]) {
           const s = pin[p];

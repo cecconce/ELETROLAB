@@ -11,6 +11,8 @@ import {
   ALIMENTATORE_TENSIONE,
   ALIMENTATORE_TENSIONE_MAX,
   DISTANZA_PREDEFINITA,
+  R_USCITA_PIN,
+  R_5V,
   TEMPI_DIVISIONE,
   TEMPO_DIVISIONE_PREDEFINITO,
   VOLT_DIVISIONE,
@@ -327,7 +329,7 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
     });
   }
   if (!s.scheda) problemi.push({ chiave: "senza-scheda", gravita: "avviso", testo: t("arduino.problema.senzaScheda"), componenti: [], morsetti: [] });
-  problemi.push(...pinFuoriTensione(s));
+  problemi.push(...pinFuoriTensione(s), ...correntiEccessive(s));
   for (const c of schema.componenti) {
     const a = s.aspetto[c.id];
     if (c.tipo === "lcd" && a?.alimentato && Object.keys(s.lcd).length > 0 && !lcdDelDisplay(s, c.id)) {
@@ -416,6 +418,39 @@ export function pinFuoriTensione(s: SessioneArduino): ProblemaMostrato[] {
       componenti: [s.scheda],
       morsetti: [],
     });
+  }
+  return esito;
+}
+
+/** Corrente massima di un pin (A, valore assoluto della scheda) e del pin 5V con l'USB. */
+const CORRENTE_PIN_MAX = 0.04;
+const CORRENTE_5V_MAX = 0.5;
+
+/**
+ * Pin che danno (o ricevono) più corrente di quella che sopportano: un pin
+ * dell'Arduino al massimo 40 mA (20 mA consigliati), il pin 5V alimentato
+ * dall'USB circa 500 mA. La simulazione continua ma lo studente viene avvisato.
+ */
+export function correntiEccessive(s: SessioneArduino): ProblemaMostrato[] {
+  if (!s.scheda) return [];
+  const esito: ProblemaMostrato[] = [];
+  const v = (pin: string) => s.risultato.tensioni[s.nodoDi(s.scheda!, pin)] ?? 0;
+  for (const [pin, nome] of PIN_SCHEDA) {
+    const st = s.pin[pin];
+    if (st?.modo !== "OUTPUT") continue;
+    const corrente = (5 * st.livello - v(pin)) / R_USCITA_PIN;
+    if (Math.abs(corrente) <= CORRENTE_PIN_MAX) continue;
+    esito.push({
+      chiave: `corrente-${pin}`,
+      gravita: "errore",
+      testo: t(Math.abs(corrente) > 0.15 ? "arduino.problema.pinCorto" : "arduino.problema.pinCorrente", { pin: nome, corrente: Math.round(Math.abs(corrente) * 1000) }),
+      componenti: [s.scheda],
+      morsetti: [],
+    });
+  }
+  const corrente5V = (5 - v("5V")) / R_5V;
+  if (corrente5V > CORRENTE_5V_MAX) {
+    esito.push({ chiave: "corrente-5V", gravita: "errore", testo: t("arduino.problema.corrente5V", { corrente: Math.round(corrente5V * 1000) }), componenti: [s.scheda], morsetti: [] });
   }
   return esito;
 }
