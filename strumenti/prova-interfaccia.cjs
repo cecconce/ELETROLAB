@@ -322,6 +322,7 @@ async function collega(pagina, a, b) {
   // === Modulo Arduino ========================================================
   await provaArduino(pagina, controlla, foto, apriEsempio);
   await provaArduinoFase9(pagina, controlla, foto, apriEsempio);
+  await provaFase9Finale(pagina, controlla, foto, apriEsempio);
 
   // === Modulo Elettronica ====================================================
   await provaElettronica(pagina, controlla, foto, apriEsempio);
@@ -751,6 +752,67 @@ async function provaArduinoFase9(pagina, controlla, foto, apriEsempio) {
   await apri("arduino-lcd-i2c.elab");
   await pagina.waitForTimeout(600);
   controlla((await testi()).join("").includes("Temperatura:"), "il display I2C scrive «Temperatura:»");
+  await fermaSeServe();
+}
+
+/**
+ * Fase 9, attività 9.14 e 9.16: elenco dei componenti nella finestra Esporta
+ * (tabella e file CSV) e debugger del codice Arduino (punto di interruzione
+ * sul numero di riga, variabili, Passo, Continua, Pausa).
+ */
+async function provaFase9Finale(pagina, controlla, foto, apriEsempio) {
+  const pulsante = pagina.locator(".pulsante-simulazione");
+  const fermaSeServe = async () => {
+    if ((await pulsante.innerText()).includes("FERMA")) await pulsante.click();
+    await pagina.waitForTimeout(200);
+  };
+
+  console.log("Arduino: elenco dei componenti (distinta materiali)");
+  await fermaSeServe();
+  await apriEsempio(pagina, "arduino-semaforo.elab");
+  await pagina.getByRole("button", { name: /Esporta/ }).click();
+  await pagina.waitForTimeout(300);
+  const tabella = await pagina.locator(".distinta-tabella").innerText();
+  controlla(/Resistenza/.test(tabella) && /LED/.test(tabella), "nella finestra Esporta c'è l'elenco dei componenti (resistenze e LED)");
+  const [csv] = await Promise.all([pagina.waitForEvent("download"), pagina.getByRole("button", { name: /CSV/ }).click()]);
+  const percorsoCsv = path.join(CARTELLA_IMMAGINI, csv.suggestedFilename());
+  await csv.saveAs(percorsoCsv);
+  const testoCsv = fs.readFileSync(percorsoCsv);
+  controlla(
+    testoCsv[0] === 0xef && testoCsv[1] === 0xbb && testoCsv[2] === 0xbf && testoCsv.toString("utf8").includes(";"),
+    `salvato ${csv.suggestedFilename()} con BOM UTF-8 e punto e virgola (per Excel)`,
+  );
+  await foto("09g-distinta");
+  await pagina.keyboard.press("Escape");
+  await pagina.waitForTimeout(200);
+  const chiudi = pagina.getByRole("button", { name: /Chiudi|Annulla/ });
+  if (await chiudi.count()) await chiudi.first().click().catch(() => {});
+  await pagina.waitForTimeout(200);
+
+  console.log("Arduino: debugger del codice");
+  const numeroRiga = (n) => pagina.locator(".cm-lineNumbers .cm-gutterElement").filter({ hasText: new RegExp(`^${n}$`) });
+  await numeroRiga(18).click();
+  await pagina.waitForTimeout(200);
+  controlla((await pagina.locator(".cm-lineNumbers .cm-punto-interruzione").count()) === 1, "clic sul numero 18: compare il punto di interruzione");
+  await pulsante.click();
+  await pagina.waitForTimeout(800);
+  const barra = () => pagina.locator(".debugger-barra").innerText();
+  controlla((await barra()).includes("Fermo alla riga 18"), "il programma si ferma alla riga 18");
+  const variabili = await pagina.locator(".debugger-variabili").innerText();
+  controlla(/pin\s+10/.test(variabili) && /millisecondi\s+5000/.test(variabili), "variabili locali visibili: pin = 10, millisecondi = 5000");
+  controlla((await pagina.locator(".cm-riga-ferma").count()) === 1, "la riga ferma è evidenziata nell'editor");
+  await foto("09h-debugger");
+  await pagina.getByRole("button", { name: /Passo/ }).click();
+  await pagina.waitForTimeout(400);
+  controlla((await barra()).includes("Fermo alla riga 19"), "⤵ Passo: si ferma alla riga 19");
+  // Tolgo il punto e riparto: con «Pausa» il programma si ferma di nuovo.
+  await numeroRiga(18).click();
+  await pagina.getByRole("button", { name: /Continua/ }).click();
+  await pagina.waitForTimeout(500);
+  controlla(!(await barra()).includes("Fermo"), "▶ Continua: il programma riparte");
+  await pagina.getByRole("button", { name: /Pausa/ }).click();
+  await pagina.waitForTimeout(6000);
+  controlla((await barra()).includes("Fermo alla riga"), "⏸ Pausa: il programma si ferma all'istruzione successiva");
   await fermaSeServe();
 }
 

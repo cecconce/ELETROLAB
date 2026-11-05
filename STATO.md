@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 9 – Arduino più simile a Tinkercad: alimentazione esterna, transistor, relè, sensori, plotter** — in corso
+**Fase 9 – Arduino più simile a Tinkercad: alimentazione esterna, transistor, relè, sensori, plotter** — completata — in attesa di conferma
 
 Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella versione per arduino lo stile tinkercad e poi vai avanti»). Richieste: alimentatore da banco nel modulo Arduino come in Tinkercad, poi proseguire con i miglioramenti.
 
@@ -26,9 +26,9 @@ Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella v
 - [x] 9.14 Elenco dei componenti (distinta materiali, come in Tinkercad) in tutti i moduli, con copia ed esportazione CSV.
 - [x] 9.15 Avviso di corrente eccessiva sui pin dell'Arduino (oltre 40 mA) e sul pin 5V.
 - [x] 9.16 Debugger del codice Arduino: punti di interruzione sulle righe, pausa, passo, valori delle variabili.
-- [ ] 9.17 Verifica finale: build Actions, prova Playwright, resoconto aggiornato.
+- [x] 9.17 Verifica finale: build Actions, prova Playwright, resoconto aggiornato.
 
-## Resoconto della Fase 9 (2026-11-05, verifica intermedia: sarà aggiornato a fine fase)
+## Resoconto della Fase 9 (2026-11-05, aggiornato con la verifica finale dell'attività 9.17)
 
 ### Cosa funziona (modulo Arduino, come in Tinkercad Circuits)
 - **Alimentazione esterna**: alimentatore da banco 0–30 V con limite di corrente (passa in CC e la tensione scende, come uno strumento vero), display di tensione e corrente, spie CV/CC; in simulazione clic a destra/sinistra ±0,5 V. Pila da 9 V e portapile 4 stilo (6 V) con resistenza interna. Il − non è il GND dell'Arduino: senza massa comune le letture dei pin sono «flottanti», come nella realtà.
@@ -38,6 +38,9 @@ Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella v
 - **Editor a blocchi**: blocchi per la striscia NeoPixel e il registro 74HC595.
 - **Avvisi in italiano**: pin oltre 5 V o negativo, base del transistor senza resistenza, transistor surriscaldato, lampadina bruciata, display I2C con pin o indirizzo sbagliati.
 - **Verifica degli esercizi**: confronta anche relè, lampadine e striscia NeoPixel.
+- **Elenco dei componenti** (distinta materiali, in tutti i moduli): nella finestra «Esporta», tabella con quantità, componente, valore e sigle; «📋 Copia l'elenco» e «📊 Salva come CSV (Excel)» (punto e virgola e BOM UTF-8, si apre con gli accenti giusti in Excel italiano).
+- **Avvisi sulla corrente**: pin dell'Arduino oltre 40 mA (oltre 150 mA «cortocircuito») e pin 5V oltre i 500 mA dell'USB; la simulazione continua, come in Tinkercad.
+- **Debugger del codice** (modo testo): clic sul numero di riga = punto di interruzione (pallino rosso); il programma si ferma prima di quella riga con il tempo simulato bloccato, riga gialla, tabella delle variabili locali e globali, pulsanti ▶ Continua, ⤵ Passo e ⏸ Pausa.
 - **15 esempi nuovi**: alimentatore e LED, voltmetro, motorino con transistor, lampadina con relè, lampione con plotter, antifurto, sensore di forza, annaffiatoio, rilevatore di gas, ponte H, serratura a codice, contatore binario 74HC595, arcobaleno NeoPixel, onda quadra sull'oscilloscopio, termometro con display I2C.
 
 ### Come provarlo passo per passo
@@ -49,11 +52,14 @@ Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella v
 6. «Serratura a codice con il tastierino 4×4»: tieni premuti 1, 2, 3, 4 e poi #: il servo apre e si accende il LED verde.
 7. «Contatore binario con il registro a scorrimento 74HC595», «Arcobaleno sulla striscia…», «Motore avanti e indietro con il ponte H L293D», «Onda quadra vista con l’oscilloscopio», «Termometro con il display LCD I2C»: ▶ AVVIA e segui il «Come provarlo» di ciascuno.
 8. Libreria → «Alimentazione», «Strumenti di misura»: i componenti nuovi si posano e si collegano come gli altri.
+9. Apri «Semaforo» → **Esporta**: in fondo alla finestra c'è l'elenco dei componenti; «Salva come CSV (Excel)» e apri il file con Excel.
+10. Sempre nel «Semaforo», clic sul numero **18** dell'editor (compare un pallino rosso) → ▶ AVVIA: il programma si ferma alla riga 18 e sotto l'editor si leggono `pin 10` e `millisecondi 5000`. Prova ⤵ Passo (riga 19), poi togli il pallino e premi ▶ Continua; ⏸ Pausa lo ferma di nuovo.
+11. Avviso sulla corrente: in un esempio con un LED, togli la resistenza e collega il LED direttamente fra il pin e GND → ▶ AVVIA: nel pannello dei problemi compare l'avviso sui 40 mA.
 
 ### Test eseguiti
-- `npm test`: **720 test Vitest**, tutti superati (78 nuovi in questa fase: generatore flottante, CV/CC, pile, transistor in interdizione/attivo/saturazione, relè con isteresi, lampadina, sensori, L293D con PWM, 74HC595 con fronti/reset/abilitazione, Keypad con scansione di righe e colonne, NeoPixel, LiquidCrystal_I2C, array a due dimensioni, plotter, oscilloscopio, blocchi, verifica degli esercizi, ognuno dei 15 esempi simulato, nomi di file senza conflitti di maiuscole, icone senza attributi doppi). `npm run build` OK.
-- **GitHub Actions** (`windows-latest`: test, `cargo test`, `tauri build`, portable e installer): verdi le esecuzioni n. 78–80, 84–86, 88, 90, 91 (87 e 89 annullate perché superate dalla successiva). Le n. 81–83 erano fallite per due file con lo stesso nome a meno della maiuscola (corretto nella n. 84, con un test che lo impedisce).
-- **Prova dell'interfaccia con Playwright** (`npm run prova-interfaccia`): **149 controlli superati**, nessun errore in console (11 nuovi: alimentatore, relè, tastierino, plotter, NeoPixel, ponte H, oscilloscopio, display I2C). Le prove mirate di ogni novità sono state guardate negli screenshot.
+- `npm test`: **726 test Vitest** in 67 file, tutti superati (84 nuovi in questa fase: generatore flottante, CV/CC, pile, transistor in interdizione/attivo/saturazione, relè con isteresi, lampadina, sensori, L293D con PWM, 74HC595 con fronti/reset/abilitazione, Keypad con scansione di righe e colonne, NeoPixel, LiquidCrystal_I2C, array a due dimensioni, plotter, oscilloscopio, blocchi, verifica degli esercizi, ognuno dei 15 esempi simulato, nomi di file senza conflitti di maiuscole, icone senza attributi doppi, distinta materiali e CSV, corrente sui pin e sul 5V, debugger con punti di interruzione, passo, pausa e variabili). `npm run build` OK.
+- **GitHub Actions** (`windows-latest`: test, `cargo test`, `tauri build`, portable e installer): verdi le esecuzioni n. 78–80, 84–86, 88, 90, 91, 94, 96 e 97 (l'ultima sul commit del debugger; 87, 89, 92, 93 e 95 annullate perché superate dalla successiva). Le n. 81–83 erano fallite per due file con lo stesso nome a meno della maiuscola (corretto nella n. 84, con un test che lo impedisce).
+- **Prova dell'interfaccia con Playwright** (`npm run prova-interfaccia`): **158 controlli superati**, nessun errore in console (20 nuovi: alimentatore, relè, tastierino, plotter, NeoPixel, ponte H, oscilloscopio, display I2C; con la 9.17 elenco dei componenti con file CSV, punto di interruzione, fermo alla riga 18 con le variabili, riga evidenziata, Passo, Continua e Pausa). Le prove mirate di ogni novità sono state guardate negli screenshot.
 - **Prestazioni**: 10 s simulati di ognuno dei 26 esempi Arduino; quasi tutti meno di 2 ms di calcolo per secondo simulato.
 
 ### Limiti noti
@@ -65,6 +71,9 @@ Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella v
 - Oscilloscopio a un canale, campioni solo ai cambi del circuito e una volta per passo (50 ms) quando non cambia niente.
 - LCD I2C: solo LiquidCrystal_I2C sui pin A4/A5 della Uno (niente caratteri personalizzati). Keypad: niente tasti multipli contemporanei.
 - Un `loop()` senza pause (per esempio «Pulsante», «Serratura») impegna circa il 15 % di un processore moderno; su un PC datato la simulazione resta in tempo reale ma più carica.
+- Debugger solo nel modo testo (non sui blocchi); niente modifica dei valori delle variabili durante la pausa né «esci dalla funzione»; i punti di interruzione non vengono salvati nel file.
+- L'avviso sulla corrente dei pin non è controllato dalla prova Playwright (solo dai test Vitest).
+- Nella versione di prova nel browser il CSV scaricato da Chromium senza finestra può chiamarsi «download» (nome con il trattino lungo); nell'.exe il nome si sceglie nella finestra Salva di Windows.
 - L'.exe non è stato provato su un PC Windows reale.
 
 ## Fase 8 – Impianti più completi, Impianti + PLC nello stesso file, strumenti realistici (confermata il 2026-11-05)
@@ -494,3 +503,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-05 — attività 9.14: **elenco dei componenti** (distinta materiali, come in Tinkercad) nella finestra «Esporta» di tutti i moduli: tabella con quantità, componente, valore (resistenze, condensatori, tensioni…) e sigle in ordine naturale (K2 prima di K10); componenti uguali raggruppati per tipo e valore, i contatti che hanno la sigla della bobina la contano una volta. «📋 Copia l'elenco» (testo «3 × Resistenza 220 Ω (R1, R2, R3)») e «📊 Salva come CSV (Excel)» con il punto e virgola e il BOM UTF-8, così Excel in italiano lo apre con gli accenti e i simboli giusti. Motore puro `src/editor/distinta.ts`. La finestra Esporta ora scorre se è più alta dello schermo. 3 nuovi test; `npm test` 723 OK, build OK, prova Playwright (tabella e file CSV scaricato).
 - 2026-11-05 — attività 9.15: **avvisi sulla corrente** nel modulo Arduino: un pin in uscita che dà o riceve più di 40 mA («meglio non superare 20», con il consiglio di aumentare la resistenza o usare un transistor o un relè); oltre 150 mA il messaggio parla di cortocircuito (pin collegato direttamente a GND o a 5V); il pin 5V oltre i 500 mA dell'USB (con il consiglio di alimentare a parte motori, lampadine e strisce di LED). La simulazione continua, come in Tinkercad. 1 nuovo test e uno aggiornato (il LED senza resistenza ora dà anche l'avviso sul pin); `npm test` 724 OK, nessun esempio con avvisi.
 - 2026-11-05 — attività 9.16: **debugger del codice Arduino** (come in Tinkercad). Clic sul numero di una riga dell'editor di testo: pallino rosso, punto di interruzione (anche durante la simulazione). Nell'interprete, prima di ogni istruzione con un punto di interruzione (o andando passo passo) il programma si ferma e il tempo simulato non scorre: la riga diventa gialla e sotto l'editor compaiono «⏸ Fermo alla riga N», «▶ Continua», «⤵ Passo» e la tabella delle variabili visibili (prima le locali, poi le globali; char come 'A' (65), array fra graffe, oggetti fra parentesi). Mentre il programma gira c'è anche «⏸ Pausa» (si ferma all'istruzione successiva). Corretto durante la prova: `avvia` non vedeva i punti aggiunti dopo l'apertura (mancava una dipendenza di useCallback). 2 nuovi test (fermo e tempo bloccato, continua, passo, pausa, variabili); `npm test` 726 OK, build OK, prova Playwright (fermo alla riga 24 con `numero 0`, dopo Continua `numero 1`, Passo alla riga 25).
+- 2026-11-05 — attività 9.17, verifica finale e chiusura della Fase 9: `strumenti/prova-interfaccia.cjs` esteso con la sezione «Fase 9, finale» (elenco dei componenti con CSV scaricato e controllato, debugger: punto di interruzione alla riga 18 del Semaforo, variabili `pin`/`millisecondi`, Passo, Continua, Pausa): **158 controlli superati**, nessun errore in console. `npm test` 726 OK, `npm run build` OK, build Actions n. 97 verde (test, cargo test, tauri build). Resoconto della Fase 9 aggiornato; fase completata, in attesa di conferma. Nota: nella prova nel browser il CSV scaricato da Chromium headless ha nome «download» (solo prova, non l'.exe).
