@@ -1222,3 +1222,49 @@ void loop() {
 `),
   );
 }
+
+// 24. Arcobaleno sulla striscia NeoPixel, con il potenziometro per la velocità
+{
+  const b = costruttore();
+  alimenta(b);
+  b.posa("striscia-neopixel", 720, -160);
+  b.filo("striscia-neopixel-1:5V", "Ap13", "#d32f2f");
+  b.filo("striscia-neopixel-1:DIN", "U:D6", "#43a047");
+  b.filo("striscia-neopixel-1:GND", "Am14", "#212121");
+  b.potenziometro("e20");
+  b.filo("a20", "Am20");
+  b.filo("a22", "Ap22");
+  b.filo("a21", "U:A0", BLU);
+  scrivi(
+    "arduino-neopixel.elab",
+    b.schema(`// Arcobaleno che scorre sulla striscia di 8 LED RGB (NeoPixel).
+// Ogni LED ha una tinta diversa (ColorHSV: 0…65535 fa tutto il giro dei
+// colori); a ogni passo le tinte si spostano un po'. Il potenziometro su A0
+// regola la velocità. I colori compaiono solo con show().
+
+#include <Adafruit_NeoPixel.h>
+
+const int PIN_STRISCIA = 6;
+const int NUMERO_LED = 8;
+Adafruit_NeoPixel striscia(NUMERO_LED, PIN_STRISCIA, NEO_GRB + NEO_KHZ800);
+
+long inizio = 0;   // tinta del primo LED
+
+void setup() {
+  striscia.begin();
+  striscia.setBrightness(150);
+}
+
+void loop() {
+  for (int i = 0; i < NUMERO_LED; i++) {
+    long tinta = inizio + i * 65536L / NUMERO_LED;
+    striscia.setPixelColor(i, striscia.ColorHSV(tinta));
+  }
+  striscia.show();
+  int velocita = analogRead(A0);          // 0…1023
+  inizio = inizio + 256 + velocita * 4;
+  delay(50);
+}
+`),
+  );
+}

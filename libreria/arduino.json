@@ -3154,6 +3154,42 @@
       "icona": "ard-tastierino.svg"
     },
     {
+      "id": "striscia-neopixel",
+      "nome": "Striscia di LED RGB (NeoPixel)",
+      "categoria": "uscite",
+      "sigla": "D",
+      "descrizione": "Striscia con 8 LED RGB indirizzabili: ogni LED ha il suo colore, scelto dal programma con la libreria Adafruit_NeoPixel (setPixelColor, Color, ColorHSV) e mostrato con show(). Bastano 3 fili: 5V, GND e DIN (il dato) su un pin qualsiasi. I colori compaiono solo dopo show(), come sulla striscia vera.",
+      "paroleChiave": [
+        "neopixel",
+        "striscia",
+        "led rgb",
+        "ws2812",
+        "arcobaleno",
+        "colori",
+        "led indirizzabili"
+      ],
+      "larghezza": 200,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "5V",
+          "x": 20,
+          "y": 60
+        },
+        {
+          "id": "DIN",
+          "x": 40,
+          "y": 60
+        },
+        {
+          "id": "GND",
+          "x": 60,
+          "y": 60
+        }
+      ],
+      "icona": "ard-striscia-neopixel.svg"
+    },
+    {
       "id": "74hc595",
       "nome": "Registro a scorrimento 74HC595",
       "categoria": "uscite",

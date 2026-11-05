@@ -778,6 +778,38 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------- Striscia NeoPixel
+voce(
+  {
+    id: "striscia-neopixel",
+    nome: "Striscia di LED RGB (NeoPixel)",
+    categoria: "uscite",
+    sigla: "D",
+    descrizione:
+      "Striscia con 8 LED RGB indirizzabili: ogni LED ha il suo colore, scelto dal programma con la libreria Adafruit_NeoPixel (setPixelColor, Color, ColorHSV) e mostrato con show(). Bastano 3 fili: 5V, GND e DIN (il dato) su un pin qualsiasi. I colori compaiono solo dopo show(), come sulla striscia vera.",
+    paroleChiave: ["neopixel", "striscia", "led rgb", "ws2812", "arcobaleno", "colori", "led indirizzabili"],
+    larghezza: 200,
+    altezza: 60,
+    morsetti: [
+      { id: "5V", x: 20, y: 60 },
+      { id: "DIN", x: 40, y: 60 },
+      { id: "GND", x: 60, y: 60 },
+    ],
+  },
+  svg(
+    200,
+    60,
+    [
+      ...[20, 40, 60].map((x, i) => `<line x1="${x}" y1="38" x2="${x}" y2="60" stroke="${["#e53935", "#43a047", "#212121"][i]}" stroke-width="3"/>`),
+      `<rect x="2" y="6" width="196" height="32" rx="3" fill="#ececec" stroke="#9e9e9e"/>`,
+      ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<rect x="${10 + i * 23}" y="12" width="18" height="18" rx="2" fill="#fafafa" stroke="#bdbdbd"/><circle cx="${19 + i * 23}" cy="21" r="5" fill="#e0e0e0"/>`),
+      testo(20, 47, "5V", 6, "#616161"),
+      testo(40, 47, "DIN", 6, "#616161"),
+      testo(60, 47, "GND", 6, "#616161"),
+    ].join("\n"),
+  ),
+);
+
 // ---------------------------------------------------------- Registro a scorrimento 74HC595
 {
   const basso: [string, string][] = [["Q1", "Q1"], ["Q2", "Q2"], ["Q3", "Q3"], ["Q4", "Q4"], ["Q5", "Q5"], ["Q6", "Q6"], ["Q7", "Q7"], ["GND", "GND"]];

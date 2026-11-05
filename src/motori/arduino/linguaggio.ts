@@ -14,7 +14,8 @@
 //   sqrt, random, randomSeed, tone, noTone, pulseIn;
 // - oggetti Serial, Servo, LiquidCrystal e Keypad (tastierino a matrice:
 //   makeKeymap, getKey, waitForKey; la scansione di righe e colonne passa
-//   davvero dai pin, come nella libreria originale).
+//   davvero dai pin, come nella libreria originale) e Adafruit_NeoPixel
+//   (strisce di LED RGB indirizzabili: setPixelColor, Color, ColorHSV, show…).
 //
 // Il programma gira come su una scheda vera, ma "a scatti": `avanza(ms)` lo
 // esegue finché il suo orologio non ha raggiunto il tempo richiesto. Ogni
@@ -161,7 +162,7 @@ function sequenza(c: string): string {
 
 /** Tipi conosciuti. */
 const TIPI_NUMERICI = new Set(["int", "long", "short", "byte", "char", "bool", "boolean", "float", "double", "word", "size_t", "uint8_t", "int8_t", "uint16_t", "int16_t", "uint32_t", "int32_t"]);
-const TIPI_OGGETTO = new Set(["Servo", "LiquidCrystal", "String", "Keypad"]);
+const TIPI_OGGETTO = new Set(["Servo", "LiquidCrystal", "String", "Keypad", "Adafruit_NeoPixel"]);
 
 interface Tipo {
   nome: string; // int, long, float, bool, String, Servo…
@@ -756,6 +757,22 @@ export interface Hardware {
   lcd(nome: string, righe: string[], colonne: number, pin: number[]): void;
   /** Durata in microsecondi dell'impulso sul pin (sensore a ultrasuoni), 0 se nessuno. */
   pulseIn(pin: string, livello: number): number;
+  /** show() di una striscia NeoPixel: colori 0xRRGGBB dei LED, già scalati dalla luminosità. */
+  neopixel?(pin: string, colori: number[]): void;
+}
+
+/** Colore 0xRRGGBB da tinta (0…65535), saturazione e valore (0…255), come ColorHSV della libreria. */
+export function coloreHsv(tinta: number, saturazione = 255, valore = 255): number {
+  const h = (((tinta % 65536) + 65536) % 65536) / 65536 * 6;
+  const sat = Math.min(255, Math.max(0, saturazione)) / 255;
+  const val = Math.min(255, Math.max(0, valore));
+  const settore = Math.floor(h);
+  const f = h - settore;
+  const p = val * (1 - sat);
+  const q = val * (1 - sat * f);
+  const t = val * (1 - sat * (1 - f));
+  const [r, g, b] = [[val, t, p], [q, val, p], [p, val, t], [p, q, val], [t, p, val], [val, p, q]][settore % 6];
+  return (Math.round(r) << 16) | (Math.round(g) << 8) | Math.round(b);
 }
 
 // ============================================================ Esecuzione
@@ -788,6 +805,8 @@ const COSTANTI: Record<string, number> = {
   HIGH: 1, LOW: 0, true: 1, false: 0, INPUT: 0, OUTPUT: 1, INPUT_PULLUP: 2, LED_BUILTIN: 13,
   A0: 14, A1: 15, A2: 16, A3: 17, A4: 18, A5: 19, DEC: 10, HEX: 16, BIN: 2, OCT: 8, NULL: 0,
   PI: Math.PI, HALF_PI: Math.PI / 2, TWO_PI: Math.PI * 2, LSBFIRST: 0, MSBFIRST: 1, NO_KEY: 0,
+  // Opzioni del costruttore Adafruit_NeoPixel (servono solo a scrivere il programma come sull'IDE).
+  NEO_GRB: 82, NEO_RGB: 6, NEO_RGBW: 27, NEO_GRBW: 210, NEO_KHZ800: 0, NEO_KHZ400: 256,
 };
 
 /** Intervallo minimo fra due scansioni del tastierino (µs): l'antirimbalzo della libreria Keypad. */
@@ -1022,6 +1041,13 @@ export class Esecutore {
       amb.definisci(d.nome, { tipo, valore: { t: "o", classe: tipo.nome, dati, nome: d.nome } });
       return;
     }
+    if (tipo.nome === "Adafruit_NeoPixel" && d.costruttore) {
+      // Adafruit_NeoPixel striscia(numeroLed, pin, NEO_GRB + NEO_KHZ800);
+      const valori: Valore[] = [];
+      for (const a of d.costruttore) valori.push(yield* this.valuta(a, amb));
+      amb.definisci(d.nome, { tipo, valore: this.creaNeoPixel(valori, d.nome, riga) });
+      return;
+    }
     if (tipo.nome === "Keypad" && d.costruttore) {
       // Keypad tastiera(makeKeymap(tasti), pinRighe, pinColonne, RIGHE, COLONNE);
       const valori: Valore[] = [];
@@ -1191,6 +1217,14 @@ export class Esecutore {
     return p;
   }
 
+  /** Crea l'oggetto Adafruit_NeoPixel: numero di LED e pin del dato. */
+  private creaNeoPixel(valori: Valore[], nome: string, riga: number): Valore {
+    const [n, p] = valori;
+    if (n?.t !== "n" || p?.t !== "n") throw new ErroreArduino(riga, "Adafruit_NeoPixel: scrivi il numero di LED e il pin, per esempio Adafruit_NeoPixel striscia(8, 6, NEO_GRB + NEO_KHZ800);");
+    const quanti = Math.max(0, Math.min(300, Math.trunc(n.v)));
+    return { t: "o", classe: "Adafruit_NeoPixel", nome, dati: { quanti, pin: this.pin(p.v, riga, "Adafruit_NeoPixel"), colori: new Array<number>(quanti).fill(0), luminosita: 255, iniziata: false } };
+  }
+
   /** Crea l'oggetto Keypad: mappa dei tasti (array a due dimensioni), pin delle righe e delle colonne. */
   private creaKeypad(valori: Valore[], nome: string, riga: number): Valore {
     const [mappa, pr, pc, nr, nc] = valori;
@@ -1242,6 +1276,11 @@ export class Esecutore {
         // makeKeymap(tasti) serve solo a passare la tabella dei tasti al costruttore.
         const v = arg[0] ? yield* this.valuta(arg[0], amb) : VOID;
         return v;
+      }
+      case "Adafruit_NeoPixel": {
+        const valori: Valore[] = [];
+        for (const a of arg) valori.push(yield* this.valuta(a, amb));
+        return this.creaNeoPixel(valori, "striscia", riga);
       }
       case "Keypad": {
         const valori: Valore[] = [];
@@ -1478,7 +1517,7 @@ export class Esecutore {
       }
       throw new ErroreArduino(riga, `Le String non hanno la funzione ${e.nome}().`);
     }
-    if (ogg.t !== "o") throw new ErroreArduino(riga, `Il punto si usa dopo un oggetto (Serial, Servo, LiquidCrystal, Keypad, String).`);
+    if (ogg.t !== "o") throw new ErroreArduino(riga, `Il punto si usa dopo un oggetto (Serial, Servo, LiquidCrystal, Keypad, Adafruit_NeoPixel, String).`);
     if (ogg.classe === "Serial") {
       switch (e.nome) {
         case "begin":
@@ -1512,6 +1551,57 @@ export class Esecutore {
           return VOID;
       }
       throw new ErroreArduino(riga, `Serial non ha la funzione ${e.nome}().`);
+    }
+    if (ogg.classe === "Adafruit_NeoPixel") {
+      const d = ogg.dati as { quanti: number; pin: string; colori: number[]; luminosita: number; iniziata: boolean };
+      const rgb = (r: number, g: number, b: number) => ((r & 255) << 16) | ((g & 255) << 8) | (b & 255);
+      const colore = (da: number) => (valori.length - da >= 3 ? rgb(n(da), n(da + 1), n(da + 2)) : n(da) >>> 0);
+      switch (e.nome) {
+        case "begin":
+          d.iniziata = true;
+          return VOID;
+        case "show": {
+          // Come la striscia vera: i colori arrivano ai LED solo con show().
+          const scala = (c: number) => Math.round((c * d.luminosita) / 255);
+          const visibili = d.colori.map((c) => rgb(scala((c >> 16) & 255), scala((c >> 8) & 255), scala(c & 255)));
+          this.hw.neopixel?.(d.pin, visibili);
+          this.tempoUs += 30 * d.quanti; // circa 30 µs per LED
+          return VOID;
+        }
+        case "setPixelColor": {
+          const i = Math.trunc(n(0));
+          if (i >= 0 && i < d.quanti) d.colori[i] = colore(1) & 0xffffff;
+          return VOID;
+        }
+        case "fill": {
+          const c = valori.length > 0 ? n(0) >>> 0 : 0;
+          const primo = valori.length > 1 ? Math.trunc(n(1)) : 0;
+          const quanti = valori.length > 2 && n(2) > 0 ? Math.trunc(n(2)) : d.quanti - primo;
+          for (let i = Math.max(0, primo); i < Math.min(d.quanti, primo + quanti); i++) d.colori[i] = c & 0xffffff;
+          return VOID;
+        }
+        case "clear":
+          d.colori.fill(0);
+          return VOID;
+        case "setBrightness":
+          d.luminosita = Math.min(255, Math.max(0, Math.trunc(n(0))));
+          return VOID;
+        case "getBrightness":
+          return num(d.luminosita);
+        case "numPixels":
+          return num(d.quanti);
+        case "getPixelColor": {
+          const i = Math.trunc(n(0));
+          return num(i >= 0 && i < d.quanti ? d.colori[i] : 0);
+        }
+        case "Color":
+          return num(rgb(n(0), n(1), n(2)));
+        case "ColorHSV":
+          return num(coloreHsv(n(0), valori.length > 1 ? n(1) : 255, valori.length > 2 ? n(2) : 255));
+        case "gamma32":
+          return num(n(0) >>> 0);
+      }
+      throw new ErroreArduino(riga, `Adafruit_NeoPixel non ha la funzione ${e.nome}().`);
     }
     if (ogg.classe === "Keypad") {
       const d = ogg.dati as { mappa: Extract<Valore, { t: "a" }>; righe: string[]; colonne: string[]; premuto: number; ultimaScansione: number; antirimbalzo: number };

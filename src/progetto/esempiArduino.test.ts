@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(23);
+    expect(arduino).toHaveLength(24);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -448,6 +448,23 @@ describe("esempio del registro a scorrimento 74HC595", () => {
     expect(bit()).toBe("00000101");
     aspetta(s, 300 * 8); // numero 13
     expect(bit()).toBe("00001101");
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio della striscia NeoPixel", () => {
+  it("8 LED con tinte diverse che scorrono", () => {
+    const { schema, s } = apri("arduino-neopixel.elab");
+    aspetta(s, 200);
+    expect(s.errore).toBeNull();
+    const striscia = id(schema, "striscia-neopixel");
+    const colori = () => vistaDaSessioneArduino(s, schema, lib).componenti[striscia].arduino!.neopixel!;
+    const primi = colori();
+    expect(primi).toHaveLength(8);
+    expect(new Set(primi).size).toBe(8); // tutte diverse
+    expect(primi.every((c) => c > 0)).toBe(true);
+    aspetta(s, 300);
+    expect(colori()).not.toEqual(primi);
     expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });

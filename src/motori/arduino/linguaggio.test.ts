@@ -405,3 +405,42 @@ describe("libreria Keypad", () => {
     expect(() => esegui(`#include <Keypad.h>\nchar t[4] = {'1','2','3','4'};\nbyte r[4] = {9,8,7,6};\nbyte c[4] = {5,4,3,2};\nKeypad k = Keypad(makeKeymap(t), r, c, 4, 4);\nvoid setup(){}\nvoid loop(){}`, 10)).toThrow(/array a due dimensioni/);
   });
 });
+
+describe("libreria Adafruit_NeoPixel", () => {
+  it("i colori arrivano alla striscia solo con show(), scalati dalla luminosità", async () => {
+    const { coloreHsv } = await import("./linguaggio");
+    const s = schedaFinta();
+    const inviati: { pin: string; colori: number[] }[] = [];
+    s.hw.neopixel = (pin, colori) => void inviati.push({ pin, colori });
+    const e = preparaSketch(
+      `#include <Adafruit_NeoPixel.h>
+       Adafruit_NeoPixel st = Adafruit_NeoPixel(3, 6, NEO_GRB + NEO_KHZ800);
+       void setup() {
+         st.begin();
+         st.setPixelColor(0, 255, 0, 0);
+         st.setPixelColor(1, st.Color(0, 0, 255));
+         Serial.println(st.numPixels());
+         st.show();
+         st.setBrightness(51);
+         st.fill(st.Color(255, 255, 255), 2);
+         st.show();
+         st.clear();
+       }
+       void loop() {}`,
+      s.hw,
+    );
+    e.avanza(10);
+    expect(e.errore).toBeNull();
+    expect(s.seriale).toBe("3\n");
+    expect(inviati).toHaveLength(2);
+    expect(inviati[0]).toEqual({ pin: "D6", colori: [0xff0000, 0x0000ff, 0] });
+    expect(inviati[1].colori).toEqual([0x330000, 0x000033, 0x333333]);
+    expect(coloreHsv(0)).toBe(0xff0000);
+    expect(coloreHsv(65536 / 3)).toBe(0x00ff00);
+    expect(coloreHsv(0, 0, 255)).toBe(0xffffff);
+  });
+
+  it("costruttore senza numero di LED: errore spiegato", () => {
+    expect(() => esegui(`Adafruit_NeoPixel st(6);\nvoid setup(){}\nvoid loop(){}`, 10)).toThrow(/numero di LED e il pin/);
+  });
+});

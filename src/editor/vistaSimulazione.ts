@@ -76,6 +76,8 @@ export interface AspettoComponente {
     velocita?: number;
     /** Alimentatore e pile: tensione ai morsetti, corrente erogata, limite di corrente raggiunto (CC). */
     alimentatore?: { volt: number; ampere: number; cc: boolean };
+    /** Striscia NeoPixel: colori dei LED (0xRRGGBB). */
+    neopixel?: number[];
     /** Ponte H: stato delle uscite OUT1…OUT4 ("alto", "basso", "aperto"). */
     uscitePonte?: string[];
     /** Modulo relè: alimentato e con la bobina eccitata. */

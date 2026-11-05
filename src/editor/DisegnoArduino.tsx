@@ -270,6 +270,30 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
+    case "striscia-neopixel": {
+      // LED accesi con il loro colore e un alone proporzionale alla luminosità.
+      const colori = a?.neopixel ?? [];
+      return (
+        <Group listening={false}>
+          {colori.slice(0, 8).map((c, i) => {
+            if (!c) return null;
+            const r = (c >> 16) & 255;
+            const g = (c >> 8) & 255;
+            const b = c & 255;
+            const l = Math.max(r, g, b) / 255;
+            // Tinta a piena intensità (il canale più forte a 255); la luminosità decide l'alone.
+            const pieno = (x: number) => Math.round(x / l);
+            const colore = `rgb(${pieno(r)},${pieno(g)},${pieno(b)})`;
+            return (
+              <Group key={i}>
+                <Circle x={19 + i * 23} y={21} radius={9 + 6 * l} fill={colore} opacity={0.25 + 0.4 * l} shadowColor={colore} shadowBlur={16 * l} shadowOpacity={1} />
+                <Circle x={19 + i * 23} y={21} radius={5} fill={colore} opacity={0.5 + 0.5 * l} />
+              </Group>
+            );
+          })}
+        </Group>
+      );
+    }
     case "tastierino": {
       // Tasto premuto: si illumina di verde.
       const k = a?.posizione ?? -1;

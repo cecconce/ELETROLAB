@@ -212,6 +212,11 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.luminosita = a.luminosita ?? 0;
       arduino.bruciato = a.bruciato ?? false;
     }
+    if (c.tipo === "striscia-neopixel") {
+      // Colori inviati con show() sul pin collegato a DIN, se la striscia è alimentata.
+      const pin = pinCollegato(s, c.id, "DIN");
+      arduino.neopixel = a.alimentato && pin ? s.neopixel[pin] ?? [] : [];
+    }
     if (c.tipo === "tastierino") arduino.posizione = s.interazioni.premuti.has(c.id) ? s.interazioni.posizioni[c.id] ?? -1 : -1;
     if (c.tipo === "l293d") arduino.uscitePonte = (a.uscite ?? []).map((u) => u.stato);
     if (c.tipo === "modulo-rele") {

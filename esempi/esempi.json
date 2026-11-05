@@ -303,6 +303,13 @@
       "prova": "Premi ▶ AVVIA: i LED contano in binario (1, 10, 11, 100…) e il monitor seriale scrive il numero e i suoi bit. Confronta i LED accesi con il numero: per esempio 5 = 101 accende nella fila sotto il secondo e il quarto LED (Q2 e Q0). Prova a cambiare MSBFIRST in LSBFIRST: l'ordine dei LED si rovescia."
     },
     {
+      "file": "arduino-neopixel.elab",
+      "modulo": "arduino",
+      "titolo": "Arcobaleno sulla striscia di LED RGB (NeoPixel)",
+      "descrizione": "Una striscia di 8 LED RGB indirizzabili si comanda con un solo pin (DIN) e la libreria Adafruit_NeoPixel: setPixelColor sceglie il colore di ogni LED, ColorHSV lo calcola dalla tinta (0…65535 fa tutto il giro dei colori), show() li manda alla striscia. Le tinte si spostano a ogni passo e l'arcobaleno scorre; il potenziometro su A0 regola la velocità.",
+      "prova": "Premi ▶ AVVIA: l'arcobaleno scorre lungo la striscia. Clic a destra del potenziometro per farlo scorrere più veloce, a sinistra più piano. Ferma la simulazione e prova a togliere striscia.show(): i LED restano spenti."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

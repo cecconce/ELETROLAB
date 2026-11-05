@@ -1,0 +1,146 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:35:21.240Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "striscia-neopixel-1",
+        "tipo": "striscia-neopixel",
+        "etichetta": "D1",
+        "x": 720,
+        "y": -160,
+        "larghezza": 200,
+        "altezza": 60
+      },
+      {
+        "id": "potenziometro-1",
+        "tipo": "potenziometro",
+        "etichetta": "RV1",
+        "x": 900,
+        "y": 120,
+        "larghezza": 40,
+        "altezza": 40
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "striscia-neopixel-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap13"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "striscia-neopixel-1",
+          "morsetto": "DIN"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D6"
+        },
+        "colore": "#43a047"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "striscia-neopixel-1",
+          "morsetto": "GND"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am14"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a20"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am20"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a22"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap22"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a21"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A0"
+        },
+        "colore": "#1565c0"
+      }
+    ],
+    "codice": "// Arcobaleno che scorre sulla striscia di 8 LED RGB (NeoPixel).\n// Ogni LED ha una tinta diversa (ColorHSV: 0…65535 fa tutto il giro dei\n// colori); a ogni passo le tinte si spostano un po'. Il potenziometro su A0\n// regola la velocità. I colori compaiono solo con show().\n\n#include <Adafruit_NeoPixel.h>\n\nconst int PIN_STRISCIA = 6;\nconst int NUMERO_LED = 8;\nAdafruit_NeoPixel striscia(NUMERO_LED, PIN_STRISCIA, NEO_GRB + NEO_KHZ800);\n\nlong inizio = 0;   // tinta del primo LED\n\nvoid setup() {\n  striscia.begin();\n  striscia.setBrightness(150);\n}\n\nvoid loop() {\n  for (int i = 0; i < NUMERO_LED; i++) {\n    long tinta = inizio + i * 65536L / NUMERO_LED;\n    striscia.setPixelColor(i, striscia.ColorHSV(tinta));\n  }\n  striscia.show();\n  int velocita = analogRead(A0);          // 0…1023\n  inizio = inizio + 256 + velocita * 4;\n  delay(50);\n}\n"
+  }
+}

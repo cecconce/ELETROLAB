@@ -265,6 +265,11 @@ export function elementiCircuito(
       case "resistenza":
         R(c.id, n("1"), n("2"), c.valore ?? RESISTENZA_PREDEFINITA);
         break;
+      case "striscia-neopixel":
+        // Elettronica dei LED: un piccolo carico sull'alimentazione; l'ingresso DIN assorbe pochissimo.
+        R(`${c.id}:alim`, n("5V"), n("GND"), 1000);
+        R(`${c.id}:din`, n("DIN"), n("GND"), 1e6);
+        break;
       case "74hc595": {
         // Alimentazione del chip; uscite come i pin dell'Arduino (circa 50 Ω),
         // riferite al GND (collegato a quello della scheda).
@@ -580,6 +585,10 @@ export function aspettoComponenti(
   for (const c of componenti) {
     if (c.tipo === "l293d") {
       aspetto[c.id] = { uscite: [...(statiPonti.get(c.id) ?? [APERTA, APERTA, APERTA, APERTA])], alimentato: v(nodoDi(c.id, "VSS")) - v(nodoDi(c.id, "GND1")) > 4.5 };
+      continue;
+    }
+    if (c.tipo === "striscia-neopixel") {
+      aspetto[c.id] = { alimentato: v(nodoDi(c.id, "5V")) - v(nodoDi(c.id, "GND")) > 4 };
       continue;
     }
     if (c.tipo === "modulo-rele") {
