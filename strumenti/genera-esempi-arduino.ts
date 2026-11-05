@@ -745,3 +745,52 @@ void loop() {
 `),
   );
 }
+
+// 16. Lampione automatico con la fotoresistenza e il plotter seriale
+{
+  const b = costruttore();
+  alimenta(b);
+  // Fotoresistenza in e5–e6 verso il 5V, resistenza da 10 kΩ (a6–a10) verso GND: partitore su A0.
+  const f = foro("e5");
+  b.posa("fotoresistenza", f.x, f.y - 40);
+  b.resistenza("a6", 10000);
+  b.filo("b5", "Ap5");
+  b.filo("b10", "Am10");
+  b.filo("b6", "U:A0", BLU);
+  // LED con la sua resistenza sul pin 9.
+  b.resistenza("a20");
+  b.led("giallo", "e24");
+  b.filo("U:D9", "b20", ARANCIONE);
+  b.filo("c26", "Am26");
+  scrivi(
+    "arduino-lampione.elab",
+    b.schema(`// Lampione automatico: quando fa buio il LED si accende da solo.
+// La fotoresistenza e la resistenza da 10 kΩ formano un partitore: con tanta
+// luce su A0 arrivano quasi 5 V, al buio poca tensione.
+// Il programma scrive «Luce:valore,Soglia:valore»: apri il Grafico del monitor
+// seriale per vedere le due linee (plotter seriale).
+
+const int LED = 9;
+const int SOGLIA = 500;   // sotto questo valore è «buio»
+
+void setup() {
+  pinMode(LED, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int luce = analogRead(A0);          // 0 (buio) … 1023 (tanta luce)
+  if (luce < SOGLIA) {
+    digitalWrite(LED, HIGH);          // buio: lampione acceso
+  } else {
+    digitalWrite(LED, LOW);
+  }
+  Serial.print("Luce:");
+  Serial.print(luce);
+  Serial.print(",Soglia:");
+  Serial.println(SOGLIA);
+  delay(100);
+}
+`),
+  );
+}

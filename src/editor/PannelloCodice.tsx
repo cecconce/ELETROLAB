@@ -4,11 +4,13 @@
 //   spiegato sotto.
 // - Durante la simulazione il codice non si modifica (come sulla scheda vera
 //   bisogna fermare, correggere e riavviare) e compare il monitor seriale,
-//   con la casella per inviare testo al programma.
+//   con la casella per inviare testo al programma e il pulsante per passare
+//   al plotter seriale (il grafico dei numeri scritti dal programma).
 import { useEffect, useRef, useState } from "react";
 import { t } from "../testi";
 import { EditorBlocchi } from "./EditorBlocchi";
 import { EditorCodice } from "./EditorCodice";
+import { PlotterSeriale } from "./PlotterSeriale";
 
 export interface PropsPannelloCodice {
   codice: string;
@@ -32,11 +34,12 @@ export function PannelloCodice(props: PropsPannelloCodice) {
   const { codice, onCambia, inSimulazione, errore, seriale, onInviaSeriale, onPulisciSeriale, modo } = props;
   const monitor = useRef<HTMLPreElement>(null);
   const [daInviare, setDaInviare] = useState("");
+  const [vistaMonitor, setVistaMonitor] = useState<"testo" | "grafico">("testo");
 
   // Il monitor seriale scorre da solo fino all'ultima riga.
   useEffect(() => {
     if (monitor.current) monitor.current.scrollTop = monitor.current.scrollHeight;
-  }, [seriale]);
+  }, [seriale, vistaMonitor]);
 
   // Cambio di modo: dai blocchi al testo il programma resta (ma le modifiche
   // al testo non tornano nei blocchi); dal testo ai blocchi il codice scritto
@@ -79,14 +82,34 @@ export function PannelloCodice(props: PropsPannelloCodice) {
       {inSimulazione && (
         <div className="monitor-seriale">
           <div className="monitor-intestazione">
-            <strong>{t("arduino.seriale.titolo")}</strong>
-            <button type="button" className="pulsante piccolo" onClick={onPulisciSeriale}>
-              {t("arduino.seriale.pulisci")}
-            </button>
+            <strong>{vistaMonitor === "testo" ? t("arduino.seriale.titolo") : t("arduino.plotter.titolo")}</strong>
+            <span className="monitor-comandi">
+              <span className="monitor-viste" role="radiogroup" aria-label={t("arduino.plotter.scegli")}>
+                {(["testo", "grafico"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={vistaMonitor === v}
+                    className={vistaMonitor === v ? "pulsante piccolo attivo" : "pulsante piccolo"}
+                    onClick={() => setVistaMonitor(v)}
+                  >
+                    {v === "testo" ? `📝 ${t("arduino.plotter.testo")}` : `📈 ${t("arduino.plotter.grafico")}`}
+                  </button>
+                ))}
+              </span>
+              <button type="button" className="pulsante piccolo" onClick={onPulisciSeriale}>
+                {t("arduino.seriale.pulisci")}
+              </button>
+            </span>
           </div>
-          <pre ref={monitor} className="monitor-testo" data-testid="monitor-seriale">
-            {seriale || t("arduino.seriale.vuoto")}
-          </pre>
+          {vistaMonitor === "testo" ? (
+            <pre ref={monitor} className="monitor-testo" data-testid="monitor-seriale">
+              {seriale || t("arduino.seriale.vuoto")}
+            </pre>
+          ) : (
+            <PlotterSeriale seriale={seriale} />
+          )}
           <form
             className="monitor-invio"
             onSubmit={(e) => {

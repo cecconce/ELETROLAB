@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ESEMPI } from "./caricaEsempi";
 import { apriEsempio } from "./esempi";
 import type { Schema } from "../editor/schema";
+import { datiPlotter } from "../editor/plotterSeriale";
 import { componentiDaSchema, nodiDaSchema, problemiArduino, vistaDaSessioneArduino } from "../editor/arduino";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { vocePerTipo } from "../editor/libreria";
@@ -31,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(15);
+    expect(arduino).toHaveLength(16);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -285,5 +286,26 @@ describe("esempio della lampadina comandata dal relè", () => {
     expect(s.aspetto[h].luminosita).toBe(0);
     expect(s.seriale.trim().split("\n").pop()).toContain("Lampadina spenta");
     expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio del lampione con il plotter seriale", () => {
+  it("al buio il LED si accende e il plotter trova le serie Luce e Soglia", () => {
+    const { schema, s } = apri("arduino-lampione.elab");
+    aspetta(s, 500);
+    expect(s.errore).toBeNull();
+    const ldr = id(schema, "fotoresistenza");
+    // Luce media (0,5): sopra la soglia, LED spento.
+    expect(luminosita(s, schema, "led-giallo")).toBe(0);
+    clicGiuArduino(s, ldr, true);
+    clicGiuArduino(s, ldr, true); // buio
+    aspetta(s, 500);
+    expect(luminosita(s, schema, "led-giallo")).toBeGreaterThan(0.5);
+    const d = datiPlotter(s.seriale);
+    expect(d.serie.map((x) => x.nome)).toEqual(["Luce", "Soglia"]);
+    expect(d.serie[1].valori.every((v) => v === 500)).toBe(true);
+    const luce = d.serie[0].valori.filter((v): v is number => v !== null);
+    expect(Math.max(...luce)).toBeGreaterThan(500);
+    expect(Math.min(...luce)).toBeLessThan(500);
   });
 });

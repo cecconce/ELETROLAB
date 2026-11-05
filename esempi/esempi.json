@@ -247,6 +247,13 @@
       "prova": "Premi ▶ AVVIA. Premi e rilascia il pulsante S1: il relè scatta («ECCITATO»), il contatto passa da NC a NO, la lampadina si accende e PS1 indica circa 0,1 A. Premi di nuovo per spegnere. Prova a collegare la lampadina a NC invece che a NO: funziona al contrario."
     },
     {
+      "file": "arduino-lampione.elab",
+      "modulo": "arduino",
+      "titolo": "Lampione automatico con la fotoresistenza e il plotter",
+      "descrizione": "La fotoresistenza e una resistenza da 10 kΩ formano un partitore di tensione: con più luce la resistenza della fotoresistenza scende e su A0 arriva più tensione. Sotto la soglia di 500 il programma accende il LED (il «lampione»). Il programma scrive «Luce:…,Soglia:…» e il plotter seriale disegna le due linee, come nell'IDE di Arduino.",
+      "prova": "Premi ▶ AVVIA e passa al «📈 Grafico» del monitor seriale. Clic sulla fotoresistenza per cambiare la luce (clic a sinistra per meno luce): la linea blu sale e scende, quella rossa della soglia resta ferma. Quando la linea blu va sotto la rossa il LED si accende."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",
