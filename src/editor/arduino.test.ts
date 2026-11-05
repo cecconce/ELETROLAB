@@ -264,3 +264,65 @@ describe("display LCD e sensore a ultrasuoni", () => {
     expect(valori[valori.length - 1]).toBe(100);
   });
 });
+
+describe("transistor, diodo e alimentatore sul banco", () => {
+  const acceso = "void setup() { pinMode(9, OUTPUT); digitalWrite(9, HIGH); }\nvoid loop() {}";
+
+  it("base collegata al pin senza resistenza: avviso in italiano", async () => {
+    const { problemiArduino } = await import("./arduino");
+    let s: Schema = {
+      componenti: [comp("U", "arduino-uno", 0, 0), comp("Q", "transistor-npn", 600, 0, { etichetta: "Q1" })],
+      fili: [],
+    };
+    s = filo(s, "U/D9", "Q/B");
+    s = filo(s, "Q/E", "U/GND1");
+    const sess = avviaSessioneArduino(acceso, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    passoArduino(sess, 100);
+    const p = problemiArduino(sess, s, lib);
+    expect(p.map((x) => x.chiave)).toContain("base-Q");
+    expect(p.find((x) => x.chiave === "base-Q")!.testo).toMatch(/Nella base del transistor Q1 passano \d+ mA/);
+  });
+
+  it("collettore in corto sull'alimentatore: il transistor si surriscalda", async () => {
+    const { problemiArduino, vistaDaSessioneArduino } = await import("./arduino");
+    let s: Schema = {
+      componenti: [
+        comp("U", "arduino-uno", 0, 0),
+        comp("Q", "transistor-npn", 600, 0, { etichetta: "Q1" }),
+        comp("R", "resistenza", 600, 200, { valore: 220 }),
+        comp("PS", "alimentatore", 800, 0, { etichetta: "PS1", parametri: { tensione: 12, correnteMax: 3 } }),
+      ],
+      fili: [],
+    };
+    s = filo(s, "U/D9", "R/1");
+    s = filo(s, "R/2", "Q/B");
+    s = filo(s, "Q/E", "U/GND1");
+    s = filo(s, "PS/+", "Q/C");
+    s = filo(s, "PS/-", "U/GND2");
+    const sess = avviaSessioneArduino(acceso, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    passoArduino(sess, 100);
+    // Ib ≈ 17 mA → β·Ib ≈ 1,7 A: oltre gli 800 mA del transistor piccolo.
+    const p = problemiArduino(sess, s, lib);
+    expect(p.find((x) => x.chiave === "bruciato-Q")!.testo).toMatch(/Il transistor Q1 si surriscalda/);
+    expect(vistaDaSessioneArduino(sess, s, lib).componenti.Q.arduino!.bruciato).toBe(true);
+  });
+
+  it("il diodo conduce in un solo verso", async () => {
+    const { vistaDaSessioneArduino } = await import("./arduino");
+    const banco = (inverso: boolean) => {
+      let s: Schema = {
+        componenti: [comp("PS", "alimentatore", 0, 0), comp("D", "diodo", 300, 0), comp("R", "resistenza", 300, 200, { valore: 1000 })],
+        fili: [],
+      };
+      s = filo(s, "PS/+", inverso ? "D/K" : "D/A");
+      s = filo(s, inverso ? "D/A" : "D/K", "R/1");
+      s = filo(s, "R/2", "PS/-");
+      const sess = avviaSessioneArduino("void setup(){}\nvoid loop(){}", componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+      passoArduino(sess, 50);
+      return vistaDaSessioneArduino(sess, s, lib).componenti.PS.arduino!.alimentatore!.ampere;
+    };
+    // (5 − 0,7) / 1000 ≈ 4,3 mA in diretta, niente al contrario.
+    expect(banco(false)).toBeCloseTo(0.0043, 4);
+    expect(banco(true)).toBe(0);
+  });
+});

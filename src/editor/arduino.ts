@@ -200,6 +200,7 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.funzione = a.funzione;
       arduino.lettura = testoMultimetro(a.funzione, a.misura ?? 0);
     }
+    if (c.tipo === "transistor-npn") arduino.bruciato = a.bruciato ?? false;
     if (c.tipo === "alimentatore" || c.tipo === "batteria-9v" || c.tipo === "portapile-4aa") {
       arduino.alimentatore = { volt: a.tensione ?? 0, ampere: a.corrente ?? 0, cc: a.correnteCostante ?? false };
     }
@@ -280,7 +281,24 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
         morsetti: [],
       });
     }
-    if (a?.bruciato) {
+    if (c.tipo === "transistor-npn" && a && (a.correnteBase ?? 0) > CORRENTE_BASE_MAX) {
+      problemi.push({
+        chiave: `base-${c.id}`,
+        gravita: "errore",
+        testo: t("arduino.problema.baseSenzaResistenza", { sigla: c.etichetta, corrente: Math.round((a.correnteBase ?? 0) * 1000) }),
+        componenti: [c.id],
+        morsetti: [],
+      });
+    }
+    if (a?.bruciato && c.tipo === "transistor-npn") {
+      problemi.push({
+        chiave: `bruciato-${c.id}`,
+        gravita: "errore",
+        testo: t("arduino.problema.transistorBruciato", { sigla: c.etichetta, corrente: Math.round((a.corrente ?? 0) * 1000) }),
+        componenti: [c.id],
+        morsetti: [],
+      });
+    } else if (a?.bruciato) {
       const nome = libreria.componenti.find((v) => v.id === c.tipo)?.nome ?? c.tipo;
       problemi.push({
         chiave: `bruciato-${c.id}`,
@@ -293,6 +311,9 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
   }
   return problemi;
 }
+
+/** Corrente di base oltre la quale manca la resistenza di base (A): un pin ne dà al massimo 20–40 mA. */
+const CORRENTE_BASE_MAX = 0.02;
 
 /** Pin digitali e analogici della scheda Uno, con il nome scritto sulla scheda. */
 const PIN_SCHEDA = [...Array.from({ length: 14 }, (_, i) => [`D${i}`, String(i)]), ...Array.from({ length: 6 }, (_, i) => [`A${i}`, `A${i}`])];

@@ -1,0 +1,223 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T18:43:30.669Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "potenziometro-1",
+        "tipo": "potenziometro",
+        "etichetta": "RV1",
+        "x": 600,
+        "y": 120,
+        "larghezza": 40,
+        "altezza": 40
+      },
+      {
+        "id": "transistor-npn-1",
+        "tipo": "transistor-npn",
+        "etichetta": "Q1",
+        "x": 900,
+        "y": 100,
+        "larghezza": 40,
+        "altezza": 60
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 840,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 1000
+      },
+      {
+        "id": "diodo-1",
+        "tipo": "diodo",
+        "etichetta": "D1",
+        "x": 940,
+        "y": 80,
+        "larghezza": 80,
+        "altezza": 40
+      },
+      {
+        "id": "alimentatore-1",
+        "tipo": "alimentatore",
+        "etichetta": "PS1",
+        "x": 600,
+        "y": -200,
+        "larghezza": 160,
+        "altezza": 120,
+        "parametri": {
+          "tensione": 9,
+          "correnteMax": 1
+        }
+      },
+      {
+        "id": "motore-dc-1",
+        "tipo": "motore-dc",
+        "etichetta": "M1",
+        "x": 880,
+        "y": -140,
+        "larghezza": 80,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a5"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am5"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a7"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap7"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a6"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A0"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D9"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b17"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a20"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am20"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "a26"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "motore-dc-1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "c26"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "motore-dc-1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "c22"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am12"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Motorino comandato con un transistor e alimentato a parte.\n// Un pin dell'Arduino dà al massimo 20–40 mA: il motorino ne vuole molti di\n// più, quindi lo alimenta l'alimentatore PS1 (9 V) e il pin 9 comanda solo\n// la base del transistor Q1 attraverso la resistenza da 1 kΩ.\n// Il diodo D1 (di ricircolo) protegge il transistor quando il motore si ferma.\n// Il − dell'alimentatore è unito al GND della scheda (riferimento comune).\n// Il potenziometro su A0 regola la velocità (PWM).\n\nconst int MOTORE = 9;   // pin con la tilde ~: può fare analogWrite\n\nvoid setup() {\n  pinMode(MOTORE, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int pot = analogRead(A0);       // 0…1023\n  int velocita = pot / 4;         // 0…255\n  analogWrite(MOTORE, velocita);\n  Serial.print(\"Velocita' (0-255): \");\n  Serial.println(velocita);\n  delay(300);\n}\n"
+  }
+}

@@ -90,6 +90,11 @@ const R_AMPEROMETRO = 0.05;
 /** Sopra questo valore l'ohmmetro indica «OL» (circuito aperto). */
 export const OHM_FUORI_SCALA = 20e6;
 
+/** Guadagno di corrente del transistor NPN della libreria. */
+export const BETA_TRANSISTOR = 100;
+/** Oltre questa corrente di collettore il transistor (piccolo, TO-92) si surriscalda (A). */
+export const CORRENTE_TRANSISTOR_MAX = 0.8;
+
 /** Resistenza dell'avvolgimento del motorino in continua (Ω). */
 export const R_MOTORE_DC = 20;
 
@@ -163,6 +168,12 @@ export function elementiCircuito(
       }
       case "resistenza":
         R(c.id, n("1"), n("2"), c.valore ?? RESISTENZA_PREDEFINITA);
+        break;
+      case "transistor-npn":
+        el.push({ tipo: "npn", id: c.id, c: n("C"), b: n("B"), e: n("E"), beta: BETA_TRANSISTOR });
+        break;
+      case "diodo":
+        el.push({ tipo: "diodo", id: c.id, anodo: n("A"), catodo: n("K"), vf: 0.7, ron: 0.5 });
         break;
       case "alimentatore":
         // Tensione costante (CV) finché la corrente resta sotto il limite;
@@ -325,6 +336,9 @@ export interface AspettoArduino {
   misura?: number;
   /** Motore in continua: velocità −1…1 (il segno è il verso). */
   velocita?: number;
+  /** Transistor: stato (interdizione, attivo o saturo) e correnti di base e collettore (A). */
+  statoTransistor?: "interdizione" | "attivo" | "saturo";
+  correnteBase?: number;
   /** Alimentatore e pile: tensione ai morsetti (V), corrente erogata (A) e, per l'alimentatore, limite raggiunto (CC). */
   tensione?: number;
   correnteCostante?: boolean;
@@ -339,7 +353,20 @@ export function aspettoComponenti(
   const v = (n: string) => r.tensioni[n] ?? 0;
   const aspetto: Record<string, AspettoArduino> = {};
   for (const c of componenti) {
-    if (c.tipo === "alimentatore" || c.tipo in PILE) {
+    if (c.tipo === "transistor-npn") {
+      const ib = r.correnti[`${c.id}:BE`] ?? 0;
+      const ic = r.correnti[c.id] ?? 0;
+      aspetto[c.id] = {
+        statoTransistor: ib < 1e-6 ? "interdizione" : r.saturi.has(c.id) ? "saturo" : "attivo",
+        correnteBase: ib,
+        corrente: ic,
+        // Corrente di collettore eccessiva: in un transistor vero si brucerebbe.
+        bruciato: ic > CORRENTE_TRANSISTOR_MAX,
+      };
+    } else if (c.tipo === "diodo") {
+      const i = r.correnti[c.id] ?? 0;
+      aspetto[c.id] = { corrente: i, alimentato: i >= 1e-4 };
+    } else if (c.tipo === "alimentatore" || c.tipo in PILE) {
       const corrente = r.correnti[c.id] ?? 0;
       aspetto[c.id] = {
         tensione: v(nodoDi(c.id, "+")) - v(nodoDi(c.id, "-")),

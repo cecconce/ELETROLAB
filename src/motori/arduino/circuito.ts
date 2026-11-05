@@ -6,6 +6,10 @@
 // - resistenze (anche i pulsanti chiusi, il potenziometro, la fotoresistenza);
 // - generatori "flottanti" fra due nodi qualsiasi (alimentatore da banco,
 //   pile): i morsetti + e − non sono legati alla massa dell'Arduino;
+// - transistor NPN con un modello semplificato a tre stati: interdizione
+//   (giunzione base-emettitore spenta, collettore aperto), zona attiva
+//   (Ic = β·Ib: generatore di corrente comandato, lineare) e saturazione
+//   (fra collettore ed emettitore restano 0,2 V);
 // - diodi e LED con modello a soglia: spento = aperto, acceso = tensione di
 //   soglia Vf in serie a una piccola resistenza Ron.
 // Metodo: analisi nodale (G · V = I) risolta con l'eliminazione di Gauss; lo
@@ -19,7 +23,9 @@ export type Elemento =
   | { tipo: "generatore"; id: string; nodo: string; volt: number; ohm: number }
   /** Generatore fra `piu` e `meno` (nessuno dei due è la massa): `volt` con resistenza interna `ohm`. */
   | { tipo: "alimentatore"; id: string; piu: string; meno: string; volt: number; ohm: number }
-  | { tipo: "diodo"; id: string; anodo: string; catodo: string; vf: number; ron: number };
+  | { tipo: "diodo"; id: string; anodo: string; catodo: string; vf: number; ron: number }
+  /** Transistor NPN: collettore, base, emettitore e guadagno di corrente β. */
+  | { tipo: "npn"; id: string; c: string; b: string; e: string; beta: number };
 
 export const MASSA = "massa";
 
@@ -31,8 +37,10 @@ export interface RisultatoCircuito {
    * catodo) e di ogni alimentatore (uscente dal morsetto +), in A.
    */
   correnti: Record<string, number>;
-  /** Diodi in conduzione. */
+  /** Diodi in conduzione (anche le giunzioni base-emettitore, con id "<transistor>:BE"). */
   diodiAccesi: Set<string>;
+  /** Transistor in saturazione (in conduzione piena, come un interruttore chiuso). */
+  saturi: Set<string>;
   /** Nodi senza alcun collegamento a un generatore o alla massa. */
   flottanti: Set<string>;
 }
@@ -41,7 +49,19 @@ export interface RisultatoCircuito {
 const DISPERSIONE = 1e-9;
 /** Resistenza minima, per non dividere per zero (pulsanti chiusi, fili). */
 const R_MINIMA = 1e-3;
-const ITERAZIONI_DIODI = 30;
+const ITERAZIONI_DIODI = 60;
+
+/** Giunzione base-emettitore: soglia e resistenza in conduzione. */
+export const VBE = 0.7;
+const R_BE = 10;
+/** Tensione collettore-emettitore in saturazione e resistenza in serie. */
+export const VCE_SAT = 0.2;
+const R_CE_SAT = 0.5;
+
+type Npn = Extract<Elemento, { tipo: "npn" }>;
+type Diodo = Extract<Elemento, { tipo: "diodo" }>;
+/** Giunzione base-emettitore di un transistor, trattata come un diodo. */
+const giunzioneBE = (t: Npn): Diodo => ({ tipo: "diodo", id: `${t.id}:BE`, anodo: t.b, catodo: t.e, vf: VBE, ron: R_BE });
 
 export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuito {
   // Elenco dei nodi (la massa è esclusa: è il riferimento).
@@ -51,14 +71,17 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
   }
   const indice = new Map<string, number>();
   [...nodi].forEach((n, i) => indice.set(n, i));
-  const diodi = elementi.filter((e): e is Extract<Elemento, { tipo: "diodo" }> => e.tipo === "diodo");
+  const transistor = elementi.filter((e): e is Npn => e.tipo === "npn");
+  const diodi = [...elementi.filter((e): e is Diodo => e.tipo === "diodo"), ...transistor.map(giunzioneBE)];
   const accesi = new Set<string>();
+  const saturi = new Set<string>();
 
   let v = new Array<number>(nodi.size).fill(0);
   const tensione = (n: string) => (n === MASSA ? 0 : v[indice.get(n)!]);
+  const correnteDiodo = (d: Diodo) => (accesi.has(d.id) ? Math.max(0, (tensione(d.anodo) - tensione(d.catodo) - d.vf) / Math.max(d.ron, R_MINIMA)) : 0);
 
   for (let giro = 0; giro < ITERAZIONI_DIODI; giro++) {
-    v = risolviLineare(elementi, indice, accesi);
+    v = risolviLineare(elementi, indice, accesi, saturi);
     // Correggi lo stato dei diodi: si accende chi ha più di Vf ai capi, si
     // spegne chi conduce "al contrario". Uno alla volta il più sbagliato,
     // così la ricerca non oscilla.
@@ -73,9 +96,35 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
         if (!peggiore || errore > peggiore.errore) peggiore = { id: d.id, accendi: false, errore };
       }
     }
-    if (!peggiore) break;
-    if (peggiore.accendi) accesi.add(peggiore.id);
-    else accesi.delete(peggiore.id);
+    if (peggiore) {
+      if (peggiore.accendi) accesi.add(peggiore.id);
+      else accesi.delete(peggiore.id);
+      continue;
+    }
+    // Diodi a posto: controlla lo stato dei transistor (uno alla volta).
+    let cambiato = false;
+    for (const t of transistor) {
+      const ib = correnteDiodo(giunzioneBE(t));
+      const vce = tensione(t.c) - tensione(t.e);
+      if (!saturi.has(t.id)) {
+        // In zona attiva il generatore di corrente non può portare Vce sotto
+        // la tensione di saturazione: il transistor è saturo.
+        if (ib > 0 && vce < VCE_SAT - 1e-6) {
+          saturi.add(t.id);
+          cambiato = true;
+        }
+      } else {
+        // Saturo: esce dalla saturazione se la base è spenta o se servirebbe
+        // più corrente di collettore di quella che la base consente (β·Ib).
+        const ic = (vce - VCE_SAT) / R_CE_SAT;
+        if (ib <= 0 || ic > t.beta * ib * 1.0001) {
+          saturi.delete(t.id);
+          cambiato = true;
+        }
+      }
+      if (cambiato) break;
+    }
+    if (!cambiato) break;
   }
 
   const tensioni: Record<string, number> = { [MASSA]: 0 };
@@ -83,23 +132,28 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
   const correnti: Record<string, number> = {};
   for (const e of elementi) {
     if (e.tipo === "resistenza") correnti[e.id] = (tensione(e.a) - tensione(e.b)) / Math.max(e.ohm, R_MINIMA);
-    if (e.tipo === "diodo") {
-      correnti[e.id] = accesi.has(e.id) ? Math.max(0, (tensione(e.anodo) - tensione(e.catodo) - e.vf) / Math.max(e.ron, R_MINIMA)) : 0;
-    }
+    if (e.tipo === "diodo") correnti[e.id] = correnteDiodo(e);
     if (e.tipo === "alimentatore") correnti[e.id] = (e.volt - (tensione(e.piu) - tensione(e.meno))) / Math.max(e.ohm, R_MINIMA);
+    if (e.tipo === "npn") {
+      // Corrente di base (giunzione) e di collettore (nel verso C → E).
+      const ib = correnteDiodo(giunzioneBE(e));
+      correnti[`${e.id}:BE`] = ib;
+      correnti[e.id] = ib <= 0 ? 0 : saturi.has(e.id) ? Math.max(0, (tensione(e.c) - tensione(e.e) - VCE_SAT) / R_CE_SAT) : e.beta * ib;
+    }
   }
-  return { tensioni, correnti, diodiAccesi: accesi, flottanti: nodiFlottanti(elementi, nodi) };
+  return { tensioni, correnti, diodiAccesi: accesi, saturi, flottanti: nodiFlottanti(elementi, nodi) };
 }
 
 function nodiDi(e: Elemento): string[] {
   if (e.tipo === "resistenza") return [e.a, e.b];
   if (e.tipo === "generatore") return [e.nodo];
   if (e.tipo === "alimentatore") return [e.piu, e.meno];
+  if (e.tipo === "npn") return [e.c, e.b, e.e];
   return [e.anodo, e.catodo];
 }
 
 /** Costruisce e risolve G · V = I con i diodi nello stato indicato. */
-function risolviLineare(elementi: readonly Elemento[], indice: Map<string, number>, accesi: ReadonlySet<string>): number[] {
+function risolviLineare(elementi: readonly Elemento[], indice: Map<string, number>, accesi: ReadonlySet<string>, saturi: ReadonlySet<string>): number[] {
   const n = indice.size;
   const G = Array.from({ length: n }, () => new Array<number>(n).fill(0));
   const I = new Array<number>(n).fill(0);
@@ -117,6 +171,20 @@ function risolviLineare(elementi: readonly Elemento[], indice: Map<string, numbe
     const i = indice.get(nodo);
     if (i !== undefined) I[i] += corrente;
   };
+  /** Termine della matrice G[riga][colonna] (ignorato se uno dei due nodi è la massa). */
+  const termine = (riga: string, colonna: string, g: number) => {
+    const r = indice.get(riga);
+    const c = indice.get(colonna);
+    if (r !== undefined && c !== undefined) G[r][c] += g;
+  };
+  /** Diodo in conduzione: i = (Va − Vk − Vf) / Ron. */
+  const diodoAcceso = (anodo: string, catodo: string, vf: number, ron: number) => {
+    // Nella legge dei nodi il termine Vf/Ron passa a destra: entra nell'anodo ed esce dal catodo.
+    const g = 1 / Math.max(ron, R_MINIMA);
+    conduttanza(anodo, catodo, g);
+    iniezione(anodo, vf * g);
+    iniezione(catodo, -vf * g);
+  };
   for (let i = 0; i < n; i++) G[i][i] += DISPERSIONE;
   for (const e of elementi) {
     if (e.tipo === "resistenza") conduttanza(e.a, e.b, 1 / Math.max(e.ohm, R_MINIMA));
@@ -133,12 +201,24 @@ function risolviLineare(elementi: readonly Elemento[], indice: Map<string, numbe
       iniezione(e.piu, e.volt * g);
       iniezione(e.meno, -e.volt * g);
     } else if (e.tipo === "diodo" && accesi.has(e.id)) {
-      // Diodo acceso: i = (Va − Vk − Vf) / Ron. Nella legge dei nodi il
-      // termine Vf/Ron passa a destra: entra nell'anodo ed esce dal catodo.
-      const g = 1 / Math.max(e.ron, R_MINIMA);
-      conduttanza(e.anodo, e.catodo, g);
-      iniezione(e.anodo, e.vf * g);
-      iniezione(e.catodo, -e.vf * g);
+      diodoAcceso(e.anodo, e.catodo, e.vf, e.ron);
+    } else if (e.tipo === "npn" && accesi.has(`${e.id}:BE`)) {
+      diodoAcceso(e.b, e.e, VBE, R_BE);
+      if (saturi.has(e.id)) {
+        // Saturazione: fra collettore ed emettitore una caduta di 0,2 V.
+        diodoAcceso(e.c, e.e, VCE_SAT, R_CE_SAT);
+      } else {
+        // Zona attiva: Ic = β·Ib = gm·(Vb − Ve) − β·Vbe/Rbe, che esce dal
+        // collettore ed entra nell'emettitore (generatore comandato in tensione).
+        const gm = e.beta / R_BE;
+        const i0 = (e.beta * VBE) / R_BE;
+        termine(e.c, e.b, gm);
+        termine(e.c, e.e, -gm);
+        termine(e.e, e.b, -gm);
+        termine(e.e, e.e, gm);
+        iniezione(e.c, i0);
+        iniezione(e.e, -i0);
+      }
     }
   }
   return gauss(G, I);
@@ -184,6 +264,10 @@ function nodiFlottanti(elementi: readonly Elemento[], nodi: ReadonlySet<string>)
   for (const e of elementi) {
     if (e.tipo === "resistenza" && e.ohm < 1e9) unisci(e.a, e.b);
     if (e.tipo === "diodo") unisci(e.anodo, e.catodo);
+    if (e.tipo === "npn") {
+      unisci(e.b, e.e);
+      unisci(e.c, e.e);
+    }
     if (e.tipo === "generatore") radici.push(e.nodo);
     // Un alimentatore unisce i suoi due morsetti ma non è un riferimento: se
     // il suo circuito non tocca il GND della scheda (o un pin), per l'Arduino

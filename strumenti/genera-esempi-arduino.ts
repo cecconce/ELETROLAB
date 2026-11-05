@@ -638,3 +638,56 @@ void loop() {
 `),
   );
 }
+
+// 14. Motorino comandato con il transistor, alimentato a parte (con il diodo di ricircolo)
+{
+  const b = costruttore();
+  alimenta(b); // 5V e GND della scheda sulle linee in alto (per il potenziometro)
+  // Potenziometro: piedini in e5, e6, e7.
+  b.potenziometro("e5");
+  b.filo("a5", "Am5");
+  b.filo("a7", "Ap7");
+  b.filo("a6", "U:A0", BLU);
+  // Transistor con E, B, C nei fori e20, e21, e22; resistenza di base da 1 kΩ fra le colonne 17 e 21.
+  const t = foro("e20");
+  b.posa("transistor-npn", t.x, t.y - 60);
+  b.resistenza("a17", 1000);
+  b.filo("U:D9", "b17", ARANCIONE);
+  b.filo("a20", "Am20"); // emettitore a GND
+  // Diodo di ricircolo: anodo sul collettore (colonna 22), catodo sul + del motore (colonna 26).
+  b.posa("diodo", foro("b22").x, foro("b22").y - 20);
+  // Alimentatore da 9 V: + al motore e al catodo del diodo, − al GND comune.
+  b.posa("alimentatore", 600, -200, { parametri: { tensione: 9, correnteMax: 1 } });
+  b.posa("motore-dc", 880, -140);
+  b.filo("alimentatore-1:+", "a26", "#d32f2f");
+  b.filo("motore-dc-1:+", "c26", "#d32f2f");
+  b.filo("motore-dc-1:-", "c22", "#212121");
+  b.filo("alimentatore-1:-", "Am12", "#212121");
+  scrivi(
+    "arduino-motore-transistor.elab",
+    b.schema(`// Motorino comandato con un transistor e alimentato a parte.
+// Un pin dell'Arduino dà al massimo 20–40 mA: il motorino ne vuole molti di
+// più, quindi lo alimenta l'alimentatore PS1 (9 V) e il pin 9 comanda solo
+// la base del transistor Q1 attraverso la resistenza da 1 kΩ.
+// Il diodo D1 (di ricircolo) protegge il transistor quando il motore si ferma.
+// Il − dell'alimentatore è unito al GND della scheda (riferimento comune).
+// Il potenziometro su A0 regola la velocità (PWM).
+
+const int MOTORE = 9;   // pin con la tilde ~: può fare analogWrite
+
+void setup() {
+  pinMode(MOTORE, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int pot = analogRead(A0);       // 0…1023
+  int velocita = pot / 4;         // 0…255
+  analogWrite(MOTORE, velocita);
+  Serial.print("Velocita' (0-255): ");
+  Serial.println(velocita);
+  delay(300);
+}
+`),
+  );
+}

@@ -31,7 +31,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(13);
+    expect(arduino).toHaveLength(14);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -225,5 +225,34 @@ describe("esempi con l'alimentatore da banco", () => {
     const problemi = problemiArduino(s, schema, lib);
     expect(problemi.map((p) => p.chiave)).toContain("pin-tensione-A0");
     expect(problemi.find((p) => p.chiave === "pin-tensione-A0")!.testo).toContain("6,0 V");
+  });
+});
+
+describe("esempio del motorino con il transistor", () => {
+  it("il potenziometro regola la velocità, il transistor regge la corrente e il diodo resta spento", () => {
+    const { schema, s } = apri("arduino-motore-transistor.elab");
+    aspetta(s, 500);
+    expect(s.errore).toBeNull();
+    const motore = id(schema, "motore-dc");
+    const q = id(schema, "transistor-npn");
+    const ps = id(schema, "alimentatore");
+    const velocita = () => s.aspetto[motore]?.velocita ?? 0;
+    const meta = velocita();
+    expect(meta).toBeGreaterThan(0.2);
+    expect(s.aspetto[q].statoTransistor).toBe("attivo");
+    expect(s.aspetto[id(schema, "diodo")].corrente).toBe(0);
+    // Il motore assorbe dall'alimentatore, non dal pin: la corrente di base è piccola.
+    expect(s.aspetto[q].correnteBase!).toBeLessThan(0.005);
+    expect(s.aspetto[ps].corrente!).toBeGreaterThan(0.05);
+    const pot = id(schema, "potenziometro");
+    for (let k = 0; k < 5; k++) clicGiuArduino(s, pot); // tutto a destra
+    aspetta(s, 700);
+    expect(velocita()).toBeGreaterThan(meta);
+    expect(s.seriale).toContain("Velocita' (0-255): 255");
+    for (let k = 0; k < 10; k++) clicGiuArduino(s, pot, true); // tutto a sinistra
+    aspetta(s, 700);
+    expect(velocita()).toBe(0);
+    expect(s.aspetto[q].statoTransistor).toBe("interdizione");
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });

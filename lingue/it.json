@@ -352,6 +352,8 @@
   "lista.spiegazione": "LD carica un contatto (LDN se normalmente chiuso, LDP/LDF fronte di salita/discesa); AND mette in serie, OR in parallelo (con N, P, F come sopra); AND( … ) e OR( … ) raggruppano un ramo; ST scrive il risultato in una bobina (STN negata); S e R impostano e azzerano; ST T0.IN e CAL T0(PT := T#5s) comandano un temporizzatore, ST C0.CU e CAL C0(PV := 5) un contatore.",
   "lista.copia": "Copia",
   "lista.copiato": "Copiato!",
+  "arduino.problema.baseSenzaResistenza": "Nella base del transistor {sigla} passano {corrente} mA: la base va pilotata attraverso una resistenza (per esempio 1 kΩ fra il pin e la base), altrimenti il pin dell'Arduino e il transistor si rovinano.",
+  "arduino.problema.transistorBruciato": "Il transistor {sigla} si surriscalda: nel collettore passano {corrente} mA, troppi per un transistor piccolo (al massimo 800 mA). Controlla il carico: forse c'è un cortocircuito.",
   "arduino.problema.pinSopra5V": "Sul pin {pin} dell'Arduino arrivano {volt} V: i pin sopportano al massimo 5 V e una scheda vera si rovinerebbe. Abbassa la tensione o usa un partitore di tensione.",
   "arduino.problema.pinNegativo": "Sul pin {pin} dell'Arduino arrivano {volt} V (tensione negativa): controlla di non aver scambiato il + e il − dell'alimentazione. Una scheda vera si rovinerebbe.",
   "arduino.alimentatore.limite": "limite",

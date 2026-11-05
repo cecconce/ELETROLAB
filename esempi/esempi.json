@@ -233,6 +233,13 @@
       "prova": "Premi ▶ AVVIA: il monitor seriale scrive «Tensione: 6.00 V». Clic sulla parte destra o sinistra di PS1 per cambiare la tensione di 0,5 V e guarda il valore sul monitor. Oltre 10 V il programma scrive «Fuori scala» e ElettroLab avvisa che sul pin A0 arrivano più di 5 V."
     },
     {
+      "file": "arduino-motore-transistor.elab",
+      "modulo": "arduino",
+      "titolo": "Motorino con transistor e alimentatore esterno",
+      "descrizione": "Un pin dell'Arduino non può alimentare un motorino (dà al massimo 20–40 mA). Il motore è alimentato dall'alimentatore PS1 a 9 V e il pin 9 comanda il transistor NPN Q1 attraverso una resistenza di base da 1 kΩ: una piccola corrente di base controlla la corrente grande del collettore (Ic = β·Ib). Il diodo D1 di ricircolo protegge il transistor quando il motore si spegne. Il − dell'alimentatore è unito al GND della scheda. Il potenziometro regola la velocità con analogWrite (PWM).",
+      "prova": "Premi ▶ AVVIA: il motore gira a metà velocità e il display verde di PS1 indica la corrente assorbita. Clic a destra del potenziometro per accelerare, a sinistra per rallentare: guarda il monitor seriale e la corrente su PS1. Prova a togliere il cavetto fra il − di PS1 e il GND: il motore si ferma, perché la base non ha più un riferimento comune."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

@@ -240,6 +240,13 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
+    case "transistor-npn":
+      return a?.bruciato ? (
+        <Group listening={false}>
+          <Rect x={6} y={6} width={28} height={28} cornerRadius={6} fill="#5d4037" opacity={0.8} shadowColor="#ff6d00" shadowBlur={14} shadowOpacity={1} />
+          <Text x={-20} y={-14} width={80} align="center" text="BRUCIATO" fontSize={10} fontStyle="bold" fill="#d32f2f" fontFamily={FONT} />
+        </Group>
+      ) : null;
     case "batteria-9v":
     case "portapile-4aa": {
       // Pila che eroga corrente: piccola etichetta con tensione e corrente.

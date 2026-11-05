@@ -2958,6 +2958,72 @@
       "icona": "ard-display-sette-segmenti.svg"
     },
     {
+      "id": "transistor-npn",
+      "nome": "Transistor NPN",
+      "categoria": "passivi",
+      "sigla": "Q",
+      "descrizione": "Transistor bipolare NPN (contenitore TO-92, guadagno β = 100). Piedini da sinistra, con la faccia piatta davanti: E (emettitore), B (base), C (collettore). Una piccola corrente nella base (dal pin dell'Arduino attraverso una resistenza da 1 kΩ) fa passare una corrente 100 volte più grande fra collettore ed emettitore: così un pin comanda un motorino o una lampadina che consumano troppo per il pin. Base spenta: interdizione (interruttore aperto); base ben pilotata: saturazione (interruttore chiuso, 0,2 V fra C ed E).",
+      "paroleChiave": [
+        "transistor",
+        "transistore",
+        "npn",
+        "bjt",
+        "bc337",
+        "2n2222",
+        "interruttore elettronico"
+      ],
+      "larghezza": 40,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "E",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "B",
+          "x": 20,
+          "y": 60
+        },
+        {
+          "id": "C",
+          "x": 40,
+          "y": 60
+        }
+      ],
+      "icona": "ard-transistor-npn.svg"
+    },
+    {
+      "id": "diodo",
+      "nome": "Diodo (1N4007)",
+      "categoria": "passivi",
+      "sigla": "D",
+      "descrizione": "Diodo raddrizzatore: lascia passare la corrente in un solo verso, dall'anodo al catodo (il lato con la fascia argentata), con una caduta di circa 0,7 V. Montato al contrario accanto a un motorino o a un relè (diodo di ricircolo) protegge il transistor quando la bobina si spegne; in serie a un'alimentazione protegge il circuito se si scambiano + e −.",
+      "paroleChiave": [
+        "diodo",
+        "1n4007",
+        "1n4148",
+        "raddrizzatore",
+        "ricircolo",
+        "diode"
+      ],
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "A",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "K",
+          "x": 80,
+          "y": 20
+        }
+      ],
+      "icona": "ard-diodo.svg"
+    },
+    {
       "id": "alimentatore",
       "nome": "Alimentatore da banco",
       "categoria": "alimentazione",

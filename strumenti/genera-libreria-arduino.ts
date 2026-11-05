@@ -624,6 +624,68 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------- Semiconduttori
+voce(
+  {
+    id: "transistor-npn",
+    nome: "Transistor NPN",
+    categoria: "passivi",
+    sigla: "Q",
+    descrizione:
+      "Transistor bipolare NPN (contenitore TO-92, guadagno β = 100). Piedini da sinistra, con la faccia piatta davanti: E (emettitore), B (base), C (collettore). Una piccola corrente nella base (dal pin dell'Arduino attraverso una resistenza da 1 kΩ) fa passare una corrente 100 volte più grande fra collettore ed emettitore: così un pin comanda un motorino o una lampadina che consumano troppo per il pin. Base spenta: interdizione (interruttore aperto); base ben pilotata: saturazione (interruttore chiuso, 0,2 V fra C ed E).",
+    paroleChiave: ["transistor", "transistore", "npn", "bjt", "bc337", "2n2222", "interruttore elettronico"],
+    larghezza: 40,
+    altezza: 60,
+    morsetti: [
+      { id: "E", x: 0, y: 60 },
+      { id: "B", x: 20, y: 60 },
+      { id: "C", x: 40, y: 60 },
+    ],
+  },
+  svg(
+    40,
+    60,
+    [
+      `<defs><linearGradient id="to92" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#424242"/><stop offset="0.35" stop-color="#2b2b2b"/><stop offset="1" stop-color="#111"/></linearGradient></defs>`,
+      ...[0, 20, 40].map((x) => `<line x1="${x}" y1="60" x2="${Math.min(30, Math.max(10, x))}" y2="34" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+      // corpo a mezzaluna: faccia piatta in basso, curva in alto
+      `<path d="M6 34 V16 A14 14 0 0 1 34 16 V34 Z" fill="url(#to92)" stroke="#000"/>`,
+      testo(20, 24, "NPN", 7, "#bdbdbd"),
+      testo(20, 31, "β100", 5.5, "#9e9e9e"),
+      ...[["E", 3], ["B", 20], ["C", 37]].map(([t, x]) => testo(Number(x), 47, String(t), 6.5, "#616161", 'font-weight="bold"')),
+    ].join("\n"),
+  ),
+);
+
+voce(
+  {
+    id: "diodo",
+    nome: "Diodo (1N4007)",
+    categoria: "passivi",
+    sigla: "D",
+    descrizione:
+      "Diodo raddrizzatore: lascia passare la corrente in un solo verso, dall'anodo al catodo (il lato con la fascia argentata), con una caduta di circa 0,7 V. Montato al contrario accanto a un motorino o a un relè (diodo di ricircolo) protegge il transistor quando la bobina si spegne; in serie a un'alimentazione protegge il circuito se si scambiano + e −.",
+    paroleChiave: ["diodo", "1n4007", "1n4148", "raddrizzatore", "ricircolo", "diode"],
+    larghezza: 80,
+    altezza: 40,
+    morsetti: [
+      { id: "A", x: 0, y: 20 },
+      { id: "K", x: 80, y: 20 },
+    ],
+  },
+  svg(
+    80,
+    40,
+    [
+      `<line x1="0" y1="20" x2="80" y2="20" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      `<rect x="22" y="13" width="36" height="14" rx="3" fill="#212121" stroke="#000"/>`,
+      `<rect x="49" y="13" width="5" height="14" fill="#cfd8dc"/>`,
+      testo(10, 12, "A", 7, "#616161"),
+      testo(70, 12, "K", 7, "#616161"),
+    ].join("\n"),
+  ),
+);
+
 // ---------------------------------------------------------- Alimentazione
 // Alimentatore da banco (disegno originale): due display a LED per tensione e
 // corrente, manopole, spie CV/CC e boccole + (rossa) e − (nera) in basso.
