@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
 import Konva from "konva";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
 import { displayAlimentatore, fasceResistenza, scriviOhm, valoreParametroArduino } from "./arduino";
-import { TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0 } from "../motori/arduino";
+import { TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, testoScala } from "../motori/arduino";
 import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI, SEGMENTI } from "./segmenti7";
 import type { ComponenteSchema } from "./schema";
 import { t } from "../testi";
@@ -267,6 +267,20 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
           {c.tipo === "sensore-gas" && livello > 0 && <Circle x={40} y={32} radius={20 + 10 * livello} fill="#9e9e9e" opacity={0.15 + 0.35 * livello} />}
           <Rect x={larghezza / 2 - 45} y={-18} width={90} height={16} cornerRadius={4} fill={colore} />
           <Text x={larghezza / 2 - 45} y={-15} width={90} align="center" text={`${t(etichetta)} ${percento}`} fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+        </Group>
+      );
+    }
+    case "oscilloscopio": {
+      // Traccia verde luminosa sullo schermo e le scale scelte nelle Proprietà.
+      const tempoDiv = valoreParametroArduino(c.parametri, c.tipo, "tempoDiv");
+      const voltDiv = valoreParametroArduino(c.parametri, c.tipo, "voltDiv");
+      return (
+        <Group listening={false}>
+          {inSimulazione && (a?.traccia?.length ?? 0) >= 4 && (
+            <Line x={10} y={10} points={a!.traccia!} stroke="#76ff03" strokeWidth={1.6} lineJoin="round" shadowColor="#76ff03" shadowBlur={6} shadowOpacity={0.9} />
+          )}
+          <Text x={11} y={11} text={`${testoScala(tempoDiv, "s")}/div`} fontSize={7} fill="#9ccc65" fontFamily="Consolas, 'Courier New', monospace" />
+          <Text x={11} y={82} width={98} align="right" text={`${testoScala(voltDiv, "V")}/div`} fontSize={7} fill="#9ccc65" fontFamily="Consolas, 'Courier New', monospace" />
         </Group>
       );
     }

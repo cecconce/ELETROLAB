@@ -1268,3 +1268,47 @@ void loop() {
 `),
   );
 }
+
+// 25. Oscilloscopio: onda quadra di un pin, con la frequenza scelta dal potenziometro
+{
+  const b = costruttore();
+  alimenta(b);
+  b.resistenza("a5");
+  b.led("verde", "e9");
+  b.filo("U:D8", "b5", ARANCIONE);
+  b.filo("c11", "Am11");
+  b.potenziometro("e20");
+  b.filo("a20", "Am20");
+  b.filo("a22", "Ap22");
+  b.filo("a21", "U:A0", BLU);
+  // Oscilloscopio: + sul pin 8 (colonna 5), − su GND.
+  b.posa("oscilloscopio", 660, -200, { parametri: { tempoDiv: "0.1", voltDiv: "2" } });
+  b.filo("oscilloscopio-1:+", "d5", "#d32f2f");
+  b.filo("oscilloscopio-1:-", "Am8", "#212121");
+  scrivi(
+    "arduino-oscilloscopio.elab",
+    b.schema(`// Onda quadra sull'oscilloscopio.
+// Il pin 8 si accende e si spegne: l'oscilloscopio XSC1 disegna la sua
+// tensione nel tempo (0 V e 5 V). Il potenziometro su A0 sceglie la durata
+// di ogni mezzo periodo, da 20 a 520 ms: girandolo l'onda si stringe o si
+// allarga. Periodo T = 2 × mezzo periodo, frequenza f = 1 / T.
+
+const int USCITA = 8;
+
+void setup() {
+  pinMode(USCITA, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int mezzo = 20 + analogRead(A0) / 2;   // 20…531 ms
+  digitalWrite(USCITA, HIGH);
+  delay(mezzo);
+  digitalWrite(USCITA, LOW);
+  delay(mezzo);
+  Serial.print("Periodo (ms):");
+  Serial.println(2 * mezzo);
+}
+`),
+  );
+}

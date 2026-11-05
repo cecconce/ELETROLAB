@@ -11,6 +11,12 @@ import {
   ALIMENTATORE_TENSIONE,
   ALIMENTATORE_TENSIONE_MAX,
   DISTANZA_PREDEFINITA,
+  TEMPI_DIVISIONE,
+  TEMPO_DIVISIONE_PREDEFINITO,
+  VOLT_DIVISIONE,
+  VOLT_DIVISIONE_PREDEFINITO,
+  testoScala,
+  tracciaOscilloscopio,
   SENSORI_A_LIVELLI,
   livelloSensore,
   R_LAMPADINA,
@@ -39,14 +45,21 @@ export const PARAMETRI_ARDUINO: Record<string, DefinizioneParametro[]> = {
     { id: "correnteMax", nome: t("proprieta.alimentatoreLimite"), tipo: "numero", unita: "A", minimo: 0.001, massimo: ALIMENTATORE_CORRENTE_MAX },
   ],
 };
+PARAMETRI_ARDUINO.oscilloscopio = [
+  { id: "tempoDiv", nome: t("proprieta.oscilloscopioTempo"), tipo: "scelta", scelte: TEMPI_DIVISIONE.map((v) => ({ valore: String(v), nome: `${testoScala(v, "s")} / div` })) },
+  { id: "voltDiv", nome: t("proprieta.oscilloscopioVolt"), tipo: "scelta", scelte: VOLT_DIVISIONE.map((v) => ({ valore: String(v), nome: `${testoScala(v, "V")} / div` })) },
+];
 const PREDEFINITI_ARDUINO: Record<string, Record<string, number>> = {
   alimentatore: { tensione: ALIMENTATORE_TENSIONE, correnteMax: ALIMENTATORE_CORRENTE },
+  oscilloscopio: { tempoDiv: TEMPO_DIVISIONE_PREDEFINITO, voltDiv: VOLT_DIVISIONE_PREDEFINITO },
 };
 
 /** Valore di un parametro Arduino (quello scritto nel componente o il predefinito). */
 export function valoreParametroArduino(parametri: Record<string, number | string> | undefined, tipo: string, id: string): number {
   const v = parametri?.[id];
-  return typeof v === "number" ? v : PREDEFINITI_ARDUINO[tipo]?.[id] ?? 0;
+  // Le scelte dei menu sono salvate come testo ("0.2"): si rileggono come numero.
+  const n = typeof v === "string" ? Number(v) : v;
+  return typeof n === "number" && Number.isFinite(n) ? n : PREDEFINITI_ARDUINO[tipo]?.[id] ?? 0;
 }
 
 /** Cifre dei display dell'alimentatore: tensione con due decimali, corrente con tre (come uno strumento vero). */
@@ -211,6 +224,12 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
     if (c.tipo === "lampadina") {
       arduino.luminosita = a.luminosita ?? 0;
       arduino.bruciato = a.bruciato ?? false;
+    }
+    if (c.tipo === "oscilloscopio") {
+      // Traccia sullo schermo (100 × 80 unità, 10 × 8 divisioni).
+      const tempoDiv = valoreParametroArduino(c.parametri, c.tipo, "tempoDiv");
+      const voltDiv = valoreParametroArduino(c.parametri, c.tipo, "voltDiv");
+      arduino.traccia = tracciaOscilloscopio(s.campioni[c.id] ?? [], s.esecutore?.tempoUs ?? 0, tempoDiv, voltDiv, 100, 80);
     }
     if (c.tipo === "striscia-neopixel") {
       // Colori inviati con show() sul pin collegato a DIN, se la striscia è alimentata.

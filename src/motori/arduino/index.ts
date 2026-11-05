@@ -4,3 +4,4 @@ export * from "./componenti";
 export * from "./breadboard";
 export * from "./linguaggio";
 export * from "./sessione";
+export * from "./oscilloscopio";

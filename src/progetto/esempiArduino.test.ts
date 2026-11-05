@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(24);
+    expect(arduino).toHaveLength(25);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -465,6 +465,21 @@ describe("esempio della striscia NeoPixel", () => {
     expect(primi.every((c) => c > 0)).toBe(true);
     aspetta(s, 300);
     expect(colori()).not.toEqual(primi);
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio dell'oscilloscopio", () => {
+  it("lo schermo mostra l'onda quadra fra 0 V e 5 V", () => {
+    const { schema, s } = apri("arduino-oscilloscopio.elab");
+    aspetta(s, 1500);
+    expect(s.errore).toBeNull();
+    const x = id(schema, "oscilloscopio");
+    const traccia = vistaDaSessioneArduino(s, schema, lib).componenti[x].arduino!.traccia!;
+    const ys = traccia.filter((_, i) => i % 2 === 1);
+    // 2 V/div su 80 unità (10 per divisione): 0 V a y = 40, 5 V a y = 15.
+    expect(ys.some((y) => Math.abs(y - 40) < 0.5)).toBe(true);
+    expect(ys.some((y) => Math.abs(y - 15) < 0.5)).toBe(true);
     expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });

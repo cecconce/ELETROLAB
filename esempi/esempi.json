@@ -310,6 +310,13 @@
       "prova": "Premi ▶ AVVIA: l'arcobaleno scorre lungo la striscia. Clic a destra del potenziometro per farlo scorrere più veloce, a sinistra più piano. Ferma la simulazione e prova a togliere striscia.show(): i LED restano spenti."
     },
     {
+      "file": "arduino-oscilloscopio.elab",
+      "modulo": "arduino",
+      "titolo": "Onda quadra vista con l’oscilloscopio",
+      "descrizione": "Il pin 8 si accende e si spegne e l'oscilloscopio XSC1 (puntale + sul pin, − su GND) disegna la sua tensione nel tempo: un'onda quadra fra 0 V e 5 V. Il potenziometro sceglie la durata di ogni mezzo periodo (da 20 a 531 ms). Sullo schermo ogni divisione orizzontale vale 100 ms e ogni divisione verticale 2 V: contando le divisioni si misurano periodo e ampiezza.",
+      "prova": "Premi ▶ AVVIA: sullo schermo scorre l'onda quadra. Clic a destra del potenziometro: l'onda si allarga (periodo più lungo), a sinistra si stringe. Conta le divisioni di un periodo e confronta con il monitor seriale. Ferma la simulazione e cambia nelle Proprietà dell'oscilloscopio il tempo per divisione."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

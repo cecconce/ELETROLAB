@@ -1173,6 +1173,42 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------- Oscilloscopio
+voce(
+  {
+    id: "oscilloscopio",
+    nome: "Oscilloscopio",
+    categoria: "strumenti",
+    sigla: "XSC",
+    descrizione:
+      "Disegna la tensione fra il puntale + e il puntale − nel tempo: si vedono le onde quadre di un pin che lampeggia, il PWM (come valore medio), le tensioni che cambiano girando un potenziometro. Lo schermo ha 10 divisioni orizzontali e 8 verticali, con lo zero al centro; tempo per divisione e volt per divisione si scelgono nelle Proprietà. Il − va di solito al GND.",
+    paroleChiave: ["oscilloscopio", "onda", "segnale", "tensione nel tempo", "traccia", "misura"],
+    larghezza: 160,
+    altezza: 120,
+    morsetti: [
+      { id: "+", x: 60, y: 120 },
+      { id: "-", x: 100, y: 120 },
+    ],
+  },
+  svg(
+    160,
+    120,
+    [
+      `<rect x="1" y="1" width="158" height="104" rx="8" fill="#455a64" stroke="#263238" stroke-width="2"/>`,
+      `<rect x="8" y="8" width="104" height="84" rx="3" fill="#0b1f0b" stroke="#000"/>`,
+      ...Array.from({ length: 11 }, (_, i) => `<line x1="${10 + i * 10}" y1="10" x2="${10 + i * 10}" y2="90" stroke="#1f4d1f" stroke-width="${i === 5 ? 1 : 0.5}"/>`),
+      ...Array.from({ length: 9 }, (_, i) => `<line x1="10" y1="${10 + i * 10}" x2="110" y2="${10 + i * 10}" stroke="#1f4d1f" stroke-width="${i === 4 ? 1 : 0.5}"/>`),
+      ...[28, 62].map((y) => `<circle cx="136" cy="${y}" r="11" fill="#263238" stroke="#90a4ae" stroke-width="1.5"/><line x1="136" y1="${y}" x2="136" y2="${y - 8}" stroke="#eceff1" stroke-width="2.5" stroke-linecap="round"/>`),
+      testo(136, 47, "TIME", 6, "#cfd8dc"),
+      testo(136, 81, "VOLTS", 6, "#cfd8dc"),
+      `<line x1="60" y1="98" x2="60" y2="120" stroke="#e53935" stroke-width="3"/><circle cx="60" cy="98" r="5" fill="#c62828"/>`,
+      `<line x1="100" y1="98" x2="100" y2="120" stroke="#212121" stroke-width="3"/><circle cx="100" cy="98" r="5" fill="#212121"/>`,
+      testo(50, 101, "+", 9, "#ff8a80", 'font-weight="bold"'),
+      testo(111, 101, "−", 9, "#eceff1", 'font-weight="bold"'),
+    ].join("\n"),
+  ),
+);
+
 const libreria = {
   versione: 1,
   modulo: "arduino",

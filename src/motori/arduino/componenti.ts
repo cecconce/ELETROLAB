@@ -265,6 +265,10 @@ export function elementiCircuito(
       case "resistenza":
         R(c.id, n("1"), n("2"), c.valore ?? RESISTENZA_PREDEFINITA);
         break;
+      case "oscilloscopio":
+        // Ingresso dell'oscilloscopio: 1 MΩ fra i puntali, come uno strumento vero.
+        R(c.id, n("+"), n("-"), 1e6);
+        break;
       case "striscia-neopixel":
         // Elettronica dei LED: un piccolo carico sull'alimentazione; l'ingresso DIN assorbe pochissimo.
         R(`${c.id}:alim`, n("5V"), n("GND"), 1000);

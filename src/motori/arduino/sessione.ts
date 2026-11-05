@@ -55,6 +55,8 @@ export interface SessioneArduino {
   pin: Record<string, StatoPin>;
   toni: Record<string, number>;
   servi: Record<string, number>;
+  /** Oscilloscopi: campioni (tempo in µs, tensione fra + e − in V), i più vecchi in testa. */
+  campioni: Record<string, { t: number; v: number }[]>;
   /** Colori inviati con show() alle strisce NeoPixel, per pin del dato (0xRRGGBB). */
   neopixel: Record<string, number[]>;
   /** Contenuto dei display creati dal programma, con i pin del costruttore. */
@@ -77,12 +79,42 @@ function ricalcola(s: SessioneArduino) {
   const interazioni: Interazioni = s.interazioni;
   const registri = s.componenti.filter((c) => c.tipo === "74hc595");
   if (registri.length) aggiornaRegistri(s, registri);
+  const oscilloscopi = s.componenti.filter((c) => c.tipo === "oscilloscopio");
   const { risultato, inCorrenteCostante, releEccitati, statiPonti } = risolviBanco(s.componenti, s.nodoDi, s.pin, interazioni, s.releEccitati);
   s.risultato = risultato;
   s.releEccitati = releEccitati;
   s.aspetto = { ...aspettoComponenti(s.componenti, s.nodoDi, s.risultato, inCorrenteCostante, releEccitati, statiPonti), ...misureMultimetri(s.componenti, s.nodoDi, interazioni, s.risultato) };
   s.sporco = false;
   s.versione++;
+  if (oscilloscopi.length) campiona(s, oscilloscopi, true);
+}
+
+/** Durata massima della registrazione degli oscilloscopi (µs): 10 divisioni da 1 s. */
+const REGISTRAZIONE_US = 10e6;
+const CAMPIONI_MASSIMI = 4000;
+
+/**
+ * Aggiunge un campione a ogni oscilloscopio. Con `calcolato` le tensioni sono
+ * quelle del circuito appena risolto; altrimenti (un pin è appena cambiato) un
+ * puntale collegato direttamente a un pin in uscita prende subito il nuovo
+ * livello, così i fronti delle onde quadre cadono nel momento giusto.
+ */
+function campiona(s: SessioneArduino, oscilloscopi: readonly ComponenteArduino[], calcolato: boolean) {
+  const t = s.esecutore?.tempoUs ?? 0;
+  const tensione = (nodo: string) => {
+    if (!calcolato && s.scheda) {
+      for (const [p, st] of Object.entries(s.pin)) if (st.modo === "OUTPUT" && s.nodoDi(s.scheda, p) === nodo) return 5 * st.livello;
+    }
+    return s.risultato.tensioni[nodo] ?? 0;
+  };
+  for (const c of oscilloscopi) {
+    const lista = (s.campioni[c.id] ??= []);
+    const v = tensione(s.nodoDi(c.id, "+")) - tensione(s.nodoDi(c.id, "-"));
+    const ultimo = lista[lista.length - 1];
+    if (ultimo && ultimo.t === t) ultimo.v = v;
+    else if (!ultimo || Math.abs(ultimo.v - v) > 1e-3 || t - ultimo.t > 5000) lista.push({ t, v });
+    while (lista.length > CAMPIONI_MASSIMI || (lista.length > 2 && t - lista[1].t > REGISTRAZIONE_US)) lista.shift();
+  }
 }
 
 function nodoPin(s: SessioneArduino, pin: string): string {
@@ -101,6 +133,7 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     toni: {},
     servi: {},
     neopixel: {},
+    campioni: {},
     lcd: {},
     distanze: {},
     seriale: "",
@@ -123,7 +156,10 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     cambia();
     // I registri a scorrimento reagiscono subito ai fronti (shiftOut ne fa 16 di fila).
     if (registri.length) aggiornaRegistri(s, registri);
+    // Gli oscilloscopi registrano il fronte nel momento esatto in cui il pin cambia.
+    if (oscilloscopi.length) campiona(s, oscilloscopi, false);
   };
+  const oscilloscopi = componenti.filter((c) => c.tipo === "oscilloscopio");
   const registri = componenti.filter((c) => c.tipo === "74hc595");
   const hw: Hardware = {
     pinMode(pin, modo) {
@@ -204,6 +240,14 @@ export function passoArduino(s: SessioneArduino, ms: number): void {
     if (s.esecutore.errore) s.errore = s.esecutore.errore;
   }
   if (s.sporco) ricalcola(s);
+  else {
+    // La traccia continua anche quando non cambia niente.
+    const oscilloscopi = s.componenti.filter((c) => c.tipo === "oscilloscopio");
+    if (oscilloscopi.length) {
+      campiona(s, oscilloscopi, true);
+      s.versione++;
+    }
+  }
 }
 
 /**

@@ -371,6 +371,8 @@
   "arduino.rele.eccitato": "ECCITATO",
   "arduino.lampadina.bruciata": "BRUCIATA",
   "arduino.alimentatore.limite": "limite",
+  "proprieta.oscilloscopioTempo": "Tempo per divisione",
+  "proprieta.oscilloscopioVolt": "Volt per divisione",
   "proprieta.alimentatoreTensione": "Tensione impostata",
   "proprieta.alimentatoreLimite": "Limite di corrente",
   "proprieta.funzioneMultimetro": "Funzione all'avvio (in simulazione si cambia con un clic)",

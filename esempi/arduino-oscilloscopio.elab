@@ -1,0 +1,181 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:44:59.407Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 600,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-verde-1",
+        "tipo": "led-verde",
+        "etichetta": "D1",
+        "x": 680,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "potenziometro-1",
+        "tipo": "potenziometro",
+        "etichetta": "RV1",
+        "x": 900,
+        "y": 120,
+        "larghezza": 40,
+        "altezza": 40
+      },
+      {
+        "id": "oscilloscopio-1",
+        "tipo": "oscilloscopio",
+        "etichetta": "XSC1",
+        "x": 660,
+        "y": -200,
+        "larghezza": 160,
+        "altezza": 120,
+        "parametri": {
+          "tempoDiv": "0.1",
+          "voltDiv": "2"
+        }
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D8"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b5"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c11"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am11"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a20"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am20"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a22"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap22"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a21"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A0"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "oscilloscopio-1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "d5"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "oscilloscopio-1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am8"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Onda quadra sull'oscilloscopio.\n// Il pin 8 si accende e si spegne: l'oscilloscopio XSC1 disegna la sua\n// tensione nel tempo (0 V e 5 V). Il potenziometro su A0 sceglie la durata\n// di ogni mezzo periodo, da 20 a 520 ms: girandolo l'onda si stringe o si\n// allarga. Periodo T = 2 × mezzo periodo, frequenza f = 1 / T.\n\nconst int USCITA = 8;\n\nvoid setup() {\n  pinMode(USCITA, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int mezzo = 20 + analogRead(A0) / 2;   // 20…531 ms\n  digitalWrite(USCITA, HIGH);\n  delay(mezzo);\n  digitalWrite(USCITA, LOW);\n  delay(mezzo);\n  Serial.print(\"Periodo (ms):\");\n  Serial.println(2 * mezzo);\n}\n"
+  }
+}

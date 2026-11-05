@@ -3665,6 +3665,36 @@
         }
       ],
       "icona": "ard-multimetro.svg"
+    },
+    {
+      "id": "oscilloscopio",
+      "nome": "Oscilloscopio",
+      "categoria": "strumenti",
+      "sigla": "XSC",
+      "descrizione": "Disegna la tensione fra il puntale + e il puntale − nel tempo: si vedono le onde quadre di un pin che lampeggia, il PWM (come valore medio), le tensioni che cambiano girando un potenziometro. Lo schermo ha 10 divisioni orizzontali e 8 verticali, con lo zero al centro; tempo per divisione e volt per divisione si scelgono nelle Proprietà. Il − va di solito al GND.",
+      "paroleChiave": [
+        "oscilloscopio",
+        "onda",
+        "segnale",
+        "tensione nel tempo",
+        "traccia",
+        "misura"
+      ],
+      "larghezza": 160,
+      "altezza": 120,
+      "morsetti": [
+        {
+          "id": "+",
+          "x": 60,
+          "y": 120
+        },
+        {
+          "id": "-",
+          "x": 100,
+          "y": 120
+        }
+      ],
+      "icona": "ard-oscilloscopio.svg"
     }
   ]
 }
