@@ -219,6 +219,20 @@
       "prova": "Premi ▶ AVVIA: il monitor scrive «Allarme pronto». Clic sul sensore: compare «MOVIMENTO», si accende il LED L e il monitor scrive «Movimento rilevato!» una volta sola. Un altro clic: «Nessun movimento»."
     },
     {
+      "file": "arduino-alimentatore.elab",
+      "modulo": "arduino",
+      "titolo": "Alimentatore da banco e LED (legge di Ohm)",
+      "descrizione": "Un alimentatore da banco PS1 accende un LED attraverso una resistenza da 470 Ω, senza usare la scheda. Il display rosso indica la tensione, quello verde la corrente; il multimetro XMM1 misura la tensione sul LED. Alzando la tensione la corrente cresce secondo la legge di Ohm: I = (V − VLED) / R. Il limite di corrente protegge il circuito: se lo superi l'alimentatore passa in CC.",
+      "prova": "Premi ▶ AVVIA: PS1 indica 9,00 V e circa 0,015 A, il LED è acceso. Clic sulla parte destra di PS1 per alzare la tensione di 0,5 V, sulla parte sinistra per abbassarla: guarda la corrente e la luminosità del LED. Ferma la simulazione, seleziona PS1 e metti il limite di corrente a 0,005 A: riavviando si accende la spia CC e la tensione scende."
+    },
+    {
+      "file": "arduino-voltmetro.elab",
+      "modulo": "arduino",
+      "titolo": "Voltmetro con Arduino e alimentatore",
+      "descrizione": "Arduino misura la tensione dell'alimentatore PS1. Poiché un pin analogico legge al massimo 5 V, la tensione passa da un partitore con due resistenze da 10 kΩ: su A0 arriva la metà. Il programma converte la lettura (0…1023) in volt e la scrive sul monitor seriale. Il − dell'alimentatore è collegato al GND della scheda (riferimento comune).",
+      "prova": "Premi ▶ AVVIA: il monitor seriale scrive «Tensione: 6.00 V». Clic sulla parte destra o sinistra di PS1 per cambiare la tensione di 0,5 V e guarda il valore sul monitor. Oltre 10 V il programma scrive «Fuori scala» e ElettroLab avvisa che sul pin A0 arrivano più di 5 V."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

@@ -1,0 +1,145 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T18:35:45.206Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "alimentatore-1",
+        "tipo": "alimentatore",
+        "etichetta": "PS1",
+        "x": 560,
+        "y": -180,
+        "larghezza": 160,
+        "altezza": 120,
+        "parametri": {
+          "tensione": 9,
+          "correnteMax": 1
+        }
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 700,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 470
+      },
+      {
+        "id": "led-rosso-1",
+        "tipo": "led-rosso",
+        "etichetta": "D1",
+        "x": 780,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "multimetro-1",
+        "tipo": "multimetro",
+        "etichetta": "XMM1",
+        "x": 800,
+        "y": -200,
+        "larghezza": 120,
+        "altezza": 140
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap5"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am7"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap10"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b10"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c16"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am16"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "multimetro-1",
+          "morsetto": "V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "d14"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "multimetro-1",
+          "morsetto": "COM"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "d16"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Alimentatore da banco e LED: in questo esempio la scheda non fa niente,\n// il LED è alimentato dall'alimentatore PS1 attraverso la resistenza da 470 Ω.\n// Il display rosso di PS1 indica la tensione, quello verde la corrente.\n// Legge di Ohm: I = (V − tensione del LED) / R.\n\nvoid setup() {\n}\n\nvoid loop() {\n}\n"
+  }
+}

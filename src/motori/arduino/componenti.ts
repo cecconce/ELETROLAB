@@ -52,6 +52,9 @@ export interface ComponenteArduino {
   colore?: string;
   /** Multimetro: funzione di partenza (V, A o Ω). */
   funzione?: string;
+  /** Alimentatore: tensione impostata (V) e limite di corrente (A). */
+  tensione?: number;
+  correnteMax?: number;
 }
 
 /** Azioni dello studente durante la simulazione. */
@@ -90,6 +93,38 @@ export const OHM_FUORI_SCALA = 20e6;
 /** Resistenza dell'avvolgimento del motorino in continua (Ω). */
 export const R_MOTORE_DC = 20;
 
+// --- Alimentazione esterna (come in Tinkercad: alimentatore da banco e pile) ---
+
+/** Alimentatore da banco: valori proposti, campo di regolazione e passo del clic. */
+export const ALIMENTATORE_TENSIONE = 5;
+export const ALIMENTATORE_CORRENTE = 1;
+export const ALIMENTATORE_TENSIONE_MAX = 30;
+export const ALIMENTATORE_CORRENTE_MAX = 5;
+export const ALIMENTATORE_PASSO = 0.5;
+/** Resistenza interna dell'alimentatore in tensione costante (Ω): quasi ideale. */
+const R_ALIMENTATORE = 0.01;
+/**
+ * Resistenza interna "finta" usata in corrente costante: con un generatore di
+ * Norton da I·R in serie a R molto grande la corrente resta quasi I qualunque
+ * sia il carico (finché il carico è molto più piccolo di R).
+ */
+const R_CORRENTE_COSTANTE = 1e7;
+
+/** Pile: tensione a vuoto e resistenza interna (valori tipici di pile alcaline nuove). */
+export const PILE: Record<string, { volt: number; ohm: number }> = {
+  "batteria-9v": { volt: 9, ohm: 1.5 },
+  "portapile-4aa": { volt: 6, ohm: 0.6 },
+};
+
+/** Tensione impostata sull'alimentatore: quella scelta con i clic o, all'inizio, quella delle Proprietà. */
+export function tensioneAlimentatore(interazioni: Interazioni, c: ComponenteArduino): number {
+  const v = interazioni.posizioni[c.id] ?? c.tensione ?? ALIMENTATORE_TENSIONE;
+  return Math.min(ALIMENTATORE_TENSIONE_MAX, Math.max(0, v));
+}
+export function limiteAlimentatore(c: ComponenteArduino): number {
+  return Math.min(ALIMENTATORE_CORRENTE_MAX, Math.max(0.001, c.correnteMax ?? ALIMENTATORE_CORRENTE));
+}
+
 /** Nodo elettrico di un morsetto (calcolato dall'editor: fili, fori della breadboard, piedini infilati). */
 export type NodoDi = (componente: string, morsetto: string) => string;
 
@@ -106,6 +141,8 @@ export function elementiCircuito(
   nodoDi: NodoDi,
   pin: Readonly<Record<string, StatoPin>>,
   interazioni: Interazioni,
+  /** Alimentatori che lavorano in corrente costante (limite raggiunto). */
+  inCorrenteCostante: ReadonlySet<string> = new Set(),
 ): Elemento[] {
   const el: Elemento[] = [];
   const R = (id: string, a: string, b: string, ohm: number) => el.push({ tipo: "resistenza", id, a, b, ohm });
@@ -127,6 +164,21 @@ export function elementiCircuito(
       case "resistenza":
         R(c.id, n("1"), n("2"), c.valore ?? RESISTENZA_PREDEFINITA);
         break;
+      case "alimentatore":
+        // Tensione costante (CV) finché la corrente resta sotto il limite;
+        // oltre, corrente costante (CC) pari al limite: vedi risolviBanco.
+        if (inCorrenteCostante.has(c.id)) {
+          el.push({ tipo: "alimentatore", id: c.id, piu: n("+"), meno: n("-"), volt: limiteAlimentatore(c) * R_CORRENTE_COSTANTE, ohm: R_CORRENTE_COSTANTE });
+        } else {
+          el.push({ tipo: "alimentatore", id: c.id, piu: n("+"), meno: n("-"), volt: tensioneAlimentatore(interazioni, c), ohm: R_ALIMENTATORE });
+        }
+        break;
+      case "batteria-9v":
+      case "portapile-4aa": {
+        const p = PILE[c.tipo];
+        el.push({ tipo: "alimentatore", id: c.id, piu: n("+"), meno: n("-"), volt: p.volt, ohm: p.ohm });
+        break;
+      }
       case "led":
         el.push({ tipo: "diodo", id: c.id, anodo: n("A"), catodo: n("K"), vf: SOGLIA_LED[c.colore ?? "rosso"] ?? 1.8, ron: 15 });
         break;
@@ -213,6 +265,42 @@ export function elementiCircuito(
   return el;
 }
 
+/**
+ * Risolve il circuito del banco tenendo conto del limite di corrente degli
+ * alimentatori, come un alimentatore da laboratorio: se la corrente supera il
+ * limite impostato, l'alimentatore passa in corrente costante (CC) e la
+ * tensione ai morsetti scende quanto serve; se in CC la tensione
+ * supererebbe quella impostata, torna in tensione costante (CV).
+ */
+export function risolviBanco(
+  componenti: readonly ComponenteArduino[],
+  nodoDi: NodoDi,
+  pin: Readonly<Record<string, StatoPin>>,
+  interazioni: Interazioni,
+): { risultato: RisultatoCircuito; inCorrenteCostante: Set<string> } {
+  const alimentatori = componenti.filter((c) => c.tipo === "alimentatore");
+  const cc = new Set<string>();
+  let r = risolviCircuito(elementiCircuito(componenti, nodoDi, pin, interazioni, cc));
+  // Pochi giri bastano: ogni giro cambia modo a qualche alimentatore.
+  for (let giro = 0; giro < 2 * alimentatori.length + 1; giro++) {
+    let cambiato = false;
+    for (const c of alimentatori) {
+      const corrente = r.correnti[c.id] ?? 0;
+      const volt = (r.tensioni[nodoDi(c.id, "+")] ?? 0) - (r.tensioni[nodoDi(c.id, "-")] ?? 0);
+      if (!cc.has(c.id) && Math.abs(corrente) > limiteAlimentatore(c) * 1.0001) {
+        cc.add(c.id);
+        cambiato = true;
+      } else if (cc.has(c.id) && volt > tensioneAlimentatore(interazioni, c)) {
+        cc.delete(c.id);
+        cambiato = true;
+      }
+    }
+    if (!cambiato) break;
+    r = risolviCircuito(elementiCircuito(componenti, nodoDi, pin, interazioni, cc));
+  }
+  return { risultato: r, inCorrenteCostante: cc };
+}
+
 /** Segmenti del display nell'ordine dei valori di `AspettoArduino.segmenti`. */
 export const SEGMENTI_DISPLAY = ["a", "b", "c", "d", "e", "f", "g", "dp"] as const;
 
@@ -237,13 +325,30 @@ export interface AspettoArduino {
   misura?: number;
   /** Motore in continua: velocità −1…1 (il segno è il verso). */
   velocita?: number;
+  /** Alimentatore e pile: tensione ai morsetti (V), corrente erogata (A) e, per l'alimentatore, limite raggiunto (CC). */
+  tensione?: number;
+  correnteCostante?: boolean;
 }
 
-export function aspettoComponenti(componenti: readonly ComponenteArduino[], nodoDi: NodoDi, r: RisultatoCircuito): Record<string, AspettoArduino> {
+export function aspettoComponenti(
+  componenti: readonly ComponenteArduino[],
+  nodoDi: NodoDi,
+  r: RisultatoCircuito,
+  inCorrenteCostante: ReadonlySet<string> = new Set(),
+): Record<string, AspettoArduino> {
   const v = (n: string) => r.tensioni[n] ?? 0;
   const aspetto: Record<string, AspettoArduino> = {};
   for (const c of componenti) {
-    if (c.tipo === "led") {
+    if (c.tipo === "alimentatore" || c.tipo in PILE) {
+      const corrente = r.correnti[c.id] ?? 0;
+      aspetto[c.id] = {
+        tensione: v(nodoDi(c.id, "+")) - v(nodoDi(c.id, "-")),
+        // Sotto 0,1 mA il display indica zero (e si nascondono le correnti di dispersione).
+        corrente: Math.abs(corrente) < 1e-4 ? 0 : corrente,
+        correnteCostante: inCorrenteCostante.has(c.id),
+        alimentato: Math.abs(corrente) >= 1e-4,
+      };
+    } else if (c.tipo === "led") {
       const i = r.correnti[c.id] ?? 0;
       // Sotto mezzo milliampere un LED vero non si vede acceso (e così si
       // ignorano le correnti minuscole di un circuito lasciato aperto).
@@ -314,7 +419,7 @@ function misuraOhm(componenti: readonly ComponenteArduino[], nodoDi: NodoDi, int
   const nCom = nodoDi(id, "COM");
   if (nV === nCom) return 0;
   const altri = componenti.filter((c) => c.id !== id);
-  const elementi: Elemento[] = elementiCircuito(altri, nodoDi, {}, interazioni).filter((e) => e.tipo !== "generatore");
+  const elementi: Elemento[] = elementiCircuito(altri, nodoDi, {}, interazioni).filter((e) => e.tipo !== "generatore" && e.tipo !== "alimentatore");
   // Pila interna da 1 V con 1 kΩ in serie; il COM è il riferimento.
   const R_INTERNA = 1000;
   elementi.push({ tipo: "generatore", id: `${id}:pila`, nodo: nV, volt: 1, ohm: R_INTERNA });

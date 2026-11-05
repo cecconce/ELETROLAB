@@ -562,3 +562,79 @@ void loop() {
 `),
   );
 }
+
+// 12. Alimentatore da banco e LED (legge di Ohm), come in Tinkercad
+{
+  const b = costruttore();
+  // Alimentatore sopra la breadboard: + sulla linea rossa, − sulla linea blu in alto.
+  b.posa("alimentatore", 560, -180, { parametri: { tensione: 9, correnteMax: 1 } });
+  b.filo("alimentatore-1:+", "Ap5", "#d32f2f");
+  b.filo("alimentatore-1:-", "Am7", "#212121");
+  b.resistenza("a10", 470); // colonne 10–14
+  b.led("rosso", "e14");
+  b.filo("Ap10", "b10", "#d32f2f");
+  b.filo("c16", "Am16", "#212121");
+  // Voltmetro ai capi del LED.
+  b.posa("multimetro", 800, -200);
+  b.filo("multimetro-1:V", "d14", "#d32f2f");
+  b.filo("multimetro-1:COM", "d16", "#212121");
+  scrivi(
+    "arduino-alimentatore.elab",
+    b.schema(`// Alimentatore da banco e LED: in questo esempio la scheda non fa niente,
+// il LED è alimentato dall'alimentatore PS1 attraverso la resistenza da 470 Ω.
+// Il display rosso di PS1 indica la tensione, quello verde la corrente.
+// Legge di Ohm: I = (V − tensione del LED) / R.
+
+void setup() {
+}
+
+void loop() {
+}
+`),
+  );
+}
+
+// 13. Voltmetro con Arduino: l'alimentatore su A0 attraverso un partitore
+{
+  const b = costruttore();
+  b.posa("alimentatore", 520, -180, { parametri: { tensione: 6, correnteMax: 0.1 } });
+  b.resistenza("a20", 10000); // R1: colonne 20–24
+  b.resistenza("c24", 10000); // R2: colonne 24–28
+  b.filo("alimentatore-1:+", "b20", "#d32f2f");
+  b.filo("alimentatore-1:-", "Am12", "#212121");
+  b.filo("d28", "Am28", "#212121");
+  b.filo("U:GND1", "Am2", "#212121");
+  b.filo("d24", "U:A0", GIALLO);
+  scrivi(
+    "arduino-voltmetro.elab",
+    b.schema(`// Voltmetro con Arduino: misura la tensione dell'alimentatore PS1.
+// Un pin analogico legge al massimo 5 V, quindi la tensione passa da un
+// partitore con due resistenze uguali (R1 = R2 = 10 kΩ): su A0 arriva metà
+// della tensione. Il programma la ricalcola e la scrive sul monitor seriale.
+// Il − dell'alimentatore va al GND della scheda: le tensioni si misurano
+// sempre rispetto a un riferimento comune.
+
+const float R1 = 10000.0;
+const float R2 = 10000.0;
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Voltmetro pronto (massimo 10 V)");
+}
+
+void loop() {
+  int lettura = analogRead(A0);              // 0…1023
+  float vPin = lettura * 5.0 / 1023.0;       // tensione su A0
+  float v = vPin * (R1 + R2) / R2;           // tensione dell'alimentatore
+  if (lettura >= 1023) {
+    Serial.println("Fuori scala: oltre 10 V!");
+  } else {
+    Serial.print("Tensione: ");
+    Serial.print(v);
+    Serial.println(" V");
+  }
+  delay(500);
+}
+`),
+  );
+}

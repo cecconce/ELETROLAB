@@ -4,6 +4,8 @@
 // - generatori di tensione riferiti a massa con resistenza interna
 //   (i pin dell'Arduino, i pin 5V e 3,3V): equivalente di Norton;
 // - resistenze (anche i pulsanti chiusi, il potenziometro, la fotoresistenza);
+// - generatori "flottanti" fra due nodi qualsiasi (alimentatore da banco,
+//   pile): i morsetti + e − non sono legati alla massa dell'Arduino;
 // - diodi e LED con modello a soglia: spento = aperto, acceso = tensione di
 //   soglia Vf in serie a una piccola resistenza Ron.
 // Metodo: analisi nodale (G · V = I) risolta con l'eliminazione di Gauss; lo
@@ -15,6 +17,8 @@ export type Elemento =
   | { tipo: "resistenza"; id: string; a: string; b: string; ohm: number }
   /** Generatore fra il nodo `nodo` e la massa: `volt` con resistenza interna `ohm`. */
   | { tipo: "generatore"; id: string; nodo: string; volt: number; ohm: number }
+  /** Generatore fra `piu` e `meno` (nessuno dei due è la massa): `volt` con resistenza interna `ohm`. */
+  | { tipo: "alimentatore"; id: string; piu: string; meno: string; volt: number; ohm: number }
   | { tipo: "diodo"; id: string; anodo: string; catodo: string; vf: number; ron: number };
 
 export const MASSA = "massa";
@@ -22,7 +26,10 @@ export const MASSA = "massa";
 export interface RisultatoCircuito {
   /** Tensione di ogni nodo rispetto a massa (V). */
   tensioni: Record<string, number>;
-  /** Corrente di ogni resistenza (da a verso b) e di ogni diodo (da anodo a catodo), in A. */
+  /**
+   * Corrente di ogni resistenza (da a verso b), di ogni diodo (da anodo a
+   * catodo) e di ogni alimentatore (uscente dal morsetto +), in A.
+   */
   correnti: Record<string, number>;
   /** Diodi in conduzione. */
   diodiAccesi: Set<string>;
@@ -79,6 +86,7 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
     if (e.tipo === "diodo") {
       correnti[e.id] = accesi.has(e.id) ? Math.max(0, (tensione(e.anodo) - tensione(e.catodo) - e.vf) / Math.max(e.ron, R_MINIMA)) : 0;
     }
+    if (e.tipo === "alimentatore") correnti[e.id] = (e.volt - (tensione(e.piu) - tensione(e.meno))) / Math.max(e.ohm, R_MINIMA);
   }
   return { tensioni, correnti, diodiAccesi: accesi, flottanti: nodiFlottanti(elementi, nodi) };
 }
@@ -86,6 +94,7 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
 function nodiDi(e: Elemento): string[] {
   if (e.tipo === "resistenza") return [e.a, e.b];
   if (e.tipo === "generatore") return [e.nodo];
+  if (e.tipo === "alimentatore") return [e.piu, e.meno];
   return [e.anodo, e.catodo];
 }
 
@@ -116,7 +125,14 @@ function risolviLineare(elementi: readonly Elemento[], indice: Map<string, numbe
       const g = 1 / Math.max(e.ohm, R_MINIMA);
       conduttanza(e.nodo, MASSA, g);
       iniezione(e.nodo, e.volt * g);
-    } else if (accesi.has(e.id)) {
+    } else if (e.tipo === "alimentatore") {
+      // Norton fra i due morsetti: conduttanza fra + e − e corrente V/R che
+      // entra nel + ed esce dal −.
+      const g = 1 / Math.max(e.ohm, R_MINIMA);
+      conduttanza(e.piu, e.meno, g);
+      iniezione(e.piu, e.volt * g);
+      iniezione(e.meno, -e.volt * g);
+    } else if (e.tipo === "diodo" && accesi.has(e.id)) {
       // Diodo acceso: i = (Va − Vk − Vf) / Ron. Nella legge dei nodi il
       // termine Vf/Ron passa a destra: entra nell'anodo ed esce dal catodo.
       const g = 1 / Math.max(e.ron, R_MINIMA);
@@ -169,6 +185,10 @@ function nodiFlottanti(elementi: readonly Elemento[], nodi: ReadonlySet<string>)
     if (e.tipo === "resistenza" && e.ohm < 1e9) unisci(e.a, e.b);
     if (e.tipo === "diodo") unisci(e.anodo, e.catodo);
     if (e.tipo === "generatore") radici.push(e.nodo);
+    // Un alimentatore unisce i suoi due morsetti ma non è un riferimento: se
+    // il suo circuito non tocca il GND della scheda (o un pin), per l'Arduino
+    // quei nodi restano flottanti, come nella realtà senza massa comune.
+    if (e.tipo === "alimentatore") unisci(e.piu, e.meno);
   }
   const visti = new Set<string>(radici);
   const coda = [...radici];

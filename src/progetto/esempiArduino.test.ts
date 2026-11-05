@@ -31,7 +31,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(11);
+    expect(arduino).toHaveLength(13);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -185,5 +185,45 @@ describe("esempio del sensore di movimento", () => {
     aspetta(s, 500);
     expect(s.pin.D13?.livello).toBe(0);
     expect(s.seriale.trim().split("\n").pop()).toContain("Nessun movimento");
+  });
+});
+
+describe("esempi con l'alimentatore da banco", () => {
+  it("alimentatore e LED: 9 V, circa 15 mA, la corrente cresce alzando la tensione", () => {
+    const { schema, s } = apri("arduino-alimentatore.elab");
+    aspetta(s, 200);
+    const ps = id(schema, "alimentatore");
+    const vista = () => vistaDaSessioneArduino(s, schema, lib).componenti[ps].arduino!.alimentatore!;
+    expect(vista().volt).toBeCloseTo(9, 1);
+    expect(vista().ampere).toBeGreaterThan(0.013);
+    expect(vista().ampere).toBeLessThan(0.016);
+    expect(vista().cc).toBe(false);
+    expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.8);
+    const prima = vista().ampere;
+    clicGiuArduino(s, ps);
+    clicSuArduino(s, ps);
+    expect(vista().volt).toBeCloseTo(9.5, 1);
+    expect(vista().ampere).toBeGreaterThan(prima);
+    // Il voltmetro sul LED indica la sua tensione di soglia (circa 2 V).
+    const xmm = id(schema, "multimetro");
+    expect(vistaDaSessioneArduino(s, schema, lib).componenti[xmm].arduino!.lettura).toMatch(/^[12],\d\d V$/);
+  });
+
+  it("voltmetro: il monitor scrive la tensione dell'alimentatore e avvisa oltre 10 V", () => {
+    const { schema, s } = apri("arduino-voltmetro.elab");
+    aspetta(s, 700);
+    expect(s.seriale).toContain("Voltmetro pronto");
+    expect(s.seriale).toContain("Tensione: 6.00 V");
+    const ps = id(schema, "alimentatore");
+    for (let k = 0; k < 4; k++) clicGiuArduino(s, ps); // 6 V → 8 V
+    aspetta(s, 600);
+    expect(s.seriale.trim().split("\n").pop()).toContain("Tensione: 8.00 V");
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+    for (let k = 0; k < 8; k++) clicGiuArduino(s, ps); // 12 V: su A0 arrivano 6 V
+    aspetta(s, 600);
+    expect(s.seriale).toContain("Fuori scala");
+    const problemi = problemiArduino(s, schema, lib);
+    expect(problemi.map((p) => p.chiave)).toContain("pin-tensione-A0");
+    expect(problemi.find((p) => p.chiave === "pin-tensione-A0")!.testo).toContain("6,0 V");
   });
 });

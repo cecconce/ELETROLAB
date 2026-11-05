@@ -10,7 +10,7 @@ import { t } from "../testi";
 import { associaContatto, cambiaSigla, contattoAssociato, numeroMorsetto, proprietariPer } from "./associazioni";
 import { vocePerTipo, type Libreria } from "./libreria";
 import { COMMENTO_MASSIMO, TIPO_COMMENTO, impostaCollegamento, impostaCommento } from "./ladder";
-import { leggiOhm, scriviOhm } from "./arduino";
+import { leggiOhm, PARAMETRI_ARDUINO, scriviOhm, valoreParametroArduino } from "./arduino";
 import { COLORI_FILI, colorePropostoFilo } from "./fili";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
@@ -272,6 +272,16 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
           </select>
         </label>
       )}
+
+      {libreria.modulo === "arduino" &&
+        (PARAMETRI_ARDUINO[componente.tipo] ?? []).map((d) => (
+          <CampoParametro
+            key={`${componente.id}-${d.id}-${valoreParametroArduino(componente.parametri, componente.tipo, d.id)}`}
+            definizione={d}
+            valore={valoreParametroArduino(componente.parametri, componente.tipo, d.id)}
+            onCambia={(v) => onCambiaSchema(impostaParametro(schema, componente.id, d.id, v))}
+          />
+        ))}
 
       {libreria.modulo === "arduino" && componente.tipo === "multimetro" && (
         <label className="proprieta-campo">

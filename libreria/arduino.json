@@ -19,6 +19,10 @@
       "nome": "Componenti passivi"
     },
     {
+      "id": "alimentazione",
+      "nome": "Alimentazione (alimentatore, pile)"
+    },
+    {
       "id": "strumenti",
       "nome": "Strumenti di misura"
     }
@@ -2952,6 +2956,97 @@
         }
       ],
       "icona": "ard-display-sette-segmenti.svg"
+    },
+    {
+      "id": "alimentatore",
+      "nome": "Alimentatore da banco",
+      "categoria": "alimentazione",
+      "sigla": "PS",
+      "descrizione": "Alimentatore regolabile da laboratorio (0–30 V) con limite di corrente. Il display di sinistra indica la tensione ai morsetti, quello di destra la corrente erogata. Se il circuito chiede più corrente del limite, l'alimentatore passa in CC (corrente costante) e la tensione scende: così protegge LED e componenti. Tensione e limite si impostano nelle Proprietà; in simulazione un clic a destra alza la tensione di 0,5 V, un clic a sinistra la abbassa. Il morsetto − non è collegato al GND dell'Arduino: se l'alimentatore comanda un circuito letto dalla scheda, collega il − al GND.",
+      "paroleChiave": [
+        "alimentatore",
+        "alimentazione",
+        "generatore",
+        "tensione",
+        "banco",
+        "power supply",
+        "limite di corrente"
+      ],
+      "larghezza": 160,
+      "altezza": 120,
+      "morsetti": [
+        {
+          "id": "+",
+          "x": 60,
+          "y": 120
+        },
+        {
+          "id": "-",
+          "x": 100,
+          "y": 120
+        }
+      ],
+      "icona": "ard-alimentatore.svg"
+    },
+    {
+      "id": "batteria-9v",
+      "nome": "Pila da 9 V",
+      "categoria": "alimentazione",
+      "sigla": "BAT",
+      "descrizione": "Pila a transistor da 9 V con clip: cavetto rosso il +, nero il −. Ha una piccola resistenza interna (1,5 Ω), quindi sotto carico la tensione scende un po'. Si può usare per alimentare LED e motorini, o la scheda Arduino dal pin Vin.",
+      "paroleChiave": [
+        "pila",
+        "batteria",
+        "9 V",
+        "9V",
+        "alimentazione"
+      ],
+      "larghezza": 60,
+      "altezza": 100,
+      "morsetti": [
+        {
+          "id": "+",
+          "x": 20,
+          "y": 100
+        },
+        {
+          "id": "-",
+          "x": 40,
+          "y": 100
+        }
+      ],
+      "icona": "ard-batteria-9v.svg"
+    },
+    {
+      "id": "portapile-4aa",
+      "nome": "Portapile 4 stilo (6 V)",
+      "categoria": "alimentazione",
+      "sigla": "BAT",
+      "descrizione": "Portapile con quattro pile stilo AA da 1,5 V in serie: 4 × 1,5 V = 6 V. Cavetto rosso il +, nero il −. Adatto ai motorini e ai servo, che consumano più corrente di quella che può dare un pin dell'Arduino.",
+      "paroleChiave": [
+        "portapile",
+        "pile",
+        "stilo",
+        "AA",
+        "batteria",
+        "6 V",
+        "alimentazione"
+      ],
+      "larghezza": 100,
+      "altezza": 100,
+      "morsetti": [
+        {
+          "id": "+",
+          "x": 40,
+          "y": 100
+        },
+        {
+          "id": "-",
+          "x": 60,
+          "y": 100
+        }
+      ],
+      "icona": "ard-portapile-4aa.svg"
     },
     {
       "id": "multimetro",

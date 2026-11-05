@@ -13,8 +13,11 @@ import {
   FUNZIONI_MULTIMETRO,
   indiceFunzioneMultimetro,
   misureMultimetri,
-  elementiCircuito,
+  ALIMENTATORE_PASSO,
+  ALIMENTATORE_TENSIONE_MAX,
   letturaAnalogica,
+  risolviBanco,
+  tensioneAlimentatore,
   letturaDigitale,
   PIN_PWM,
   TEMPERATURA_PREDEFINITA,
@@ -62,8 +65,9 @@ export interface SessioneArduino {
 
 function ricalcola(s: SessioneArduino) {
   const interazioni: Interazioni = s.interazioni;
-  s.risultato = risolviCircuito(elementiCircuito(s.componenti, s.nodoDi, s.pin, interazioni));
-  s.aspetto = { ...aspettoComponenti(s.componenti, s.nodoDi, s.risultato), ...misureMultimetri(s.componenti, s.nodoDi, interazioni, s.risultato) };
+  const { risultato, inCorrenteCostante } = risolviBanco(s.componenti, s.nodoDi, s.pin, interazioni);
+  s.risultato = risultato;
+  s.aspetto = { ...aspettoComponenti(s.componenti, s.nodoDi, s.risultato, inCorrenteCostante), ...misureMultimetri(s.componenti, s.nodoDi, interazioni, s.risultato) };
   s.sporco = false;
   s.versione++;
 }
@@ -207,6 +211,11 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false)
     // Il selettore passa alla funzione seguente (o precedente con il clic destro).
     const n = FUNZIONI_MULTIMETRO.length;
     s.interazioni.posizioni[id] = (indiceFunzioneMultimetro(s.interazioni, c) + (indietro ? n - 1 : 1)) % n;
+  } else if (c.tipo === "alimentatore") {
+    // Manopola della tensione: +0,5 V con il clic, −0,5 V con il clic dalla parte sinistra.
+    const ora = tensioneAlimentatore(s.interazioni, c);
+    const nuova = Math.round((ora + (indietro ? -ALIMENTATORE_PASSO : ALIMENTATORE_PASSO)) / ALIMENTATORE_PASSO) * ALIMENTATORE_PASSO;
+    s.interazioni.posizioni[id] = Math.min(ALIMENTATORE_TENSIONE_MAX, Math.max(0, nuova));
   } else if (c.tipo === "interruttore-slitta" || c.tipo === "sensore-pir") {
     s.interazioni.posizioni[id] = (s.interazioni.posizioni[id] ?? 0) >= 0.5 ? 0 : 1;
   } else if (c.tipo === "fotoresistenza") {

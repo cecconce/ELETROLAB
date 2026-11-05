@@ -74,6 +74,8 @@ export interface AspettoComponente {
     temperatura?: number;
     /** Motore in continua: velocità −1…1. */
     velocita?: number;
+    /** Alimentatore e pile: tensione ai morsetti, corrente erogata, limite di corrente raggiunto (CC). */
+    alimentatore?: { volt: number; ampere: number; cc: boolean };
   };
   /** Elettronica: LED e lampadine (0…1), LED bruciato, cursore del potenziometro, display del multimetro. */
   elettronica?: {

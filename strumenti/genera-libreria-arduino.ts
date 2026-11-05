@@ -624,6 +624,119 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------- Alimentazione
+// Alimentatore da banco (disegno originale): due display a LED per tensione e
+// corrente, manopole, spie CV/CC e boccole + (rossa) e − (nera) in basso.
+voce(
+  {
+    id: "alimentatore",
+    nome: "Alimentatore da banco",
+    categoria: "alimentazione",
+    sigla: "PS",
+    descrizione:
+      "Alimentatore regolabile da laboratorio (0–30 V) con limite di corrente. Il display di sinistra indica la tensione ai morsetti, quello di destra la corrente erogata. Se il circuito chiede più corrente del limite, l'alimentatore passa in CC (corrente costante) e la tensione scende: così protegge LED e componenti. Tensione e limite si impostano nelle Proprietà; in simulazione un clic a destra alza la tensione di 0,5 V, un clic a sinistra la abbassa. Il morsetto − non è collegato al GND dell'Arduino: se l'alimentatore comanda un circuito letto dalla scheda, collega il − al GND.",
+    paroleChiave: ["alimentatore", "alimentazione", "generatore", "tensione", "banco", "power supply", "limite di corrente"],
+    larghezza: 160,
+    altezza: 120,
+    morsetti: [
+      { id: "+", x: 60, y: 120 },
+      { id: "-", x: 100, y: 120 },
+    ],
+  },
+  svg(
+    160,
+    120,
+    [
+      `<defs><linearGradient id="psCassa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5c6b73"/><stop offset="1" stop-color="#37444b"/></linearGradient></defs>`,
+      `<rect x="1" y="1" width="158" height="104" rx="8" fill="url(#psCassa)" stroke="#263238" stroke-width="2"/>`,
+      `<rect x="6" y="6" width="148" height="94" rx="5" fill="#2b3439"/>`,
+      // display della tensione e della corrente (le cifre si scrivono sopra, vedi DisegnoArduino)
+      `<rect x="12" y="12" width="64" height="28" rx="3" fill="#120808" stroke="#000"/>`,
+      `<rect x="84" y="12" width="64" height="28" rx="3" fill="#081208" stroke="#000"/>`,
+      testo(44, 50, "TENSIONE", 7, "#cfd8dc"),
+      testo(116, 50, "CORRENTE", 7, "#cfd8dc"),
+      // manopole
+      ...[30, 130].map((x) => `<circle cx="${x}" cy="72" r="12" fill="#1c2226" stroke="#90a4ae" stroke-width="1.5"/><circle cx="${x}" cy="72" r="8" fill="#3a464d"/><line x1="${x}" y1="72" x2="${x}" y2="63" stroke="#eceff1" stroke-width="2.5" stroke-linecap="round"/>`),
+      // spie CV e CC (spente; si accendono in simulazione)
+      `<circle cx="66" cy="62" r="3.5" fill="#33402e"/><circle cx="94" cy="62" r="3.5" fill="#402e2e"/>`,
+      testo(66, 74, "CV", 6.5, "#cfd8dc"),
+      testo(94, 74, "CC", 6.5, "#cfd8dc"),
+      // boccole e cavetti di uscita
+      `<line x1="60" y1="96" x2="60" y2="120" stroke="#e53935" stroke-width="3"/><circle cx="60" cy="90" r="7" fill="#c62828" stroke="#7f0000" stroke-width="1.5"/><circle cx="60" cy="90" r="2.5" fill="#ffcdd2"/>`,
+      `<line x1="100" y1="96" x2="100" y2="120" stroke="#212121" stroke-width="3"/><circle cx="100" cy="90" r="7" fill="#212121" stroke="#000" stroke-width="1.5"/><circle cx="100" cy="90" r="2.5" fill="#9e9e9e"/>`,
+      testo(48, 93, "+", 10, "#ff8a80", 'font-weight="bold"'),
+      testo(113, 93, "−", 10, "#eceff1", 'font-weight="bold"'),
+    ].join("\n"),
+  ),
+);
+
+voce(
+  {
+    id: "batteria-9v",
+    nome: "Pila da 9 V",
+    categoria: "alimentazione",
+    sigla: "BAT",
+    descrizione: "Pila a transistor da 9 V con clip: cavetto rosso il +, nero il −. Ha una piccola resistenza interna (1,5 Ω), quindi sotto carico la tensione scende un po'. Si può usare per alimentare LED e motorini, o la scheda Arduino dal pin Vin.",
+    paroleChiave: ["pila", "batteria", "9 V", "9V", "alimentazione"],
+    larghezza: 60,
+    altezza: 100,
+    morsetti: [
+      { id: "+", x: 20, y: 100 },
+      { id: "-", x: 40, y: 100 },
+    ],
+  },
+  svg(
+    60,
+    100,
+    [
+      `<defs><linearGradient id="b9Corpo" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#263238"/><stop offset="0.45" stop-color="#4f5b62"/><stop offset="1" stop-color="#1c2327"/></linearGradient></defs>`,
+      // clip con i due cavetti
+      `<rect x="10" y="4" width="40" height="12" rx="3" fill="#212121"/>`,
+      `<path d="M20 16 V30" stroke="#e53935" stroke-width="3"/><path d="M40 16 V30" stroke="#212121" stroke-width="3"/>`,
+      `<rect x="6" y="14" width="48" height="66" rx="4" fill="url(#b9Corpo)" stroke="#111"/>`,
+      `<rect x="6" y="14" width="48" height="16" rx="4" fill="#f9a825"/>`,
+      testo(30, 52, "9V", 15, "#ffffff", 'font-weight="bold"'),
+      testo(30, 66, "ALCALINA", 6.5, "#cfd8dc"),
+      testo(17, 26, "+", 10, "#b71c1c", 'font-weight="bold"'),
+      testo(43, 26, "−", 10, "#212121", 'font-weight="bold"'),
+      `<path d="M20 80 V100" stroke="#e53935" stroke-width="3"/><path d="M40 80 V100" stroke="#212121" stroke-width="3"/>`,
+    ].join("\n"),
+  ),
+);
+
+voce(
+  {
+    id: "portapile-4aa",
+    nome: "Portapile 4 stilo (6 V)",
+    categoria: "alimentazione",
+    sigla: "BAT",
+    descrizione: "Portapile con quattro pile stilo AA da 1,5 V in serie: 4 × 1,5 V = 6 V. Cavetto rosso il +, nero il −. Adatto ai motorini e ai servo, che consumano più corrente di quella che può dare un pin dell'Arduino.",
+    paroleChiave: ["portapile", "pile", "stilo", "AA", "batteria", "6 V", "alimentazione"],
+    larghezza: 100,
+    altezza: 100,
+    morsetti: [
+      { id: "+", x: 40, y: 100 },
+      { id: "-", x: 60, y: 100 },
+    ],
+  },
+  svg(
+    100,
+    100,
+    [
+      `<defs><linearGradient id="aaPila" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9e9e9e"/><stop offset="0.4" stop-color="#eeeeee"/><stop offset="1" stop-color="#757575"/></linearGradient></defs>`,
+      `<rect x="2" y="2" width="96" height="82" rx="5" fill="#212121" stroke="#000"/>`,
+      ...[0, 1, 2, 3].map((k) => {
+        const x = 8 + k * 22;
+        // pile alternate (in serie): la calotta del + è su in una e giù nella successiva
+        const su = k % 2 === 0;
+        return `<rect x="${x}" y="10" width="18" height="66" rx="3" fill="url(#aaPila)"/><rect x="${x}" y="${su ? 18 : 48}" width="18" height="18" fill="#2e7d32"/><rect x="${x + 5}" y="${su ? 6 : 74}" width="8" height="5" rx="1" fill="#bdbdbd"/>` + testo(x + 9, su ? 31 : 61, su ? "+" : "−", 9, "#ffffff", 'font-weight="bold"');
+      }),
+      testo(50, 94, "4 × AA  6V", 7, "#616161"),
+      `<path d="M40 84 V100" stroke="#e53935" stroke-width="3"/><path d="M60 84 V100" stroke="#212121" stroke-width="3"/>`,
+    ].join("\n"),
+  ),
+);
+
 // ---------------------------------------------------------------- Multimetro
 voce(
   {
@@ -668,6 +781,7 @@ const libreria = {
     { id: "uscite", nome: "Uscite (LED, suono, motori)" },
     { id: "ingressi", nome: "Ingressi (pulsanti, sensori)" },
     { id: "passivi", nome: "Componenti passivi" },
+    { id: "alimentazione", nome: "Alimentazione (alimentatore, pile)" },
     { id: "strumenti", nome: "Strumenti di misura" },
   ],
   componenti: voci,

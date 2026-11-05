@@ -6,6 +6,10 @@
 //   della breadboard) o se sono fori collegati internamente dalla breadboard;
 // - i componenti con i loro parametri (colore del LED, valore della resistenza).
 import {
+  ALIMENTATORE_CORRENTE,
+  ALIMENTATORE_CORRENTE_MAX,
+  ALIMENTATORE_TENSIONE,
+  ALIMENTATORE_TENSIONE_MAX,
   DISTANZA_PREDEFINITA,
   TEMPERATURA_PREDEFINITA,
   testoMultimetro,
@@ -23,6 +27,29 @@ import type { ProblemaMostrato } from "./messaggiProblemi";
 import type { AspettoComponente, VistaSimulazione } from "./vistaSimulazione";
 import { morsettiDelComponente, type MorsettiDelTipo } from "./fili";
 import type { Schema } from "./schema";
+import type { DefinizioneParametro } from "./elettronica";
+
+/** Parametri numerici dei componenti Arduino che si impostano nelle Proprietà. */
+export const PARAMETRI_ARDUINO: Record<string, DefinizioneParametro[]> = {
+  alimentatore: [
+    { id: "tensione", nome: t("proprieta.alimentatoreTensione"), tipo: "numero", unita: "V", minimo: 0, massimo: ALIMENTATORE_TENSIONE_MAX },
+    { id: "correnteMax", nome: t("proprieta.alimentatoreLimite"), tipo: "numero", unita: "A", minimo: 0.001, massimo: ALIMENTATORE_CORRENTE_MAX },
+  ],
+};
+const PREDEFINITI_ARDUINO: Record<string, Record<string, number>> = {
+  alimentatore: { tensione: ALIMENTATORE_TENSIONE, correnteMax: ALIMENTATORE_CORRENTE },
+};
+
+/** Valore di un parametro Arduino (quello scritto nel componente o il predefinito). */
+export function valoreParametroArduino(parametri: Record<string, number | string> | undefined, tipo: string, id: string): number {
+  const v = parametri?.[id];
+  return typeof v === "number" ? v : PREDEFINITI_ARDUINO[tipo]?.[id] ?? 0;
+}
+
+/** Cifre dei display dell'alimentatore: tensione con due decimali, corrente con tre (come uno strumento vero). */
+export function displayAlimentatore(volt: number, ampere: number): { volt: string; ampere: string } {
+  return { volt: Math.max(0, volt).toFixed(2), ampere: Math.max(0, Math.abs(ampere)).toFixed(3) };
+}
 
 /** Unione dei morsetti in nodi (union-find). */
 export function nodiDaSchema(schema: Schema, morsettiDi: MorsettiDelTipo): NodoDi {
@@ -70,7 +97,11 @@ export function componentiDaSchema(schema: Schema): ComponenteArduino[] {
     const led = /^led-(\w+)$/.exec(c.tipo);
     if (led && c.tipo !== "led-rgb") return { id: c.id, tipo: "led", colore: led[1] };
     const funzione = c.tipo === "multimetro" && typeof c.parametri?.funzione === "string" ? { funzione: c.parametri.funzione } : {};
-    return { id: c.id, tipo: c.tipo, ...(c.valore !== undefined ? { valore: c.valore } : {}), ...funzione };
+    const alimentatore =
+      c.tipo === "alimentatore"
+        ? { tensione: valoreParametroArduino(c.parametri, c.tipo, "tensione"), correnteMax: valoreParametroArduino(c.parametri, c.tipo, "correnteMax") }
+        : {};
+    return { id: c.id, tipo: c.tipo, ...(c.valore !== undefined ? { valore: c.valore } : {}), ...funzione, ...alimentatore };
   });
 }
 
@@ -140,7 +171,7 @@ void loop() {
 /** Che cosa fa un clic sui componenti del banco durante la simulazione. */
 function clicArduino(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante") return "pulsante";
-  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro" || tipo === "sensore-pir") return "manuale";
+  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro" || tipo === "sensore-pir" || tipo === "alimentatore") return "manuale";
   return null;
 }
 
@@ -168,6 +199,9 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
     if (c.tipo === "multimetro" && a.funzione) {
       arduino.funzione = a.funzione;
       arduino.lettura = testoMultimetro(a.funzione, a.misura ?? 0);
+    }
+    if (c.tipo === "alimentatore" || c.tipo === "batteria-9v" || c.tipo === "portapile-4aa") {
+      arduino.alimentatore = { volt: a.tensione ?? 0, ampere: a.corrente ?? 0, cc: a.correnteCostante ?? false };
     }
     if (c.tipo === "fotoresistenza") arduino.luce = s.interazioni.luce[c.id] ?? 0.5;
     if (c.tipo === "servo") {
@@ -233,6 +267,7 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
     });
   }
   if (!s.scheda) problemi.push({ chiave: "senza-scheda", gravita: "avviso", testo: t("arduino.problema.senzaScheda"), componenti: [], morsetti: [] });
+  problemi.push(...pinFuoriTensione(s));
   for (const c of schema.componenti) {
     const a = s.aspetto[c.id];
     if (c.tipo === "lcd" && a?.alimentato && Object.keys(s.lcd).length > 0 && !lcdDelDisplay(s, c.id)) {
@@ -257,6 +292,34 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
     }
   }
   return problemi;
+}
+
+/** Pin digitali e analogici della scheda Uno, con il nome scritto sulla scheda. */
+const PIN_SCHEDA = [...Array.from({ length: 14 }, (_, i) => [`D${i}`, String(i)]), ...Array.from({ length: 6 }, (_, i) => [`A${i}`, `A${i}`])];
+
+/**
+ * Pin che ricevono una tensione fuori dai limiti (più di 5,5 V o meno di
+ * −0,5 V): con l'alimentatore o le pile si può portare su un pin più di quanto
+ * sopporta, e la scheda vera si rovinerebbe. La simulazione continua (come in
+ * Tinkercad) ma lo studente viene avvisato.
+ */
+export function pinFuoriTensione(s: SessioneArduino): ProblemaMostrato[] {
+  if (!s.scheda) return [];
+  const esito: ProblemaMostrato[] = [];
+  for (const [pin, nome] of PIN_SCHEDA) {
+    const nodo = s.nodoDi(s.scheda, pin);
+    if (s.risultato.flottanti.has(nodo)) continue;
+    const volt = s.risultato.tensioni[nodo];
+    if (volt === undefined || (volt <= 5.5 && volt >= -0.5)) continue;
+    esito.push({
+      chiave: `pin-tensione-${pin}`,
+      gravita: "errore",
+      testo: t(volt > 0 ? "arduino.problema.pinSopra5V" : "arduino.problema.pinNegativo", { pin: nome, volt: volt.toFixed(1).replace(".", ",") }),
+      componenti: [s.scheda],
+      morsetti: [],
+    });
+  }
+  return esito;
 }
 
 /** Firma della vista Arduino: cambia solo quando cambia qualcosa di visibile. */

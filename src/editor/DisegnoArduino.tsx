@@ -8,9 +8,10 @@
 import { useEffect, useRef } from "react";
 import Konva from "konva";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
-import { fasceResistenza, scriviOhm } from "./arduino";
+import { displayAlimentatore, fasceResistenza, scriviOhm, valoreParametroArduino } from "./arduino";
 import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI, SEGMENTI } from "./segmenti7";
 import type { ComponenteSchema } from "./schema";
+import { t } from "../testi";
 import type { AspettoComponente } from "./vistaSimulazione";
 
 const COLORE_LED: Record<string, string> = { rosso: "#ff3b30", verde: "#34c759", giallo: "#ffd60a", blu: "#2f80ff" };
@@ -216,6 +217,43 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
     }
     case "motore-dc":
       return <MotoreDc velocita={a?.velocita ?? 0} />;
+    case "alimentatore": {
+      // Ferma la simulazione: i display mostrano la tensione impostata e il limite
+      // di corrente. In simulazione: tensione ai morsetti, corrente erogata e la
+      // spia CV (verde) o CC (rossa, limite raggiunto).
+      const al = a?.alimentatore;
+      const cifre = al
+        ? displayAlimentatore(al.volt, al.ampere)
+        : displayAlimentatore(valoreParametroArduino(c.parametri, c.tipo, "tensione"), valoreParametroArduino(c.parametri, c.tipo, "correnteMax"));
+      const cifra = { fontSize: 19, fontStyle: "bold", fontFamily: "Consolas, 'Courier New', monospace", align: "right" as const, width: 58 };
+      return (
+        <Group listening={false}>
+          <Text x={14} y={17} text={cifre.volt} fill="#ff5252" shadowColor="#ff1744" shadowBlur={inSimulazione ? 6 : 0} shadowOpacity={1} opacity={inSimulazione ? 1 : 0.75} {...cifra} />
+          <Text x={86} y={17} text={cifre.ampere} fill="#69f0ae" shadowColor="#00e676" shadowBlur={inSimulazione ? 6 : 0} shadowOpacity={1} opacity={inSimulazione ? 1 : 0.75} {...cifra} />
+          {inSimulazione && al && (
+            <>
+              <Circle x={66} y={62} radius={3.5} fill={al.cc ? "#33402e" : "#76ff03"} shadowColor="#76ff03" shadowBlur={al.cc ? 0 : 8} shadowOpacity={1} />
+              <Circle x={94} y={62} radius={3.5} fill={al.cc ? "#ff1744" : "#402e2e"} shadowColor="#ff1744" shadowBlur={al.cc ? 8 : 0} shadowOpacity={1} />
+            </>
+          )}
+          {!inSimulazione && <Text x={84} y={41} width={64} align="right" text={t("arduino.alimentatore.limite")} fontSize={6} fill="#90a4ae" fontFamily={FONT} />}
+        </Group>
+      );
+    }
+    case "batteria-9v":
+    case "portapile-4aa": {
+      // Pila che eroga corrente: piccola etichetta con tensione e corrente.
+      const al = a?.alimentatore;
+      if (!inSimulazione || !al || al.ampere === 0) return null;
+      const larghezza = c.tipo === "batteria-9v" ? 60 : 100;
+      const testoPila = `${al.volt.toFixed(2).replace(".", ",")} V · ${(Math.abs(al.ampere) * 1000).toFixed(0)} mA`;
+      return (
+        <Group listening={false}>
+          <Rect x={larghezza / 2 - 45} y={-18} width={90} height={16} cornerRadius={4} fill="#263238" />
+          <Text x={larghezza / 2 - 45} y={-15} width={90} align="center" text={testoPila} fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+        </Group>
+      );
+    }
     case "sensore-pir":
       // Movimento rilevato: la cupola si illumina e compare la scritta.
       return inSimulazione && (a?.posizione ?? 0) >= 0.5 ? (

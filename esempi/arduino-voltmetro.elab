@@ -1,0 +1,125 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T18:35:45.206Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "alimentatore-1",
+        "tipo": "alimentatore",
+        "etichetta": "PS1",
+        "x": 520,
+        "y": -180,
+        "larghezza": 160,
+        "altezza": 120,
+        "parametri": {
+          "tensione": 6,
+          "correnteMax": 0.1
+        }
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 900,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 10000
+      },
+      {
+        "id": "resistenza-2",
+        "tipo": "resistenza",
+        "etichetta": "R2",
+        "x": 980,
+        "y": 100,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 10000
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b20"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am12"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "d28"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am28"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "d24"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A0"
+        },
+        "colore": "#f9a825"
+      }
+    ],
+    "codice": "// Voltmetro con Arduino: misura la tensione dell'alimentatore PS1.\n// Un pin analogico legge al massimo 5 V, quindi la tensione passa da un\n// partitore con due resistenze uguali (R1 = R2 = 10 kΩ): su A0 arriva metà\n// della tensione. Il programma la ricalcola e la scrive sul monitor seriale.\n// Il − dell'alimentatore va al GND della scheda: le tensioni si misurano\n// sempre rispetto a un riferimento comune.\n\nconst float R1 = 10000.0;\nconst float R2 = 10000.0;\n\nvoid setup() {\n  Serial.begin(9600);\n  Serial.println(\"Voltmetro pronto (massimo 10 V)\");\n}\n\nvoid loop() {\n  int lettura = analogRead(A0);              // 0…1023\n  float vPin = lettura * 5.0 / 1023.0;       // tensione su A0\n  float v = vPin * (R1 + R2) / R2;           // tensione dell'alimentatore\n  if (lettura >= 1023) {\n    Serial.println(\"Fuori scala: oltre 10 V!\");\n  } else {\n    Serial.print(\"Tensione: \");\n    Serial.print(v);\n    Serial.println(\" V\");\n  }\n  delay(500);\n}\n"
+  }
+}

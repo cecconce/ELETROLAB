@@ -4,18 +4,20 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 8 – Impianti più completi, Impianti + PLC nello stesso file, strumenti realistici** — completata — in attesa di conferma
+**Fase 9 – Arduino più simile a Tinkercad: alimentazione esterna, transistor e relè** — in corso
 
-Fase 7 confermata da Pierluigi il 2026-11-02 («buono»). Richieste: il clone di CADe_SIMU manca di funzioni e dispositivi (per primi interruttori, deviatori, invertitori degli impianti civili); vista realistica con immagini più vere; Impianti e PLC devono lavorare insieme in un unico file; in Elettronica oscilloscopio, multimetro e generatore di funzioni realistici.
+Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella versione per arduino lo stile tinkercad e poi vai avanti»). Richieste: alimentatore da banco nel modulo Arduino come in Tinkercad, poi proseguire con i miglioramenti.
 
 ### Attività (in ordine)
 
-- [x] 8.1 Impianti civili completi: interruttore unipolare e bipolare, pulsante (campanello), relè passo-passo, suoneria, presa, magnetotermico 2P e differenziale con tasto di prova; esempi civili (punto luce interrotto, deviata, relè passo-passo).
-- [x] 8.2 Vista realistica degli Impianti rifatta con disegni più veri (volumi, ombre, materiali) per tutti gli apparecchi.
-- [x] 8.3 PLC nello schema degli Impianti: componente PLC con ingressi I e uscite Q collegabili con i fili, programma Ladder nello stesso file, simulazione insieme; esempio.
-- [x] 8.4 Elettronica: oscilloscopio, multimetro e generatore di funzioni con pannelli realistici (manopole, schermo, display).
-- [x] 8.4b Impianti: pneumatica semplificata (cilindro con elettrovalvola 5/2 e finecorsa a0/a1) con esempio del ciclo di andata e ritorno.
-- [x] 8.5 Verifica finale: build Actions, prova Playwright, resoconto.
+- [x] 9.1 Alimentazione esterna nel modulo Arduino: alimentatore da banco regolabile (0–30 V, limite di corrente con passaggio in CC, display di tensione e corrente, spie CV/CC), pila da 9 V e portapile 4 stilo; avviso se un pin dell'Arduino riceve più di 5 V; esempi «Alimentatore da banco e LED» e «Voltmetro con Arduino».
+- [ ] 9.2 Transistor NPN e diodo nel modulo Arduino (modello semplificato: interdizione, zona attiva con β, saturazione); esempio del motorino comandato con il transistor e alimentato a parte, con il diodo di ricircolo.
+- [ ] 9.3 Modulo relè 5 V nel modulo Arduino (bobina comandata da un pin, contatti NA/NC) con una lampadina alimentata a parte; esempio.
+- [ ] 9.4 Verifica finale: build Actions, prova Playwright, resoconto.
+
+## Fase 8 – Impianti più completi, Impianti + PLC nello stesso file, strumenti realistici (confermata il 2026-11-05)
+
+Attività 8.1–8.5 tutte completate; resoconto qui sotto.
 
 ## Resoconto della Fase 8 (2026-11-02)
 
@@ -421,3 +423,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-02 — completamento dell'attività 8.1: sensori di processo negli Impianti (libreria a 49 voci): **interruttore a galleggiante** (livello), **pressostato**, **termostato** (NC: si apre col caldo) e **fotocellula**, tutti a posizione mantenuta (un clic cambia lo stato misurato), con simboli CEI (galleggiante, P, θ, raggio di luce) e disegni realistici; il relè passo-passo ora è riconosciuto dall'editor come bobina che comanda contatti (`comandaContatti`). 1 nuovo test; `npm test` 639 OK.
 - 2026-11-02 — attività 8.4b: **pneumatica** negli Impianti (nuova categoria, libreria a 52 voci), come in CADe_SIMU in forma semplificata: **cilindro a doppio effetto con elettrovalvola 5/2 monostabile** (bobina A1-A2: alimentata lo stelo esce, non alimentata rientra; corsa 1,5 s) e **finecorsa a1 (stelo fuori) e a0 (stelo dentro)** legati al cilindro dalla sigla (posandoli prendono quella dell'ultimo cilindro). Motore: posizione dello stelo in `StatoImpianto.cilindri`, aggiornata a ogni passo; il passo si spezza esattamente quando lo stelo arriva a fine corsa (`prossimoEvento`), così i finecorsa commutano al momento giusto; nuovo comando dei contatti `{ tipo: "cilindro", fine }`. Simbolo ISO 1219 originale (bobina, valvola 5/2 a due quadrati con molla, cilindro con pistone e stelo) e disegno realistico (bobina nera, valvola in alluminio azzurro, tubi blu, canna cromata); in simulazione lo stelo esce animato. Nuovo esempio «Pneumatica: cilindro con andata e ritorno automatici». 2 nuovi test; `npm test` 642 OK, build OK, prova Playwright con lo stelo che esce.
 - 2026-11-02 — attività 8.5 e chiusura della Fase 8: `strumenti/prova-interfaccia.cjs` esteso con la sezione «Fase 8» (impianto civile con differenziale e vista Realistica, lampada da tre punti, relè passo-passo, PLC nello schema con la scheda Ladder, cilindro pneumatico: lo stelo si misura dal rettangolo disegnato perché `aspetto()` non guarda le misure); 138 controlli superati, nessun errore in console. Build Actions verdi n. 72, 73, 75, 76 (n. 74 fallita ai test, superata dal commit successivo). `npm test` 642 OK, build OK. README aggiornato con le novità degli Impianti. Scritto il resoconto della Fase 8; fase in attesa di conferma.
+- 2026-11-05 — Fase 8 confermata da Pierluigi; scritte le attività della Fase 9. Attività 9.1: **alimentazione esterna** nel modulo Arduino (libreria a 24 voci, nuova categoria «Alimentazione»). Nel risolutore un nuovo elemento `alimentatore`, generatore fra due nodi qualsiasi (il − non è la massa dell'Arduino; senza GND comune i nodi restano «flottanti» per le letture dei pin). **Alimentatore da banco** (`risolviBanco`): tensione 0–30 V e limite di corrente dalle Proprietà, in simulazione clic a destra/sinistra ±0,5 V; se la corrente supera il limite passa in corrente costante (CC) e la tensione scende, come uno strumento vero; display rosso della tensione e verde della corrente, spie CV/CC (a simulazione ferma i display mostrano tensione impostata e limite). **Pila da 9 V** (1,5 Ω interni) e **portapile 4 stilo** (6 V), con l'etichetta di tensione e corrente in simulazione. Disegni originali. Nuovo avviso in italiano se un pin riceve più di 5,5 V o meno di −0,5 V. Esempi «Alimentatore da banco e LED (legge di Ohm)» e «Voltmetro con Arduino e alimentatore» (partitore su A0, monitor seriale). 15 nuovi test (generatore flottante, CV/CC, corto, LED protetto dal limite, multimetro, pile, partitore su A0, clic in simulazione, due esempi con l'avviso sul pin); `npm test` 657 OK, build OK, prova Playwright dei due esempi senza errori in console.
