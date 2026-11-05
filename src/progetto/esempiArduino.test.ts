@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ESEMPI } from "./caricaEsempi";
 import { apriEsempio } from "./esempi";
 import type { Schema } from "../editor/schema";
-import { datiPlotter } from "../editor/plotterSeriale";
+import { datiPlotter } from "../editor/letturaPlotter";
 import { componentiDaSchema, nodiDaSchema, problemiArduino, vistaDaSessioneArduino } from "../editor/arduino";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { vocePerTipo } from "../editor/libreria";

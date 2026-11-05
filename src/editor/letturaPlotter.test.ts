@@ -1,6 +1,6 @@
 // Test del plotter seriale: lettura delle righe e scala del grafico.
 import { describe, expect, it } from "vitest";
-import { datiPlotter, scalaPlotter, valoriRiga } from "./plotterSeriale";
+import { datiPlotter, scalaPlotter, valoriRiga } from "./letturaPlotter";
 
 describe("righe del monitor seriale", () => {
   it("numeri soli, separati da virgole o spazi", () => {

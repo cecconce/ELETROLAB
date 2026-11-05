@@ -3,7 +3,7 @@
 // automatica, le tacche e la legenda con il valore attuale di ogni serie.
 import { useMemo } from "react";
 import { t } from "../testi";
-import { CAMPIONI_PLOTTER, datiPlotter, scalaPlotter } from "./plotterSeriale";
+import { CAMPIONI_PLOTTER, datiPlotter, scalaPlotter } from "./letturaPlotter";
 
 /** Colori delle serie (ben distinguibili anche sul tema scuro). */
 const COLORI = ["#1e88e5", "#e53935", "#43a047", "#fb8c00", "#8e24aa", "#00acc1"];
