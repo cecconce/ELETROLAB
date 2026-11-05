@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 9 – Arduino più simile a Tinkercad: alimentazione esterna, transistor, relè, sensori, plotter** — completata — in attesa di conferma
+**Fase 9 – Arduino più simile a Tinkercad: alimentazione esterna, transistor, relè, sensori, plotter** — in corso
 
 Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella versione per arduino lo stile tinkercad e poi vai avanti»). Richieste: alimentatore da banco nel modulo Arduino come in Tinkercad, poi proseguire con i miglioramenti.
 
@@ -22,9 +22,13 @@ Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella v
 - [x] 9.10 Editor a blocchi: blocchi per la striscia NeoPixel (colore di un LED, mostra) e per il registro 74HC595.
 - [x] 9.11 Oscilloscopio nel modulo Arduino (traccia della tensione nel tempo, tempo e volt per divisione); esempio dell'onda quadra.
 - [x] 9.12 Display LCD 16×2 con modulo I2C (4 fili) e libreria LiquidCrystal_I2C; esempio del termometro.
-- [x] 9.13 Verifica finale: build Actions, prova Playwright, resoconto.
+- [x] 9.13 Verifica intermedia: build Actions, prova Playwright, resoconto (riaperta: Pierluigi ha chiesto almeno 3 ore di lavoro).
+- [ ] 9.14 Elenco dei componenti (distinta materiali, come in Tinkercad) in tutti i moduli, con copia ed esportazione CSV.
+- [ ] 9.15 Avviso di corrente eccessiva sui pin dell'Arduino (oltre 40 mA) e sul pin 5V.
+- [ ] 9.16 Debugger del codice Arduino: punti di interruzione sulle righe, pausa, passo, valori delle variabili.
+- [ ] 9.17 Verifica finale: build Actions, prova Playwright, resoconto aggiornato.
 
-## Resoconto della Fase 9 (2026-11-05)
+## Resoconto della Fase 9 (2026-11-05, verifica intermedia: sarà aggiornato a fine fase)
 
 ### Cosa funziona (modulo Arduino, come in Tinkercad Circuits)
 - **Alimentazione esterna**: alimentatore da banco 0–30 V con limite di corrente (passa in CC e la tensione scende, come uno strumento vero), display di tensione e corrente, spie CV/CC; in simulazione clic a destra/sinistra ±0,5 V. Pila da 9 V e portapile 4 stilo (6 V) con resistenza interna. Il − non è il GND dell'Arduino: senza massa comune le letture dei pin sono «flottanti», come nella realtà.
@@ -486,3 +490,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-05 — rifiniture: la fotoresistenza ai clic si ferma al buio e al pieno sole (prima con il clic sinistro sul buio saltava al pieno sole); la striscia NeoPixel entra nella verifica automatica degli esercizi (colori dei LED arrotondati a spento/metà/pieno per canale); README aggiornato con tutti i componenti e le librerie nuove del modulo Arduino. 2 nuovi test; `npm test` 718 OK.
 - 2026-11-05 — attività 9.12: **display LCD 16×2 I2C** (libreria a 38 voci; piedini GND, VCC, SDA, SCL, disegno con il modulo I2C dietro) e libreria **LiquidCrystal_I2C** nell'interprete: costruttore con indirizzo, colonne e righe, `init()`, `backlight()`/`noBacklight()` (la retroilluminazione si accende dal programma), poi gli stessi comandi di LiquidCrystal. Il display mostra il testo se è alimentato, SDA è sul pin A4 e SCL sul pin A5 e l'indirizzo del programma è quello scelto nelle Proprietà (0x27 o 0x3F); altrimenti resta vuoto con un avviso in italiano (pin I2C sbagliati, indirizzo diverso). Nuovo esempio «Termometro con il display LCD I2C». 2 nuovi test; `npm test` 720 OK, build OK, prova Playwright.
 - 2026-11-05 — attività 9.13 e chiusura della Fase 9: `strumenti/prova-interfaccia.cjs` esteso con la sezione «Arduino, Fase 9» (149 controlli superati, nessun errore in console); build Actions verdi (ultima n. 91); `npm test` 720 OK, build OK; prova di prestazioni sui 26 esempi Arduino. Scritto il resoconto della Fase 9; fase in attesa di conferma.
+- 2026-11-05 — Fase 9 riaperta nella stessa sessione: la richiesta era di lavorare almeno 3 ore; aggiunte le attività 9.14–9.17.
