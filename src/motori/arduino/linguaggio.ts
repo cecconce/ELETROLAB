@@ -162,7 +162,7 @@ function sequenza(c: string): string {
 
 /** Tipi conosciuti. */
 const TIPI_NUMERICI = new Set(["int", "long", "short", "byte", "char", "bool", "boolean", "float", "double", "word", "size_t", "uint8_t", "int8_t", "uint16_t", "int16_t", "uint32_t", "int32_t"]);
-const TIPI_OGGETTO = new Set(["Servo", "LiquidCrystal", "String", "Keypad", "Adafruit_NeoPixel"]);
+const TIPI_OGGETTO = new Set(["Servo", "LiquidCrystal", "LiquidCrystal_I2C", "String", "Keypad", "Adafruit_NeoPixel"]);
 
 interface Tipo {
   nome: string; // int, long, float, bool, String, Servo…
@@ -754,7 +754,7 @@ export interface Hardware {
    * costruttore LiquidCrystal(rs, en, d4, d5, d6, d7): servono a capire a quale
    * display del banco si riferisce.
    */
-  lcd(nome: string, righe: string[], colonne: number, pin: number[]): void;
+  lcd(nome: string, righe: string[], colonne: number, pin: number[], i2c?: { indirizzo: number; retro: boolean }): void;
   /** Durata in microsecondi dell'impulso sul pin (sensore a ultrasuoni), 0 se nessuno. */
   pulseIn(pin: string, livello: number): number;
   /** show() di una striscia NeoPixel: colori 0xRRGGBB dei LED, già scalati dalla luminosità. */
@@ -1029,6 +1029,17 @@ export class Esecutore {
         el.push({ tipo, valore: converti(v, tipo, riga) });
       }
       amb.definisci(d.nome, { tipo: { nome: "array", senzaSegno: false }, valore: { t: "a", el, tipo } });
+      return;
+    }
+    if (tipo.nome === "LiquidCrystal_I2C") {
+      // LiquidCrystal_I2C lcd(0x27, 16, 2);
+      const arg: number[] = [];
+      for (const a of d.costruttore ?? []) {
+        const v = yield* this.valuta(a, amb);
+        arg.push(v.t === "n" ? v.v : 0);
+      }
+      const dati = { pin: [] as number[], i2c: arg[0] ?? 0x27, colonne: arg[1] ?? 16, righe: arg[2] ?? 2, cx: 0, cy: 0, testo: [] as string[], retro: false };
+      amb.definisci(d.nome, { tipo, valore: { t: "o", classe: "LiquidCrystal", dati, nome: d.nome } });
       return;
     }
     if (tipo.nome === "Servo" || tipo.nome === "LiquidCrystal") {
@@ -1657,13 +1668,28 @@ export class Esecutore {
       throw new ErroreArduino(riga, `Servo non ha la funzione ${e.nome}().`);
     }
     if (ogg.classe === "LiquidCrystal") {
-      const d = ogg.dati as { colonne: number; righe: number; cx: number; cy: number; testo: string[]; pin: number[] };
-      const aggiorna = () => this.hw.lcd(ogg.nome, d.testo.slice(0, d.righe).map((r) => r.padEnd(d.colonne, " ").slice(0, d.colonne)), d.colonne, d.pin);
+      // Anche LiquidCrystal_I2C (con i2c = indirizzo): stessi comandi più init e backlight.
+      const d = ogg.dati as { colonne: number; righe: number; cx: number; cy: number; testo: string[]; pin: number[]; i2c?: number; retro?: boolean };
+      const aggiorna = () =>
+        this.hw.lcd(
+          ogg.nome,
+          d.testo.slice(0, d.righe).map((r) => r.padEnd(d.colonne, " ").slice(0, d.colonne)),
+          d.colonne,
+          d.pin,
+          d.i2c !== undefined ? { indirizzo: d.i2c, retro: d.retro ?? false } : undefined,
+        );
       const vuoto = () => Array.from({ length: d.righe }, () => " ".repeat(d.colonne));
       switch (e.nome) {
         case "begin":
           d.colonne = valori.length > 0 ? n(0) : 16;
           d.righe = valori.length > 1 ? n(1) : 2;
+          d.testo = vuoto();
+          d.cx = 0;
+          d.cy = 0;
+          aggiorna();
+          return VOID;
+        case "init":
+          // LiquidCrystal_I2C: le dimensioni sono già nel costruttore.
           d.testo = vuoto();
           d.cx = 0;
           d.cy = 0;
@@ -1699,14 +1725,18 @@ export class Esecutore {
           aggiorna();
           return VOID;
         }
+        case "backlight":
+        case "noBacklight":
+          // Sul modulo I2C la retroilluminazione si accende dal programma.
+          d.retro = e.nome === "backlight";
+          if (d.i2c !== undefined) aggiorna();
+          return VOID;
         case "noDisplay":
         case "display":
         case "cursor":
         case "noCursor":
         case "blink":
         case "noBlink":
-        case "backlight":
-        case "noBacklight":
           return VOID;
       }
       throw new ErroreArduino(riga, `LiquidCrystal non ha la funzione ${e.nome}().`);

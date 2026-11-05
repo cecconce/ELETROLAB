@@ -60,7 +60,7 @@ export interface SessioneArduino {
   /** Colori inviati con show() alle strisce NeoPixel, per pin del dato (0xRRGGBB). */
   neopixel: Record<string, number[]>;
   /** Contenuto dei display creati dal programma, con i pin del costruttore. */
-  lcd: Record<string, { righe: string[]; pin: number[] }>;
+  lcd: Record<string, { righe: string[]; pin: number[]; i2c?: { indirizzo: number; retro: boolean } }>;
   /** Distanza dell'ostacolo davanti a ogni sensore a ultrasuoni (cm). */
   seriale: string;
   ingressoSeriale: number[];
@@ -209,8 +209,8 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
       s.neopixel[pin] = colori;
       s.versione++;
     },
-    lcd(nome, righe, _colonne, pin) {
-      s.lcd[nome] = { righe, pin };
+    lcd(nome, righe, _colonne, pin, i2c) {
+      s.lcd[nome] = { righe, pin, ...(i2c ? { i2c } : {}) };
       s.versione++;
     },
     pulseIn(pin) {

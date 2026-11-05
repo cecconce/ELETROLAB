@@ -45,6 +45,9 @@ export const PARAMETRI_ARDUINO: Record<string, DefinizioneParametro[]> = {
     { id: "correnteMax", nome: t("proprieta.alimentatoreLimite"), tipo: "numero", unita: "A", minimo: 0.001, massimo: ALIMENTATORE_CORRENTE_MAX },
   ],
 };
+PARAMETRI_ARDUINO["lcd-i2c"] = [
+  { id: "indirizzo", nome: t("proprieta.indirizzoI2c"), tipo: "scelta", scelte: [{ valore: "39", nome: "0x27" }, { valore: "63", nome: "0x3F" }] },
+];
 PARAMETRI_ARDUINO.oscilloscopio = [
   { id: "tempoDiv", nome: t("proprieta.oscilloscopioTempo"), tipo: "scelta", scelte: TEMPI_DIVISIONE.map((v) => ({ valore: String(v), nome: `${testoScala(v, "s")} / div` })) },
   { id: "voltDiv", nome: t("proprieta.oscilloscopioVolt"), tipo: "scelta", scelte: VOLT_DIVISIONE.map((v) => ({ valore: String(v), nome: `${testoScala(v, "V")} / div` })) },
@@ -52,6 +55,7 @@ PARAMETRI_ARDUINO.oscilloscopio = [
 const PREDEFINITI_ARDUINO: Record<string, Record<string, number>> = {
   alimentatore: { tensione: ALIMENTATORE_TENSIONE, correnteMax: ALIMENTATORE_CORRENTE },
   oscilloscopio: { tempoDiv: TEMPO_DIVISIONE_PREDEFINITO, voltDiv: VOLT_DIVISIONE_PREDEFINITO },
+  "lcd-i2c": { indirizzo: 0x27 },
 };
 
 /** Valore di un parametro Arduino (quello scritto nel componente o il predefinito). */
@@ -260,6 +264,11 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.righe = a.alimentato && lcd ? lcd.righe : [];
       arduino.retro = a.luminosita ?? 0;
     }
+    if (c.tipo === "lcd-i2c") {
+      const lcd = a.alimentato ? lcdI2cDelDisplay(s, c.id, valoreParametroArduino(c.parametri, c.tipo, "indirizzo")) : null;
+      arduino.righe = lcd ? lcd.righe : [];
+      arduino.retro = lcd?.i2c?.retro ? 1 : 0;
+    }
     if (c.tipo === "ultrasuoni") arduino.distanza = s.distanze[c.id] ?? DISTANZA_PREDEFINITA;
     if (c.tipo === "arduino-uno") arduino.ledL = (s.pin.D13?.modo === "OUTPUT" && s.pin.D13.livello > 0) || false;
     componenti[c.id] = {
@@ -296,6 +305,15 @@ function lcdDelDisplay(s: SessioneArduino, id: string): { righe: string[]; pin: 
   return null;
 }
 
+/**
+ * Display LiquidCrystal_I2C creato dal programma che corrisponde al display
+ * I2C sul banco: SDA su A4, SCL su A5 e lo stesso indirizzo.
+ */
+function lcdI2cDelDisplay(s: SessioneArduino, id: string, indirizzo: number) {
+  if (pinCollegato(s, id, "SDA") !== "A4" || pinCollegato(s, id, "SCL") !== "A5") return null;
+  return Object.values(s.lcd).find((l) => l.i2c && l.i2c.indirizzo === indirizzo) ?? null;
+}
+
 /** Problemi del programma e del circuito, spiegati in italiano. */
 export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Libreria): ProblemaMostrato[] {
   const problemi: ProblemaMostrato[] = [];
@@ -330,6 +348,16 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
         componenti: [c.id],
         morsetti: [],
       });
+    }
+    if (c.tipo === "lcd-i2c" && a?.alimentato && Object.values(s.lcd).some((l) => l.i2c)) {
+      const indirizzo = valoreParametroArduino(c.parametri, c.tipo, "indirizzo");
+      const esadecimale = (x: number) => `0x${x.toString(16).toUpperCase()}`;
+      if (pinCollegato(s, c.id, "SDA") !== "A4" || pinCollegato(s, c.id, "SCL") !== "A5") {
+        problemi.push({ chiave: `i2c-pin-${c.id}`, gravita: "avviso", testo: t("arduino.problema.i2cPin", { sigla: c.etichetta }), componenti: [c.id], morsetti: [] });
+      } else if (!Object.values(s.lcd).some((l) => l.i2c?.indirizzo === indirizzo)) {
+        const scritto = Object.values(s.lcd).find((l) => l.i2c)!.i2c!.indirizzo;
+        problemi.push({ chiave: `i2c-indirizzo-${c.id}`, gravita: "avviso", testo: t("arduino.problema.i2cIndirizzo", { sigla: c.etichetta, programma: esadecimale(scritto), display: esadecimale(indirizzo) }), componenti: [c.id], morsetti: [] });
+      }
     }
     if (a?.bruciato && c.tipo === "lampadina") {
       problemi.push({

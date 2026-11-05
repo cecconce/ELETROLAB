@@ -317,6 +317,13 @@
       "prova": "Premi ▶ AVVIA: sullo schermo scorre l'onda quadra. Clic a destra del potenziometro: l'onda si allarga (periodo più lungo), a sinistra si stringe. Conta le divisioni di un periodo e confronta con il monitor seriale. Ferma la simulazione e cambia nelle Proprietà dell'oscilloscopio il tempo per divisione."
     },
     {
+      "file": "arduino-lcd-i2c.elab",
+      "modulo": "arduino",
+      "titolo": "Termometro con il display LCD I2C",
+      "descrizione": "Il display LCD con il modulo I2C usa solo 4 fili: GND, 5V, SDA sul pin A4 e SCL sul pin A5. Si programma con la libreria LiquidCrystal_I2C (indirizzo 0x27, 16 colonne, 2 righe): init() e backlight() all'avvio, poi setCursor e print come con il display normale. Il programma legge il sensore di temperatura su A0 e scrive i gradi con un decimale.",
+      "prova": "Premi ▶ AVVIA: il display si illumina e scrive «Temperatura:» e circa 20 gradi (la lettura a 10 bit arrotonda: 19.9). Clic a destra sul sensore per scaldarlo, a sinistra per raffreddarlo: il valore cambia. Prova a scambiare i fili SDA e SCL: il display resta vuoto e ElettroLab spiega perché."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

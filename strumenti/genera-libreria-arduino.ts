@@ -396,6 +396,36 @@ voce(
     },
     svg(340, 160, corpo),
   );
+
+  // Stesso display con il modulo I2C saldato dietro: solo 4 fili (GND, VCC, SDA, SCL).
+  const PIN_I2C = ["GND", "VCC", "SDA", "SCL"];
+  const corpoI2c = [
+    ...PIN_I2C.map((id, i) => `<line x1="${20 + i * 20}" y1="0" x2="${20 + i * 20}" y2="26" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+    `<rect x="1" y="20" width="338" height="138" rx="6" fill="#1f6f3a" stroke="#14532d" stroke-width="2"/>`,
+    ...[[12, 30], [328, 30], [12, 148], [328, 148]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#e8e8e8"/>`),
+    // modulo I2C (basetta blu con il trimmer del contrasto) che sporge in alto a sinistra
+    `<rect x="8" y="22" width="96" height="30" rx="3" fill="#1565c0" stroke="#0d47a1"/>`,
+    `<rect x="70" y="27" width="14" height="14" fill="#1e88e5" stroke="#0d47a1"/><circle cx="77" cy="34" r="4" fill="#eceff1"/>`,
+    ...PIN_I2C.map((id, i) => `<circle cx="${20 + i * 20}" cy="28" r="3" fill="#c9a227"/><text x="${20 + i * 20}" y="44" font-size="6.5" text-anchor="middle" fill="#fff" ${FONT}>${id}</text>`),
+    testo(94, 48, "I2C", 6, "#bbdefb"),
+    `<rect x="22" y="56" width="296" height="80" rx="4" fill="#202020"/>`,
+    `<rect x="32" y="67" width="276" height="58" fill="#5f7f3c"/>`,
+    testo(290, 152, "LCD 16x2 I2C", 8),
+  ].join("\n");
+  voce(
+    {
+      id: "lcd-i2c",
+      nome: "Display LCD 16x2 (I2C)",
+      categoria: "uscite",
+      sigla: "LCD",
+      descrizione: "Lo stesso display da 2 righe di 16 caratteri, con il modulo I2C dietro: bastano 4 fili. GND a GND, VCC a 5V, SDA ad A4 e SCL ad A5 (i pin I2C della Uno). Nel programma: #include <LiquidCrystal_I2C.h>, LiquidCrystal_I2C lcd(0x27, 16, 2); poi lcd.init(); lcd.backlight(); e si scrive come con LiquidCrystal (setCursor, print, clear). L'indirizzo (0x27 o 0x3F) si sceglie nelle Proprietà.",
+      paroleChiave: ["lcd", "i2c", "display", "schermo", "liquidcrystal_i2c", "16x2", "pcf8574"],
+      larghezza: 340,
+      altezza: 160,
+      morsetti: PIN_I2C.map((id, i) => ({ id, x: 20 + i * 20, y: 0 })),
+    },
+    svg(340, 160, corpoI2c),
+  );
 }
 
 // ---------------------------------------------------------------- Sensore a ultrasuoni

@@ -1,0 +1,182 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:52:54.476Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "tmp36-1",
+        "tipo": "tmp36",
+        "etichetta": "U2",
+        "x": 700,
+        "y": 100,
+        "larghezza": 40,
+        "altezza": 60
+      },
+      {
+        "id": "lcd-i2c-1",
+        "tipo": "lcd-i2c",
+        "etichetta": "LCD1",
+        "x": 560,
+        "y": 440,
+        "larghezza": 340,
+        "altezza": 160
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap30"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bp30"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "Am29"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bm29"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a10"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap10"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a12"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am12"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a11"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A0"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "lcd-i2c-1",
+          "morsetto": "GND"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bm8"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "lcd-i2c-1",
+          "morsetto": "VCC"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bp9"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "lcd-i2c-1",
+          "morsetto": "SDA"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A4"
+        },
+        "colore": "#00897b"
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "lcd-i2c-1",
+          "morsetto": "SCL"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A5"
+        },
+        "colore": "#fbc02d"
+      }
+    ],
+    "codice": "// Termometro con il display LCD I2C.\n// Il display con il modulo I2C usa solo 4 fili: GND, 5V, SDA (pin A4) e\n// SCL (pin A5). La libreria LiquidCrystal_I2C si usa come LiquidCrystal,\n// con init() e backlight() all'avvio.\n// Il sensore di temperatura dà 0,5 V a 0 °C e 10 mV in più per ogni grado.\n\n#include <Wire.h>\n#include <LiquidCrystal_I2C.h>\n\nLiquidCrystal_I2C lcd(0x27, 16, 2);   // indirizzo, colonne, righe\n\nvoid setup() {\n  lcd.init();\n  lcd.backlight();\n  lcd.setCursor(0, 0);\n  lcd.print(\"Temperatura:\");\n}\n\nvoid loop() {\n  int lettura = analogRead(A0);\n  float volt = lettura * 5.0 / 1023.0;\n  float gradi = (volt - 0.5) * 100.0;\n  lcd.setCursor(0, 1);\n  lcd.print(gradi, 1);\n  lcd.print(\" gradi C   \");\n  delay(500);\n}\n"
+  }
+}

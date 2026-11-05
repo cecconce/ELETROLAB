@@ -105,7 +105,8 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
-    case "lcd": {
+    case "lcd":
+    case "lcd-i2c": {
       // Schermo 16×2: sfondo verde chiaro con la retroilluminazione, caratteri scuri.
       const righe = a?.righe ?? [];
       const retro = a?.retro ?? 0;

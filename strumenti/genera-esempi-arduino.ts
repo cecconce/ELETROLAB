@@ -1312,3 +1312,54 @@ void loop() {
 `),
   );
 }
+
+// 26. Termometro con il display LCD I2C (4 fili)
+{
+  const b = costruttore();
+  alimenta(b);
+  b.filo("Ap30", "Bp30", "#d32f2f"); // 5V anche sulla linea rossa in basso
+  b.filo("Am29", "Bm29"); // GND anche sulla linea blu in basso
+  // Sensore di temperatura: VCC, OUT, GND in e10, e11, e12.
+  const t = foro("e10");
+  b.posa("tmp36", t.x, t.y - 60);
+  b.filo("a10", "Ap10", "#d32f2f");
+  b.filo("a12", "Am12");
+  b.filo("a11", "U:A0", BLU);
+  // Display I2C sotto la breadboard: GND, VCC dalle linee in basso, SDA ad A4, SCL ad A5.
+  b.posa("lcd-i2c", 560, 440);
+  b.filo("lcd-i2c-1:GND", "Bm8");
+  b.filo("lcd-i2c-1:VCC", "Bp9", "#d32f2f");
+  b.filo("lcd-i2c-1:SDA", "U:A4", "#00897b");
+  b.filo("lcd-i2c-1:SCL", "U:A5", "#fbc02d");
+  scrivi(
+    "arduino-lcd-i2c.elab",
+    b.schema(`// Termometro con il display LCD I2C.
+// Il display con il modulo I2C usa solo 4 fili: GND, 5V, SDA (pin A4) e
+// SCL (pin A5). La libreria LiquidCrystal_I2C si usa come LiquidCrystal,
+// con init() e backlight() all'avvio.
+// Il sensore di temperatura dà 0,5 V a 0 °C e 10 mV in più per ogni grado.
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);   // indirizzo, colonne, righe
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Temperatura:");
+}
+
+void loop() {
+  int lettura = analogRead(A0);
+  float volt = lettura * 5.0 / 1023.0;
+  float gradi = (volt - 0.5) * 100.0;
+  lcd.setCursor(0, 1);
+  lcd.print(gradi, 1);
+  lcd.print(" gradi C   ");
+  delay(500);
+}
+`),
+  );
+}

@@ -447,6 +447,12 @@ export function elementiCircuito(
       case "ultrasuoni":
         R(c.id, n("VCC"), n("GND"), 2000);
         break;
+      case "lcd-i2c":
+        // Logica del display e del modulo I2C; SDA e SCL hanno i pull-up del modulo (10 kΩ verso VCC).
+        R(`${c.id}:logica`, n("VCC"), n("GND"), 2000);
+        R(`${c.id}:sda`, n("SDA"), n("VCC"), 10000);
+        R(`${c.id}:scl`, n("SCL"), n("VCC"), 10000);
+        break;
       default:
         break;
     }
@@ -660,6 +666,8 @@ export function aspettoComponenti(
     } else if (c.tipo === "lcd") {
       const luce = r.correnti[`${c.id}:luce`] ?? 0;
       aspetto[c.id] = { alimentato: v(nodoDi(c.id, "VDD")) - v(nodoDi(c.id, "VSS")) > 4, luminosita: luce >= CORRENTE_LED_MINIMA ? Math.min(1, luce / 0.01) : 0 };
+    } else if (c.tipo === "lcd-i2c") {
+      aspetto[c.id] = { alimentato: v(nodoDi(c.id, "VCC")) - v(nodoDi(c.id, "GND")) > 4 };
     } else if (c.tipo === "ultrasuoni") {
       aspetto[c.id] = { alimentato: v(nodoDi(c.id, "VCC")) - v(nodoDi(c.id, "GND")) > 4 };
     }

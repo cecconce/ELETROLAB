@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(25);
+    expect(arduino).toHaveLength(26);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -481,5 +481,35 @@ describe("esempio dell'oscilloscopio", () => {
     expect(ys.some((y) => Math.abs(y - 40) < 0.5)).toBe(true);
     expect(ys.some((y) => Math.abs(y - 15) < 0.5)).toBe(true);
     expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio del display LCD I2C", () => {
+  it("scrive la temperatura; con SDA e SCL scambiati resta vuoto con un avviso", () => {
+    const { schema, s } = apri("arduino-lcd-i2c.elab");
+    aspetta(s, 700);
+    expect(s.errore).toBeNull();
+    const lcd = id(schema, "lcd-i2c");
+    const a = () => vistaDaSessioneArduino(s, schema, lib).componenti[lcd].arduino!;
+    expect(a().righe![0]).toContain("Temperatura:");
+    // La conversione a 10 bit arrotonda: circa 20 gradi.
+    expect(Math.abs(parseFloat(a().righe![1]) - 20)).toBeLessThan(0.3);
+    expect(a().retro).toBe(1);
+    clicGiuArduino(s, id(schema, "tmp36"));
+    aspetta(s, 700);
+    expect(Math.abs(parseFloat(a().righe![1]) - 25)).toBeLessThan(0.3);
+    expect(a().righe![1]).toContain("gradi C");
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+    // SDA e SCL scambiati.
+    const scambiato: Schema = {
+      ...schema,
+      fili: schema.fili.map((f) =>
+        f.da.componente === lcd && f.da.morsetto === "SDA" ? { ...f, a: { ...f.a, morsetto: "A5" } } : f.da.componente === lcd && f.da.morsetto === "SCL" ? { ...f, a: { ...f.a, morsetto: "A4" } } : f,
+      ),
+    };
+    const s2 = avviaSessioneArduino(scambiato.codice ?? "", componentiDaSchema(scambiato), nodiDaSchema(scambiato, morsettiDi));
+    aspetta(s2, 500);
+    expect(vistaDaSessioneArduino(s2, scambiato, lib).componenti[lcd].arduino!.righe).toEqual([]);
+    expect(problemiArduino(s2, scambiato, lib).map((p) => p.chiave)).toContain(`i2c-pin-${lcd}`);
   });
 });

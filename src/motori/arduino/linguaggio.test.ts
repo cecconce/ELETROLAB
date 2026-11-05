@@ -444,3 +444,24 @@ describe("libreria Adafruit_NeoPixel", () => {
     expect(() => esegui(`Adafruit_NeoPixel st(6);\nvoid setup(){}\nvoid loop(){}`, 10)).toThrow(/numero di LED e il pin/);
   });
 });
+
+describe("libreria LiquidCrystal_I2C", () => {
+  it("init, backlight, setCursor e print; indirizzo e retroilluminazione passati alla scheda", () => {
+    const s = schedaFinta();
+    const chiamate: { righe: string[]; i2c?: { indirizzo: number; retro: boolean } }[] = [];
+    s.hw.lcd = (_nome, righe, _c, _p, i2c) => void chiamate.push({ righe, i2c });
+    const e = preparaSketch(
+      `#include <Wire.h>
+       #include <LiquidCrystal_I2C.h>
+       LiquidCrystal_I2C lcd(0x3F, 16, 2);
+       void setup() { lcd.init(); lcd.backlight(); lcd.setCursor(2, 1); lcd.print("Ciao"); }
+       void loop() {}`,
+      s.hw,
+    );
+    e.avanza(10);
+    expect(e.errore).toBeNull();
+    const ultima = chiamate[chiamate.length - 1];
+    expect(ultima.i2c).toEqual({ indirizzo: 0x3f, retro: true });
+    expect(ultima.righe[1]).toBe("  Ciao          ");
+  });
+});

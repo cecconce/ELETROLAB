@@ -2683,6 +2683,47 @@
       "icona": "ard-lcd.svg"
     },
     {
+      "id": "lcd-i2c",
+      "nome": "Display LCD 16x2 (I2C)",
+      "categoria": "uscite",
+      "sigla": "LCD",
+      "descrizione": "Lo stesso display da 2 righe di 16 caratteri, con il modulo I2C dietro: bastano 4 fili. GND a GND, VCC a 5V, SDA ad A4 e SCL ad A5 (i pin I2C della Uno). Nel programma: #include <LiquidCrystal_I2C.h>, LiquidCrystal_I2C lcd(0x27, 16, 2); poi lcd.init(); lcd.backlight(); e si scrive come con LiquidCrystal (setCursor, print, clear). L'indirizzo (0x27 o 0x3F) si sceglie nelle Proprietà.",
+      "paroleChiave": [
+        "lcd",
+        "i2c",
+        "display",
+        "schermo",
+        "liquidcrystal_i2c",
+        "16x2",
+        "pcf8574"
+      ],
+      "larghezza": 340,
+      "altezza": 160,
+      "morsetti": [
+        {
+          "id": "GND",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "VCC",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "SDA",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "SCL",
+          "x": 80,
+          "y": 0
+        }
+      ],
+      "icona": "ard-lcd-i2c.svg"
+    },
+    {
       "id": "ultrasuoni",
       "nome": "Sensore a ultrasuoni",
       "categoria": "ingressi",
