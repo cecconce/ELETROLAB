@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 9 – Arduino più simile a Tinkercad: alimentazione esterna, transistor, relè, sensori, plotter** — in corso
+**Fase 9 – Arduino più simile a Tinkercad: alimentazione esterna, transistor, relè, sensori, plotter** — completata — in attesa di conferma
 
 Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella versione per arduino lo stile tinkercad e poi vai avanti»). Richieste: alimentatore da banco nel modulo Arduino come in Tinkercad, poi proseguire con i miglioramenti.
 
@@ -22,7 +22,46 @@ Fase 8 confermata da Pierluigi il 2026-11-05 («aggiungi un alimentatore nella v
 - [x] 9.10 Editor a blocchi: blocchi per la striscia NeoPixel (colore di un LED, mostra) e per il registro 74HC595.
 - [x] 9.11 Oscilloscopio nel modulo Arduino (traccia della tensione nel tempo, tempo e volt per divisione); esempio dell'onda quadra.
 - [x] 9.12 Display LCD 16×2 con modulo I2C (4 fili) e libreria LiquidCrystal_I2C; esempio del termometro.
-- [ ] 9.13 Verifica finale: build Actions, prova Playwright, resoconto.
+- [x] 9.13 Verifica finale: build Actions, prova Playwright, resoconto.
+
+## Resoconto della Fase 9 (2026-11-05)
+
+### Cosa funziona (modulo Arduino, come in Tinkercad Circuits)
+- **Alimentazione esterna**: alimentatore da banco 0–30 V con limite di corrente (passa in CC e la tensione scende, come uno strumento vero), display di tensione e corrente, spie CV/CC; in simulazione clic a destra/sinistra ±0,5 V. Pila da 9 V e portapile 4 stilo (6 V) con resistenza interna. Il − non è il GND dell'Arduino: senza massa comune le letture dei pin sono «flottanti», come nella realtà.
+- **Componenti nuovi** (la libreria passa da 21 a 38 voci): transistor NPN, diodo, modulo relè 5 V, lampadina 12 V, ponte H L293D, registro a scorrimento 74HC595, striscia NeoPixel (8 LED RGB), tastierino 4×4, display LCD I2C, sensori di inclinazione, forza, umidità del terreno e gas, oscilloscopio.
+- **Interprete**: librerie Keypad, Adafruit_NeoPixel e LiquidCrystal_I2C, shiftOut, array a due dimensioni, char stampati come caratteri.
+- **Plotter seriale** nel monitor (📝 Testo / 📈 Grafico): una o più serie, con etichette o per posizione, scala automatica e legenda.
+- **Editor a blocchi**: blocchi per la striscia NeoPixel e il registro 74HC595.
+- **Avvisi in italiano**: pin oltre 5 V o negativo, base del transistor senza resistenza, transistor surriscaldato, lampadina bruciata, display I2C con pin o indirizzo sbagliati.
+- **Verifica degli esercizi**: confronta anche relè, lampadine e striscia NeoPixel.
+- **15 esempi nuovi**: alimentatore e LED, voltmetro, motorino con transistor, lampadina con relè, lampione con plotter, antifurto, sensore di forza, annaffiatoio, rilevatore di gas, ponte H, serratura a codice, contatore binario 74HC595, arcobaleno NeoPixel, onda quadra sull'oscilloscopio, termometro con display I2C.
+
+### Come provarlo passo per passo
+1. GitHub → **Actions** → ultima esecuzione «Build Windows» verde → **Artifacts** → `ElettroLab-portable`; avviare `ElettroLab.exe`.
+2. **Arduino** → Sfoglia gli esempi → «Alimentatore da banco e LED» → ▶ AVVIA: PS1 indica 9.00 V e circa 0.015 A. Clic sulla parte destra di PS1: 9.50 V e la corrente sale. Ferma, metti il limite a 0,005 A nelle Proprietà, riavvia: si accende la spia CC.
+3. «Motorino con transistor e alimentatore esterno»: clic sul potenziometro per cambiare la velocità; la corrente si legge su PS1.
+4. «Lampadina da 12 V comandata dal relè»: premi S1, il relè scatta («ECCITATO») e la lampadina si accende.
+5. «Lampione automatico…»: passa al 📈 Grafico del monitor seriale e clicca sulla fotoresistenza.
+6. «Serratura a codice con il tastierino 4×4»: tieni premuti 1, 2, 3, 4 e poi #: il servo apre e si accende il LED verde.
+7. «Contatore binario con il registro a scorrimento 74HC595», «Arcobaleno sulla striscia…», «Motore avanti e indietro con il ponte H L293D», «Onda quadra vista con l’oscilloscopio», «Termometro con il display LCD I2C»: ▶ AVVIA e segui il «Come provarlo» di ciascuno.
+8. Libreria → «Alimentazione», «Strumenti di misura»: i componenti nuovi si posano e si collegano come gli altri.
+
+### Test eseguiti
+- `npm test`: **720 test Vitest**, tutti superati (78 nuovi in questa fase: generatore flottante, CV/CC, pile, transistor in interdizione/attivo/saturazione, relè con isteresi, lampadina, sensori, L293D con PWM, 74HC595 con fronti/reset/abilitazione, Keypad con scansione di righe e colonne, NeoPixel, LiquidCrystal_I2C, array a due dimensioni, plotter, oscilloscopio, blocchi, verifica degli esercizi, ognuno dei 15 esempi simulato, nomi di file senza conflitti di maiuscole, icone senza attributi doppi). `npm run build` OK.
+- **GitHub Actions** (`windows-latest`: test, `cargo test`, `tauri build`, portable e installer): verdi le esecuzioni n. 78–80, 84–86, 88, 90, 91 (87 e 89 annullate perché superate dalla successiva). Le n. 81–83 erano fallite per due file con lo stesso nome a meno della maiuscola (corretto nella n. 84, con un test che lo impedisce).
+- **Prova dell'interfaccia con Playwright** (`npm run prova-interfaccia`): **149 controlli superati**, nessun errore in console (11 nuovi: alimentatore, relè, tastierino, plotter, NeoPixel, ponte H, oscilloscopio, display I2C). Le prove mirate di ogni novità sono state guardate negli screenshot.
+- **Prestazioni**: 10 s simulati di ognuno dei 26 esempi Arduino; quasi tutti meno di 2 ms di calcolo per secondo simulato.
+
+### Limiti noti
+- Il PWM è trattato come valore medio (LED, motori, L293D), non come impulsi: sull'oscilloscopio un pin in PWM appare come una tensione continua.
+- Transistor: solo NPN (niente PNP né MOSFET), modello a tre stati con β fisso = 100. Il diodo di ricircolo non serve davvero (il motore è una resistenza: niente induttanza).
+- Alimentatore: la lampadina e la striscia NeoPixel non assorbono la corrente vera dei LED; i display e i moduli hanno consumi indicativi.
+- Sensori di forza, umidità e gas a 5 livelli (0–100 % a passi del 25 %), comandati con i clic.
+- 74HC595: si legge il livello dei piedini collegati direttamente ai pin, a 5V o a GND; fronti generati da altri circuiti non sono riconosciuti.
+- Oscilloscopio a un canale, campioni solo ai cambi del circuito e una volta per passo (50 ms) quando non cambia niente.
+- LCD I2C: solo LiquidCrystal_I2C sui pin A4/A5 della Uno (niente caratteri personalizzati). Keypad: niente tasti multipli contemporanei.
+- Un `loop()` senza pause (per esempio «Pulsante», «Serratura») impegna circa il 15 % di un processore moderno; su un PC datato la simulazione resta in tempo reale ma più carica.
+- L'.exe non è stato provato su un PC Windows reale.
 
 ## Fase 8 – Impianti più completi, Impianti + PLC nello stesso file, strumenti realistici (confermata il 2026-11-05)
 
@@ -446,3 +485,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-05 — attività 9.11: **oscilloscopio** nel modulo Arduino (libreria a 37 voci; puntali + e −, ingresso da 1 MΩ). La sessione registra un campione (tempo, tensione) a ogni ricalcolo del circuito e, se il puntale è collegato direttamente a un pin in uscita, anche nel momento esatto in cui il pin cambia: i fronti delle onde quadre cadono al microsecondo giusto, non ai bordi dei passi da 50 ms; a circuito fermo la traccia continua (un campione per passo), al massimo 10 s o 4000 campioni. Motore puro `src/motori/arduino/oscilloscopio.ts`: traccia a gradini su 10 × 8 divisioni con lo zero al centro, tensioni fuori schermo tagliate al bordo. Tempo per divisione (1 ms…1 s) e volt per divisione (0,5…5 V) scelti nelle Proprietà e scritti sullo schermo. Nuovo esempio «Onda quadra vista con l’oscilloscopio» (mezzo periodo scelto dal potenziometro). 4 nuovi test; `npm test` 716 OK, build OK, prova Playwright (onda quadra sullo schermo).
 - 2026-11-05 — rifiniture: la fotoresistenza ai clic si ferma al buio e al pieno sole (prima con il clic sinistro sul buio saltava al pieno sole); la striscia NeoPixel entra nella verifica automatica degli esercizi (colori dei LED arrotondati a spento/metà/pieno per canale); README aggiornato con tutti i componenti e le librerie nuove del modulo Arduino. 2 nuovi test; `npm test` 718 OK.
 - 2026-11-05 — attività 9.12: **display LCD 16×2 I2C** (libreria a 38 voci; piedini GND, VCC, SDA, SCL, disegno con il modulo I2C dietro) e libreria **LiquidCrystal_I2C** nell'interprete: costruttore con indirizzo, colonne e righe, `init()`, `backlight()`/`noBacklight()` (la retroilluminazione si accende dal programma), poi gli stessi comandi di LiquidCrystal. Il display mostra il testo se è alimentato, SDA è sul pin A4 e SCL sul pin A5 e l'indirizzo del programma è quello scelto nelle Proprietà (0x27 o 0x3F); altrimenti resta vuoto con un avviso in italiano (pin I2C sbagliati, indirizzo diverso). Nuovo esempio «Termometro con il display LCD I2C». 2 nuovi test; `npm test` 720 OK, build OK, prova Playwright.
+- 2026-11-05 — attività 9.13 e chiusura della Fase 9: `strumenti/prova-interfaccia.cjs` esteso con la sezione «Arduino, Fase 9» (149 controlli superati, nessun errore in console); build Actions verdi (ultima n. 91); `npm test` 720 OK, build OK; prova di prestazioni sui 26 esempi Arduino. Scritto il resoconto della Fase 9; fase in attesa di conferma.
