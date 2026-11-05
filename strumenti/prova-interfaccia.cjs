@@ -321,6 +321,7 @@ async function collega(pagina, a, b) {
 
   // === Modulo Arduino ========================================================
   await provaArduino(pagina, controlla, foto, apriEsempio);
+  await provaArduinoFase9(pagina, controlla, foto, apriEsempio);
 
   // === Modulo Elettronica ====================================================
   await provaElettronica(pagina, controlla, foto, apriEsempio);
@@ -646,6 +647,112 @@ async function ledAcceso(pagina, colore) {
 const ROSSO = "#ff3b30";
 const VERDE = "#34c759";
 const GIALLO = "#ffd60a";
+
+/**
+ * Arduino, Fase 9: alimentatore da banco, relè e lampadina, tastierino,
+ * plotter seriale, striscia NeoPixel, ponte H, oscilloscopio e display I2C,
+ * provati dall'interfaccia seguendo il loro «Come provarlo».
+ */
+async function provaArduinoFase9(pagina, controlla, foto, apriEsempio) {
+  const fermaSeServe = async () => {
+    const p = pagina.locator(".pulsante-simulazione");
+    if ((await p.innerText()).includes("FERMA")) await p.click();
+    await pagina.waitForTimeout(200);
+  };
+  const avviaSim = async () => {
+    await pagina.locator(".pulsante-simulazione").click();
+    await pagina.waitForTimeout(800);
+  };
+  const testi = () => pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+  /** Rettangolo (pagina) dell'icona larga × alta: i componenti del banco si riconoscono dalla misura. */
+  const icona = (l, h) =>
+    pagina.evaluate(
+      ([l, h]) => {
+        const st = window.Konva.stages[0];
+        const im = st.find("Image").filter((i) => i.width() === l && i.height() === h)[0];
+        const q = im.getClientRect();
+        const c = st.container().getBoundingClientRect();
+        return { x: c.left + q.x, y: c.top + q.y, w: q.width, h: q.height, s: q.width / l };
+      },
+      [l, h],
+    );
+  const monitor = () => pagina.locator('[data-testid="monitor-seriale"]').innerText();
+  const apri = async (file) => {
+    await fermaSeServe();
+    await apriEsempio(pagina, file);
+    await avviaSim();
+  };
+
+  console.log("Arduino: alimentatore da banco e LED");
+  await apri("arduino-alimentatore.elab");
+  controlla((await testi()).includes("9.00"), "il display dell'alimentatore indica 9.00 V");
+  const ps = await icona(160, 120);
+  await pagina.mouse.click(ps.x + ps.w * 0.85, ps.y + ps.h * 0.4);
+  await pagina.waitForTimeout(400);
+  controlla((await testi()).includes("9.50"), "clic a destra sull'alimentatore: 9.50 V");
+  await foto("09a-alimentatore");
+
+  console.log("Arduino: lampadina comandata dal relè");
+  await apri("arduino-rele-lampadina.elab");
+  const s1 = await icona(40, 60);
+  await pagina.mouse.move(s1.x + s1.w / 2, s1.y + s1.h / 2);
+  await pagina.mouse.down();
+  await pagina.waitForTimeout(300);
+  await pagina.mouse.up();
+  await pagina.waitForTimeout(500);
+  controlla((await testi()).includes("ECCITATO"), "premuto S1: il relè scatta («ECCITATO»)");
+  controlla((await monitor()).includes("Lampadina accesa"), "il monitor scrive «Lampadina accesa»");
+  await foto("09b-rele");
+
+  console.log("Arduino: serratura con il tastierino");
+  await apri("arduino-serratura.elab");
+  const k = await icona(180, 220);
+  const TASTI = ["1", "2", "3", "A", "4", "5", "6", "B", "7", "8", "9", "C", "*", "0", "#", "D"];
+  for (const t of "1234#") {
+    const i = TASTI.indexOf(t);
+    await pagina.mouse.move(k.x + (14 + (i % 4) * 38 + 19) * k.s, k.y + (14 + Math.floor(i / 4) * 43 + 21) * k.s);
+    await pagina.mouse.down();
+    await pagina.waitForTimeout(250);
+    await pagina.mouse.up();
+    await pagina.waitForTimeout(250);
+  }
+  controlla((await monitor()).includes("Codice giusto"), "1234 e # sul tastierino: «Codice giusto»");
+  await foto("09c-serratura");
+
+  console.log("Arduino: plotter seriale");
+  await apri("arduino-lampione.elab");
+  await pagina.getByRole("radio", { name: /Grafico/ }).click();
+  await pagina.waitForTimeout(800);
+  controlla((await pagina.locator('[data-testid="plotter-seriale"] path').count()) === 2, "il plotter disegna due linee (Luce e Soglia)");
+  controlla((await pagina.locator(".plotter-legenda").innerText()).includes("Soglia: 500"), "la legenda indica «Soglia: 500»");
+  await foto("09d-plotter");
+  await pagina.getByRole("radio", { name: "📝 Testo" }).click();
+
+  console.log("Arduino: striscia NeoPixel");
+  await apri("arduino-neopixel.elab");
+  const coloriLed = () =>
+    pagina.evaluate(() => [...new Set(window.Konva.stages[0].find("Circle").map((c) => c.fill()).filter((f) => typeof f === "string" && f.startsWith("rgb(")))]);
+  controlla((await coloriLed()).length >= 6, "i LED della striscia hanno colori diversi");
+  await foto("09e-neopixel");
+
+  console.log("Arduino: ponte H L293D");
+  await apri("arduino-ponte-h.elab");
+  const pallini = await pagina.evaluate(() => window.Konva.stages[0].find("Circle").map((c) => c.fill()));
+  controlla(pallini.includes("#ff1744") && pallini.includes("#2979ff"), "sul L293D un'uscita alta (rossa) e una bassa (blu)");
+
+  console.log("Arduino: oscilloscopio");
+  await apri("arduino-oscilloscopio.elab");
+  await pagina.waitForTimeout(1200);
+  const traccia = await pagina.evaluate(() => window.Konva.stages[0].find("Line").filter((l) => l.stroke() === "#76ff03").map((l) => l.points().length));
+  controlla(traccia.length === 1 && traccia[0] > 10, "sullo schermo dell'oscilloscopio c'è la traccia dell'onda quadra");
+  await foto("09f-oscilloscopio");
+
+  console.log("Arduino: display LCD I2C");
+  await apri("arduino-lcd-i2c.elab");
+  await pagina.waitForTimeout(600);
+  controlla((await testi()).join("").includes("Temperatura:"), "il display I2C scrive «Temperatura:»");
+  await fermaSeServe();
+}
 
 async function provaArduino(pagina, controlla, foto, apriEsempio) {
   const ferma = async () => {
