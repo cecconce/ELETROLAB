@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="120" viewBox="0 0 80 120">
+<line x1="20" y1="0" x2="20" y2="12" stroke="#9e9e9e" stroke-width="2.5"/>
+<line x1="40" y1="0" x2="40" y2="12" stroke="#9e9e9e" stroke-width="2.5"/>
+<line x1="60" y1="0" x2="60" y2="12" stroke="#9e9e9e" stroke-width="2.5"/>
+<rect x="10" y="8" width="60" height="30" rx="3" fill="#1565c0" stroke="#0d47a1"/>
+<text x="20" y="22" font-size="6.5" text-anchor="middle" fill="#e3f2fd" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">VCC</text>
+<text x="40" y="22" font-size="6.5" text-anchor="middle" fill="#e3f2fd" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">GND</text>
+<text x="60" y="22" font-size="6.5" text-anchor="middle" fill="#e3f2fd" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">SIG</text>
+<path d="M14 36 H66 V44 L60 116 Q57 120 54 116 L50 52 H30 L26 116 Q23 120 20 116 L14 44 Z" fill="#1976d2" stroke="#0d47a1"/>
+<path d="M22 50 L24 112 M58 50 L56 112" stroke="#e0b84c" stroke-width="3" stroke-linecap="round"/>
+</svg>

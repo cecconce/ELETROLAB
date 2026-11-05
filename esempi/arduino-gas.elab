@@ -1,0 +1,177 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:02:37.216Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "sensore-gas-1",
+        "tipo": "sensore-gas",
+        "etichetta": "U2",
+        "x": 880,
+        "y": 80,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 600,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-1",
+        "tipo": "led-rosso",
+        "etichetta": "D1",
+        "x": 680,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "buzzer-1",
+        "tipo": "buzzer",
+        "etichetta": "BZ1",
+        "x": 1060,
+        "y": 120,
+        "larghezza": 40,
+        "altezza": 40
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a20"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap20"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a21"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am21"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "b22"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A2"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D10"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b5"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c11"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am11"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D8"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b28"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c30"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am30"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Rilevatore di gas: in aria pulita il sensore dà circa 0,4 V (A2 ≈ 80);\n// con il gas la tensione sale. Sopra la soglia si accendono il LED rosso\n// e il buzzer.\n\nconst int SENSORE = A2;\nconst int LED = 10;\nconst int BUZZER = 8;\nconst int SOGLIA = 400;\n\nvoid setup() {\n  pinMode(LED, OUTPUT);\n  Serial.begin(9600);\n  Serial.println(\"Rilevatore di gas pronto\");\n}\n\nvoid loop() {\n  int gas = analogRead(SENSORE);\n  Serial.print(\"Gas:\");\n  Serial.print(gas);\n  Serial.print(\",Soglia:\");\n  Serial.println(SOGLIA);\n  if (gas > SOGLIA) {\n    digitalWrite(LED, HIGH);\n    tone(BUZZER, 1500);\n  } else {\n    digitalWrite(LED, LOW);\n    noTone(BUZZER);\n  }\n  delay(200);\n}\n"
+  }
+}

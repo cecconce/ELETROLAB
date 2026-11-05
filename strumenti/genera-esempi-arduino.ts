@@ -794,3 +794,198 @@ void loop() {
 `),
   );
 }
+
+// 17. Allarme antifurto con il sensore di inclinazione e il buzzer
+{
+  const b = costruttore();
+  alimenta(b);
+  const f = foro("e5");
+  b.posa("sensore-inclinazione", f.x, f.y - 40); // piedini in e5 ed e6
+  b.filo("b5", "Am5");
+  b.filo("b6", "U:D2", ARANCIONE);
+  const z = foro("e14");
+  b.posa("buzzer", z.x, z.y - 40); // + in e14, − in e16
+  b.filo("U:D8", "b14", GIALLO);
+  b.filo("c16", "Am16");
+  scrivi(
+    "arduino-inclinazione.elab",
+    b.schema(`// Antifurto: se qualcuno sposta l'oggetto, il sensore di inclinazione si
+// apre e il buzzer suona. Il sensore è collegato come un pulsante, con la
+// resistenza di pull-up interna: dritto (chiuso) legge LOW, inclinato HIGH.
+
+const int SENSORE = 2;
+const int BUZZER = 8;
+
+void setup() {
+  pinMode(SENSORE, INPUT_PULLUP);
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Antifurto inserito");
+}
+
+void loop() {
+  if (digitalRead(SENSORE) == HIGH) {
+    tone(BUZZER, 2000);              // allarme!
+    digitalWrite(LED_BUILTIN, HIGH);
+    Serial.println("ALLARME: oggetto spostato!");
+    delay(500);
+  } else {
+    noTone(BUZZER);
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+  delay(50);
+}
+`),
+  );
+}
+
+// 18. Sensore di forza: la pressione regola la luminosità del LED (e il plotter la disegna)
+{
+  const b = costruttore();
+  alimenta(b);
+  const f = foro("e5");
+  b.posa("sensore-forza", f.x, f.y - 80); // piedini in e5 ed e7
+  b.resistenza("a7", 10000); // a7–a11 verso GND
+  b.filo("b5", "Ap5");
+  b.filo("b11", "Am11");
+  b.filo("c7", "U:A0", BLU);
+  b.resistenza("a20");
+  b.led("rosso", "e24");
+  b.filo("U:D9", "b20", ARANCIONE);
+  b.filo("c26", "Am26");
+  scrivi(
+    "arduino-forza.elab",
+    b.schema(`// Sensore di forza (FSR): più premi, più il LED è luminoso.
+// L'FSR e la resistenza da 10 kΩ formano un partitore su A0: senza pressione
+// A0 legge quasi 0, premendo a fondo quasi 1023.
+// map() trasforma 0…1023 in 0…255 per analogWrite.
+
+const int LED = 9;
+
+void setup() {
+  pinMode(LED, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int forza = analogRead(A0);
+  int luminosita = map(forza, 0, 1023, 0, 255);
+  analogWrite(LED, luminosita);
+  Serial.print("Forza:");
+  Serial.println(forza);
+  delay(100);
+}
+`),
+  );
+}
+
+// 19. Annaffiatoio automatico: sensore di umidità, relè e pompa (motorino) a pile
+{
+  const b = costruttore();
+  alimenta(b);
+  // Sonda sopra la breadboard: VCC, GND, SIG dalle linee e da A1.
+  b.posa("sensore-umidita", 520, -200);
+  b.filo("sensore-umidita-1:VCC", "Ap6", "#d32f2f");
+  b.filo("sensore-umidita-1:GND", "Am7", "#212121");
+  b.filo("sensore-umidita-1:SIG", "U:A1", BLU);
+  // Modulo relè comandato dal pin 7; la pompa è un motorino alimentato dal portapile.
+  b.posa("modulo-rele", 700, -160);
+  b.filo("modulo-rele-1:VCC", "Ap20", "#d32f2f");
+  b.filo("modulo-rele-1:GND", "Am21", "#212121");
+  b.filo("modulo-rele-1:IN", "U:D7", GIALLO);
+  b.posa("portapile-4aa", 900, -320);
+  b.posa("motore-dc", 940, -160);
+  b.filo("portapile-4aa-1:+", "modulo-rele-1:COM", "#d32f2f");
+  b.filo("modulo-rele-1:NO", "motore-dc-1:+", "#f9a825");
+  b.filo("motore-dc-1:-", "portapile-4aa-1:-", "#212121");
+  scrivi(
+    "arduino-annaffiatoio.elab",
+    b.schema(`// Annaffiatoio automatico: quando il terreno è secco, il relè accende la
+// pompa (il motorino M1, alimentato dal portapile da 6 V); quando il terreno
+// è abbastanza bagnato la spegne. Due soglie diverse (isteresi) evitano che
+// la pompa si accenda e si spenga di continuo vicino al valore limite.
+
+const int SONDA = A1;
+const int POMPA = 7;
+const int SECCO = 300;     // sotto: annaffia
+const int BAGNATO = 600;   // sopra: smetti
+bool pompaAccesa = false;
+
+void setup() {
+  pinMode(POMPA, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int umidita = analogRead(SONDA);
+  if (umidita < SECCO) {
+    pompaAccesa = true;
+  }
+  if (umidita > BAGNATO) {
+    pompaAccesa = false;
+  }
+  digitalWrite(POMPA, pompaAccesa ? HIGH : LOW);
+  Serial.print("Umidita:");
+  Serial.print(umidita);
+  Serial.print(",Secco:");
+  Serial.print(SECCO);
+  Serial.print(",Bagnato:");
+  Serial.println(BAGNATO);
+  delay(200);
+}
+`),
+  );
+}
+
+// 20. Rilevatore di gas: soglia, LED rosso e buzzer
+{
+  const b = costruttore();
+  alimenta(b);
+  const g = foro("e20");
+  b.posa("sensore-gas", g.x - 20, g.y - 80); // VCC e20, GND e21, AO e22
+  b.filo("a20", "Ap20");
+  b.filo("a21", "Am21");
+  b.filo("b22", "U:A2", BLU);
+  b.resistenza("a5");
+  b.led("rosso", "e9");
+  b.filo("U:D10", "b5", ARANCIONE);
+  b.filo("c11", "Am11");
+  const z = foro("e30");
+  b.posa("buzzer", z.x - 40, z.y - 40); // + in e28, − in e30
+  b.filo("U:D8", "b28", GIALLO);
+  b.filo("c30", "Am30");
+  scrivi(
+    "arduino-gas.elab",
+    b.schema(`// Rilevatore di gas: in aria pulita il sensore dà circa 0,4 V (A2 ≈ 80);
+// con il gas la tensione sale. Sopra la soglia si accendono il LED rosso
+// e il buzzer.
+
+const int SENSORE = A2;
+const int LED = 10;
+const int BUZZER = 8;
+const int SOGLIA = 400;
+
+void setup() {
+  pinMode(LED, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Rilevatore di gas pronto");
+}
+
+void loop() {
+  int gas = analogRead(SENSORE);
+  Serial.print("Gas:");
+  Serial.print(gas);
+  Serial.print(",Soglia:");
+  Serial.println(SOGLIA);
+  if (gas > SOGLIA) {
+    digitalWrite(LED, HIGH);
+    tone(BUZZER, 1500);
+  } else {
+    digitalWrite(LED, LOW);
+    noTone(BUZZER);
+  }
+  delay(200);
+}
+`),
+  );
+}

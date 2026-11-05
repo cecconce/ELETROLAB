@@ -90,6 +90,31 @@ const R_AMPEROMETRO = 0.05;
 /** Sopra questo valore l'ohmmetro indica «OL» (circuito aperto). */
 export const OHM_FUORI_SCALA = 20e6;
 
+// --- Sensori comandati con i clic (livello 0…1 in `interazioni.posizioni`) ---
+
+/** Livelli proposti cliccando su forza, umidità del terreno e gas. */
+export const LIVELLI_SENSORE = [0, 0.25, 0.5, 0.75, 1];
+/** Livello iniziale di ogni sensore. */
+export const LIVELLO_INIZIALE: Record<string, number> = {
+  "sensore-inclinazione": 0,
+  "sensore-forza": 0,
+  "sensore-umidita": 0.5,
+  "sensore-gas": 0,
+};
+export const SENSORI_A_LIVELLI = new Set(["sensore-forza", "sensore-umidita", "sensore-gas"]);
+/** Livello attuale di un sensore (quello scelto con i clic o quello iniziale). */
+export function livelloSensore(interazioni: Interazioni, c: ComponenteArduino): number {
+  return limita01(interazioni.posizioni[c.id] ?? LIVELLO_INIZIALE[c.tipo] ?? 0);
+}
+/** Sensore di forza (FSR): senza pressione è quasi un circuito aperto, premuto a fondo circa 250 Ω. */
+const FSR_LIBERO = 10e6;
+const FSR_LEGGERO = 100e3;
+const FSR_PIENO = 250;
+export function resistenzaFsr(forza: number): number {
+  if (forza <= 0) return FSR_LIBERO;
+  return FSR_LEGGERO * Math.pow(FSR_PIENO / FSR_LEGGERO, forza);
+}
+
 /** Modulo relè: resistenza della bobina (5 V, circa 70 mA) e soglie dell'ingresso IN con isteresi (V). */
 export const R_BOBINA_RELE = 70;
 export const RELE_SOGLIA_ECCITA = 3;
@@ -180,6 +205,24 @@ export function elementiCircuito(
       case "resistenza":
         R(c.id, n("1"), n("2"), c.valore ?? RESISTENZA_PREDEFINITA);
         break;
+      case "sensore-inclinazione":
+        // Interruttore a sfera: chiuso dritto, aperto quando è inclinato.
+        if (livelloSensore(interazioni, c) < 0.5) R(c.id, n("1"), n("2"), 0.1);
+        break;
+      case "sensore-forza":
+        R(c.id, n("1"), n("2"), resistenzaFsr(livelloSensore(interazioni, c)));
+        break;
+      case "sensore-umidita":
+      case "sensore-gas": {
+        // Moduli con uscita analogica: tensione proporzionale al livello (umidità
+        // del terreno o concentrazione di gas), riferita a GND; un piccolo
+        // assorbimento dall'alimentazione. Il gas parte da 0,4 V (aria pulita).
+        const livello = livelloSensore(interazioni, c);
+        const volt = c.tipo === "sensore-gas" ? 0.4 + 4.2 * livello : 4.5 * livello;
+        R(`${c.id}:alim`, n("VCC"), n("GND"), c.tipo === "sensore-gas" ? 33 : 5000);
+        el.push({ tipo: "generatore", id: `${c.id}:out`, nodo: n(c.tipo === "sensore-gas" ? "AO" : "SIG"), volt, ohm: 100 });
+        break;
+      }
       case "modulo-rele": {
         // Scheda con relè, transistor e diodo già montati: VCC-GND alimentano la
         // bobina (circa 70 mA quando è eccitata, solo il LED quando è a riposo),

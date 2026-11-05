@@ -624,6 +624,123 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------- Sensori comandati con i clic
+voce(
+  {
+    id: "sensore-inclinazione",
+    nome: "Sensore di inclinazione",
+    categoria: "ingressi",
+    sigla: "S",
+    descrizione: "Interruttore con una pallina dentro (tilt): dritto la pallina tocca i due contatti e il circuito è chiuso; inclinato la pallina rotola via e il circuito si apre. Si usa come un pulsante (con INPUT_PULLUP). In simulazione: clic per inclinarlo o raddrizzarlo.",
+    paroleChiave: ["inclinazione", "tilt", "sfera", "pallina", "vibrazione", "sensore"],
+    larghezza: 20,
+    altezza: 40,
+    morsetti: [
+      { id: "1", x: 0, y: 40 },
+      { id: "2", x: 20, y: 40 },
+    ],
+  },
+  svg(
+    20,
+    40,
+    [
+      `<line x1="0" y1="40" x2="6" y2="26" stroke="${PIEDINO}" stroke-width="2.5"/><line x1="20" y1="40" x2="14" y2="26" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      `<defs><linearGradient id="tiltCorpo" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#424242"/><stop offset="0.4" stop-color="#757575"/><stop offset="1" stop-color="#212121"/></linearGradient></defs>`,
+      `<rect x="3" y="2" width="14" height="26" rx="5" fill="url(#tiltCorpo)" stroke="#111"/>`,
+      `<circle cx="10" cy="22" r="3.5" fill="#cfd8dc" opacity="0.5"/>`,
+    ].join("\n"),
+  ),
+);
+
+voce(
+  {
+    id: "sensore-forza",
+    nome: "Sensore di forza (FSR)",
+    categoria: "ingressi",
+    sigla: "R",
+    descrizione: "Resistenza sensibile alla forza: senza pressione è quasi un circuito aperto (oltre 1 MΩ), premendo la sua resistenza scende fino a poche centinaia di ohm. Con una resistenza da 10 kΩ forma un partitore da leggere con analogRead. In simulazione: clic a destra per premere di più, a sinistra per premere di meno.",
+    paroleChiave: ["forza", "pressione", "fsr", "peso", "bilancia", "sensore"],
+    larghezza: 40,
+    altezza: 80,
+    morsetti: [
+      { id: "1", x: 0, y: 80 },
+      { id: "2", x: 40, y: 80 },
+    ],
+  },
+  svg(
+    40,
+    80,
+    [
+      `<line x1="0" y1="80" x2="16" y2="58" stroke="${PIEDINO}" stroke-width="2.5"/><line x1="40" y1="80" x2="24" y2="58" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      `<rect x="14" y="30" width="12" height="30" fill="#5d4037" stroke="#3e2723"/>`,
+      `<circle cx="20" cy="18" r="17" fill="#6d4c41" stroke="#3e2723"/>`,
+      `<circle cx="20" cy="18" r="12" fill="#8d6e63"/>`,
+      ...[0, 1, 2, 3].map((k) => `<path d="M${11 + k * 6} 9 V27" stroke="#c9a227" stroke-width="1.2"/>`),
+    ].join("\n"),
+  ),
+);
+
+voce(
+  {
+    id: "sensore-umidita",
+    nome: "Sensore di umidità del terreno",
+    categoria: "ingressi",
+    sigla: "U",
+    descrizione: "Sonda a forchetta da infilare nel terreno: più il terreno è bagnato, più alta è la tensione sull'uscita SIG (da 0 V, terreno secco, a circa 4,5 V, terreno bagnato). VCC a 5 V, GND a GND, SIG a un ingresso analogico. In simulazione: clic a destra per bagnare il terreno, a sinistra per asciugarlo.",
+    paroleChiave: ["umidità", "umidita", "terreno", "suolo", "piante", "acqua", "annaffiare", "sensore"],
+    larghezza: 80,
+    altezza: 120,
+    morsetti: [
+      { id: "VCC", x: 20, y: 0 },
+      { id: "GND", x: 40, y: 0 },
+      { id: "SIG", x: 60, y: 0 },
+    ],
+  },
+  svg(
+    80,
+    120,
+    [
+      ...[20, 40, 60].map((x) => `<line x1="${x}" y1="0" x2="${x}" y2="12" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+      `<rect x="10" y="8" width="60" height="30" rx="3" fill="#1565c0" stroke="#0d47a1"/>`,
+      ...[["VCC", 20], ["GND", 40], ["SIG", 60]].map(([t, x]) => testo(Number(x), 22, String(t), 6.5, "#e3f2fd", 'font-weight="bold"')),
+      // forchetta con le piste dorate
+      `<path d="M14 36 H66 V44 L60 116 Q57 120 54 116 L50 52 H30 L26 116 Q23 120 20 116 L14 44 Z" fill="#1976d2" stroke="#0d47a1"/>`,
+      `<path d="M22 50 L24 112 M58 50 L56 112" stroke="#e0b84c" stroke-width="3" stroke-linecap="round"/>`,
+    ].join("\n"),
+  ),
+);
+
+voce(
+  {
+    id: "sensore-gas",
+    nome: "Sensore di gas",
+    categoria: "ingressi",
+    sigla: "U",
+    descrizione: "Modulo con sensore di gas (fumo, GPL, metano): dentro c'è una piccola resistenza che si scalda, quindi consuma circa 150 mA dal 5 V. L'uscita AO dà circa 0,4 V in aria pulita e sale con la concentrazione di gas: si legge con analogRead e si confronta con una soglia. In simulazione: clic a destra per aggiungere gas, a sinistra per toglierlo.",
+    paroleChiave: ["gas", "fumo", "gpl", "metano", "mq-2", "mq2", "aria", "allarme", "sensore"],
+    larghezza: 80,
+    altezza: 80,
+    morsetti: [
+      { id: "VCC", x: 20, y: 80 },
+      { id: "GND", x: 40, y: 80 },
+      { id: "AO", x: 60, y: 80 },
+    ],
+  },
+  svg(
+    80,
+    80,
+    [
+      `<defs><radialGradient id="gasRete" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#eceff1"/><stop offset="1" stop-color="#90a4ae"/></radialGradient></defs>`,
+      ...[20, 40, 60].map((x) => `<line x1="${x}" y1="68" x2="${x}" y2="80" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+      `<rect x="4" y="4" width="72" height="66" rx="4" fill="#1565c0" stroke="#0d47a1"/>`,
+      `<circle cx="40" cy="32" r="22" fill="#b0bec5" stroke="#607d8b"/>`,
+      `<circle cx="40" cy="32" r="17" fill="url(#gasRete)"/>`,
+      ...[-10, -5, 0, 5, 10].map((d) => `<line x1="${40 + d}" y1="17" x2="${40 + d}" y2="47" stroke="#78909c" stroke-width="0.8"/><line x1="25" y1="${32 + d}" x2="55" y2="${32 + d}" stroke="#78909c" stroke-width="0.8"/>`),
+      ...[["VCC", 20], ["GND", 40], ["AO", 60]].map(([t, x]) => testo(Number(x), 64, String(t), 6.5, "#e3f2fd", 'font-weight="bold"')),
+    ].join("\n"),
+  ),
+);
+
 // ---------------------------------------------------------- Relè e lampadina
 voce(
   {

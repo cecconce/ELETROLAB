@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(16);
+    expect(arduino).toHaveLength(20);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -307,5 +307,75 @@ describe("esempio del lampione con il plotter seriale", () => {
     const luce = d.serie[0].valori.filter((v): v is number => v !== null);
     expect(Math.max(...luce)).toBeGreaterThan(500);
     expect(Math.min(...luce)).toBeLessThan(500);
+  });
+});
+
+describe("esempi con i sensori nuovi", () => {
+  it("antifurto: inclinato suona il buzzer, dritto tace", () => {
+    const { schema, s } = apri("arduino-inclinazione.elab");
+    aspetta(s, 300);
+    const buzzer = id(schema, "buzzer");
+    const vista = () => vistaDaSessioneArduino(s, schema, lib).componenti;
+    expect(vista()[buzzer].arduino!.suona).toBe(false);
+    clicGiuArduino(s, id(schema, "sensore-inclinazione"));
+    aspetta(s, 300);
+    expect(vista()[buzzer].arduino!.suona).toBe(true);
+    expect(s.seriale).toContain("ALLARME");
+    clicGiuArduino(s, id(schema, "sensore-inclinazione"));
+    aspetta(s, 800);
+    expect(vista()[buzzer].arduino!.suona).toBe(false);
+  });
+
+  it("sensore di forza: più si preme, più il LED è luminoso", () => {
+    const { schema, s } = apri("arduino-forza.elab");
+    aspetta(s, 300);
+    const fsr = id(schema, "sensore-forza");
+    expect(luminosita(s, schema, "led-rosso")).toBe(0);
+    const livelli: number[] = [];
+    for (let k = 0; k < 4; k++) {
+      clicGiuArduino(s, fsr);
+      aspetta(s, 300);
+      livelli.push(luminosita(s, schema, "led-rosso"));
+    }
+    for (let k = 1; k < livelli.length; k++) expect(livelli[k]).toBeGreaterThanOrEqual(livelli[k - 1]);
+    expect(livelli[3]).toBeGreaterThan(0.5);
+    expect(vistaDaSessioneArduino(s, schema, lib).componenti[fsr].arduino!.posizione).toBe(1);
+  });
+
+  it("annaffiatoio: secco accende la pompa, con l'isteresi fra 300 e 600", () => {
+    const { schema, s } = apri("arduino-annaffiatoio.elab");
+    aspetta(s, 500);
+    const sonda = id(schema, "sensore-umidita");
+    const motore = id(schema, "motore-dc");
+    const gira = () => (s.aspetto[motore]?.velocita ?? 0) !== 0;
+    expect(gira()).toBe(false);
+    clicGiuArduino(s, sonda, true);
+    clicGiuArduino(s, sonda, true); // 0 %: secco
+    aspetta(s, 500);
+    expect(s.aspetto[id(schema, "modulo-rele")].eccitato).toBe(true);
+    expect(gira()).toBe(true);
+    clicGiuArduino(s, sonda);
+    clicGiuArduino(s, sonda); // 50 %: fra le soglie, la pompa continua
+    aspetta(s, 500);
+    expect(gira()).toBe(true);
+    clicGiuArduino(s, sonda); // 75 %: bagnato
+    aspetta(s, 500);
+    expect(gira()).toBe(false);
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+
+  it("rilevatore di gas: oltre la soglia LED e buzzer", () => {
+    const { schema, s } = apri("arduino-gas.elab");
+    aspetta(s, 500);
+    const gas = id(schema, "sensore-gas");
+    const buzzer = id(schema, "buzzer");
+    expect(luminosita(s, schema, "led-rosso")).toBe(0);
+    clicGiuArduino(s, gas);
+    aspetta(s, 400); // 25 %: sotto la soglia
+    expect(luminosita(s, schema, "led-rosso")).toBe(0);
+    clicGiuArduino(s, gas);
+    aspetta(s, 400); // 50 %
+    expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.5);
+    expect(vistaDaSessioneArduino(s, schema, lib).componenti[buzzer].arduino!.suona).toBe(true);
   });
 });

@@ -1,0 +1,122 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:02:37.215Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "sensore-inclinazione-1",
+        "tipo": "sensore-inclinazione",
+        "etichetta": "S1",
+        "x": 600,
+        "y": 120,
+        "larghezza": 20,
+        "altezza": 40
+      },
+      {
+        "id": "buzzer-1",
+        "tipo": "buzzer",
+        "etichetta": "BZ1",
+        "x": 780,
+        "y": 120,
+        "larghezza": 40,
+        "altezza": 40
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "b5"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am5"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "b6"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D2"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D8"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b14"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c16"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am16"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Antifurto: se qualcuno sposta l'oggetto, il sensore di inclinazione si\n// apre e il buzzer suona. Il sensore è collegato come un pulsante, con la\n// resistenza di pull-up interna: dritto (chiuso) legge LOW, inclinato HIGH.\n\nconst int SENSORE = 2;\nconst int BUZZER = 8;\n\nvoid setup() {\n  pinMode(SENSORE, INPUT_PULLUP);\n  pinMode(LED_BUILTIN, OUTPUT);\n  Serial.begin(9600);\n  Serial.println(\"Antifurto inserito\");\n}\n\nvoid loop() {\n  if (digitalRead(SENSORE) == HIGH) {\n    tone(BUZZER, 2000);              // allarme!\n    digitalWrite(LED_BUILTIN, HIGH);\n    Serial.println(\"ALLARME: oggetto spostato!\");\n    delay(500);\n  } else {\n    noTone(BUZZER);\n    digitalWrite(LED_BUILTIN, LOW);\n  }\n  delay(50);\n}\n"
+  }
+}

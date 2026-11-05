@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+<defs><radialGradient id="gasRete" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#eceff1"/><stop offset="1" stop-color="#90a4ae"/></radialGradient></defs>
+<line x1="20" y1="68" x2="20" y2="80" stroke="#9e9e9e" stroke-width="2.5"/>
+<line x1="40" y1="68" x2="40" y2="80" stroke="#9e9e9e" stroke-width="2.5"/>
+<line x1="60" y1="68" x2="60" y2="80" stroke="#9e9e9e" stroke-width="2.5"/>
+<rect x="4" y="4" width="72" height="66" rx="4" fill="#1565c0" stroke="#0d47a1"/>
+<circle cx="40" cy="32" r="22" fill="#b0bec5" stroke="#607d8b"/>
+<circle cx="40" cy="32" r="17" fill="url(#gasRete)"/>
+<line x1="30" y1="17" x2="30" y2="47" stroke="#78909c" stroke-width="0.8"/><line x1="25" y1="22" x2="55" y2="22" stroke="#78909c" stroke-width="0.8"/>
+<line x1="35" y1="17" x2="35" y2="47" stroke="#78909c" stroke-width="0.8"/><line x1="25" y1="27" x2="55" y2="27" stroke="#78909c" stroke-width="0.8"/>
+<line x1="40" y1="17" x2="40" y2="47" stroke="#78909c" stroke-width="0.8"/><line x1="25" y1="32" x2="55" y2="32" stroke="#78909c" stroke-width="0.8"/>
+<line x1="45" y1="17" x2="45" y2="47" stroke="#78909c" stroke-width="0.8"/><line x1="25" y1="37" x2="55" y2="37" stroke="#78909c" stroke-width="0.8"/>
+<line x1="50" y1="17" x2="50" y2="47" stroke="#78909c" stroke-width="0.8"/><line x1="25" y1="42" x2="55" y2="42" stroke="#78909c" stroke-width="0.8"/>
+<text x="20" y="64" font-size="6.5" text-anchor="middle" fill="#e3f2fd" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">VCC</text>
+<text x="40" y="64" font-size="6.5" text-anchor="middle" fill="#e3f2fd" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">GND</text>
+<text x="60" y="64" font-size="6.5" text-anchor="middle" fill="#e3f2fd" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">AO</text>
+</svg>

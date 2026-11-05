@@ -14,6 +14,9 @@ import {
   indiceFunzioneMultimetro,
   misureMultimetri,
   ALIMENTATORE_PASSO,
+  LIVELLI_SENSORE,
+  SENSORI_A_LIVELLI,
+  livelloSensore,
   ALIMENTATORE_TENSIONE_MAX,
   letturaAnalogica,
   risolviBanco,
@@ -220,7 +223,12 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false)
     const ora = tensioneAlimentatore(s.interazioni, c);
     const nuova = Math.round((ora + (indietro ? -ALIMENTATORE_PASSO : ALIMENTATORE_PASSO)) / ALIMENTATORE_PASSO) * ALIMENTATORE_PASSO;
     s.interazioni.posizioni[id] = Math.min(ALIMENTATORE_TENSIONE_MAX, Math.max(0, nuova));
-  } else if (c.tipo === "interruttore-slitta" || c.tipo === "sensore-pir") {
+  } else if (SENSORI_A_LIVELLI.has(c.tipo)) {
+    // Livello successivo (o precedente con il clic a sinistra), senza ricominciare dal fondo.
+    const ora = livelloSensore(s.interazioni, c);
+    const i = LIVELLI_SENSORE.findIndex((l) => Math.abs(l - ora) < 1e-6);
+    s.interazioni.posizioni[id] = LIVELLI_SENSORE[Math.min(LIVELLI_SENSORE.length - 1, Math.max(0, (i < 0 ? 0 : i) + (indietro ? -1 : 1)))];
+  } else if (c.tipo === "interruttore-slitta" || c.tipo === "sensore-pir" || c.tipo === "sensore-inclinazione") {
     s.interazioni.posizioni[id] = (s.interazioni.posizioni[id] ?? 0) >= 0.5 ? 0 : 1;
   } else if (c.tipo === "fotoresistenza") {
     const livelli = [0, 0.25, 0.5, 0.75, 1];

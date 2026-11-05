@@ -1,0 +1,200 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:02:37.216Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "sensore-umidita-1",
+        "tipo": "sensore-umidita",
+        "etichetta": "U2",
+        "x": 520,
+        "y": -200,
+        "larghezza": 80,
+        "altezza": 120
+      },
+      {
+        "id": "modulo-rele-1",
+        "tipo": "modulo-rele",
+        "etichetta": "K1",
+        "x": 700,
+        "y": -160,
+        "larghezza": 140,
+        "altezza": 80
+      },
+      {
+        "id": "portapile-4aa-1",
+        "tipo": "portapile-4aa",
+        "etichetta": "BAT1",
+        "x": 900,
+        "y": -320,
+        "larghezza": 100,
+        "altezza": 100
+      },
+      {
+        "id": "motore-dc-1",
+        "tipo": "motore-dc",
+        "etichetta": "M1",
+        "x": 940,
+        "y": -160,
+        "larghezza": 80,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "sensore-umidita-1",
+          "morsetto": "VCC"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap6"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "sensore-umidita-1",
+          "morsetto": "GND"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am7"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "sensore-umidita-1",
+          "morsetto": "SIG"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "A1"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "modulo-rele-1",
+          "morsetto": "VCC"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap20"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "modulo-rele-1",
+          "morsetto": "GND"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am21"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "modulo-rele-1",
+          "morsetto": "IN"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D7"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "portapile-4aa-1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "modulo-rele-1",
+          "morsetto": "COM"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "modulo-rele-1",
+          "morsetto": "NO"
+        },
+        "a": {
+          "componente": "motore-dc-1",
+          "morsetto": "+"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "motore-dc-1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "portapile-4aa-1",
+          "morsetto": "-"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Annaffiatoio automatico: quando il terreno è secco, il relè accende la\n// pompa (il motorino M1, alimentato dal portapile da 6 V); quando il terreno\n// è abbastanza bagnato la spegne. Due soglie diverse (isteresi) evitano che\n// la pompa si accenda e si spenga di continuo vicino al valore limite.\n\nconst int SONDA = A1;\nconst int POMPA = 7;\nconst int SECCO = 300;     // sotto: annaffia\nconst int BAGNATO = 600;   // sopra: smetti\nbool pompaAccesa = false;\n\nvoid setup() {\n  pinMode(POMPA, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int umidita = analogRead(SONDA);\n  if (umidita < SECCO) {\n    pompaAccesa = true;\n  }\n  if (umidita > BAGNATO) {\n    pompaAccesa = false;\n  }\n  digitalWrite(POMPA, pompaAccesa ? HIGH : LOW);\n  Serial.print(\"Umidita:\");\n  Serial.print(umidita);\n  Serial.print(\",Secco:\");\n  Serial.print(SECCO);\n  Serial.print(\",Bagnato:\");\n  Serial.println(BAGNATO);\n  delay(200);\n}\n"
+  }
+}

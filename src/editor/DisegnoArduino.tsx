@@ -240,6 +240,35 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
+    case "sensore-inclinazione":
+      // Inclinato: il corpo si piega di lato, la pallina si stacca dai contatti.
+      return inSimulazione && (a?.posizione ?? 0) >= 0.5 ? (
+        <Group listening={false}>
+          <Rect x={-2} y={-18} width={64} height={16} cornerRadius={4} fill="#e65100" />
+          <Text x={-2} y={-15} width={64} align="center" text={t("arduino.sensore.inclinato")} fontSize={9} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+          <Rect x={3} y={2} width={14} height={26} cornerRadius={5} fill="#616161" stroke="#e65100" strokeWidth={1.5} rotation={25} offsetX={-4} opacity={0.85} />
+        </Group>
+      ) : null;
+    case "sensore-forza":
+    case "sensore-umidita":
+    case "sensore-gas": {
+      if (!inSimulazione) return null;
+      const livello = a?.posizione ?? 0;
+      const percento = `${Math.round(livello * 100)} %`;
+      const etichetta = { "sensore-forza": "arduino.sensore.forza", "sensore-umidita": "arduino.sensore.umidita", "sensore-gas": "arduino.sensore.gas" }[c.tipo]!;
+      const colore = c.tipo === "sensore-umidita" ? "#1565c0" : c.tipo === "sensore-gas" ? (livello >= 0.5 ? "#c62828" : "#546e7a") : "#6d4c41";
+      const larghezza = c.larghezza;
+      return (
+        <Group listening={false}>
+          {c.tipo === "sensore-forza" && livello > 0 && <Circle x={20} y={18} radius={8 + 8 * livello} fill="#ffcc80" opacity={0.35 + 0.4 * livello} />}
+          {c.tipo === "sensore-umidita" && <Rect x={10} y={70} width={60} height={50} fill="#6d4c41" opacity={0.25 + 0.5 * (1 - livello)} cornerRadius={4} />}
+          {c.tipo === "sensore-umidita" && livello > 0 && <Rect x={10} y={120 - 50 * livello} width={60} height={50 * livello} fill="#42a5f5" opacity={0.35} cornerRadius={4} />}
+          {c.tipo === "sensore-gas" && livello > 0 && <Circle x={40} y={32} radius={20 + 10 * livello} fill="#9e9e9e" opacity={0.15 + 0.35 * livello} />}
+          <Rect x={larghezza / 2 - 45} y={-18} width={90} height={16} cornerRadius={4} fill={colore} />
+          <Text x={larghezza / 2 - 45} y={-15} width={90} align="center" text={`${t(etichetta)} ${percento}`} fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+        </Group>
+      );
+    }
     case "modulo-rele": {
       if (!inSimulazione) return null;
       // LED rosso di alimentazione, LED verde di stato e, nella morsettiera, il

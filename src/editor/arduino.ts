@@ -11,6 +11,8 @@ import {
   ALIMENTATORE_TENSIONE,
   ALIMENTATORE_TENSIONE_MAX,
   DISTANZA_PREDEFINITA,
+  SENSORI_A_LIVELLI,
+  livelloSensore,
   R_LAMPADINA,
   TEMPERATURA_PREDEFINITA,
   testoMultimetro,
@@ -172,7 +174,7 @@ void loop() {
 /** Che cosa fa un clic sui componenti del banco durante la simulazione. */
 function clicArduino(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante") return "pulsante";
-  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro" || tipo === "sensore-pir" || tipo === "alimentatore") return "manuale";
+  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro" || tipo === "sensore-pir" || tipo === "alimentatore" || tipo === "sensore-inclinazione" || SENSORI_A_LIVELLI.has(tipo)) return "manuale";
   return null;
 }
 
@@ -193,6 +195,10 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.bruciato = a.bruciato ?? false;
     }
     if (c.tipo === "potenziometro") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0.5;
+    if (c.tipo === "sensore-inclinazione" || SENSORI_A_LIVELLI.has(c.tipo)) {
+      const comp = s.componenti.find((x) => x.id === c.id);
+      arduino.posizione = comp ? livelloSensore(s.interazioni, comp) : 0;
+    }
     if (c.tipo === "sensore-pir") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
     if (c.tipo === "interruttore-slitta") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
     if (c.tipo === "tmp36") arduino.temperatura = s.interazioni.temperature[c.id] ?? TEMPERATURA_PREDEFINITA;

@@ -2958,6 +2958,141 @@
       "icona": "ard-display-sette-segmenti.svg"
     },
     {
+      "id": "sensore-inclinazione",
+      "nome": "Sensore di inclinazione",
+      "categoria": "ingressi",
+      "sigla": "S",
+      "descrizione": "Interruttore con una pallina dentro (tilt): dritto la pallina tocca i due contatti e il circuito è chiuso; inclinato la pallina rotola via e il circuito si apre. Si usa come un pulsante (con INPUT_PULLUP). In simulazione: clic per inclinarlo o raddrizzarlo.",
+      "paroleChiave": [
+        "inclinazione",
+        "tilt",
+        "sfera",
+        "pallina",
+        "vibrazione",
+        "sensore"
+      ],
+      "larghezza": 20,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "2",
+          "x": 20,
+          "y": 40
+        }
+      ],
+      "icona": "ard-sensore-inclinazione.svg"
+    },
+    {
+      "id": "sensore-forza",
+      "nome": "Sensore di forza (FSR)",
+      "categoria": "ingressi",
+      "sigla": "R",
+      "descrizione": "Resistenza sensibile alla forza: senza pressione è quasi un circuito aperto (oltre 1 MΩ), premendo la sua resistenza scende fino a poche centinaia di ohm. Con una resistenza da 10 kΩ forma un partitore da leggere con analogRead. In simulazione: clic a destra per premere di più, a sinistra per premere di meno.",
+      "paroleChiave": [
+        "forza",
+        "pressione",
+        "fsr",
+        "peso",
+        "bilancia",
+        "sensore"
+      ],
+      "larghezza": 40,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 0,
+          "y": 80
+        },
+        {
+          "id": "2",
+          "x": 40,
+          "y": 80
+        }
+      ],
+      "icona": "ard-sensore-forza.svg"
+    },
+    {
+      "id": "sensore-umidita",
+      "nome": "Sensore di umidità del terreno",
+      "categoria": "ingressi",
+      "sigla": "U",
+      "descrizione": "Sonda a forchetta da infilare nel terreno: più il terreno è bagnato, più alta è la tensione sull'uscita SIG (da 0 V, terreno secco, a circa 4,5 V, terreno bagnato). VCC a 5 V, GND a GND, SIG a un ingresso analogico. In simulazione: clic a destra per bagnare il terreno, a sinistra per asciugarlo.",
+      "paroleChiave": [
+        "umidità",
+        "umidita",
+        "terreno",
+        "suolo",
+        "piante",
+        "acqua",
+        "annaffiare",
+        "sensore"
+      ],
+      "larghezza": 80,
+      "altezza": 120,
+      "morsetti": [
+        {
+          "id": "VCC",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "GND",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "SIG",
+          "x": 60,
+          "y": 0
+        }
+      ],
+      "icona": "ard-sensore-umidita.svg"
+    },
+    {
+      "id": "sensore-gas",
+      "nome": "Sensore di gas",
+      "categoria": "ingressi",
+      "sigla": "U",
+      "descrizione": "Modulo con sensore di gas (fumo, GPL, metano): dentro c'è una piccola resistenza che si scalda, quindi consuma circa 150 mA dal 5 V. L'uscita AO dà circa 0,4 V in aria pulita e sale con la concentrazione di gas: si legge con analogRead e si confronta con una soglia. In simulazione: clic a destra per aggiungere gas, a sinistra per toglierlo.",
+      "paroleChiave": [
+        "gas",
+        "fumo",
+        "gpl",
+        "metano",
+        "mq-2",
+        "mq2",
+        "aria",
+        "allarme",
+        "sensore"
+      ],
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "VCC",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "GND",
+          "x": 40,
+          "y": 80
+        },
+        {
+          "id": "AO",
+          "x": 60,
+          "y": 80
+        }
+      ],
+      "icona": "ard-sensore-gas.svg"
+    },
+    {
       "id": "modulo-rele",
       "nome": "Modulo relè 5 V",
       "categoria": "uscite",
