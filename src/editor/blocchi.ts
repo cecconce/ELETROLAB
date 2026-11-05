@@ -4,8 +4,9 @@
 // Lo studente compone il programma con i blocchi "all'avvio" e "ripeti
 // sempre"; ad ogni modifica il generatore scrive il codice C++ corrispondente
 // (quello che poi esegue l'interprete), aggiungendo da solo le parti
-// "noiose": pinMode dei pin usati, Serial.begin, oggetti Servo e
-// LiquidCrystal, funzione per il sensore a ultrasuoni, variabili globali.
+// "noiose": pinMode dei pin usati, Serial.begin, oggetti Servo,
+// LiquidCrystal e Adafruit_NeoPixel, funzione per il sensore a ultrasuoni,
+// variabili globali.
 //
 // Blockly (licenza Apache-2.0) viene caricato solo quando serve, così l'avvio
 // del programma resta leggero.
@@ -106,6 +107,38 @@ const DEFINIZIONI = [
     colour: COLORE_DISPOSITIVI,
     tooltip: "Display LCD collegato come negli esempi: RS 12, E 11, D4–D7 ai pin 5, 4, 3, 2.",
   },
+  {
+    type: "ard_neopixel_colore",
+    message0: "striscia LED sul pin %1: LED n° %2 rosso %3 verde %4 blu %5",
+    args0: [
+      { type: "field_dropdown", name: "PIN", options: PIN_DIGITALI },
+      { type: "input_value", name: "LED", check: "Number" },
+      { type: "input_value", name: "R", check: "Number" },
+      { type: "input_value", name: "G", check: "Number" },
+      { type: "input_value", name: "B", check: "Number" },
+    ],
+    inputsInline: true,
+    previousStatement: null,
+    nextStatement: null,
+    colour: COLORE_DISPOSITIVI,
+    tooltip: "Sceglie il colore di un LED della striscia NeoPixel (8 LED, numerati da 1): rosso, verde e blu da 0 a 255. Il colore compare con il blocco «mostra i colori».",
+  },
+  { type: "ard_neopixel_mostra", message0: "mostra i colori della striscia LED sul pin %1", args0: [{ type: "field_dropdown", name: "PIN", options: PIN_DIGITALI }], previousStatement: null, nextStatement: null, colour: COLORE_DISPOSITIVI, tooltip: "Manda i colori scelti alla striscia NeoPixel: striscia.show()." },
+  {
+    type: "ard_registro",
+    message0: "scrivi %1 sul registro 74HC595: dato pin %2 clock pin %3 latch pin %4",
+    args0: [
+      { type: "input_value", name: "VALORE", check: "Number" },
+      { type: "field_dropdown", name: "DATI", options: PIN_DIGITALI },
+      { type: "field_dropdown", name: "CLOCK", options: PIN_DIGITALI },
+      { type: "field_dropdown", name: "LATCH", options: PIN_DIGITALI },
+    ],
+    inputsInline: true,
+    previousStatement: null,
+    nextStatement: null,
+    colour: COLORE_DISPOSITIVI,
+    tooltip: "Manda un numero da 0 a 255 al registro a scorrimento: ogni bit accende o spegne una delle uscite Q0…Q7 (shiftOut e impulso sul latch).",
+  },
   { type: "ard_lcd_pulisci", message0: "cancella il display", previousStatement: null, nextStatement: null, colour: COLORE_DISPOSITIVI, tooltip: "lcd.clear()" },
   {
     type: "ard_attendi",
@@ -184,6 +217,14 @@ export const CASSETTA = {
         { kind: "block", type: "ard_seriale", inputs: { TESTO: { shadow: { type: "text", fields: { TEXT: "ciao" } } } } },
         { kind: "block", type: "ard_lcd", inputs: { TESTO: { shadow: { type: "text", fields: { TEXT: "Ciao!" } } } } },
         { kind: "block", type: "ard_lcd_pulisci" },
+        {
+          kind: "block",
+          type: "ard_neopixel_colore",
+          fields: { PIN: "6" },
+          inputs: { LED: { shadow: { type: "math_number", fields: { NUM: 1 } } }, R: { shadow: { type: "math_number", fields: { NUM: 255 } } }, G: { shadow: { type: "math_number", fields: { NUM: 0 } } }, B: { shadow: { type: "math_number", fields: { NUM: 0 } } } },
+        },
+        { kind: "block", type: "ard_neopixel_mostra", fields: { PIN: "6" } },
+        { kind: "block", type: "ard_registro", fields: { DATI: "11", CLOCK: "12", LATCH: "8" }, inputs: { VALORE: { shadow: { type: "math_number", fields: { NUM: 5 } } } } },
       ],
     },
     {
@@ -290,6 +331,8 @@ interface Necessita {
   servi: Set<string>;
   lcd: boolean;
   distanza: boolean;
+  /** Pin delle strisce NeoPixel usate. */
+  neopixel: Set<string>;
 }
 
 let caricato: Promise<Blockly> | null = null;
@@ -315,7 +358,7 @@ export function codiceDaBlocchi(Blockly: Blockly, ws: BlocklyTipo.Workspace): st
   gen.INDENT = "  ";
   const nomi = new Blockly.Names("setup,loop,int,long,float,bool,void,if,else,for,while,do,return,break,continue,switch,case,default,true,false,HIGH,LOW,INPUT,OUTPUT,lcd,distanzaCm,Serial,delay,millis");
   nomi.setVariableMap(ws.getVariableMap());
-  const necessita: Necessita = { modi: new Map(), seriale: false, servi: new Set(), lcd: false, distanza: false };
+  const necessita: Necessita = { modi: new Map(), seriale: false, servi: new Set(), lcd: false, distanza: false, neopixel: new Set() };
   const modo = (pin: string, m: "OUTPUT" | "INPUT" | "INPUT_PULLUP") => {
     if (!necessita.modi.has(pin) || m === "OUTPUT") necessita.modi.set(pin, m);
   };
@@ -355,6 +398,23 @@ export function codiceDaBlocchi(Blockly: Blockly, ws: BlocklyTipo.Workspace): st
     necessita.lcd = true;
     const colonna = Math.max(1, Math.min(16, Number(b.getFieldValue("COLONNA")) || 1)) - 1;
     return `lcd.setCursor(${colonna}, ${b.getFieldValue("RIGA")});\nlcd.print(${valore(b, "TESTO", ORDINE.NESSUNO, '""')});\n`;
+  };
+  f["ard_neopixel_colore"] = (b) => {
+    const pin = b.getFieldValue("PIN");
+    necessita.neopixel.add(pin);
+    const led = valore(b, "LED", ORDINE.ADDITIVO, "1");
+    const indice = /^\d+$/.test(led) ? String(Number(led) - 1) : `${led} - 1`;
+    return `striscia${pin}.setPixelColor(${indice}, ${valore(b, "R", ORDINE.NESSUNO)}, ${valore(b, "G", ORDINE.NESSUNO)}, ${valore(b, "B", ORDINE.NESSUNO)});\n`;
+  };
+  f["ard_neopixel_mostra"] = (b) => {
+    const pin = b.getFieldValue("PIN");
+    necessita.neopixel.add(pin);
+    return `striscia${pin}.show();\n`;
+  };
+  f["ard_registro"] = (b) => {
+    const [dati, clock, latch] = ["DATI", "CLOCK", "LATCH"].map((k) => b.getFieldValue(k) as string);
+    for (const p of [dati, clock, latch]) modo(p, "OUTPUT");
+    return `digitalWrite(${latch}, LOW);\nshiftOut(${dati}, ${clock}, MSBFIRST, ${valore(b, "VALORE", ORDINE.NESSUNO)});\ndigitalWrite(${latch}, HIGH);\n`;
   };
   f["ard_lcd_pulisci"] = () => {
     necessita.lcd = true;
@@ -447,8 +507,10 @@ export function codiceDaBlocchi(Blockly: Blockly, ws: BlocklyTipo.Workspace): st
   const righe: string[] = ["// Programma scritto con i blocchi di ElettroLab.", ""];
   if (necessita.servi.size) righe.push("#include <Servo.h>");
   if (necessita.lcd) righe.push("#include <LiquidCrystal.h>");
-  if (necessita.servi.size || necessita.lcd) righe.push("");
+  if (necessita.neopixel.size) righe.push("#include <Adafruit_NeoPixel.h>");
+  if (necessita.servi.size || necessita.lcd || necessita.neopixel.size) righe.push("");
   for (const p of necessita.servi) righe.push(`Servo servo${p};`);
+  for (const p of necessita.neopixel) righe.push(`Adafruit_NeoPixel striscia${p}(8, ${p}, NEO_GRB + NEO_KHZ800);`);
   if (necessita.lcd) righe.push("LiquidCrystal lcd(12, 11, 5, 4, 3, 2);");
   for (const v of ws.getVariableMap().getAllVariables()) righe.push(`int ${nomi.getName(v.getId(), Blockly.Names.NameType.VARIABLE)} = 0;`);
   if (righe[righe.length - 1] !== "") righe.push("");
@@ -471,6 +533,7 @@ export function codiceDaBlocchi(Blockly: Blockly, ws: BlocklyTipo.Workspace): st
   if (necessita.seriale) righe.push("  Serial.begin(9600);");
   for (const p of necessita.servi) righe.push(`  servo${p}.attach(${p});`);
   if (necessita.lcd) righe.push("  lcd.begin(16, 2);");
+  for (const p of necessita.neopixel) righe.push(`  striscia${p}.begin();`);
   righe.push(corpoAvvio.replace(/\n$/, ""), "}", "", "void loop() {", corpoRipeti.replace(/\n$/, ""), "}", "");
   return righe.filter((r, i, a) => !(r === "" && a[i - 1] === "")).join("\n").replace(/\{\n\n/g, "{\n");
 }

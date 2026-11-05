@@ -156,4 +156,45 @@ describe("editor a blocchi", () => {
     const codice = await genera({ blocks: { languageVersion: 0, blocks: [] } });
     expect(() => analizzaSketch(codice)).not.toThrow();
   });
+
+  it("striscia NeoPixel e registro 74HC595: dichiarazioni, begin e shiftOut scritti da soli", async () => {
+    const json = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          { type: "ard_avvio" },
+          {
+            type: "ard_ripeti",
+            y: 200,
+            inputs: {
+              CORPO: {
+                block: catena(
+                  { type: "ard_neopixel_colore", fields: { PIN: "6" }, inputs: { LED: num(2), R: num(0), G: num(255), B: num(0) } },
+                  { type: "ard_neopixel_mostra", fields: { PIN: "6" } },
+                  { type: "ard_registro", fields: { DATI: "11", CLOCK: "12", LATCH: "8" }, inputs: { VALORE: num(5) } },
+                  { type: "ard_attendi", inputs: { SECONDI: num(1) } },
+                ),
+              },
+            },
+          },
+        ],
+      },
+    };
+    const codice = await genera(json);
+    expect(codice).toContain("#include <Adafruit_NeoPixel.h>");
+    expect(codice).toContain("Adafruit_NeoPixel striscia6(8, 6, NEO_GRB + NEO_KHZ800);");
+    expect(codice).toContain("striscia6.begin();");
+    expect(codice).toContain("striscia6.setPixelColor(1, 0, 255, 0);");
+    expect(codice).toContain("shiftOut(11, 12, MSBFIRST, 5);");
+    expect(codice).toContain("pinMode(8, OUTPUT);");
+    // Il codice generato gira nell'interprete.
+    const s = scheda();
+    const inviati: number[][] = [];
+    s.hw.neopixel = (_pin, colori) => void inviati.push(colori);
+    const e = preparaSketch(codice, s.hw);
+    e.avanza(100);
+    expect(e.errore).toBeNull();
+    expect(inviati[0]).toEqual([0, 0x00ff00, 0, 0, 0, 0, 0, 0]);
+    expect(s.pin.D8).toBe(1);
+  });
 });
