@@ -282,6 +282,13 @@
       "prova": "Premi ▶ AVVIA: aria pulita, tutto spento. Clic a destra sul sensore per aggiungere gas: a 50 % («GAS 50 %») si accendono il LED rosso e il buzzer. Clic a sinistra per tornare all'aria pulita."
     },
     {
+      "file": "arduino-ponte-h.elab",
+      "modulo": "arduino",
+      "titolo": "Motore avanti e indietro con il ponte H L293D",
+      "descrizione": "Il ponte H L293D permette di invertire il verso di un motore in continua senza scambiare i fili: IN1 alto e IN2 basso fanno girare il motore in un verso, il contrario nell'altro, uguali lo fermano. Con analogWrite sull'abilitazione EN1,2 si regola la velocità. Il motore è alimentato dall'alimentatore PS1 (9 V) sul piedino VS, la logica dai 5 V dell'Arduino; i GND sono in comune. Le uscite del L293D perdono circa 2,5 V, come nell'integrato vero.",
+      "prova": "Premi ▶ AVVIA: il motore gira avanti veloce, poi piano, si ferma, gira indietro e si ferma di nuovo; il monitor seriale scrive cosa sta facendo. Sui piedini OUT1 e OUT2 del L293D un pallino rosso indica l'uscita alta e uno blu quella bassa. Guarda la corrente sul display verde di PS1."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

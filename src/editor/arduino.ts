@@ -212,6 +212,7 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.luminosita = a.luminosita ?? 0;
       arduino.bruciato = a.bruciato ?? false;
     }
+    if (c.tipo === "l293d") arduino.uscitePonte = (a.uscite ?? []).map((u) => u.stato);
     if (c.tipo === "modulo-rele") {
       arduino.eccitato = a.eccitato ?? false;
       arduino.alimentato = a.alimentato ?? false;

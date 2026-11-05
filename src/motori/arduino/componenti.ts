@@ -115,6 +115,30 @@ export function resistenzaFsr(forza: number): number {
   return FSR_LEGGERO * Math.pow(FSR_PIENO / FSR_LEGGERO, forza);
 }
 
+// --- Ponte H L293D ---
+
+/** Canali del L293D: ingresso, uscita e abilitazione di ciascuno. */
+export const CANALI_L293D = [
+  { ingresso: "IN1", uscita: "OUT1", abilita: "EN12" },
+  { ingresso: "IN2", uscita: "OUT2", abilita: "EN12" },
+  { ingresso: "IN3", uscita: "OUT3", abilita: "EN34" },
+  { ingresso: "IN4", uscita: "OUT4", abilita: "EN34" },
+] as const;
+/**
+ * Stato di un'uscita: verso VS (alto), verso GND (basso) o scollegata
+ * (aperto). Con il PWM su EN o su IN l'uscita è alta solo per una frazione
+ * del tempo (`duty`): si usa la tensione media, come per i LED.
+ */
+export interface UscitaPonte {
+  stato: "alto" | "basso" | "aperto";
+  duty: number;
+}
+const APERTA: UscitaPonte = { stato: "aperto", duty: 0 };
+/** Cadute di tensione degli stadi d'uscita (V) e loro resistenza (Ω), come nel componente vero. */
+const L293D_CADUTA_ALTO = 1.3;
+const L293D_CADUTA_BASSO = 1.2;
+const L293D_R_USCITA = 1;
+
 /** Modulo relè: resistenza della bobina (5 V, circa 70 mA) e soglie dell'ingresso IN con isteresi (V). */
 export const R_BOBINA_RELE = 70;
 export const RELE_SOGLIA_ECCITA = 3;
@@ -184,6 +208,8 @@ export function elementiCircuito(
   inCorrenteCostante: ReadonlySet<string> = new Set(),
   /** Moduli relè con la bobina eccitata. */
   releEccitati: ReadonlySet<string> = new Set(),
+  /** Ponti H: stato delle quattro uscite di ciascuno. */
+  statiPonti: ReadonlyMap<string, readonly UscitaPonte[]> = new Map(),
 ): Elemento[] {
   const el: Elemento[] = [];
   const R = (id: string, a: string, b: string, ohm: number) => el.push({ tipo: "resistenza", id, a, b, ohm });
@@ -221,6 +247,29 @@ export function elementiCircuito(
         const volt = c.tipo === "sensore-gas" ? 0.4 + 4.2 * livello : 4.5 * livello;
         R(`${c.id}:alim`, n("VCC"), n("GND"), c.tipo === "sensore-gas" ? 33 : 5000);
         el.push({ tipo: "generatore", id: `${c.id}:out`, nodo: n(c.tipo === "sensore-gas" ? "AO" : "SIG"), volt, ohm: 100 });
+        break;
+      }
+      case "l293d": {
+        // I quattro piedini GND sono uniti dentro (e fanno da dissipatore).
+        for (const g of ["GND2", "GND3", "GND4"]) R(`${c.id}:${g}`, n("GND1"), n(g), 1e-3);
+        // Logica (VSS, 5 V) e ingressi: carichi leggeri.
+        R(`${c.id}:vss`, n("VSS"), n("GND1"), 250);
+        for (const p of ["IN1", "IN2", "IN3", "IN4", "EN12", "EN34"]) R(`${c.id}:${p}`, n(p), n("GND1"), 100000);
+        // Uscite: verso VS o verso GND attraverso uno stadio con la sua caduta.
+        // Con il PWM (duty < 1) l'uscita media vale duty · (VS − caduta): si
+        // ottiene aumentando la caduta dello stadio alto della parte che manca
+        // (VS è quella del calcolo precedente, salvata nello stato).
+        const stati = statiPonti.get(c.id);
+        const vs = statiPonti.get(`${c.id}:VS`)?.[0]?.duty ?? 0;
+        CANALI_L293D.forEach((k, i) => {
+          const u = stati?.[i] ?? APERTA;
+          if (u.stato === "alto") {
+            const vf = L293D_CADUTA_ALTO + (1 - u.duty) * Math.max(0, vs - L293D_CADUTA_ALTO);
+            el.push({ tipo: "diodo", id: `${c.id}:${k.uscita}`, anodo: n("VS"), catodo: n(k.uscita), vf, ron: L293D_R_USCITA });
+          } else if (u.stato === "basso") {
+            el.push({ tipo: "diodo", id: `${c.id}:${k.uscita}`, anodo: n(k.uscita), catodo: n("GND1"), vf: L293D_CADUTA_BASSO, ron: L293D_R_USCITA });
+          }
+        });
         break;
       }
       case "modulo-rele": {
@@ -359,16 +408,20 @@ export function risolviBanco(
   interazioni: Interazioni,
   /** Relè eccitati al calcolo precedente: con l'isteresi delle soglie non "sfarfallano". */
   releIniziali: ReadonlySet<string> = new Set(),
-): { risultato: RisultatoCircuito; inCorrenteCostante: Set<string>; releEccitati: Set<string> } {
+): { risultato: RisultatoCircuito; inCorrenteCostante: Set<string>; releEccitati: Set<string>; statiPonti: Map<string, UscitaPonte[]> } {
   const alimentatori = componenti.filter((c) => c.tipo === "alimentatore");
   const rele = componenti.filter((c) => c.tipo === "modulo-rele");
+  const ponti = componenti.filter((c) => c.tipo === "l293d");
   const cc = new Set<string>();
   const eccitati = new Set([...releIniziali].filter((id) => rele.some((c) => c.id === id)));
-  const calcola = () => risolviCircuito(elementiCircuito(componenti, nodoDi, pin, interazioni, cc, eccitati));
+  // Per ogni ponte: le quattro uscite e, alla chiave "<id>:VS", la tensione VS
+  // del calcolo precedente (serve per il PWM).
+  const statiPonti = new Map<string, UscitaPonte[]>(ponti.flatMap((c) => [[c.id, [APERTA, APERTA, APERTA, APERTA]], [`${c.id}:VS`, [{ stato: "aperto", duty: 0 }]]]));
+  const calcola = () => risolviCircuito(elementiCircuito(componenti, nodoDi, pin, interazioni, cc, eccitati, statiPonti));
   let r = calcola();
   const volt = (id: string, a: string, b: string) => (r.tensioni[nodoDi(id, a)] ?? 0) - (r.tensioni[nodoDi(id, b)] ?? 0);
   // Pochi giri bastano: ogni giro cambia modo a qualche alimentatore o relè.
-  for (let giro = 0; giro < 2 * (alimentatori.length + rele.length) + 1; giro++) {
+  for (let giro = 0; giro < 2 * (alimentatori.length + rele.length + ponti.length) + 2; giro++) {
     let cambiato = false;
     for (const c of alimentatori) {
       const corrente = r.correnti[c.id] ?? 0;
@@ -392,10 +445,39 @@ export function risolviBanco(
         cambiato = true;
       }
     }
+    for (const c of ponti) {
+      // Uscite del ponte: con la logica alimentata e l'abilitazione alta
+      // seguono gli ingressi (alto → verso VS, basso → verso GND); altrimenti
+      // sono scollegate. Le tensioni si leggono rispetto al GND del componente.
+      const vss = volt(c.id, "VSS", "GND1");
+      const logica = vss > 4.5;
+      // Frazione di tempo "alta" di un ingresso: 1 o 0 per i livelli fissi, la
+      // tensione media rispetto a VSS per il PWM.
+      const frazione = (p: string) => {
+        const f = Math.min(1, Math.max(0, volt(c.id, p, "GND1") / Math.max(vss, 1e-9)));
+        return f >= 0.98 ? 1 : f <= 0.02 ? 0 : f;
+      };
+      const nuovi = CANALI_L293D.map((k): UscitaPonte => {
+        const abilita = frazione(k.abilita);
+        if (!logica || abilita === 0) return APERTA;
+        const ingresso = frazione(k.ingresso);
+        return ingresso === 0 ? { stato: "basso", duty: 1 } : { stato: "alto", duty: abilita * ingresso };
+      });
+      const vsOra = volt(c.id, "VS", "GND1");
+      const vsPrima = statiPonti.get(`${c.id}:VS`)![0].duty;
+      const prima = statiPonti.get(c.id)!;
+      const diversi = nuovi.some((u, i) => u.stato !== prima[i].stato || Math.abs(u.duty - prima[i].duty) > 1e-3);
+      const conPwm = nuovi.some((u) => u.stato === "alto" && u.duty < 1);
+      if (diversi || (conPwm && Math.abs(vsOra - vsPrima) > 1e-3)) {
+        statiPonti.set(c.id, nuovi);
+        statiPonti.set(`${c.id}:VS`, [{ stato: "aperto", duty: vsOra }]);
+        cambiato = true;
+      }
+    }
     if (!cambiato) break;
     r = calcola();
   }
-  return { risultato: r, inCorrenteCostante: cc, releEccitati: eccitati };
+  return { risultato: r, inCorrenteCostante: cc, releEccitati: eccitati, statiPonti };
 }
 
 /** Segmenti del display nell'ordine dei valori di `AspettoArduino.segmenti`. */
@@ -422,6 +504,8 @@ export interface AspettoArduino {
   misura?: number;
   /** Motore in continua: velocità −1…1 (il segno è il verso). */
   velocita?: number;
+  /** Ponte H: stato delle quattro uscite. */
+  uscite?: UscitaPonte[];
   /** Modulo relè: bobina eccitata (contatto COM-NO chiuso). */
   eccitato?: boolean;
   /** Transistor: stato (interdizione, attivo o saturo) e correnti di base e collettore (A). */
@@ -438,10 +522,15 @@ export function aspettoComponenti(
   r: RisultatoCircuito,
   inCorrenteCostante: ReadonlySet<string> = new Set(),
   releEccitati: ReadonlySet<string> = new Set(),
+  statiPonti: ReadonlyMap<string, readonly UscitaPonte[]> = new Map(),
 ): Record<string, AspettoArduino> {
   const v = (n: string) => r.tensioni[n] ?? 0;
   const aspetto: Record<string, AspettoArduino> = {};
   for (const c of componenti) {
+    if (c.tipo === "l293d") {
+      aspetto[c.id] = { uscite: [...(statiPonti.get(c.id) ?? [APERTA, APERTA, APERTA, APERTA])], alimentato: v(nodoDi(c.id, "VSS")) - v(nodoDi(c.id, "GND1")) > 4.5 };
+      continue;
+    }
     if (c.tipo === "modulo-rele") {
       aspetto[c.id] = { eccitato: releEccitati.has(c.id), alimentato: v(nodoDi(c.id, "VCC")) - v(nodoDi(c.id, "GND")) > 4 };
       continue;

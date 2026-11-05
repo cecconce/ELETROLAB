@@ -989,3 +989,78 @@ void loop() {
 `),
   );
 }
+
+// 21. Motore avanti e indietro con il ponte H L293D
+{
+  const b = costruttore();
+  alimenta(b);
+  b.filo("Am30", "Bm30"); // GND anche sulla linea blu in basso
+  // L293D a cavallo del solco: piedini 16…9 in e10…e17, piedini 1…8 in f10…f17.
+  const p = foro("e10");
+  b.posa("l293d", p.x, p.y);
+  b.filo("a10", "Ap10", "#d32f2f"); // VSS (16) = 5 V
+  b.filo("a13", "Am13"); // GND (13)
+  b.filo("j13", "Bm13"); // GND (4)
+  b.filo("U:D9", "j10", ARANCIONE); // EN1,2 (1): PWM per la velocità
+  b.filo("U:D8", "j11", GIALLO); // IN1 (2)
+  b.filo("U:D7", "j16", BLU); // IN2 (7)
+  // Motore fra OUT1 (3) e OUT2 (6); VS (8) dall'alimentatore a 9 V.
+  b.posa("motore-dc", 700, 440);
+  b.filo("i12", "motore-dc-1:+", "#d32f2f");
+  b.filo("i15", "motore-dc-1:-", "#212121");
+  b.posa("alimentatore", 1200, 180, { parametri: { tensione: 9, correnteMax: 1 } });
+  b.filo("alimentatore-1:+", "i17", "#d32f2f");
+  b.filo("alimentatore-1:-", "Bm24", "#212121");
+  scrivi(
+    "arduino-ponte-h.elab",
+    b.schema(`// Motore avanti e indietro con il ponte H L293D.
+// IN1 e IN2 decidono il verso: (HIGH, LOW) avanti, (LOW, HIGH) indietro,
+// uguali fermo. EN1,2 con analogWrite regola la velocità (0…255).
+// Il motore è alimentato da PS1 (9 V) sul piedino VS; la logica del L293D
+// prende i 5 V dell'Arduino (VSS). I GND sono tutti in comune.
+
+const int EN = 9;
+const int IN1 = 8;
+const int IN2 = 7;
+
+void motore(int velocita, int verso) {
+  if (verso > 0) {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+  } else if (verso < 0) {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+  } else {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+  }
+  analogWrite(EN, velocita);
+}
+
+void setup() {
+  pinMode(EN, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  Serial.println("Avanti veloce");
+  motore(255, 1);
+  delay(2000);
+  Serial.println("Avanti piano");
+  motore(120, 1);
+  delay(2000);
+  Serial.println("Fermo");
+  motore(0, 0);
+  delay(1000);
+  Serial.println("Indietro");
+  motore(255, -1);
+  delay(2000);
+  Serial.println("Fermo");
+  motore(0, 0);
+  delay(1000);
+}
+`),
+  );
+}

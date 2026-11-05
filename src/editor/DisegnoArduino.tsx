@@ -269,6 +269,25 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
+    case "l293d": {
+      // Pallino su ogni uscita: rosso = alta (verso VS), blu = bassa (verso GND).
+      if (!inSimulazione) return null;
+      const posizioni = [
+        { x: 40, y: 54 },
+        { x: 100, y: 54 },
+        { x: 100, y: 6 },
+        { x: 40, y: 6 },
+      ];
+      return (
+        <Group listening={false}>
+          {(a?.uscitePonte ?? []).map((stato, i) =>
+            stato === "aperto" ? null : (
+              <Circle key={i} x={posizioni[i].x} y={posizioni[i].y} radius={4} fill={stato === "alto" ? "#ff1744" : "#2979ff"} shadowColor={stato === "alto" ? "#ff1744" : "#2979ff"} shadowBlur={6} shadowOpacity={1} />
+            ),
+          )}
+        </Group>
+      );
+    }
     case "modulo-rele": {
       if (!inSimulazione) return null;
       // LED rosso di alimentazione, LED verde di stato e, nella morsettiera, il

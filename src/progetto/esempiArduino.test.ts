@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(20);
+    expect(arduino).toHaveLength(21);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -377,5 +377,29 @@ describe("esempi con i sensori nuovi", () => {
     aspetta(s, 400); // 50 %
     expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.5);
     expect(vistaDaSessioneArduino(s, schema, lib).componenti[buzzer].arduino!.suona).toBe(true);
+  });
+});
+
+describe("esempio del ponte H L293D", () => {
+  it("avanti veloce, avanti piano, fermo, indietro", () => {
+    const { schema, s } = apri("arduino-ponte-h.elab");
+    const motore = id(schema, "motore-dc");
+    const ponte = id(schema, "l293d");
+    const velocita = () => s.aspetto[motore]?.velocita ?? 0;
+    aspetta(s, 1000);
+    expect(s.errore).toBeNull();
+    const veloce = velocita();
+    expect(veloce).toBeGreaterThan(0.9);
+    expect(s.aspetto[ponte].uscite!.slice(0, 2).map((u) => u.stato)).toEqual(["alto", "basso"]);
+    expect(vistaDaSessioneArduino(s, schema, lib).componenti[ponte].arduino!.uscitePonte!.slice(0, 2)).toEqual(["alto", "basso"]);
+    aspetta(s, 2000); // avanti piano (PWM 120 su EN)
+    expect(velocita()).toBeGreaterThan(0.3);
+    expect(velocita()).toBeLessThan(veloce);
+    aspetta(s, 2000); // fermo
+    expect(velocita()).toBe(0);
+    aspetta(s, 1000); // indietro
+    expect(velocita()).toBeLessThan(-0.9);
+    expect(s.seriale).toContain("Indietro");
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });

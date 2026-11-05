@@ -3093,6 +3093,108 @@
       "icona": "ard-sensore-gas.svg"
     },
     {
+      "id": "l293d",
+      "nome": "Ponte H L293D",
+      "categoria": "uscite",
+      "sigla": "U",
+      "descrizione": "Integrato con quattro mezzi ponti per comandare i motori in continua nei due versi. Si infila a cavallo del solco della breadboard. VSS (16) = 5 V della logica, VS (8) = alimentazione dei motori (anche 9–12 V, da un alimentatore o dalle pile), GND (4, 5, 12, 13) in comune con l'Arduino. Motore fra OUT1 e OUT2: IN1 alto e IN2 basso = un verso, il contrario = l'altro verso, uguali = fermo. EN1,2 abilita le uscite 1 e 2: con analogWrite su EN si regola la velocità. Le uscite perdono circa 2,5 V in tutto, come nell'integrato vero.",
+      "paroleChiave": [
+        "l293d",
+        "ponte h",
+        "h-bridge",
+        "driver",
+        "motore",
+        "verso",
+        "avanti",
+        "indietro"
+      ],
+      "larghezza": 140,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "EN12",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "IN1",
+          "x": 20,
+          "y": 60
+        },
+        {
+          "id": "OUT1",
+          "x": 40,
+          "y": 60
+        },
+        {
+          "id": "GND1",
+          "x": 60,
+          "y": 60
+        },
+        {
+          "id": "GND2",
+          "x": 80,
+          "y": 60
+        },
+        {
+          "id": "OUT2",
+          "x": 100,
+          "y": 60
+        },
+        {
+          "id": "IN2",
+          "x": 120,
+          "y": 60
+        },
+        {
+          "id": "VS",
+          "x": 140,
+          "y": 60
+        },
+        {
+          "id": "VSS",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "IN4",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "OUT4",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "GND4",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "GND3",
+          "x": 80,
+          "y": 0
+        },
+        {
+          "id": "OUT3",
+          "x": 100,
+          "y": 0
+        },
+        {
+          "id": "IN3",
+          "x": 120,
+          "y": 0
+        },
+        {
+          "id": "EN34",
+          "x": 140,
+          "y": 0
+        }
+      ],
+      "icona": "ard-l293d.svg"
+    },
+    {
       "id": "modulo-rele",
       "nome": "Modulo relè 5 V",
       "categoria": "uscite",

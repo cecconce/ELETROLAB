@@ -741,6 +741,45 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------- Ponte H L293D
+{
+  // Piedini: in basso 1…8 da sinistra, in alto 16…9 da sinistra (come guardando
+  // l'integrato con la tacca a sinistra). Si infila a cavallo del solco: i
+  // piedini in basso cadono nella riga f, quelli in alto nella riga e.
+  const basso: [string, string][] = [["EN12", "EN1,2"], ["IN1", "IN1"], ["OUT1", "OUT1"], ["GND1", "GND"], ["GND2", "GND"], ["OUT2", "OUT2"], ["IN2", "IN2"], ["VS", "VS"]];
+  const alto: [string, string][] = [["VSS", "VSS"], ["IN4", "IN4"], ["OUT4", "OUT4"], ["GND4", "GND"], ["GND3", "GND"], ["OUT3", "OUT3"], ["IN3", "IN3"], ["EN34", "EN3,4"]];
+  voce(
+    {
+      id: "l293d",
+      nome: "Ponte H L293D",
+      categoria: "uscite",
+      sigla: "U",
+      descrizione:
+        "Integrato con quattro mezzi ponti per comandare i motori in continua nei due versi. Si infila a cavallo del solco della breadboard. VSS (16) = 5 V della logica, VS (8) = alimentazione dei motori (anche 9–12 V, da un alimentatore o dalle pile), GND (4, 5, 12, 13) in comune con l'Arduino. Motore fra OUT1 e OUT2: IN1 alto e IN2 basso = un verso, il contrario = l'altro verso, uguali = fermo. EN1,2 abilita le uscite 1 e 2: con analogWrite su EN si regola la velocità. Le uscite perdono circa 2,5 V in tutto, come nell'integrato vero.",
+      paroleChiave: ["l293d", "ponte h", "h-bridge", "driver", "motore", "verso", "avanti", "indietro"],
+      larghezza: 140,
+      altezza: 60,
+      morsetti: [...basso.map(([id], i) => ({ id, x: i * 20, y: 60 })), ...alto.map(([id], i) => ({ id, x: i * 20, y: 0 }))],
+    },
+    svg(
+      140,
+      60,
+      [
+        ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => [
+          `<rect x="${i * 20 - 3}" y="0" width="6" height="12" fill="#bdbdbd"/>`,
+          `<rect x="${i * 20 - 3}" y="48" width="6" height="12" fill="#bdbdbd"/>`,
+        ]),
+        `<rect x="1" y="10" width="138" height="40" rx="3" fill="#262626" stroke="#000"/>`,
+        `<path d="M1 24 A6 6 0 0 1 1 36" fill="#111"/>`,
+        `<circle cx="9" cy="42" r="2.5" fill="#3a3a3a"/>`,
+        testo(70, 33, "L293D", 10, "#e0e0e0", 'font-weight="bold"'),
+        ...basso.map(([, t], i) => testo(Math.min(134, Math.max(6, i * 20)), 47, t, 4.6, "#bdbdbd")),
+        ...alto.map(([, t], i) => testo(Math.min(134, Math.max(6, i * 20)), 18, t, 4.6, "#bdbdbd")),
+      ].join("\n"),
+    ),
+  );
+}
+
 // ---------------------------------------------------------- Relè e lampadina
 voce(
   {

@@ -70,10 +70,10 @@ export interface SessioneArduino {
 
 function ricalcola(s: SessioneArduino) {
   const interazioni: Interazioni = s.interazioni;
-  const { risultato, inCorrenteCostante, releEccitati } = risolviBanco(s.componenti, s.nodoDi, s.pin, interazioni, s.releEccitati);
+  const { risultato, inCorrenteCostante, releEccitati, statiPonti } = risolviBanco(s.componenti, s.nodoDi, s.pin, interazioni, s.releEccitati);
   s.risultato = risultato;
   s.releEccitati = releEccitati;
-  s.aspetto = { ...aspettoComponenti(s.componenti, s.nodoDi, s.risultato, inCorrenteCostante, releEccitati), ...misureMultimetri(s.componenti, s.nodoDi, interazioni, s.risultato) };
+  s.aspetto = { ...aspettoComponenti(s.componenti, s.nodoDi, s.risultato, inCorrenteCostante, releEccitati, statiPonti), ...misureMultimetri(s.componenti, s.nodoDi, interazioni, s.risultato) };
   s.sporco = false;
   s.versione++;
 }

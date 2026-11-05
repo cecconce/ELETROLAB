@@ -1,0 +1,219 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:10:39.627Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "l293d-1",
+        "tipo": "l293d",
+        "etichetta": "U2",
+        "x": 700,
+        "y": 160,
+        "larghezza": 140,
+        "altezza": 60
+      },
+      {
+        "id": "motore-dc-1",
+        "tipo": "motore-dc",
+        "etichetta": "M1",
+        "x": 700,
+        "y": 440,
+        "larghezza": 80,
+        "altezza": 80
+      },
+      {
+        "id": "alimentatore-1",
+        "tipo": "alimentatore",
+        "etichetta": "PS1",
+        "x": 1200,
+        "y": 180,
+        "larghezza": 160,
+        "altezza": 120,
+        "parametri": {
+          "tensione": 9,
+          "correnteMax": 1
+        }
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "Am30"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bm30"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a10"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap10"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a13"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am13"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j13"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bm13"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D9"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "j10"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D8"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "j11"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D7"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "j16"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "i12"
+        },
+        "a": {
+          "componente": "motore-dc-1",
+          "morsetto": "+"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "i15"
+        },
+        "a": {
+          "componente": "motore-dc-1",
+          "morsetto": "-"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-12",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "i17"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-13",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "-"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bm24"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Motore avanti e indietro con il ponte H L293D.\n// IN1 e IN2 decidono il verso: (HIGH, LOW) avanti, (LOW, HIGH) indietro,\n// uguali fermo. EN1,2 con analogWrite regola la velocità (0…255).\n// Il motore è alimentato da PS1 (9 V) sul piedino VS; la logica del L293D\n// prende i 5 V dell'Arduino (VSS). I GND sono tutti in comune.\n\nconst int EN = 9;\nconst int IN1 = 8;\nconst int IN2 = 7;\n\nvoid motore(int velocita, int verso) {\n  if (verso > 0) {\n    digitalWrite(IN1, HIGH);\n    digitalWrite(IN2, LOW);\n  } else if (verso < 0) {\n    digitalWrite(IN1, LOW);\n    digitalWrite(IN2, HIGH);\n  } else {\n    digitalWrite(IN1, LOW);\n    digitalWrite(IN2, LOW);\n  }\n  analogWrite(EN, velocita);\n}\n\nvoid setup() {\n  pinMode(EN, OUTPUT);\n  pinMode(IN1, OUTPUT);\n  pinMode(IN2, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  Serial.println(\"Avanti veloce\");\n  motore(255, 1);\n  delay(2000);\n  Serial.println(\"Avanti piano\");\n  motore(120, 1);\n  delay(2000);\n  Serial.println(\"Fermo\");\n  motore(0, 0);\n  delay(1000);\n  Serial.println(\"Indietro\");\n  motore(255, -1);\n  delay(2000);\n  Serial.println(\"Fermo\");\n  motore(0, 0);\n  delay(1000);\n}\n"
+  }
+}
