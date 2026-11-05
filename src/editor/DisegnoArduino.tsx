@@ -240,6 +240,43 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
+    case "modulo-rele": {
+      if (!inSimulazione) return null;
+      // LED rosso di alimentazione, LED verde di stato e, nella morsettiera, il
+      // contatto chiuso: COM-NO con la bobina eccitata, COM-NC a riposo.
+      const yContatto = a?.eccitato ? 20 : 60;
+      return (
+        <Group listening={false}>
+          {a?.alimentato && <Circle x={26} y={70} radius={3} fill="#ff5252" shadowColor="#ff1744" shadowBlur={8} shadowOpacity={1} />}
+          {a?.eccitato && <Circle x={38} y={70} radius={3} fill="#69f0ae" shadowColor="#00e676" shadowBlur={8} shadowOpacity={1} />}
+          <Line points={[124, 40, 128, 40, 128, yContatto, 124, yContatto]} stroke="#ffca28" strokeWidth={3} lineCap="round" lineJoin="round" />
+          {a?.eccitato && (
+            <>
+              <Rect x={44} y={-18} width={54} height={16} cornerRadius={4} fill="#2e7d32" />
+              <Text x={44} y={-15} width={54} align="center" text={t("arduino.rele.eccitato")} fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+            </>
+          )}
+        </Group>
+      );
+    }
+    case "lampadina": {
+      if (a?.bruciato) {
+        return (
+          <Group listening={false}>
+            <Circle x={30} y={24} radius={20} fill="#424242" opacity={0.6} />
+            <Text x={-10} y={-14} width={80} align="center" text={t("arduino.lampadina.bruciata")} fontSize={10} fontStyle="bold" fill="#d32f2f" fontFamily={FONT} />
+          </Group>
+        );
+      }
+      const l = a?.luminosita ?? 0;
+      if (l <= 0) return null;
+      return (
+        <Group listening={false}>
+          <Circle x={30} y={24} radius={18 + 14 * l} fill="#ffd54f" opacity={0.2 + 0.35 * l} shadowColor="#ffb300" shadowBlur={30 * l} shadowOpacity={1} />
+          <Circle x={30} y={24} radius={14} fill="#fff8e1" opacity={0.3 + 0.6 * l} />
+        </Group>
+      );
+    }
     case "transistor-npn":
       return a?.bruciato ? (
         <Group listening={false}>

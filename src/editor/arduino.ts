@@ -11,6 +11,7 @@ import {
   ALIMENTATORE_TENSIONE,
   ALIMENTATORE_TENSIONE_MAX,
   DISTANZA_PREDEFINITA,
+  R_LAMPADINA,
   TEMPERATURA_PREDEFINITA,
   testoMultimetro,
   gruppoForo,
@@ -201,6 +202,14 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.lettura = testoMultimetro(a.funzione, a.misura ?? 0);
     }
     if (c.tipo === "transistor-npn") arduino.bruciato = a.bruciato ?? false;
+    if (c.tipo === "lampadina") {
+      arduino.luminosita = a.luminosita ?? 0;
+      arduino.bruciato = a.bruciato ?? false;
+    }
+    if (c.tipo === "modulo-rele") {
+      arduino.eccitato = a.eccitato ?? false;
+      arduino.alimentato = a.alimentato ?? false;
+    }
     if (c.tipo === "alimentatore" || c.tipo === "batteria-9v" || c.tipo === "portapile-4aa") {
       arduino.alimentatore = { volt: a.tensione ?? 0, ampere: a.corrente ?? 0, cc: a.correnteCostante ?? false };
     }
@@ -290,7 +299,15 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
         morsetti: [],
       });
     }
-    if (a?.bruciato && c.tipo === "transistor-npn") {
+    if (a?.bruciato && c.tipo === "lampadina") {
+      problemi.push({
+        chiave: `bruciato-${c.id}`,
+        gravita: "errore",
+        testo: t("arduino.problema.lampadinaBruciata", { sigla: c.etichetta, volt: ((a.corrente ?? 0) * R_LAMPADINA).toFixed(1).replace(".", ",") }),
+        componenti: [c.id],
+        morsetti: [],
+      });
+    } else if (a?.bruciato && c.tipo === "transistor-npn") {
       problemi.push({
         chiave: `bruciato-${c.id}`,
         gravita: "errore",

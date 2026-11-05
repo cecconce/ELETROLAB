@@ -57,6 +57,8 @@ export interface SessioneArduino {
   distanze: Record<string, number>;
   interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number>; temperature: Record<string, number> };
   risultato: RisultatoCircuito;
+  /** Moduli relè con la bobina eccitata (si ricordano fra un calcolo e l'altro: isteresi). */
+  releEccitati: Set<string>;
   aspetto: Record<string, AspettoArduino>;
   sporco: boolean;
   /** Numero di modifiche visibili: l'interfaccia ridisegna quando cambia. */
@@ -65,9 +67,10 @@ export interface SessioneArduino {
 
 function ricalcola(s: SessioneArduino) {
   const interazioni: Interazioni = s.interazioni;
-  const { risultato, inCorrenteCostante } = risolviBanco(s.componenti, s.nodoDi, s.pin, interazioni);
+  const { risultato, inCorrenteCostante, releEccitati } = risolviBanco(s.componenti, s.nodoDi, s.pin, interazioni, s.releEccitati);
   s.risultato = risultato;
-  s.aspetto = { ...aspettoComponenti(s.componenti, s.nodoDi, s.risultato, inCorrenteCostante), ...misureMultimetri(s.componenti, s.nodoDi, interazioni, s.risultato) };
+  s.releEccitati = releEccitati;
+  s.aspetto = { ...aspettoComponenti(s.componenti, s.nodoDi, s.risultato, inCorrenteCostante, releEccitati), ...misureMultimetri(s.componenti, s.nodoDi, interazioni, s.risultato) };
   s.sporco = false;
   s.versione++;
 }
@@ -93,6 +96,7 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     ingressoSeriale: [],
     interazioni: { premuti: new Set(), posizioni: {}, luce: {}, temperature: {} },
     risultato: risolviCircuito([]),
+    releEccitati: new Set(),
     aspetto: {},
     sporco: true,
     versione: 0,

@@ -2958,6 +2958,87 @@
       "icona": "ard-display-sette-segmenti.svg"
     },
     {
+      "id": "modulo-rele",
+      "nome": "Modulo relè 5 V",
+      "categoria": "uscite",
+      "sigla": "K",
+      "descrizione": "Scheda con un relè e il suo circuito di comando già montato (transistor e diodo). A sinistra: VCC (5 V), GND e IN (dal pin dell'Arduino). A destra il contatto, isolato dalla scheda: COM è il comune, NO è chiuso col relè eccitato (normalmente aperto), NC è chiuso a riposo (normalmente chiuso). Con il pin a HIGH il relè scatta e il LED verde si accende: così l'Arduino accende una lampada o un motore alimentati a parte, anche a tensione più alta.",
+      "paroleChiave": [
+        "relè",
+        "rele",
+        "relay",
+        "modulo",
+        "contatto",
+        "NO",
+        "NC",
+        "COM"
+      ],
+      "larghezza": 140,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "VCC",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "GND",
+          "x": 0,
+          "y": 40
+        },
+        {
+          "id": "IN",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "NO",
+          "x": 140,
+          "y": 20
+        },
+        {
+          "id": "COM",
+          "x": 140,
+          "y": 40
+        },
+        {
+          "id": "NC",
+          "x": 140,
+          "y": 60
+        }
+      ],
+      "icona": "ard-modulo-rele.svg"
+    },
+    {
+      "id": "lampadina",
+      "nome": "Lampadina 12 V",
+      "categoria": "uscite",
+      "sigla": "H",
+      "descrizione": "Lampadina a filamento da 12 V – 1,2 W (circa 100 mA). Si accende tanto più quanto più tensione riceve; oltre il doppio della potenza si brucia. Consuma troppo per un pin dell'Arduino: si alimenta a parte (alimentatore, pile) e si comanda con un relè o un transistor.",
+      "paroleChiave": [
+        "lampadina",
+        "lampada",
+        "luce",
+        "bulb",
+        "12 V"
+      ],
+      "larghezza": 60,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "1",
+          "x": 20,
+          "y": 80
+        },
+        {
+          "id": "2",
+          "x": 40,
+          "y": 80
+        }
+      ],
+      "icona": "ard-lampadina.svg"
+    },
+    {
       "id": "transistor-npn",
       "nome": "Transistor NPN",
       "categoria": "passivi",

@@ -691,3 +691,57 @@ void loop() {
 `),
   );
 }
+
+// 15. Lampadina da 12 V comandata dal modulo relè, con un pulsante che la accende e la spegne
+{
+  const b = costruttore();
+  alimenta(b); // 5V sulla linea +, GND sulla linea − in alto
+  // Pulsante a cavallo del solco (colonne 10 e 12): un lato al pin 2, l'altro a GND.
+  b.pulsante("e10");
+  b.filo("a10", "U:D2", ARANCIONE);
+  b.filo("a12", "Am12");
+  // Modulo relè sopra la breadboard: VCC e GND dalle linee, IN dal pin 7.
+  b.posa("modulo-rele", 560, -160);
+  b.filo("modulo-rele-1:VCC", "Ap22", "#d32f2f");
+  b.filo("modulo-rele-1:GND", "Am23", "#212121");
+  b.filo("modulo-rele-1:IN", "U:D7", GIALLO);
+  // Circuito della lampadina, separato dalla scheda: alimentatore 12 V → COM, NO → lampadina → −.
+  b.posa("alimentatore", 780, -320, { parametri: { tensione: 12, correnteMax: 1 } });
+  b.posa("lampadina", 860, -140);
+  b.filo("alimentatore-1:+", "modulo-rele-1:COM", "#d32f2f");
+  b.filo("modulo-rele-1:NO", "lampadina-1:1", "#f9a825");
+  b.filo("lampadina-1:2", "alimentatore-1:-", "#212121");
+  scrivi(
+    "arduino-rele-lampadina.elab",
+    b.schema(`// Lampadina da 12 V comandata da un relè.
+// Il pin 7 comanda il modulo relè K1: con HIGH il relè scatta e chiude il
+// contatto COM-NO, che accende la lampadina H1 alimentata da PS1 (12 V).
+// Il circuito della lampadina è separato da quello dell'Arduino: il relè
+// isola le due parti, come negli impianti veri.
+// Ogni pressione del pulsante sul pin 2 accende o spegne la lampadina.
+
+const int PULSANTE = 2;
+const int RELE = 7;
+bool accesa = false;
+int prima = HIGH;   // con INPUT_PULLUP il pulsante a riposo legge HIGH
+
+void setup() {
+  pinMode(PULSANTE, INPUT_PULLUP);
+  pinMode(RELE, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Premi il pulsante");
+}
+
+void loop() {
+  int ora = digitalRead(PULSANTE);
+  if (ora == LOW && prima == HIGH) {   // fronte: il pulsante è appena stato premuto
+    accesa = !accesa;
+    digitalWrite(RELE, accesa ? HIGH : LOW);
+    Serial.println(accesa ? "Lampadina accesa" : "Lampadina spenta");
+  }
+  prima = ora;
+  delay(20);
+}
+`),
+  );
+}

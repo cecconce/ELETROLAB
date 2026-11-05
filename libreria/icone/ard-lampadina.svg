@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="80" viewBox="0 0 60 80">
+<defs><radialGradient id="vetro" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="1" stop-color="#cfd8dc" stop-opacity="0.6"/></radialGradient></defs>
+<line x1="20" y1="62" x2="20" y2="80" stroke="#9e9e9e" stroke-width="2.5"/><line x1="40" y1="62" x2="40" y2="80" stroke="#9e9e9e" stroke-width="2.5"/>
+<rect x="19" y="44" width="22" height="18" rx="2" fill="#b0bec5" stroke="#78909c"/>
+<line x1="19" y1="48" x2="41" y2="46" stroke="#78909c" stroke-width="1.2"/>
+<line x1="19" y1="53" x2="41" y2="51" stroke="#78909c" stroke-width="1.2"/>
+<line x1="19" y1="58" x2="41" y2="56" stroke="#78909c" stroke-width="1.2"/>
+<path d="M21 46 C10 38 6 30 6 24 A24 24 0 0 1 54 24 C54 30 50 38 39 46 Z" fill="url(#vetro)" stroke="#90a4ae"/>
+<path d="M25 44 L25 28 M35 44 L35 28" stroke="#616161" stroke-width="1"/>
+<path d="M25 28 l2.5 -4 l2.5 4 l2.5 -4 l2.5 4" fill="none" stroke="#5d4037" stroke-width="1.3"/>
+</svg>

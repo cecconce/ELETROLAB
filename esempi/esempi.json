@@ -240,6 +240,13 @@
       "prova": "Premi ▶ AVVIA: il motore gira a metà velocità e il display verde di PS1 indica la corrente assorbita. Clic a destra del potenziometro per accelerare, a sinistra per rallentare: guarda il monitor seriale e la corrente su PS1. Prova a togliere il cavetto fra il − di PS1 e il GND: il motore si ferma, perché la base non ha più un riferimento comune."
     },
     {
+      "file": "arduino-rele-lampadina.elab",
+      "modulo": "arduino",
+      "titolo": "Lampadina da 12 V comandata dal relè",
+      "descrizione": "Il pin 7 comanda il modulo relè K1: con HIGH il relè scatta (LED verde acceso) e il contatto COM-NO chiude il circuito della lampadina H1, alimentata a parte dall'alimentatore PS1 a 12 V. Il relè isola il circuito della lampadina da quello dell'Arduino. Il programma riconosce il fronte del pulsante sul pin 2 (INPUT_PULLUP): ogni pressione accende o spegne la lampadina.",
+      "prova": "Premi ▶ AVVIA. Premi e rilascia il pulsante S1: il relè scatta («ECCITATO»), il contatto passa da NC a NO, la lampadina si accende e PS1 indica circa 0,1 A. Premi di nuovo per spegnere. Prova a collegare la lampadina a NC invece che a NO: funziona al contrario."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

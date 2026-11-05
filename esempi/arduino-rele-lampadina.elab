@@ -1,0 +1,192 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T18:50:44.243Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "pulsante-1",
+        "tipo": "pulsante",
+        "etichetta": "S1",
+        "x": 700,
+        "y": 160,
+        "larghezza": 40,
+        "altezza": 60
+      },
+      {
+        "id": "modulo-rele-1",
+        "tipo": "modulo-rele",
+        "etichetta": "K1",
+        "x": 560,
+        "y": -160,
+        "larghezza": 140,
+        "altezza": 80
+      },
+      {
+        "id": "alimentatore-1",
+        "tipo": "alimentatore",
+        "etichetta": "PS1",
+        "x": 780,
+        "y": -320,
+        "larghezza": 160,
+        "altezza": 120,
+        "parametri": {
+          "tensione": 12,
+          "correnteMax": 1
+        }
+      },
+      {
+        "id": "lampadina-1",
+        "tipo": "lampadina",
+        "etichetta": "H1",
+        "x": 860,
+        "y": -140,
+        "larghezza": 60,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a10"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D2"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a12"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am12"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "modulo-rele-1",
+          "morsetto": "VCC"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap22"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "modulo-rele-1",
+          "morsetto": "GND"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am23"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "modulo-rele-1",
+          "morsetto": "IN"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D7"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "alimentatore-1",
+          "morsetto": "+"
+        },
+        "a": {
+          "componente": "modulo-rele-1",
+          "morsetto": "COM"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "modulo-rele-1",
+          "morsetto": "NO"
+        },
+        "a": {
+          "componente": "lampadina-1",
+          "morsetto": "1"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "lampadina-1",
+          "morsetto": "2"
+        },
+        "a": {
+          "componente": "alimentatore-1",
+          "morsetto": "-"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Lampadina da 12 V comandata da un relè.\n// Il pin 7 comanda il modulo relè K1: con HIGH il relè scatta e chiude il\n// contatto COM-NO, che accende la lampadina H1 alimentata da PS1 (12 V).\n// Il circuito della lampadina è separato da quello dell'Arduino: il relè\n// isola le due parti, come negli impianti veri.\n// Ogni pressione del pulsante sul pin 2 accende o spegne la lampadina.\n\nconst int PULSANTE = 2;\nconst int RELE = 7;\nbool accesa = false;\nint prima = HIGH;   // con INPUT_PULLUP il pulsante a riposo legge HIGH\n\nvoid setup() {\n  pinMode(PULSANTE, INPUT_PULLUP);\n  pinMode(RELE, OUTPUT);\n  Serial.begin(9600);\n  Serial.println(\"Premi il pulsante\");\n}\n\nvoid loop() {\n  int ora = digitalRead(PULSANTE);\n  if (ora == LOW && prima == HIGH) {   // fronte: il pulsante è appena stato premuto\n    accesa = !accesa;\n    digitalWrite(RELE, accesa ? HIGH : LOW);\n    Serial.println(accesa ? \"Lampadina accesa\" : \"Lampadina spenta\");\n  }\n  prima = ora;\n  delay(20);\n}\n"
+  }
+}

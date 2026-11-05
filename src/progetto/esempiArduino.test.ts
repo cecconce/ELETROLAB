@@ -31,7 +31,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(14);
+    expect(arduino).toHaveLength(15);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -253,6 +253,37 @@ describe("esempio del motorino con il transistor", () => {
     aspetta(s, 700);
     expect(velocita()).toBe(0);
     expect(s.aspetto[q].statoTransistor).toBe("interdizione");
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio della lampadina comandata dal relè", () => {
+  it("ogni pressione del pulsante fa scattare il relè e accende o spegne la lampadina", () => {
+    const { schema, s } = apri("arduino-rele-lampadina.elab");
+    aspetta(s, 300);
+    expect(s.errore).toBeNull();
+    const k = id(schema, "modulo-rele");
+    const h = id(schema, "lampadina");
+    const ps = id(schema, "alimentatore");
+    const s1 = id(schema, "pulsante");
+    const premiERilascia = () => {
+      clicGiuArduino(s, s1);
+      aspetta(s, 200);
+      clicSuArduino(s, s1);
+      aspetta(s, 200);
+    };
+    expect(s.aspetto[k].eccitato).toBe(false);
+    expect(s.aspetto[h].luminosita).toBe(0);
+    premiERilascia();
+    expect(s.aspetto[k].eccitato).toBe(true);
+    expect(s.aspetto[h].luminosita).toBeCloseTo(1, 1);
+    expect(s.aspetto[ps].corrente).toBeCloseTo(0.1, 2);
+    expect(s.seriale).toContain("Lampadina accesa");
+    expect(vistaDaSessioneArduino(s, schema, lib).componenti[k].arduino!.eccitato).toBe(true);
+    premiERilascia();
+    expect(s.aspetto[k].eccitato).toBe(false);
+    expect(s.aspetto[h].luminosita).toBe(0);
+    expect(s.seriale.trim().split("\n").pop()).toContain("Lampadina spenta");
     expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });

@@ -624,6 +624,83 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------- Relè e lampadina
+voce(
+  {
+    id: "modulo-rele",
+    nome: "Modulo relè 5 V",
+    categoria: "uscite",
+    sigla: "K",
+    descrizione:
+      "Scheda con un relè e il suo circuito di comando già montato (transistor e diodo). A sinistra: VCC (5 V), GND e IN (dal pin dell'Arduino). A destra il contatto, isolato dalla scheda: COM è il comune, NO è chiuso col relè eccitato (normalmente aperto), NC è chiuso a riposo (normalmente chiuso). Con il pin a HIGH il relè scatta e il LED verde si accende: così l'Arduino accende una lampada o un motore alimentati a parte, anche a tensione più alta.",
+    paroleChiave: ["relè", "rele", "relay", "modulo", "contatto", "NO", "NC", "COM"],
+    larghezza: 140,
+    altezza: 80,
+    morsetti: [
+      { id: "VCC", x: 0, y: 20 },
+      { id: "GND", x: 0, y: 40 },
+      { id: "IN", x: 0, y: 60 },
+      { id: "NO", x: 140, y: 20 },
+      { id: "COM", x: 140, y: 40 },
+      { id: "NC", x: 140, y: 60 },
+    ],
+  },
+  svg(
+    140,
+    80,
+    [
+      `<defs><linearGradient id="releCubo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#42a5f5"/><stop offset="1" stop-color="#1565c0"/></linearGradient></defs>`,
+      // basetta e piedini a sinistra
+      `<rect x="8" y="2" width="124" height="76" rx="5" fill="#1b5e20" stroke="#0d3311" stroke-width="1.5"/>`,
+      ...[20, 40, 60].map((y) => `<line x1="0" y1="${y}" x2="14" y2="${y}" stroke="${PIEDINO}" stroke-width="2.5"/><rect x="10" y="${y - 4}" width="8" height="8" fill="#212121"/>`),
+      ...[["VCC", 20], ["GND", 40], ["IN", 60]].map(([t, y]) => testo(30, Number(y) + 3, String(t), 7, "#e8f5e9", 'font-weight="bold"')),
+      // relè (cubo azzurro) con le scritte
+      `<rect x="44" y="10" width="54" height="50" rx="3" fill="url(#releCubo)" stroke="#0d47a1"/>`,
+      testo(71, 30, "RELÈ", 9, "#e3f2fd", 'font-weight="bold"'),
+      testo(71, 42, "5V DC", 7, "#bbdefb"),
+      testo(71, 52, "10A 250V", 6, "#bbdefb"),
+      // LED di alimentazione (rosso, sempre acceso se alimentato) e di stato (verde), spenti a riposo
+      `<circle cx="26" cy="70" r="3" fill="#5d2b2b"/><circle cx="38" cy="70" r="3" fill="#2b4d2b"/>`,
+      // morsettiera a vite a destra (verde)
+      `<rect x="104" y="8" width="28" height="64" rx="2" fill="#2e7d32" stroke="#1b5e20"/>`,
+      ...[20, 40, 60].map((y) => `<circle cx="118" cy="${y}" r="6" fill="#cfd8dc" stroke="#78909c"/><line x1="114" y1="${y - 4}" x2="122" y2="${y + 4}" stroke="#607d8b" stroke-width="1.5"/><line x1="132" y1="${y}" x2="140" y2="${y}" stroke="${PIEDINO}" stroke-width="2.5"/>`),
+      ...[["NO", 20], ["COM", 40], ["NC", 60]].map(([t, y]) => `<text x="102" y="${Number(y) + 3}" font-size="6" text-anchor="end" fill="#e8f5e9" ${FONT}>${t}</text>`),
+    ].join("\n"),
+  ),
+);
+
+voce(
+  {
+    id: "lampadina",
+    nome: "Lampadina 12 V",
+    categoria: "uscite",
+    sigla: "H",
+    descrizione: "Lampadina a filamento da 12 V – 1,2 W (circa 100 mA). Si accende tanto più quanto più tensione riceve; oltre il doppio della potenza si brucia. Consuma troppo per un pin dell'Arduino: si alimenta a parte (alimentatore, pile) e si comanda con un relè o un transistor.",
+    paroleChiave: ["lampadina", "lampada", "luce", "bulb", "12 V"],
+    larghezza: 60,
+    altezza: 80,
+    morsetti: [
+      { id: "1", x: 20, y: 80 },
+      { id: "2", x: 40, y: 80 },
+    ],
+  },
+  svg(
+    60,
+    80,
+    [
+      `<defs><radialGradient id="vetro" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/><stop offset="1" stop-color="#cfd8dc" stop-opacity="0.6"/></radialGradient></defs>`,
+      `<line x1="20" y1="62" x2="20" y2="80" stroke="${PIEDINO}" stroke-width="2.5"/><line x1="40" y1="62" x2="40" y2="80" stroke="${PIEDINO}" stroke-width="2.5"/>`,
+      // attacco a vite
+      `<rect x="19" y="44" width="22" height="18" rx="2" fill="#b0bec5" stroke="#78909c"/>`,
+      ...[48, 53, 58].map((y) => `<line x1="19" y1="${y}" x2="41" y2="${y - 2}" stroke="#78909c" stroke-width="1.2"/>`),
+      // bulbo di vetro con il filamento
+      `<path d="M21 46 C10 38 6 30 6 24 A24 24 0 0 1 54 24 C54 30 50 38 39 46 Z" fill="url(#vetro)" stroke="#90a4ae"/>`,
+      `<path d="M25 44 L25 28 M35 44 L35 28" stroke="#616161" stroke-width="1"/>`,
+      `<path d="M25 28 l2.5 -4 l2.5 4 l2.5 -4 l2.5 4" fill="none" stroke="#5d4037" stroke-width="1.3"/>`,
+    ].join("\n"),
+  ),
+);
+
 // ---------------------------------------------------------- Semiconduttori
 voce(
   {

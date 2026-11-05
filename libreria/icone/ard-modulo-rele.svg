@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="80" viewBox="0 0 140 80">
+<defs><linearGradient id="releCubo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#42a5f5"/><stop offset="1" stop-color="#1565c0"/></linearGradient></defs>
+<rect x="8" y="2" width="124" height="76" rx="5" fill="#1b5e20" stroke="#0d3311" stroke-width="1.5"/>
+<line x1="0" y1="20" x2="14" y2="20" stroke="#9e9e9e" stroke-width="2.5"/><rect x="10" y="16" width="8" height="8" fill="#212121"/>
+<line x1="0" y1="40" x2="14" y2="40" stroke="#9e9e9e" stroke-width="2.5"/><rect x="10" y="36" width="8" height="8" fill="#212121"/>
+<line x1="0" y1="60" x2="14" y2="60" stroke="#9e9e9e" stroke-width="2.5"/><rect x="10" y="56" width="8" height="8" fill="#212121"/>
+<text x="30" y="23" font-size="7" text-anchor="middle" fill="#e8f5e9" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">VCC</text>
+<text x="30" y="43" font-size="7" text-anchor="middle" fill="#e8f5e9" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">GND</text>
+<text x="30" y="63" font-size="7" text-anchor="middle" fill="#e8f5e9" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">IN</text>
+<rect x="44" y="10" width="54" height="50" rx="3" fill="url(#releCubo)" stroke="#0d47a1"/>
+<text x="71" y="30" font-size="9" text-anchor="middle" fill="#e3f2fd" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">RELÈ</text>
+<text x="71" y="42" font-size="7" text-anchor="middle" fill="#bbdefb" font-family="Segoe UI, Arial, sans-serif" >5V DC</text>
+<text x="71" y="52" font-size="6" text-anchor="middle" fill="#bbdefb" font-family="Segoe UI, Arial, sans-serif" >10A 250V</text>
+<circle cx="26" cy="70" r="3" fill="#5d2b2b"/><circle cx="38" cy="70" r="3" fill="#2b4d2b"/>
+<rect x="104" y="8" width="28" height="64" rx="2" fill="#2e7d32" stroke="#1b5e20"/>
+<circle cx="118" cy="20" r="6" fill="#cfd8dc" stroke="#78909c"/><line x1="114" y1="16" x2="122" y2="24" stroke="#607d8b" stroke-width="1.5"/><line x1="132" y1="20" x2="140" y2="20" stroke="#9e9e9e" stroke-width="2.5"/>
+<circle cx="118" cy="40" r="6" fill="#cfd8dc" stroke="#78909c"/><line x1="114" y1="36" x2="122" y2="44" stroke="#607d8b" stroke-width="1.5"/><line x1="132" y1="40" x2="140" y2="40" stroke="#9e9e9e" stroke-width="2.5"/>
+<circle cx="118" cy="60" r="6" fill="#cfd8dc" stroke="#78909c"/><line x1="114" y1="56" x2="122" y2="64" stroke="#607d8b" stroke-width="1.5"/><line x1="132" y1="60" x2="140" y2="60" stroke="#9e9e9e" stroke-width="2.5"/>
+<text x="102" y="23" font-size="6" text-anchor="end" fill="#e8f5e9" font-family="Segoe UI, Arial, sans-serif">NO</text>
+<text x="102" y="43" font-size="6" text-anchor="end" fill="#e8f5e9" font-family="Segoe UI, Arial, sans-serif">COM</text>
+<text x="102" y="63" font-size="6" text-anchor="end" fill="#e8f5e9" font-family="Segoe UI, Arial, sans-serif">NC</text>
+</svg>

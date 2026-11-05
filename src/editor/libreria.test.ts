@@ -63,6 +63,8 @@ describe("file della libreria forniti con l'app", () => {
         expect(svg).not.toMatch(/<script|href=|url\((?!#[a-zA-Z]\w*\))/i);
         // XML valido: una "&" non scritta come &amp; rende l'immagine illeggibile (e il foglio non si disegna).
         expect(svg, v.icona).not.toMatch(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/);
+        // Un attributo scritto due volte nello stesso elemento rende l'immagine illeggibile.
+        expect(attributiDoppi(svg), v.icona).toEqual([]);
       }
     }
   });
@@ -78,6 +80,7 @@ describe("file della libreria forniti con l'app", () => {
       // Le sfumature locali url(#id) sono ammesse; nessun riferimento esterno.
       expect(svg, v.icona).not.toMatch(/<script|href=|url\((?!#[a-zA-Z]\w*\))/i);
       expect(svg, v.icona).not.toMatch(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/);
+      expect(attributiDoppi(svg), v.icona).toEqual([]);
     }
   });
 
@@ -205,3 +208,16 @@ describe("posa di un componente dalla libreria", () => {
     expect(decodeURIComponent(url)).not.toContain("currentColor");
   });
 });
+
+/** Elementi di un SVG con lo stesso attributo scritto due volte (XML non valido). */
+function attributiDoppi(svg: string): string[] {
+  const doppi: string[] = [];
+  for (const [, nome, attributi] of svg.matchAll(/<([a-zA-Z]+)\s([^>]*)>/g)) {
+    const visti = new Set<string>();
+    for (const [, a] of attributi.matchAll(/([a-zA-Z:-]+)="/g)) {
+      if (visti.has(a)) doppi.push(`${nome}.${a}`);
+      visti.add(a);
+    }
+  }
+  return doppi;
+}

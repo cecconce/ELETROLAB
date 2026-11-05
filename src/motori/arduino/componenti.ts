@@ -90,6 +90,15 @@ const R_AMPEROMETRO = 0.05;
 /** Sopra questo valore l'ohmmetro indica «OL» (circuito aperto). */
 export const OHM_FUORI_SCALA = 20e6;
 
+/** Modulo relè: resistenza della bobina (5 V, circa 70 mA) e soglie dell'ingresso IN con isteresi (V). */
+export const R_BOBINA_RELE = 70;
+export const RELE_SOGLIA_ECCITA = 3;
+export const RELE_SOGLIA_RILASCIA = 1.5;
+/** Lampadina a filamento: tensione e potenza nominali, resistenza a caldo. */
+export const LAMPADINA_VOLT = 12;
+export const LAMPADINA_WATT = 1.2;
+export const R_LAMPADINA = (LAMPADINA_VOLT * LAMPADINA_VOLT) / LAMPADINA_WATT;
+
 /** Guadagno di corrente del transistor NPN della libreria. */
 export const BETA_TRANSISTOR = 100;
 /** Oltre questa corrente di collettore il transistor (piccolo, TO-92) si surriscalda (A). */
@@ -148,6 +157,8 @@ export function elementiCircuito(
   interazioni: Interazioni,
   /** Alimentatori che lavorano in corrente costante (limite raggiunto). */
   inCorrenteCostante: ReadonlySet<string> = new Set(),
+  /** Moduli relè con la bobina eccitata. */
+  releEccitati: ReadonlySet<string> = new Set(),
 ): Elemento[] {
   const el: Elemento[] = [];
   const R = (id: string, a: string, b: string, ohm: number) => el.push({ tipo: "resistenza", id, a, b, ohm });
@@ -168,6 +179,21 @@ export function elementiCircuito(
       }
       case "resistenza":
         R(c.id, n("1"), n("2"), c.valore ?? RESISTENZA_PREDEFINITA);
+        break;
+      case "modulo-rele": {
+        // Scheda con relè, transistor e diodo già montati: VCC-GND alimentano la
+        // bobina (circa 70 mA quando è eccitata, solo il LED quando è a riposo),
+        // IN è l'ingresso di comando (assorbe pochissimo). Contatti: COM-NO
+        // chiuso con la bobina eccitata, COM-NC chiuso a riposo.
+        const eccitato = releEccitati.has(c.id);
+        R(`${c.id}:bobina`, n("VCC"), n("GND"), eccitato ? R_BOBINA_RELE : 5000);
+        R(`${c.id}:in`, n("IN"), n("GND"), 10000);
+        R(`${c.id}:contatto`, n("COM"), n(eccitato ? "NO" : "NC"), 0.05);
+        break;
+      }
+      case "lampadina":
+        // Lampadina a filamento 12 V – 1,2 W: R = V² / P = 120 Ω (resistenza a caldo, costante).
+        R(c.id, n("1"), n("2"), R_LAMPADINA);
         break;
       case "transistor-npn":
         el.push({ tipo: "npn", id: c.id, c: n("C"), b: n("B"), e: n("E"), beta: BETA_TRANSISTOR });
@@ -288,28 +314,45 @@ export function risolviBanco(
   nodoDi: NodoDi,
   pin: Readonly<Record<string, StatoPin>>,
   interazioni: Interazioni,
-): { risultato: RisultatoCircuito; inCorrenteCostante: Set<string> } {
+  /** Relè eccitati al calcolo precedente: con l'isteresi delle soglie non "sfarfallano". */
+  releIniziali: ReadonlySet<string> = new Set(),
+): { risultato: RisultatoCircuito; inCorrenteCostante: Set<string>; releEccitati: Set<string> } {
   const alimentatori = componenti.filter((c) => c.tipo === "alimentatore");
+  const rele = componenti.filter((c) => c.tipo === "modulo-rele");
   const cc = new Set<string>();
-  let r = risolviCircuito(elementiCircuito(componenti, nodoDi, pin, interazioni, cc));
-  // Pochi giri bastano: ogni giro cambia modo a qualche alimentatore.
-  for (let giro = 0; giro < 2 * alimentatori.length + 1; giro++) {
+  const eccitati = new Set([...releIniziali].filter((id) => rele.some((c) => c.id === id)));
+  const calcola = () => risolviCircuito(elementiCircuito(componenti, nodoDi, pin, interazioni, cc, eccitati));
+  let r = calcola();
+  const volt = (id: string, a: string, b: string) => (r.tensioni[nodoDi(id, a)] ?? 0) - (r.tensioni[nodoDi(id, b)] ?? 0);
+  // Pochi giri bastano: ogni giro cambia modo a qualche alimentatore o relè.
+  for (let giro = 0; giro < 2 * (alimentatori.length + rele.length) + 1; giro++) {
     let cambiato = false;
     for (const c of alimentatori) {
       const corrente = r.correnti[c.id] ?? 0;
-      const volt = (r.tensioni[nodoDi(c.id, "+")] ?? 0) - (r.tensioni[nodoDi(c.id, "-")] ?? 0);
       if (!cc.has(c.id) && Math.abs(corrente) > limiteAlimentatore(c) * 1.0001) {
         cc.add(c.id);
         cambiato = true;
-      } else if (cc.has(c.id) && volt > tensioneAlimentatore(interazioni, c)) {
+      } else if (cc.has(c.id) && volt(c.id, "+", "-") > tensioneAlimentatore(interazioni, c)) {
         cc.delete(c.id);
         cambiato = true;
       }
     }
+    for (const c of rele) {
+      // La bobina si eccita se il modulo è alimentato e l'ingresso IN è alto.
+      const alimentato = volt(c.id, "VCC", "GND") > 4;
+      const ingresso = volt(c.id, "IN", "GND");
+      const prima = eccitati.has(c.id);
+      const ora = alimentato && (prima ? ingresso > RELE_SOGLIA_RILASCIA : ingresso > RELE_SOGLIA_ECCITA);
+      if (ora !== prima) {
+        if (ora) eccitati.add(c.id);
+        else eccitati.delete(c.id);
+        cambiato = true;
+      }
+    }
     if (!cambiato) break;
-    r = risolviCircuito(elementiCircuito(componenti, nodoDi, pin, interazioni, cc));
+    r = calcola();
   }
-  return { risultato: r, inCorrenteCostante: cc };
+  return { risultato: r, inCorrenteCostante: cc, releEccitati: eccitati };
 }
 
 /** Segmenti del display nell'ordine dei valori di `AspettoArduino.segmenti`. */
@@ -336,6 +379,8 @@ export interface AspettoArduino {
   misura?: number;
   /** Motore in continua: velocità −1…1 (il segno è il verso). */
   velocita?: number;
+  /** Modulo relè: bobina eccitata (contatto COM-NO chiuso). */
+  eccitato?: boolean;
   /** Transistor: stato (interdizione, attivo o saturo) e correnti di base e collettore (A). */
   statoTransistor?: "interdizione" | "attivo" | "saturo";
   correnteBase?: number;
@@ -349,10 +394,22 @@ export function aspettoComponenti(
   nodoDi: NodoDi,
   r: RisultatoCircuito,
   inCorrenteCostante: ReadonlySet<string> = new Set(),
+  releEccitati: ReadonlySet<string> = new Set(),
 ): Record<string, AspettoArduino> {
   const v = (n: string) => r.tensioni[n] ?? 0;
   const aspetto: Record<string, AspettoArduino> = {};
   for (const c of componenti) {
+    if (c.tipo === "modulo-rele") {
+      aspetto[c.id] = { eccitato: releEccitati.has(c.id), alimentato: v(nodoDi(c.id, "VCC")) - v(nodoDi(c.id, "GND")) > 4 };
+      continue;
+    }
+    if (c.tipo === "lampadina") {
+      // Luminosità secondo la potenza rispetto a quella nominale; oltre il doppio si brucia.
+      const volt = v(nodoDi(c.id, "1")) - v(nodoDi(c.id, "2"));
+      const watt = (volt * volt) / R_LAMPADINA;
+      aspetto[c.id] = { luminosita: watt < 0.02 ? 0 : Math.min(1, watt / LAMPADINA_WATT), bruciato: watt > 2 * LAMPADINA_WATT, corrente: Math.abs(volt) / R_LAMPADINA };
+      continue;
+    }
     if (c.tipo === "transistor-npn") {
       const ib = r.correnti[`${c.id}:BE`] ?? 0;
       const ic = r.correnti[c.id] ?? 0;
