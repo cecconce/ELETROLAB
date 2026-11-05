@@ -12,6 +12,7 @@
 // spiega in italiano gli errori trovati (circuito aperto, cortocircuito,
 // contatti non associati, oscillazioni…) ed evidenzia sul foglio il punto.
 import { csvDistinta, distintaComponenti } from "../editor/distinta";
+import type { VariabileDebug } from "../motori/arduino";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { t } from "../testi";
 import { AreaDisegno } from "../editor/AreaDisegno";
@@ -340,6 +341,10 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const [schedaDestra, setSchedaDestra] = useState<"codice" | "proprieta">("codice");
   const morsettiDi = useCallback((tipo: string) => vocePerTipo(libreria, tipo)?.morsetti, [libreria]);
   const sessioneRif = useRef<Sessione | null>(null);
+  // Debugger del codice Arduino: righe con un punto di interruzione e, se il
+  // programma è fermo, la riga e le variabili (aggiornate a ogni scatto).
+  const [puntiInterruzione, setPuntiInterruzione] = useState<number[]>([]);
+  const [debug, setDebug] = useState<{ riga: number; variabili: VariabileDebug[] } | null>(null);
   const firmaRif = useRef("");
   const [vista, setVista] = useState<VistaSimulazione | null>(null);
   const inSimulazione = vista !== null;
@@ -349,7 +354,15 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const aggiornaSessione = useCallback(
     (s: Sessione) => {
       sessioneRif.current = s;
-      if (eSessioneArduino(s)) setSeriale((prima) => (prima === s.seriale ? prima : s.seriale));
+      if (eSessioneArduino(s)) {
+        setSeriale((prima) => (prima === s.seriale ? prima : s.seriale));
+        const riga = s.esecutore?.fermoAllaRiga ?? null;
+        setDebug((prima) => {
+          if (riga === null) return prima === null ? prima : null;
+          const variabili = s.esecutore!.variabili();
+          return prima && prima.riga === riga && JSON.stringify(prima.variabili) === JSON.stringify(variabili) ? prima : { riga, variabili };
+        });
+      }
       const v = eSessioneElettronica(s)
         ? vistaDaSessioneElettronica(s, schema, libreria)
         : eSessioneArduino(s)
@@ -379,7 +392,11 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       modulo.id === "elettronica"
         ? avviaSessioneElettronica(componentiDaSchemaElettronica(schema), nodiDaSchema(schema, morsettiDi))
         : modulo.id === "arduino"
-        ? avviaSessioneArduino(schema.codice ?? SKETCH_PREDEFINITO, componentiDaSchema(schema), nodiDaSchema(schema, morsettiDi))
+        ? (() => {
+            const sa = avviaSessioneArduino(schema.codice ?? SKETCH_PREDEFINITO, componentiDaSchema(schema), nodiDaSchema(schema, morsettiDi));
+            if (sa.esecutore) sa.esecutore.puntiInterruzione = new Set(puntiInterruzione);
+            return sa;
+          })()
         : modulo.id === "plc"
         ? avviaSessionePlc(
             programmaDaSchema(schema),
@@ -390,7 +407,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           )
         : avviaSessione(schema, schema.plc && schema.componenti.some((c) => c.tipo === "plc") ? programmaDaSchema(schema.plc) : undefined),
     );
-  }, [aggiornaSessione, schema, simulabile, modulo.id, morsettiDi]);
+  }, [aggiornaSessione, schema, simulabile, modulo.id, morsettiDi, puntiInterruzione]);
   const ferma = useCallback(() => {
     sessioneRif.current = null;
     setVista(null);
@@ -685,6 +702,21 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                   return s && eSessioneArduino(s) && s.errore ? { riga: s.errore.riga, messaggio: s.errore.message } : null;
                 })()}
                 seriale={seriale}
+                puntiInterruzione={puntiInterruzione}
+                onCambiaPunti={(punti) => {
+                  setPuntiInterruzione(punti);
+                  const s = sessioneRif.current;
+                  if (s && eSessioneArduino(s) && s.esecutore) s.esecutore.puntiInterruzione = new Set(punti);
+                }}
+                debug={debug}
+                onDebug={(comando) => {
+                  const s = sessioneRif.current;
+                  if (!s || !eSessioneArduino(s) || !s.esecutore) return;
+                  if (comando === "continua") s.esecutore.continua();
+                  else if (comando === "passo") s.esecutore.passo();
+                  else s.esecutore.pausa();
+                  aggiornaSessione(s);
+                }}
                 onInviaSeriale={(testo) => {
                   const s = sessioneRif.current;
                   if (s && eSessioneArduino(s)) inviaSeriale(s, testo);

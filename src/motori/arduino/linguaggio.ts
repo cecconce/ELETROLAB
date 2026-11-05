@@ -792,6 +792,10 @@ type Pausa = number;
 class Ambiente {
   private var = new Map<string, Cella>();
   constructor(public padre: Ambiente | null) {}
+  /** Variabili definite proprio in questo ambiente (per il debugger). */
+  voci(): [string, Cella][] {
+    return [...this.var.entries()];
+  }
   cerca(nome: string): Cella | undefined {
     return this.var.get(nome) ?? this.padre?.cerca(nome);
   }
@@ -822,6 +826,29 @@ export function nomePin(n: number): string | null {
 
 export type StatoEsecuzione = "pronto" | "in esecuzione" | "errore";
 
+/** Valore che il generatore restituisce per fermarsi a un punto di interruzione. */
+const PAUSA_DEBUG = -1;
+
+/** Variabile mostrata dal debugger: nome, valore scritto come nel codice e dove è definita. */
+export interface VariabileDebug {
+  nome: string;
+  valore: string;
+  globale: boolean;
+}
+
+/** Valore leggibile per il debugger: 42, 3.14, 'A', "ciao", {1, 2, 3}. */
+function testoDebug(v: Valore, profondita = 0): string {
+  if (v.t === "n") return v.car ? `'${String.fromCharCode(v.v & 0xff)}' (${v.v})` : v.float ? String(Math.round(v.v * 1000) / 1000) : String(v.v);
+  if (v.t === "s") return JSON.stringify(v.v);
+  if (v.t === "a") {
+    if (profondita > 1) return "{…}";
+    const el = v.el.slice(0, 16).map((c) => testoDebug(c.valore, profondita + 1));
+    return `{${el.join(", ")}${v.el.length > 16 ? ", …" : ""}}`;
+  }
+  if (v.t === "o") return `(${v.classe})`;
+  return "";
+}
+
 export class Esecutore {
   /** Tempo simulato dall'accensione, in microsecondi. */
   tempoUs = 0;
@@ -833,6 +860,12 @@ export class Esecutore {
   private profondita = 0;
   private istruzioni = 0;
   private semeCasuale = 12345;
+  /** Debugger: righe con un punto di interruzione (1…). */
+  puntiInterruzione = new Set<number>();
+  /** Debugger: riga su cui il programma è fermo, null se sta girando. */
+  fermoAllaRiga: number | null = null;
+  private passoSingolo = false;
+  private ambienteFermo: Ambiente | null = null;
 
   constructor(
     private programma: Programma,
@@ -842,6 +875,8 @@ export class Esecutore {
   /** Esegue il programma finché il suo orologio non arriva a `tempoUs + ms·1000`. */
   avanza(ms: number): void {
     if (this.stato === "errore") return;
+    // Fermo a un punto di interruzione: il tempo simulato non scorre.
+    if (this.fermoAllaRiga !== null) return;
     const traguardo = this.tempoUs + Math.max(0, ms) * 1000;
     if (!this.corso) {
       this.corso = this.principale();
@@ -856,6 +891,7 @@ export class Esecutore {
         }
         const passo = this.corso.next();
         if (passo.done) return;
+        if (passo.value === PAUSA_DEBUG) return;
         // Il generatore si ferma per un delay (valore > 0) oppure per dare
         // respiro all'interfaccia dopo molte istruzioni (valore 0).
         if (passo.value > 0) this.attesaFinoA = this.tempoUs + passo.value;
@@ -865,6 +901,39 @@ export class Esecutore {
       this.stato = "errore";
       this.errore = e instanceof ErroreArduino ? e : new ErroreArduino(0, String((e as Error).message ?? e));
     }
+  }
+
+  /** Debugger: riparte dal punto in cui si era fermato. */
+  continua(): void {
+    this.fermoAllaRiga = null;
+    this.ambienteFermo = null;
+  }
+
+  /** Debugger: esegue l'istruzione su cui è fermo e si ferma alla successiva. */
+  passo(): void {
+    this.passoSingolo = true;
+    this.continua();
+  }
+
+  /** Debugger: si ferma alla prossima istruzione (pulsante Pausa). */
+  pausa(): void {
+    if (this.fermoAllaRiga === null) this.passoSingolo = true;
+  }
+
+  /** Debugger: variabili visibili dove il programma è fermo (prima le locali, poi le globali). */
+  variabili(): VariabileDebug[] {
+    const esito: VariabileDebug[] = [];
+    const viste = new Set<string>();
+    for (let a = this.ambienteFermo; a; a = a.padre) {
+      const globale = a === this.globali;
+      for (const [nome, c] of a.voci()) {
+        if (viste.has(nome)) continue;
+        viste.add(nome);
+        esito.push({ nome, valore: testoDebug(c.valore), globale });
+      }
+    }
+    if (!this.ambienteFermo) for (const [nome, c] of this.globali.voci()) esito.push({ nome, valore: testoDebug(c.valore), globale: true });
+    return esito;
   }
 
   /** Millisecondi trascorsi (come millis()). */
@@ -899,6 +968,14 @@ export class Esecutore {
 
   private *istruzione(s: Istr, amb: Ambiente): Generator<Pausa, Segnale | null, void> {
     yield* this.costo();
+    // Debugger: prima di eseguire un'istruzione con un punto di interruzione
+    // (o andando passo passo) il programma si ferma; riparte da qui.
+    if (s.k !== "blocco" && s.k !== "vuota" && s.riga > 0 && (this.passoSingolo || this.puntiInterruzione.has(s.riga))) {
+      this.passoSingolo = false;
+      this.fermoAllaRiga = s.riga;
+      this.ambienteFermo = amb;
+      yield PAUSA_DEBUG;
+    }
     switch (s.k) {
       case "vuota":
         return null;

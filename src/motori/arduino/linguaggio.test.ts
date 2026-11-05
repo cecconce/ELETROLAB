@@ -465,3 +465,59 @@ describe("libreria LiquidCrystal_I2C", () => {
     expect(ultima.righe[1]).toBe("  Ciao          ");
   });
 });
+
+describe("debugger", () => {
+  const codice = `int conta = 0;
+void setup() {
+  Serial.begin(9600);
+}
+void loop() {
+  int doppio = conta * 2;
+  conta++;
+  Serial.println(doppio);
+  delay(100);
+}`;
+
+  it("si ferma alla riga con il punto di interruzione e il tempo non scorre finché non riparte", () => {
+    const s = schedaFinta();
+    const e = preparaSketch(codice, s.hw);
+    e.puntiInterruzione.add(7); // conta++;
+    e.avanza(1000);
+    expect(e.fermoAllaRiga).toBe(7);
+    const tempo = e.tempoUs;
+    e.avanza(1000);
+    expect(e.tempoUs).toBe(tempo);
+    expect(e.variabili()).toEqual([
+      { nome: "doppio", valore: "0", globale: false },
+      { nome: "conta", valore: "0", globale: true },
+    ]);
+    // Continua: il giro finisce e al giro dopo si ferma di nuovo sulla stessa riga.
+    e.continua();
+    e.avanza(1000);
+    expect(e.fermoAllaRiga).toBe(7);
+    expect(s.seriale).toBe("0\n");
+    expect(e.variabili().find((v) => v.nome === "conta")!.valore).toBe("1");
+  });
+
+  it("passo: esegue una sola istruzione; pausa: si ferma alla prossima; senza punti gira normalmente", () => {
+    const s = schedaFinta();
+    const e = preparaSketch(codice, s.hw);
+    e.puntiInterruzione.add(6);
+    e.avanza(10);
+    expect(e.fermoAllaRiga).toBe(6);
+    e.passo();
+    e.avanza(10);
+    expect(e.fermoAllaRiga).toBe(7);
+    e.passo();
+    e.avanza(10);
+    expect(e.fermoAllaRiga).toBe(8);
+    e.puntiInterruzione.clear();
+    e.continua();
+    e.avanza(450);
+    expect(e.fermoAllaRiga).toBeNull();
+    expect(s.seriale.trim().split("\n").length).toBeGreaterThanOrEqual(4);
+    e.pausa();
+    e.avanza(200);
+    expect(e.fermoAllaRiga).not.toBeNull();
+  });
+});

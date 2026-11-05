@@ -1,7 +1,8 @@
 // Editor del codice Arduino con CodeMirror 6: colori della sintassi C++,
 // numeri di riga, parentesi abbinate, rientri automatici, completamento delle
 // funzioni Arduino (Ctrl+Spazio o mentre si scrive) e riga dell'errore in
-// rosso. CodeMirror si carica solo quando serve (file a parte, l'avvio del
+// rosso; punti di interruzione con un clic sul numero di riga e riga gialla
+// dove il programma è fermo (debugger). CodeMirror si carica solo quando serve (file a parte, l'avvio del
 // programma resta leggero); nel frattempo si vede una normale casella di testo.
 import { useEffect, useRef, useState } from "react";
 import { t } from "../testi";
@@ -14,6 +15,10 @@ export interface PropsEditorCodice {
   sola: boolean;
   /** Riga (1…) da segnare in rosso, o null. */
   rigaErrore: number | null;
+  /** Debugger: righe con un punto di interruzione e riga su cui il programma è fermo. */
+  puntiInterruzione?: number[];
+  onCambiaPunti?: (righe: number[]) => void;
+  rigaFerma?: number | null;
 }
 
 async function caricaCodeMirror() {
@@ -29,20 +34,58 @@ async function caricaCodeMirror() {
   return { view, state, commands, language, cpp, autocomplete, highlight };
 }
 
-export function EditorCodice({ codice, onCambia, sola, rigaErrore }: PropsEditorCodice) {
+export function EditorCodice({ codice, onCambia, sola, rigaErrore, puntiInterruzione = [], onCambiaPunti, rigaFerma = null }: PropsEditorCodice) {
   const contenitore = useRef<HTMLDivElement>(null);
   const vista = useRef<import("@codemirror/view").EditorView | null>(null);
-  const api = useRef<{ impostaSola: (s: boolean) => void; impostaErrore: (r: number | null) => void } | null>(null);
+  const api = useRef<{ impostaSola: (s: boolean) => void; impostaErrore: (r: number | null) => void; impostaPunti: (r: number[]) => void; impostaFerma: (r: number | null) => void } | null>(null);
   const cambia = useRef(onCambia);
   cambia.current = onCambia;
+  const punti = useRef(puntiInterruzione);
+  punti.current = puntiInterruzione;
+  const cambiaPunti = useRef(onCambiaPunti);
+  cambiaPunti.current = onCambiaPunti;
   const [pronto, setPronto] = useState(false);
 
   useEffect(() => {
     let annullato = false;
     void caricaCodeMirror().then((m) => {
       if (annullato || !contenitore.current) return;
-      const { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, Decoration, drawSelection } = m.view;
-      const { EditorState, Compartment, StateEffect, StateField } = m.state;
+      const { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, Decoration, drawSelection, GutterMarker, gutterLineClass } = m.view;
+      const { EditorState, Compartment, StateEffect, StateField, RangeSet } = m.state;
+      // Debugger: punti di interruzione (pallino rosso sul numero di riga) e riga ferma (gialla).
+      class MarcaPunto extends GutterMarker {
+        elementClass = "cm-punto-interruzione";
+      }
+      const marca = new MarcaPunto();
+      const segnaPunti = StateEffect.define<number[]>();
+      const campoPunti = StateField.define({
+        create: () => RangeSet.empty as import("@codemirror/state").RangeSet<import("@codemirror/view").GutterMarker>,
+        update(set, tr) {
+          for (const e of tr.effects) {
+            if (e.is(segnaPunti)) {
+              const righe = [...new Set(e.value)].filter((r) => r >= 1 && r <= tr.state.doc.lines).sort((a, b) => a - b);
+              return RangeSet.of(righe.map((r) => marca.range(tr.state.doc.line(r).from)));
+            }
+          }
+          return set.map(tr.changes);
+        },
+        provide: (f) => gutterLineClass.from(f),
+      });
+      const segnaFerma = StateEffect.define<number | null>();
+      const campoFerma = StateField.define({
+        create: () => Decoration.none,
+        update(dec, tr) {
+          for (const e of tr.effects) {
+            if (e.is(segnaFerma)) {
+              const r = e.value;
+              if (r === null || r < 1 || r > tr.state.doc.lines) return Decoration.none;
+              return Decoration.set([Decoration.line({ class: "cm-riga-ferma" }).range(tr.state.doc.line(r).from)]);
+            }
+          }
+          return dec.map(tr.changes);
+        },
+        provide: (f) => EditorView.decorations.from(f),
+      });
       const { tags } = m.highlight;
       const sola = new Compartment();
       // Riga dell'errore: decorazione aggiornata con un effetto.
@@ -87,7 +130,20 @@ export function EditorCodice({ codice, onCambia, sola, rigaErrore }: PropsEditor
         state: EditorState.create({
           doc: codice,
           extensions: [
-            lineNumbers(),
+            lineNumbers({
+              domEventHandlers: {
+                // Clic sul numero di riga: mette o toglie il punto di interruzione.
+                mousedown: (view, riga) => {
+                  if (!cambiaPunti.current) return false;
+                  const n = view.state.doc.lineAt(riga.from).number;
+                  const ora = punti.current;
+                  cambiaPunti.current(ora.includes(n) ? ora.filter((x) => x !== n) : [...ora, n].sort((a, b) => a - b));
+                  return true;
+                },
+              },
+            }),
+            campoPunti,
+            campoFerma,
             // Le righe lunghe vanno a capo: niente barra orizzontale nel pannello stretto.
             EditorView.lineWrapping,
             highlightActiveLineGutter(),
@@ -125,6 +181,11 @@ export function EditorCodice({ codice, onCambia, sola, rigaErrore }: PropsEditor
           v.dispatch({
             effects: r !== null && r >= 1 && r <= v.state.doc.lines ? [segnaErrore.of(r), EditorView.scrollIntoView(v.state.doc.line(r).from, { y: "center" })] : [segnaErrore.of(r)],
           }),
+        impostaPunti: (r) => v.dispatch({ effects: segnaPunti.of(r) }),
+        impostaFerma: (r) =>
+          v.dispatch({
+            effects: r !== null && r >= 1 && r <= v.state.doc.lines ? [segnaFerma.of(r), EditorView.scrollIntoView(v.state.doc.line(r).from, { y: "center" })] : [segnaFerma.of(r)],
+          }),
       };
       setPronto(true);
     });
@@ -145,6 +206,8 @@ export function EditorCodice({ codice, onCambia, sola, rigaErrore }: PropsEditor
   }, [codice, pronto]);
   useEffect(() => api.current?.impostaSola(sola), [sola, pronto]);
   useEffect(() => api.current?.impostaErrore(rigaErrore), [rigaErrore, pronto]);
+  useEffect(() => api.current?.impostaPunti(puntiInterruzione), [puntiInterruzione, pronto]);
+  useEffect(() => api.current?.impostaFerma(rigaFerma), [rigaFerma, pronto]);
 
   return (
     <div className="editor-codice" data-pronto={pronto}>

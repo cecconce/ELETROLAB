@@ -6,11 +6,15 @@
 //   bisogna fermare, correggere e riavviare) e compare il monitor seriale,
 //   con la casella per inviare testo al programma e il pulsante per passare
 //   al plotter seriale (il grafico dei numeri scritti dal programma).
+// - Debugger: clic sul numero di una riga per mettere o togliere un punto di
+//   interruzione; quando il programma si ferma compaiono la riga gialla, i
+//   pulsanti Continua e Passo e i valori delle variabili.
 import { useEffect, useRef, useState } from "react";
 import { t } from "../testi";
 import { EditorBlocchi } from "./EditorBlocchi";
 import { EditorCodice } from "./EditorCodice";
 import { PlotterSeriale } from "./PlotterSeriale";
+import type { VariabileDebug } from "../motori/arduino";
 
 export interface PropsPannelloCodice {
   codice: string;
@@ -20,6 +24,12 @@ export interface PropsPannelloCodice {
   /** Errore del programma da segnare (riga 1…) o null. */
   errore: { riga: number; messaggio: string } | null;
   seriale: string;
+  /** Debugger: righe con un punto di interruzione. */
+  puntiInterruzione: number[];
+  onCambiaPunti: (righe: number[]) => void;
+  /** Programma fermo: riga e variabili; null se gira. */
+  debug: { riga: number; variabili: VariabileDebug[] } | null;
+  onDebug: (comando: "continua" | "passo" | "pausa") => void;
   onInviaSeriale: (testo: string) => void;
   onPulisciSeriale: () => void;
   /** Si programma con i blocchi (che generano il codice) o con il testo. */
@@ -71,8 +81,53 @@ export function PannelloCodice(props: PropsPannelloCodice) {
         <EditorBlocchi blocchi={props.blocchi} inSimulazione={inSimulazione} onCambia={props.onCambiaBlocchi} />
       ) : (
       <div className="codice-editor" data-errore={errore ? errore.riga : undefined}>
-        <EditorCodice codice={codice} onCambia={onCambia} sola={inSimulazione} rigaErrore={errore?.riga ?? null} />
+        <EditorCodice
+          codice={codice}
+          onCambia={onCambia}
+          sola={inSimulazione}
+          rigaErrore={errore?.riga ?? null}
+          puntiInterruzione={props.puntiInterruzione}
+          onCambiaPunti={props.onCambiaPunti}
+          rigaFerma={props.debug?.riga ?? null}
+        />
       </div>
+      )}
+      {modo === "testo" && inSimulazione && (
+        <div className={props.debug ? "debugger fermo" : "debugger"}>
+          <div className="debugger-barra">
+            {props.debug ? (
+              <>
+                <strong>⏸ {t("arduino.debug.fermo", { riga: props.debug.riga })}</strong>
+                <button type="button" className="pulsante piccolo" onClick={() => props.onDebug("continua")}>
+                  ▶ {t("arduino.debug.continua")}
+                </button>
+                <button type="button" className="pulsante piccolo" onClick={() => props.onDebug("passo")}>
+                  ⤵ {t("arduino.debug.passo")}
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="tenue">{props.puntiInterruzione.length ? t("arduino.debug.punti", { n: props.puntiInterruzione.length }) : t("arduino.debug.suggerimento")}</span>
+                <button type="button" className="pulsante piccolo" onClick={() => props.onDebug("pausa")}>
+                  ⏸ {t("arduino.debug.pausa")}
+                </button>
+              </>
+            )}
+          </div>
+          {props.debug && props.debug.variabili.length > 0 && (
+            <table className="debugger-variabili">
+              <tbody>
+                {props.debug.variabili.map((v) => (
+                  <tr key={`${v.globale ? "g" : "l"}-${v.nome}`}>
+                    <td>{v.nome}</td>
+                    <td>{v.valore}</td>
+                    <td className="tenue">{v.globale ? t("arduino.debug.globale") : t("arduino.debug.locale")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
       {errore && (
         <p className="codice-errore" role="alert">

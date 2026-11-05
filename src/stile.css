@@ -1278,6 +1278,42 @@ button.io-plc {
 .editor-codemirror .cm-editor.cm-focused .cm-selectionBackground {
   background: rgba(96, 165, 250, 0.35) !important;
 }
+.editor-codemirror .cm-riga-ferma {
+  background: rgba(250, 204, 21, 0.35);
+}
+.editor-codemirror .cm-lineNumbers .cm-gutterElement {
+  cursor: pointer;
+}
+/* Punto di interruzione: pallino rosso sul numero di riga. */
+.editor-codemirror .cm-lineNumbers .cm-gutterElement.cm-punto-interruzione {
+  color: #fff;
+  background: radial-gradient(circle at 70% 50%, #dc2626 0 6px, transparent 7px);
+}
+.debugger {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+}
+.debugger-barra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.debugger.fermo .debugger-barra strong {
+  color: #b45309;
+}
+.debugger-variabili {
+  border-collapse: collapse;
+  font: 12px Consolas, "Courier New", monospace;
+  max-height: 120px;
+  overflow: auto;
+  display: block;
+}
+.debugger-variabili td {
+  padding: 1px 8px 1px 0;
+}
 .editor-codemirror .cm-riga-errore {
   background: rgba(220, 38, 38, 0.35);
 }
