@@ -123,6 +123,18 @@ describe("verifica degli esercizi — Arduino", () => {
     const r2 = verificaArduino({ ...sol, fili: sol.fili.slice(1) }, soluzione);
     expect(r2.riuscito).toBe(false);
   });
+
+  it("striscia NeoPixel e relè: confrontati anche i colori dei LED e lo stato del relè", () => {
+    const neo = esempio("arduino-neopixel.elab");
+    const soluzione = { componenti: neo.componenti, fili: neo.fili, codice: neo.codice };
+    expect(verificaArduino(neo, soluzione).riuscito).toBe(true);
+    // Stessi LED ma senza show(): la striscia resta spenta.
+    const r = verificaArduino({ ...neo, codice: neo.codice!.replace("striscia.show();", "") }, soluzione);
+    expect(r.riuscito).toBe(false);
+    expect(r.righe.join(" ")).toMatch(/D1 dovrebbe essere «\(/);
+    const rele = esempio("arduino-rele-lampadina.elab");
+    expect(verificaArduino(rele, { componenti: rele.componenti, fili: rele.fili, codice: rele.codice }).riuscito).toBe(true);
+  });
 });
 
 describe("esercizi di esempio del catalogo", () => {

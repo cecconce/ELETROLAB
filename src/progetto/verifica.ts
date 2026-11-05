@@ -285,6 +285,16 @@ export function verificaElettronica(studente: Schema, soluzione: Pick<Schema, "c
 // ---------------------------------------------------------------- Arduino
 
 /**
+ * Colore di un LED NeoPixel arrotondato (ogni canale a 0, metà o pieno), così
+ * piccole differenze di luminosità non rendono "sbagliato" un esercizio.
+ */
+function coloreApprossimato(c: number): string {
+  const livello = (x: number) => (x < 43 ? "0" : x < 170 ? "½" : "1");
+  if (c === 0) return "–";
+  return `(${livello((c >> 16) & 255)},${livello((c >> 8) & 255)},${livello(c & 255)})`;
+}
+
+/**
  * Arduino: si eseguono i due programmi sui due banchi per 1 s, poi si preme
  * ogni pulsante (0,6 s premuto, 0,6 s rilasciato) e si guardano ogni 0,25 s
  * LED (spento / acceso, con quattro livelli di luminosità per il PWM), LED «L»
@@ -293,7 +303,7 @@ export function verificaElettronica(studente: Schema, soluzione: Pick<Schema, "c
 export function verificaArduino(studente: Schema, soluzione: NonNullable<NonNullable<Schema["esercizio"]>["soluzione"]>): EsitoVerifica {
   const libreria = libreriaDelModulo("arduino");
   const morsettiDi = (tipo: string) => vocePerTipo(libreria, tipo)?.morsetti;
-  const OSSERVATI = (tipo: string) => tipo.startsWith("led-") || tipo === "servo" || tipo === "buzzer" || tipo === "lcd" || tipo === "arduino-uno" || tipo === "motore-dc" || tipo === "display-sette-segmenti" || tipo === "multimetro" || tipo === "lampadina" || tipo === "modulo-rele";
+  const OSSERVATI = (tipo: string) => tipo.startsWith("led-") || tipo === "servo" || tipo === "buzzer" || tipo === "lcd" || tipo === "arduino-uno" || tipo === "motore-dc" || tipo === "display-sette-segmenti" || tipo === "multimetro" || tipo === "lampadina" || tipo === "modulo-rele" || tipo === "striscia-neopixel";
   const nome = (c: { etichetta: string; tipo: string; id: string }) => c.etichetta || c.id;
   const osservati = soluzione.componenti.filter((c) => OSSERVATI(c.tipo));
   const pulsanti = soluzione.componenti.filter((c) => c.tipo === "pulsante").map(nome);
@@ -320,6 +330,7 @@ export function verificaArduino(studente: Schema, soluzione: NonNullable<NonNull
         } else if (c.tipo === "multimetro") o[n] = a.lettura ?? "–";
         else if (c.tipo === "motore-dc") o[n] = !a.velocita ? t("verifica.fermo") : `${t(a.velocita > 0 ? "verifica.giraOrario" : "verifica.giraAntiorario")} ${Math.round(Math.abs(a.velocita) * 4) * 25}%`;
         else if (c.tipo === "modulo-rele") o[n] = a.eccitato ? t("verifica.eccitato") : t("verifica.riposo");
+        else if (c.tipo === "striscia-neopixel") o[n] = (a.neopixel ?? []).length ? (a.neopixel ?? []).map((x) => coloreApprossimato(x)).join(" ") : t("verifica.spento");
         else if (c.tipo.startsWith("led-") || c.tipo === "lampadina") o[n] = a.bruciato ? t("verifica.bruciato") : (a.luminosita ?? 0) < 0.1 ? t("verifica.spento") : `${t("verifica.acceso")} ${Math.round((a.luminosita ?? 0) * 4) * 25}%`;
         else if (c.tipo === "servo") o[n] = a.angolo === undefined ? "–" : `${Math.round(a.angolo / 10) * 10}°`;
         else if (c.tipo === "buzzer") o[n] = a.suona ? t("verifica.suona") : t("verifica.muta");

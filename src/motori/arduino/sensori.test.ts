@@ -48,3 +48,13 @@ describe("moduli con uscita analogica", () => {
     expect(s.interazioni.posizioni.G).toBe(0);
   });
 });
+
+describe("fotoresistenza", () => {
+  it("i clic si fermano al buio e al pieno sole, senza ricominciare dall'altra parte", () => {
+    const s = avviaSessioneArduino("void setup(){}\nvoid loop(){}", [{ id: "L", tipo: "fotoresistenza" }], nodi({}));
+    for (let k = 0; k < 5; k++) clicGiuArduino(s, "L", true);
+    expect(s.interazioni.luce.L).toBe(0);
+    for (let k = 0; k < 6; k++) clicGiuArduino(s, "L");
+    expect(s.interazioni.luce.L).toBe(1);
+  });
+});

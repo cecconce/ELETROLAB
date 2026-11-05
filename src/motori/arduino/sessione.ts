@@ -343,7 +343,8 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false,
     const livelli = [0, 0.25, 0.5, 0.75, 1];
     const ora = s.interazioni.luce[id] ?? 0.5;
     const i = livelli.findIndex((l) => Math.abs(l - ora) < 1e-6);
-    s.interazioni.luce[id] = livelli[(i + (indietro ? livelli.length - 1 : 1)) % livelli.length];
+    // Si ferma agli estremi (buio, pieno sole) invece di ricominciare dall'altra parte.
+    s.interazioni.luce[id] = livelli[Math.min(livelli.length - 1, Math.max(0, (i < 0 ? 2 : i) + (indietro ? -1 : 1)))];
   } else return;
   ricalcola(s);
 }
