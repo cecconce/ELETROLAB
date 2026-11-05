@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 import Konva from "konva";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
 import { displayAlimentatore, fasceResistenza, scriviOhm, valoreParametroArduino } from "./arduino";
+import { TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0 } from "../motori/arduino";
 import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI, SEGMENTI } from "./segmenti7";
 import type { ComponenteSchema } from "./schema";
 import { t } from "../testi";
@@ -268,6 +269,14 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
           <Text x={larghezza / 2 - 45} y={-15} width={90} align="center" text={`${t(etichetta)} ${percento}`} fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
         </Group>
       );
+    }
+    case "tastierino": {
+      // Tasto premuto: si illumina di verde.
+      const k = a?.posizione ?? -1;
+      if (k < 0) return null;
+      const x = TASTIERINO_X0 + (k % 4) * TASTIERINO_L;
+      const y = TASTIERINO_Y0 + Math.floor(k / 4) * TASTIERINO_H;
+      return <Rect x={x + 3} y={y + 3} width={TASTIERINO_L - 6} height={TASTIERINO_H - 6} cornerRadius={6} fill="#4caf50" opacity={0.55} stroke="#1b5e20" strokeWidth={2} listening={false} />;
     }
     case "l293d": {
       // Pallino su ogni uscita: rosso = alta (verso VS), blu = bassa (verso GND).

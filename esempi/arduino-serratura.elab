@@ -1,0 +1,292 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:22:55.568Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "tastierino-1",
+        "tipo": "tastierino",
+        "etichetta": "S1",
+        "x": 140,
+        "y": -280,
+        "larghezza": 180,
+        "altezza": 220
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 600,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-verde-1",
+        "tipo": "led-verde",
+        "etichetta": "D1",
+        "x": 680,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-2",
+        "tipo": "resistenza",
+        "etichetta": "R2",
+        "x": 900,
+        "y": 60,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-1",
+        "tipo": "led-rosso",
+        "etichetta": "D2",
+        "x": 980,
+        "y": 80,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "servo-1",
+        "tipo": "servo",
+        "etichetta": "M1",
+        "x": 1180,
+        "y": 60,
+        "larghezza": 140,
+        "altezza": 80
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "tastierino-1",
+          "morsetto": "R1"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D9"
+        },
+        "colore": "#8d6e63"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "tastierino-1",
+          "morsetto": "R2"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D8"
+        },
+        "colore": "#8d6e63"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "tastierino-1",
+          "morsetto": "R3"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D7"
+        },
+        "colore": "#8d6e63"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "tastierino-1",
+          "morsetto": "R4"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D6"
+        },
+        "colore": "#8d6e63"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "tastierino-1",
+          "morsetto": "C1"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D5"
+        },
+        "colore": "#546e7a"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "tastierino-1",
+          "morsetto": "C2"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D4"
+        },
+        "colore": "#546e7a"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "tastierino-1",
+          "morsetto": "C3"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D3"
+        },
+        "colore": "#546e7a"
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "tastierino-1",
+          "morsetto": "C4"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D2"
+        },
+        "colore": "#546e7a"
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D11"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b5"
+        },
+        "colore": "#43a047"
+      },
+      {
+        "id": "filo-12",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c11"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am11"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-13",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D10"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b20"
+        },
+        "colore": "#e53935"
+      },
+      {
+        "id": "filo-14",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c26"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am26"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-15",
+        "da": {
+          "componente": "servo-1",
+          "morsetto": "GND"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am29"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-16",
+        "da": {
+          "componente": "servo-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap29"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-17",
+        "da": {
+          "componente": "servo-1",
+          "morsetto": "SIG"
+        },
+        "a": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D12"
+        },
+        "colore": "#ef6c00"
+      }
+    ],
+    "codice": "// Serratura a codice: scrivi 1234 sul tastierino e premi # per aprire.\n// * cancella quello che hai scritto. Con il codice giusto il servo apre il\n// chiavistello per 3 secondi e si accende il LED verde; con quello sbagliato\n// lampeggia il LED rosso.\n// La libreria Keypad scandisce il tastierino: righe sui pin 9…6, colonne sui\n// pin 5…2. getKey() dà il tasto appena premuto (o NO_KEY se nessuno).\n\n#include <Keypad.h>\n#include <Servo.h>\n\nconst byte RIGHE = 4;\nconst byte COLONNE = 4;\nchar tasti[RIGHE][COLONNE] = {\n  {'1', '2', '3', 'A'},\n  {'4', '5', '6', 'B'},\n  {'7', '8', '9', 'C'},\n  {'*', '0', '#', 'D'}\n};\nbyte pinRighe[RIGHE] = {9, 8, 7, 6};\nbyte pinColonne[COLONNE] = {5, 4, 3, 2};\nKeypad tastiera = Keypad(makeKeymap(tasti), pinRighe, pinColonne, RIGHE, COLONNE);\n\nServo chiavistello;\nconst int VERDE = 11;\nconst int ROSSO = 10;\nString codice = \"1234\";\nString inserito = \"\";\n\nvoid setup() {\n  pinMode(VERDE, OUTPUT);\n  pinMode(ROSSO, OUTPUT);\n  chiavistello.attach(12);\n  chiavistello.write(0);          // chiuso\n  Serial.begin(9600);\n  Serial.println(\"Scrivi il codice e premi # (* per cancellare)\");\n}\n\nvoid loop() {\n  char tasto = tastiera.getKey();\n  if (tasto != NO_KEY) {\n    if (tasto == '#') {\n      Serial.println();\n      if (inserito == codice) {\n        Serial.println(\"Codice giusto: porta aperta\");\n        digitalWrite(VERDE, HIGH);\n        chiavistello.write(90);   // aperto\n        delay(3000);\n        chiavistello.write(0);\n        digitalWrite(VERDE, LOW);\n        Serial.println(\"Porta chiusa\");\n      } else {\n        Serial.println(\"Codice sbagliato!\");\n        digitalWrite(ROSSO, HIGH);\n        delay(1000);\n        digitalWrite(ROSSO, LOW);\n      }\n      inserito = \"\";\n    } else if (tasto == '*') {\n      inserito = \"\";\n      Serial.println(\" (cancellato)\");\n    } else {\n      inserito += tasto;\n      Serial.print(tasto);\n    }\n  }\n}\n"
+  }
+}

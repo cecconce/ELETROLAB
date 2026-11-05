@@ -299,3 +299,109 @@ describe("ingressi e periferiche", () => {
     expect(cm).toBe(10);
   });
 });
+
+describe("array a due dimensioni", () => {
+  it("si dichiarano con le graffe annidate, si leggono e si scrivono con due indici", () => {
+    const { s } = esegui(
+      `char tasti[2][3] = {{'1','2','3'},{'4','5','6'}};
+       int m[3][2];
+       void setup() {
+         Serial.begin(9600);
+         Serial.println(tasti[1][2]);
+         m[2][1] = 7;
+         m[0][0] += 3;
+         int somma = 0;
+         for (int r = 0; r < 3; r++) for (int c = 0; c < 2; c++) somma += m[r][c];
+         Serial.println(somma);
+       }
+       void loop() {}`,
+      10,
+    );
+    expect(s.seriale).toBe("6\n10\n");
+  });
+
+  it("i char si stampano come caratteri, i calcoli con i char come numeri", () => {
+    const { s } = esegui(
+      `char c = 65;
+       unsigned char u = 66;
+       String parola = "";
+       void setup() {
+         Serial.println(c);
+         Serial.println('7');
+         Serial.println(c + 1);
+         Serial.println(u);
+         Serial.println(c, DEC);
+         parola += 'o';
+         parola = parola + c;
+         Serial.println(parola);
+       }
+       void loop() {}`,
+      10,
+    );
+    expect(s.seriale).toBe("A\n7\n66\n66\n65\noA\n");
+  });
+
+  it("errori spiegati: seconda dimensione mancante, troppi valori, assegnazione a una riga", () => {
+    expect(errore("int t[2][] = {{1}};\nvoid setup(){}\nvoid loop(){}").message).toMatch(/seconda dimensione va scritta/);
+    expect(() => esegui("int t[1][2] = {{1,2,3}};\nvoid setup(){}\nvoid loop(){}", 10)).toThrow(/Troppi valori nella riga 0/);
+    expect(() => esegui("int t[2][2];\nvoid setup(){ t[1] = 5; }\nvoid loop(){}", 10)).toThrow(/intero array/);
+  });
+});
+
+describe("libreria Keypad", () => {
+  /** Scheda finta con un tastierino: il tasto (riga, colonna) collega la riga alla colonna quando questa è a LOW. */
+  function schedaTastierino() {
+    const s = schedaFinta();
+    const premuto = { riga: -1, colonna: -1 };
+    const righe = ["D9", "D8", "D7", "D6"];
+    const colonne = ["D5", "D4", "D3", "D2"];
+    s.hw.digitalRead = (p) => {
+      const r = righe.indexOf(p);
+      if (r < 0 || r !== premuto.riga) return 1;
+      const c = colonne[premuto.colonna];
+      return s.modi[c] === "OUTPUT" && s.pin[c] === 0 ? 0 : 1;
+    };
+    return { s, premuto };
+  }
+  const sketch = (loop: string) => `#include <Keypad.h>
+    const byte R = 4;
+    const byte C = 4;
+    char tasti[R][C] = {{'1','2','3','A'},{'4','5','6','B'},{'7','8','9','C'},{'*','0','#','D'}};
+    byte pr[R] = {9, 8, 7, 6};
+    byte pc[C] = {5, 4, 3, 2};
+    Keypad k = Keypad(makeKeymap(tasti), pr, pc, R, C);
+    void setup() { Serial.begin(9600); }
+    void loop() { ${loop} }`;
+
+  it("getKey dà il tasto una volta sola per ogni pressione, scandendo righe e colonne", () => {
+    const { s, premuto } = schedaTastierino();
+    const e = preparaSketch(sketch("char t = k.getKey(); if (t) Serial.print(t);"), s.hw);
+    e.avanza(50);
+    expect(s.seriale).toBe("");
+    Object.assign(premuto, { riga: 2, colonna: 1 }); // «8»
+    e.avanza(100);
+    expect(s.seriale).toBe("8");
+    Object.assign(premuto, { riga: -1, colonna: -1 });
+    e.avanza(50);
+    Object.assign(premuto, { riga: 3, colonna: 2 }); // «#»
+    e.avanza(50);
+    expect(s.seriale).toBe("8#");
+    expect(s.modi.D9).toBe("INPUT_PULLUP");
+    expect(e.errore).toBeNull();
+  });
+
+  it("waitForKey aspetta senza bloccare la simulazione; anche con la dichiarazione a costruttore", () => {
+    const { s, premuto } = schedaTastierino();
+    const codice = sketch("").replace("Keypad k = Keypad(makeKeymap(tasti), pr, pc, R, C);", "Keypad k(makeKeymap(tasti), pr, pc, R, C);").replace("void loop() {  }", "void loop() { Serial.println(k.waitForKey()); }");
+    const e = preparaSketch(codice, s.hw);
+    e.avanza(200);
+    expect(s.seriale).toBe("");
+    Object.assign(premuto, { riga: 0, colonna: 3 });
+    e.avanza(50);
+    expect(s.seriale).toBe("A\n");
+  });
+
+  it("tabella dei tasti sbagliata: errore spiegato", () => {
+    expect(() => esegui(`#include <Keypad.h>\nchar t[4] = {'1','2','3','4'};\nbyte r[4] = {9,8,7,6};\nbyte c[4] = {5,4,3,2};\nKeypad k = Keypad(makeKeymap(t), r, c, 4, 4);\nvoid setup(){}\nvoid loop(){}`, 10)).toThrow(/array a due dimensioni/);
+  });
+});

@@ -173,7 +173,7 @@ void loop() {
 
 /** Che cosa fa un clic sui componenti del banco durante la simulazione. */
 function clicArduino(tipo: string): AspettoComponente["clic"] {
-  if (tipo === "pulsante") return "pulsante";
+  if (tipo === "pulsante" || tipo === "tastierino") return "pulsante";
   if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro" || tipo === "sensore-pir" || tipo === "alimentatore" || tipo === "sensore-inclinazione" || SENSORI_A_LIVELLI.has(tipo)) return "manuale";
   return null;
 }
@@ -212,6 +212,7 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.luminosita = a.luminosita ?? 0;
       arduino.bruciato = a.bruciato ?? false;
     }
+    if (c.tipo === "tastierino") arduino.posizione = s.interazioni.premuti.has(c.id) ? s.interazioni.posizioni[c.id] ?? -1 : -1;
     if (c.tipo === "l293d") arduino.uscitePonte = (a.uscite ?? []).map((u) => u.stato);
     if (c.tipo === "modulo-rele") {
       arduino.eccitato = a.eccitato ?? false;

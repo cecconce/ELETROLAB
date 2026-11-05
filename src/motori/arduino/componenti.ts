@@ -115,6 +115,22 @@ export function resistenzaFsr(forza: number): number {
   return FSR_LEGGERO * Math.pow(FSR_PIENO / FSR_LEGGERO, forza);
 }
 
+// --- Tastierino a matrice 4×4 ---
+
+/** Tasti del tastierino, riga per riga (come stampati sul componente). */
+export const TASTI_TASTIERINO = ["1", "2", "3", "A", "4", "5", "6", "B", "7", "8", "9", "C", "*", "0", "#", "D"];
+/** Area dei tasti nel disegno (unità del foglio): origine, larghezza e altezza di un tasto. */
+export const TASTIERINO_X0 = 14;
+export const TASTIERINO_Y0 = 14;
+export const TASTIERINO_L = 38;
+export const TASTIERINO_H = 43;
+/** Indice del tasto (0…15) nel punto indicato, in coordinate del componente; null fuori dai tasti. */
+export function tastoNelPunto(x: number, y: number): number | null {
+  const c = Math.floor((x - TASTIERINO_X0) / TASTIERINO_L);
+  const r = Math.floor((y - TASTIERINO_Y0) / TASTIERINO_H);
+  return c >= 0 && c < 4 && r >= 0 && r < 4 ? r * 4 + c : null;
+}
+
 // --- Ponte H L293D ---
 
 /** Canali del L293D: ingresso, uscita e abilitazione di ciascuno. */
@@ -231,6 +247,12 @@ export function elementiCircuito(
       case "resistenza":
         R(c.id, n("1"), n("2"), c.valore ?? RESISTENZA_PREDEFINITA);
         break;
+      case "tastierino": {
+        // Tasto premuto: unisce la sua riga alla sua colonna (matrice di contatti).
+        const tasto = interazioni.premuti.has(c.id) ? interazioni.posizioni[c.id] : undefined;
+        if (tasto !== undefined) R(`${c.id}:tasto`, n(`R${Math.floor(tasto / 4) + 1}`), n(`C${(tasto % 4) + 1}`), 0.05);
+        break;
+      }
       case "sensore-inclinazione":
         // Interruttore a sfera: chiuso dritto, aperto quando è inclinato.
         if (livelloSensore(interazioni, c) < 0.5) R(c.id, n("1"), n("2"), 0.1);

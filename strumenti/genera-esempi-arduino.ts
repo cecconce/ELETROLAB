@@ -1064,3 +1064,97 @@ void loop() {
 `),
   );
 }
+
+// 22. Serratura a codice con il tastierino 4×4 e il servo
+{
+  const b = costruttore();
+  alimenta(b);
+  // Tastierino sopra la scheda: righe R1…R4 ai pin 9…6, colonne C1…C4 ai pin 5…2.
+  b.posa("tastierino", 140, -280);
+  const pin = ["D9", "D8", "D7", "D6", "D5", "D4", "D3", "D2"];
+  ["R1", "R2", "R3", "R4", "C1", "C2", "C3", "C4"].forEach((m, i) => b.filo(`tastierino-1:${m}`, `U:${pin[i]}`, i < 4 ? "#8d6e63" : "#546e7a"));
+  // LED verde (porta aperta) sul pin 11 e rosso (codice sbagliato) sul pin 10.
+  b.resistenza("a5");
+  b.led("verde", "e9");
+  b.filo("U:D11", "b5", "#43a047");
+  b.filo("c11", "Am11");
+  b.resistenza("a20");
+  b.led("rosso", "e24");
+  b.filo("U:D10", "b20", "#e53935");
+  b.filo("c26", "Am26");
+  // Servo come chiavistello sul pin 12.
+  b.posa("servo", 1180, 60);
+  b.filo("servo-1:GND", "Am29", "#212121");
+  b.filo("servo-1:5V", "Ap29", "#d32f2f");
+  b.filo("servo-1:SIG", "U:D12", ARANCIONE);
+  scrivi(
+    "arduino-serratura.elab",
+    b.schema(`// Serratura a codice: scrivi 1234 sul tastierino e premi # per aprire.
+// * cancella quello che hai scritto. Con il codice giusto il servo apre il
+// chiavistello per 3 secondi e si accende il LED verde; con quello sbagliato
+// lampeggia il LED rosso.
+// La libreria Keypad scandisce il tastierino: righe sui pin 9…6, colonne sui
+// pin 5…2. getKey() dà il tasto appena premuto (o NO_KEY se nessuno).
+
+#include <Keypad.h>
+#include <Servo.h>
+
+const byte RIGHE = 4;
+const byte COLONNE = 4;
+char tasti[RIGHE][COLONNE] = {
+  {'1', '2', '3', 'A'},
+  {'4', '5', '6', 'B'},
+  {'7', '8', '9', 'C'},
+  {'*', '0', '#', 'D'}
+};
+byte pinRighe[RIGHE] = {9, 8, 7, 6};
+byte pinColonne[COLONNE] = {5, 4, 3, 2};
+Keypad tastiera = Keypad(makeKeymap(tasti), pinRighe, pinColonne, RIGHE, COLONNE);
+
+Servo chiavistello;
+const int VERDE = 11;
+const int ROSSO = 10;
+String codice = "1234";
+String inserito = "";
+
+void setup() {
+  pinMode(VERDE, OUTPUT);
+  pinMode(ROSSO, OUTPUT);
+  chiavistello.attach(12);
+  chiavistello.write(0);          // chiuso
+  Serial.begin(9600);
+  Serial.println("Scrivi il codice e premi # (* per cancellare)");
+}
+
+void loop() {
+  char tasto = tastiera.getKey();
+  if (tasto != NO_KEY) {
+    if (tasto == '#') {
+      Serial.println();
+      if (inserito == codice) {
+        Serial.println("Codice giusto: porta aperta");
+        digitalWrite(VERDE, HIGH);
+        chiavistello.write(90);   // aperto
+        delay(3000);
+        chiavistello.write(0);
+        digitalWrite(VERDE, LOW);
+        Serial.println("Porta chiusa");
+      } else {
+        Serial.println("Codice sbagliato!");
+        digitalWrite(ROSSO, HIGH);
+        delay(1000);
+        digitalWrite(ROSSO, LOW);
+      }
+      inserito = "";
+    } else if (tasto == '*') {
+      inserito = "";
+      Serial.println(" (cancellato)");
+    } else {
+      inserito += tasto;
+      Serial.print(tasto);
+    }
+  }
+}
+`),
+  );
+}

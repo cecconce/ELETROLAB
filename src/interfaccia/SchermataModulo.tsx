@@ -439,7 +439,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                 clicGiuElettronica(s, id, indietro);
                 aggiornaSessione(s);
               } else if (eSessioneArduino(s)) {
-                clicGiuArduino(s, id, indietro);
+                clicGiuArduino(s, id, indietro, punto);
                 aggiornaSessione(s);
               } else aggiornaSessione(eSessionePlc(s) ? clicGiuPlc(s, id, punto) : clicGiu(s, id));
             },

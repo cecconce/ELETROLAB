@@ -18,6 +18,7 @@ import {
   foriBreadboard,
 } from "../src/motori/arduino/breadboard";
 import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI } from "../src/editor/segmenti7";
+import { TASTI_TASTIERINO, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0 } from "../src/motori/arduino/componenti";
 
 const FONT = 'font-family="Segoe UI, Arial, sans-serif"';
 const svg = (w: number, h: number, corpo: string) =>
@@ -737,6 +738,42 @@ voce(
       `<circle cx="40" cy="32" r="17" fill="url(#gasRete)"/>`,
       ...[-10, -5, 0, 5, 10].map((d) => `<line x1="${40 + d}" y1="17" x2="${40 + d}" y2="47" stroke="#78909c" stroke-width="0.8"/><line x1="25" y1="${32 + d}" x2="55" y2="${32 + d}" stroke="#78909c" stroke-width="0.8"/>`),
       ...[["VCC", 20], ["GND", 40], ["AO", 60]].map(([t, x]) => testo(Number(x), 64, String(t), 6.5, "#e3f2fd", 'font-weight="bold"')),
+    ].join("\n"),
+  ),
+);
+
+// ---------------------------------------------------------- Tastierino 4×4
+voce(
+  {
+    id: "tastierino",
+    nome: "Tastierino 4×4",
+    categoria: "ingressi",
+    sigla: "S",
+    descrizione:
+      "Tastierino a membrana con 16 tasti in 4 righe e 4 colonne: premendo un tasto si collega la sua riga alla sua colonna. Gli 8 piedini (R1…R4 righe, C1…C4 colonne) vanno a 8 pin dell'Arduino; il programma usa la libreria Keypad (makeKeymap, getKey) che scandisce righe e colonne. In simulazione: tieni premuto un tasto con il mouse.",
+    paroleChiave: ["tastierino", "tastiera", "keypad", "tasti", "codice", "password", "matrice"],
+    larghezza: 180,
+    altezza: 220,
+    morsetti: ["R1", "R2", "R3", "R4", "C1", "C2", "C3", "C4"].map((id, i) => ({ id, x: 20 + i * 20, y: 220 })),
+  },
+  svg(
+    180,
+    220,
+    [
+      // nastro con gli 8 conduttori e i piedini
+      `<rect x="14" y="186" width="152" height="24" fill="#cfd8dc" stroke="#90a4ae"/>`,
+      ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<line x1="${20 + i * 20}" y1="186" x2="${20 + i * 20}" y2="220" stroke="${i < 4 ? "#8d6e63" : "#78909c"}" stroke-width="3"/>`),
+      `<rect x="2" y="2" width="176" height="190" rx="8" fill="#263238" stroke="#111"/>`,
+      ...TASTI_TASTIERINO.map((t, k) => {
+        const x = TASTIERINO_X0 + (k % 4) * TASTIERINO_L;
+        const y = TASTIERINO_Y0 + Math.floor(k / 4) * TASTIERINO_H;
+        const lettera = /[A-D]/.test(t);
+        const simbolo = t === "*" || t === "#";
+        const fondo = lettera ? "#c62828" : simbolo ? "#1565c0" : "#eceff1";
+        const scritta = lettera || simbolo ? "#ffffff" : "#263238";
+        return `<rect x="${x + 3}" y="${y + 3}" width="${TASTIERINO_L - 6}" height="${TASTIERINO_H - 6}" rx="6" fill="${fondo}" stroke="#0b1418"/>` + testo(x + TASTIERINO_L / 2, y + TASTIERINO_H / 2 + 6, t, 17, scritta, 'font-weight="bold"');
+      }),
+      ...["R1", "R2", "R3", "R4", "C1", "C2", "C3", "C4"].map((t, i) => testo(20 + i * 20, 201, t, 6, "#455a64")),
     ].join("\n"),
   ),
 );

@@ -14,6 +14,7 @@ import {
   indiceFunzioneMultimetro,
   misureMultimetri,
   ALIMENTATORE_PASSO,
+  tastoNelPunto,
   LIVELLI_SENSORE,
   SENSORI_A_LIVELLI,
   livelloSensore,
@@ -197,10 +198,17 @@ export function tempoArduino(s: SessioneArduino): number {
 }
 
 /** Pressione del mouse su un componente: pulsante premuto, manopola girata, luce cambiata. */
-export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false): void {
+export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false, punto?: { x: number; y: number }): void {
   const c = s.componenti.find((x) => x.id === id);
   if (!c) return;
   if (c.tipo === "pulsante") s.interazioni.premuti.add(id);
+  else if (c.tipo === "tastierino") {
+    // Il tasto sotto il mouse resta premuto finché non si rilascia.
+    const tasto = punto ? tastoNelPunto(punto.x, punto.y) : null;
+    if (tasto === null) return;
+    s.interazioni.posizioni[id] = tasto;
+    s.interazioni.premuti.add(id);
+  }
   else if (c.tipo === "potenziometro") {
     const pos = s.interazioni.posizioni[id] ?? 0.5;
     s.interazioni.posizioni[id] = Math.round(Math.min(1, Math.max(0, pos + (indietro ? -0.1 : 0.1))) * 10) / 10;

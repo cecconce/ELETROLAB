@@ -8,7 +8,7 @@ import { datiPlotter } from "../editor/letturaPlotter";
 import { componentiDaSchema, nodiDaSchema, problemiArduino, vistaDaSessioneArduino } from "../editor/arduino";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { vocePerTipo } from "../editor/libreria";
-import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, passoArduino, type SessioneArduino } from "../motori/arduino";
+import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, passoArduino, TASTI_TASTIERINO, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, type SessioneArduino } from "../motori/arduino";
 
 const lib = libreriaDelModulo("arduino");
 const morsettiDi = (tipo: string) => vocePerTipo(lib, tipo)?.morsetti;
@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(21);
+    expect(arduino).toHaveLength(22);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -400,6 +400,37 @@ describe("esempio del ponte H L293D", () => {
     aspetta(s, 1000); // indietro
     expect(velocita()).toBeLessThan(-0.9);
     expect(s.seriale).toContain("Indietro");
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio della serratura con il tastierino", () => {
+  it("1234# apre il chiavistello e accende il verde; un codice sbagliato accende il rosso", () => {
+    const { schema, s } = apri("arduino-serratura.elab");
+    aspetta(s, 300);
+    expect(s.errore).toBeNull();
+    const tastierino = id(schema, "tastierino");
+    const servo = id(schema, "servo");
+    const premi = (tasto: string) => {
+      const k = TASTI_TASTIERINO.indexOf(tasto);
+      const punto = { x: TASTIERINO_X0 + (k % 4) * TASTIERINO_L + 19, y: TASTIERINO_Y0 + Math.floor(k / 4) * TASTIERINO_H + 20 };
+      clicGiuArduino(s, tastierino, false, punto);
+      aspetta(s, 150);
+      clicSuArduino(s, tastierino);
+      aspetta(s, 150);
+    };
+    const angolo = () => vistaDaSessioneArduino(s, schema, lib).componenti[servo].arduino!.angolo;
+    expect(angolo()).toBe(0);
+    for (const t of "1234#") premi(t);
+    expect(s.seriale).toContain("1234");
+    expect(s.seriale).toContain("Codice giusto");
+    expect(angolo()).toBe(90);
+    expect(luminosita(s, schema, "led-verde")).toBeGreaterThan(0.5);
+    aspetta(s, 3500);
+    expect(angolo()).toBe(0);
+    for (const t of "99#") premi(t);
+    expect(s.seriale).toContain("Codice sbagliato!");
+    expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.5);
     expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });

@@ -289,6 +289,13 @@
       "prova": "Premi ▶ AVVIA: il motore gira avanti veloce, poi piano, si ferma, gira indietro e si ferma di nuovo; il monitor seriale scrive cosa sta facendo. Sui piedini OUT1 e OUT2 del L293D un pallino rosso indica l'uscita alta e uno blu quella bassa. Guarda la corrente sul display verde di PS1."
     },
     {
+      "file": "arduino-serratura.elab",
+      "modulo": "arduino",
+      "titolo": "Serratura a codice con il tastierino 4×4",
+      "descrizione": "Un tastierino a matrice 4×4 (righe sui pin 9…6, colonne sui pin 5…2) letto con la libreria Keypad: getKey() dà il tasto appena premuto. I tasti formano una String; con # il programma confronta il codice con «1234»: se è giusto il servo apre il chiavistello per 3 secondi e si accende il LED verde, altrimenti lampeggia il LED rosso. * cancella. La tabella dei tasti è un array a due dimensioni.",
+      "prova": "Premi ▶ AVVIA. Tieni premuti uno alla volta i tasti 1, 2, 3, 4 (il monitor seriale li scrive) e poi #: il servo ruota a 90° e il LED verde si accende per 3 secondi. Prova un codice sbagliato: lampeggia il LED rosso. Ferma la simulazione e cambia il codice nel programma."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

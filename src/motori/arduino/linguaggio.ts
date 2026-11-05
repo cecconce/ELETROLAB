@@ -3,7 +3,8 @@
 // Esegue un sottoinsieme del C++ usato negli sketch scolastici:
 // - #include (ignorati) e #define NOME valore;
 // - tipi int, unsigned int, long, unsigned long, byte, char, bool/boolean,
-//   float, double, String, void; const; array a una dimensione;
+//   float, double, String, void; const; array a una e a due dimensioni
+//   (int t[3][4] = {{…}, {…}, {…}});
 // - funzioni con parametri e valore di ritorno, variabili globali e locali;
 // - if/else, for, while, do-while, switch/case, break, continue, return;
 // - operatori aritmetici, logici, di confronto, sui bit, ++/--, +=…, ?:,
@@ -11,7 +12,9 @@
 // - funzioni di Arduino: pinMode, digitalWrite/Read, analogRead/Write, delay,
 //   delayMicroseconds, millis, micros, map, constrain, min, max, abs, pow,
 //   sqrt, random, randomSeed, tone, noTone, pulseIn;
-// - oggetti Serial, Servo e LiquidCrystal.
+// - oggetti Serial, Servo, LiquidCrystal e Keypad (tastierino a matrice:
+//   makeKeymap, getKey, waitForKey; la scansione di righe e colonne passa
+//   davvero dai pin, come nella libreria originale).
 //
 // Il programma gira come su una scheda vera, ma "a scatti": `avanza(ms)` lo
 // esegue finché il suo orologio non ha raggiunto il tempo richiesto. Ogni
@@ -158,7 +161,7 @@ function sequenza(c: string): string {
 
 /** Tipi conosciuti. */
 const TIPI_NUMERICI = new Set(["int", "long", "short", "byte", "char", "bool", "boolean", "float", "double", "word", "size_t", "uint8_t", "int8_t", "uint16_t", "int16_t", "uint32_t", "int32_t"]);
-const TIPI_OGGETTO = new Set(["Servo", "LiquidCrystal", "String"]);
+const TIPI_OGGETTO = new Set(["Servo", "LiquidCrystal", "String", "Keypad"]);
 
 interface Tipo {
   nome: string; // int, long, float, bool, String, Servo…
@@ -166,7 +169,7 @@ interface Tipo {
 }
 
 type Espr =
-  | { k: "num"; v: number; float: boolean; riga: number }
+  | { k: "num"; v: number; float: boolean; car?: boolean; riga: number }
   | { k: "str"; v: string; riga: number }
   | { k: "id"; nome: string; riga: number }
   | { k: "bin"; op: string; a: Espr; b: Espr; riga: number }
@@ -177,11 +180,15 @@ type Espr =
   | { k: "chiama"; nome: string; arg: Espr[]; riga: number }
   | { k: "metodo"; oggetto: Espr; nome: string; arg: Espr[]; riga: number }
   | { k: "indice"; arr: Espr; i: Espr; riga: number }
-  | { k: "cast"; tipo: Tipo; e: Espr; riga: number };
+  | { k: "cast"; tipo: Tipo; e: Espr; riga: number }
+  /** Valori fra graffe annidati nell'inizializzazione di un array a due dimensioni. */
+  | { k: "lista"; el: Espr[]; riga: number };
 
 interface Dichiarato {
   nome: string;
   dimensione: Espr | null | "auto"; // null = non è un array
+  /** Seconda dimensione (array a due dimensioni: int t[3][4]), null se non c'è. */
+  dimensione2: Espr | null;
   init: Espr | Espr[] | null;
   costruttore: Espr[] | null;
 }
@@ -334,6 +341,19 @@ class Parser {
     return { k: "blocco", corpo, riga };
   }
 
+  /** Valori fra graffe { a, b, c } dentro l'inizializzazione di un array a due dimensioni. */
+  private listaGraffe(): Espr {
+    const riga = this.cur.riga;
+    this.aspetta("{");
+    const el: Espr[] = [];
+    while (!this.eOp("}")) {
+      el.push(this.assegnazione());
+      if (!this.eOp("}")) this.aspetta(",");
+    }
+    this.p++;
+    return { k: "lista", el, riga };
+  }
+
   private dichiarazione(): Istr {
     const riga = this.cur.riga;
     const tipo = this.tipo();
@@ -342,12 +362,20 @@ class Parser {
       if (dich.length > 0) this.avanti(); // virgola
       const nome = this.nome("il nome della variabile");
       let dimensione: Dichiarato["dimensione"] = null;
+      let dimensione2: Espr | null = null;
       let init: Dichiarato["init"] = null;
       let costruttore: Espr[] | null = null;
       if (this.eOp("[")) {
         this.p++;
         dimensione = this.eOp("]") ? "auto" : this.espressione();
         this.aspetta("]");
+        if (this.eOp("[")) {
+          // Seconda dimensione: obbligatoria (come in C).
+          this.p++;
+          if (this.eOp("]")) throw new ErroreArduino(this.cur.riga, "In un array a due dimensioni la seconda dimensione va scritta, per esempio int t[3][4].");
+          dimensione2 = this.espressione();
+          this.aspetta("]");
+        }
       }
       if (this.eOp("(")) {
         this.p++;
@@ -367,14 +395,14 @@ class Parser {
           this.p++;
           const valori: Espr[] = [];
           while (!this.eOp("}")) {
-            valori.push(this.assegnazione());
+            valori.push(this.eOp("{") ? this.listaGraffe() : this.assegnazione());
             if (!this.eOp("}")) this.aspetta(",");
           }
           this.p++;
           init = valori;
         } else init = this.assegnazione();
       }
-      dich.push({ nome, dimensione, init, costruttore });
+      dich.push({ nome, dimensione, dimensione2, init, costruttore });
     } while (this.eOp(","));
     this.aspetta(";");
     return { k: "var", tipo, dich, riga };
@@ -593,7 +621,7 @@ class Parser {
       case "num":
         return { k: "num", v: t.v, float: t.float, riga: t.riga };
       case "car":
-        return { k: "num", v: t.v, float: false, riga: t.riga };
+        return { k: "num", v: t.v, float: false, car: true, riga: t.riga };
       case "str": {
         // Testi consecutivi si uniscono: "ab" "cd"
         let v = t.v;
@@ -637,7 +665,7 @@ export function analizzaSketch(testo: string): Programma {
 // ============================================================ Valori
 
 type Valore =
-  | { t: "n"; v: number; float: boolean } // numero (intero o con la virgola)
+  | { t: "n"; v: number; float: boolean; car?: boolean } // numero (intero o con la virgola; car = di tipo char, si stampa come carattere)
   | { t: "s"; v: string } // String
   | { t: "a"; el: Cella[]; tipo: Tipo } // array
   | { t: "o"; classe: string; dati: Record<string, unknown>; nome: string } // oggetto (Servo, LiquidCrystal)
@@ -669,7 +697,9 @@ function converti(v: Valore, tipo: Tipo, riga: number): Valore {
     case "byte":
       return num(((Math.trunc(x) % 256) + 256) % 256);
     case "char":
-      return num(tipo.senzaSegno ? ((Math.trunc(x) % 256) + 256) % 256 : ((((Math.trunc(x) + 128) % 256) + 256) % 256) - 128);
+      // unsigned char si comporta come byte (numero); char si stampa come carattere.
+      if (tipo.senzaSegno) return num(((Math.trunc(x) % 256) + 256) % 256);
+      return { t: "n", v: ((((Math.trunc(x) + 128) % 256) + 256) % 256) - 128, float: false, car: true };
     case "long": {
       const n = Math.trunc(x);
       return num(tipo.senzaSegno ? n >>> 0 : n | 0);
@@ -685,6 +715,8 @@ function converti(v: Valore, tipo: Tipo, riga: number): Valore {
 function testoDi(v: Valore, base?: number): string {
   if (v.t === "s") return v.v;
   if (v.t === "n") {
+    // Un char si scrive come carattere (Serial.println(tasto) → «7»), a meno di chiedere una base.
+    if (v.car && base === undefined) return String.fromCharCode(v.v & 0xff);
     if (base === 16) return (v.v >>> 0).toString(16).toUpperCase();
     if (base === 2) return (v.v >>> 0).toString(2);
     if (base === 8) return (v.v >>> 0).toString(8);
@@ -755,8 +787,11 @@ class Ambiente {
 const COSTANTI: Record<string, number> = {
   HIGH: 1, LOW: 0, true: 1, false: 0, INPUT: 0, OUTPUT: 1, INPUT_PULLUP: 2, LED_BUILTIN: 13,
   A0: 14, A1: 15, A2: 16, A3: 17, A4: 18, A5: 19, DEC: 10, HEX: 16, BIN: 2, OCT: 8, NULL: 0,
-  PI: Math.PI, HALF_PI: Math.PI / 2, TWO_PI: Math.PI * 2, LSBFIRST: 0, MSBFIRST: 1,
+  PI: Math.PI, HALF_PI: Math.PI / 2, TWO_PI: Math.PI * 2, LSBFIRST: 0, MSBFIRST: 1, NO_KEY: 0,
 };
+
+/** Intervallo minimo fra due scansioni del tastierino (µs): l'antirimbalzo della libreria Keypad. */
+const KEYPAD_ANTIRIMBALZO_US = 10000;
 
 /** Nome del pin a partire dal numero usato nel programma (13 → D13, 14 → A0). */
 export function nomePin(n: number): string | null {
@@ -924,6 +959,33 @@ export class Esecutore {
   }
 
   private *dichiara(tipo: Tipo, d: Dichiarato, amb: Ambiente, riga: number): Generator<Pausa, void, void> {
+    if (d.dimensione !== null && d.dimensione2 !== null) {
+      // Array a due dimensioni: un array di righe, ognuna un array di valori.
+      const iniziali = Array.isArray(d.init) ? d.init : [];
+      if (d.init !== null && !Array.isArray(d.init)) throw new ErroreArduino(riga, `Per riempire l'array ${d.nome} usa le graffe {{ … }, { … }}.`);
+      const d2 = yield* this.valuta(d.dimensione2, amb);
+      if (d2.t !== "n" || d2.v <= 0) throw new ErroreArduino(riga, `La seconda dimensione dell'array ${d.nome} deve essere un numero.`);
+      const colonne = Math.trunc(d2.v);
+      let righe = iniziali.length;
+      if (d.dimensione !== "auto") {
+        const d1 = yield* this.valuta(d.dimensione, amb);
+        if (d1.t !== "n" || d1.v < 0) throw new ErroreArduino(riga, `La dimensione dell'array ${d.nome} deve essere un numero.`);
+        righe = Math.trunc(d1.v);
+      }
+      if (iniziali.length > righe) throw new ErroreArduino(riga, `Troppe righe per l'array ${d.nome} (al massimo ${righe}).`);
+      const vuoto = (): Valore => (tipo.nome === "String" ? { t: "s", v: "" } : num(0, tipo.nome === "float"));
+      const el: Cella[] = [];
+      for (let r = 0; r < righe; r++) {
+        const sorgente = iniziali[r];
+        const valori = sorgente === undefined ? [] : sorgente.k === "lista" ? sorgente.el : [sorgente];
+        if (valori.length > colonne) throw new ErroreArduino(riga, `Troppi valori nella riga ${r} dell'array ${d.nome} (al massimo ${colonne}).`);
+        const riga2: Cella[] = [];
+        for (let c = 0; c < colonne; c++) riga2.push({ tipo, valore: converti(c < valori.length ? yield* this.valuta(valori[c], amb) : vuoto(), tipo, riga) });
+        el.push({ tipo: { nome: "array", senzaSegno: false }, valore: { t: "a", el: riga2, tipo } });
+      }
+      amb.definisci(d.nome, { tipo: { nome: "array", senzaSegno: false }, valore: { t: "a", el, tipo: { nome: "array", senzaSegno: false } } });
+      return;
+    }
     if (d.dimensione !== null) {
       const iniziali = Array.isArray(d.init) ? d.init : [];
       if (d.init !== null && !Array.isArray(d.init)) {
@@ -958,6 +1020,13 @@ export class Esecutore {
       }
       const dati: Record<string, unknown> = tipo.nome === "Servo" ? { pin: null, angolo: 90 } : { pin: arg, colonne: 16, righe: 2, cx: 0, cy: 0, testo: [] as string[] };
       amb.definisci(d.nome, { tipo, valore: { t: "o", classe: tipo.nome, dati, nome: d.nome } });
+      return;
+    }
+    if (tipo.nome === "Keypad" && d.costruttore) {
+      // Keypad tastiera(makeKeymap(tasti), pinRighe, pinColonne, RIGHE, COLONNE);
+      const valori: Valore[] = [];
+      for (const a of d.costruttore) valori.push(yield* this.valuta(a, amb));
+      amb.definisci(d.nome, { tipo, valore: this.creaKeypad(valori, d.nome, riga) });
       return;
     }
     let valore: Valore = tipo.nome === "String" ? { t: "s", v: "" } : num(0, tipo.nome === "float");
@@ -995,7 +1064,9 @@ export class Esecutore {
   private *valuta(e: Espr, amb: Ambiente): Generator<Pausa, Valore, void> {
     switch (e.k) {
       case "num":
-        return num(e.v, e.float);
+        return e.car ? { t: "n", v: e.v, float: false, car: true } : num(e.v, e.float);
+      case "lista":
+        throw new ErroreArduino(e.riga, "Le graffe annidate { … } si usano solo per riempire un array a due dimensioni.");
       case "str":
         return { t: "s", v: e.v };
       case "id": {
@@ -1015,6 +1086,7 @@ export class Esecutore {
       }
       case "assegna": {
         const c = yield* this.cella(e.bersaglio, amb);
+        if (c.tipo.nome === "array") throw new ErroreArduino(e.riga, "Non si può assegnare un valore a un intero array: scrivi anche l'indice, per esempio t[1][2] = 5.");
         let v = yield* this.valuta(e.valore, amb);
         if (e.op !== "=") v = this.operazione(e.op.slice(0, -1), c.valore, v, e.riga);
         c.valore = converti(v, c.tipo, e.riga);
@@ -1119,10 +1191,63 @@ export class Esecutore {
     return p;
   }
 
+  /** Crea l'oggetto Keypad: mappa dei tasti (array a due dimensioni), pin delle righe e delle colonne. */
+  private creaKeypad(valori: Valore[], nome: string, riga: number): Valore {
+    const [mappa, pr, pc, nr, nc] = valori;
+    const pinDi = (v: Valore | undefined, quanti: number, cosa: string) => {
+      if (!v || v.t !== "a") throw new ErroreArduino(riga, `Keypad: ${cosa} vanno in un array, per esempio byte pinRighe[4] = {9, 8, 7, 6};`);
+      return v.el.slice(0, quanti).map((c) => this.pin(c.valore.t === "n" ? c.valore.v : -1, riga, "Keypad"));
+    };
+    const righe = nr?.t === "n" ? Math.trunc(nr.v) : 4;
+    const colonne = nc?.t === "n" ? Math.trunc(nc.v) : 4;
+    if (!mappa || mappa.t !== "a" || mappa.el.length < righe || mappa.el.some((r) => r.valore.t !== "a")) {
+      throw new ErroreArduino(riga, "Keypad: il primo valore è makeKeymap(tasti), con tasti un array a due dimensioni come char tasti[4][4] = {{'1','2','3','A'}, …};");
+    }
+    return {
+      t: "o",
+      classe: "Keypad",
+      nome,
+      dati: { mappa, righe: pinDi(pr, righe, "i pin delle righe"), colonne: pinDi(pc, colonne, "i pin delle colonne"), premuto: 0, ultimaScansione: -Infinity, antirimbalzo: KEYPAD_ANTIRIMBALZO_US },
+    };
+  }
+
+  /**
+   * Scansione del tastierino come la fa la libreria: righe come ingressi con
+   * pull-up, una colonna alla volta portata a LOW; la riga che legge LOW è
+   * quella del tasto premuto. Torna il carattere del tasto (0 se nessuno).
+   */
+  private scansionaKeypad(d: { mappa: Extract<Valore, { t: "a" }>; righe: string[]; colonne: string[] }): number {
+    for (const r of d.righe) this.hw.pinMode(r, "INPUT_PULLUP");
+    let tasto = 0;
+    d.colonne.forEach((c, j) => {
+      this.hw.pinMode(c, "OUTPUT");
+      this.hw.digitalWrite(c, 0);
+      d.righe.forEach((r, i) => {
+        if (tasto === 0 && this.hw.digitalRead(r) === 0) {
+          const riga = d.mappa.el[i]?.valore;
+          const v = riga?.t === "a" ? riga.el[j]?.valore : undefined;
+          tasto = v?.t === "n" ? v.v : 0;
+        }
+      });
+      this.hw.pinMode(c, "INPUT");
+    });
+    return tasto;
+  }
+
   private *chiamata(nome: string, arg: Espr[], amb: Ambiente, riga: number): Generator<Pausa, Valore, void> {
     yield* this.costo();
     const args = (q: number[]) => this.argomentiNumerici(arg, amb, q, nome, riga);
     switch (nome) {
+      case "makeKeymap": {
+        // makeKeymap(tasti) serve solo a passare la tabella dei tasti al costruttore.
+        const v = arg[0] ? yield* this.valuta(arg[0], amb) : VOID;
+        return v;
+      }
+      case "Keypad": {
+        const valori: Valore[] = [];
+        for (const a of arg) valori.push(yield* this.valuta(a, amb));
+        return this.creaKeypad(valori, "keypad", riga);
+      }
       case "pinMode": {
         const [p, m] = yield* args([2]);
         this.hw.pinMode(this.pin(p, riga, nome), m === 1 ? "OUTPUT" : m === 2 ? "INPUT_PULLUP" : "INPUT");
@@ -1338,7 +1463,7 @@ export class Esecutore {
       }
       throw new ErroreArduino(riga, `Le String non hanno la funzione ${e.nome}().`);
     }
-    if (ogg.t !== "o") throw new ErroreArduino(riga, `Il punto si usa dopo un oggetto (Serial, Servo, LiquidCrystal, String).`);
+    if (ogg.t !== "o") throw new ErroreArduino(riga, `Il punto si usa dopo un oggetto (Serial, Servo, LiquidCrystal, Keypad, String).`);
     if (ogg.classe === "Serial") {
       switch (e.nome) {
         case "begin":
@@ -1372,6 +1497,37 @@ export class Esecutore {
           return VOID;
       }
       throw new ErroreArduino(riga, `Serial non ha la funzione ${e.nome}().`);
+    }
+    if (ogg.classe === "Keypad") {
+      const d = ogg.dati as { mappa: Extract<Valore, { t: "a" }>; righe: string[]; colonne: string[]; premuto: number; ultimaScansione: number; antirimbalzo: number };
+      const carattere = (c: number): Valore => ({ t: "n", v: c, float: false, car: true });
+      /** Nuovo tasto premuto (una volta sola per ogni pressione), 0 se nessuno. */
+      const nuovoTasto = () => {
+        if (this.tempoUs - d.ultimaScansione < d.antirimbalzo) return 0;
+        d.ultimaScansione = this.tempoUs;
+        const ora = this.scansionaKeypad(d);
+        const nuovo = ora !== 0 && ora !== d.premuto ? ora : 0;
+        d.premuto = ora;
+        return nuovo;
+      };
+      switch (e.nome) {
+        case "getKey":
+          return carattere(nuovoTasto());
+        case "waitForKey": {
+          // Aspetta (senza bloccare la simulazione) finché non si preme un tasto.
+          for (;;) {
+            const t = nuovoTasto();
+            if (t !== 0) return carattere(t);
+            yield d.antirimbalzo;
+          }
+        }
+        case "setDebounceTime":
+          d.antirimbalzo = Math.max(1, n(0)) * 1000;
+          return VOID;
+        case "isPressed":
+          return num(this.scansionaKeypad(d) === n(0) ? 1 : 0);
+      }
+      throw new ErroreArduino(riga, `Keypad non ha la funzione ${e.nome}().`);
     }
     if (ogg.classe === "Servo") {
       switch (e.nome) {

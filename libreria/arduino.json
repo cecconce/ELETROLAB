@@ -3093,6 +3093,67 @@
       "icona": "ard-sensore-gas.svg"
     },
     {
+      "id": "tastierino",
+      "nome": "Tastierino 4×4",
+      "categoria": "ingressi",
+      "sigla": "S",
+      "descrizione": "Tastierino a membrana con 16 tasti in 4 righe e 4 colonne: premendo un tasto si collega la sua riga alla sua colonna. Gli 8 piedini (R1…R4 righe, C1…C4 colonne) vanno a 8 pin dell'Arduino; il programma usa la libreria Keypad (makeKeymap, getKey) che scandisce righe e colonne. In simulazione: tieni premuto un tasto con il mouse.",
+      "paroleChiave": [
+        "tastierino",
+        "tastiera",
+        "keypad",
+        "tasti",
+        "codice",
+        "password",
+        "matrice"
+      ],
+      "larghezza": 180,
+      "altezza": 220,
+      "morsetti": [
+        {
+          "id": "R1",
+          "x": 20,
+          "y": 220
+        },
+        {
+          "id": "R2",
+          "x": 40,
+          "y": 220
+        },
+        {
+          "id": "R3",
+          "x": 60,
+          "y": 220
+        },
+        {
+          "id": "R4",
+          "x": 80,
+          "y": 220
+        },
+        {
+          "id": "C1",
+          "x": 100,
+          "y": 220
+        },
+        {
+          "id": "C2",
+          "x": 120,
+          "y": 220
+        },
+        {
+          "id": "C3",
+          "x": 140,
+          "y": 220
+        },
+        {
+          "id": "C4",
+          "x": 160,
+          "y": 220
+        }
+      ],
+      "icona": "ard-tastierino.svg"
+    },
+    {
       "id": "l293d",
       "nome": "Ponte H L293D",
       "categoria": "uscite",
