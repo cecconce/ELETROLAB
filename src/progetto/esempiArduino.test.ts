@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(22);
+    expect(arduino).toHaveLength(23);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -431,6 +431,23 @@ describe("esempio della serratura con il tastierino", () => {
     for (const t of "99#") premi(t);
     expect(s.seriale).toContain("Codice sbagliato!");
     expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.5);
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio del registro a scorrimento 74HC595", () => {
+  it("gli 8 LED mostrano il numero in binario", () => {
+    const { schema, s } = apri("arduino-74hc595.elab");
+    // LED da sinistra (Q7) a destra (Q0): sono posati da Q0 a Q7, quindi in ordine inverso.
+    const led = schema.componenti.filter((c) => c.tipo === "led-rosso").map((c) => c.id);
+    const bit = () => [...led].reverse().map((l) => ((s.aspetto[l]?.luminosita ?? 0) > 0.5 ? 1 : 0)).join("");
+    aspetta(s, 100); // numero 0
+    expect(bit()).toBe("00000000");
+    aspetta(s, 1500); // 5 passi da 300 ms: numero 5
+    expect(s.seriale.trim().split("\n").pop()).toBe("5 = 101");
+    expect(bit()).toBe("00000101");
+    aspetta(s, 300 * 8); // numero 13
+    expect(bit()).toBe("00001101");
     expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });

@@ -296,6 +296,13 @@
       "prova": "Premi ▶ AVVIA. Tieni premuti uno alla volta i tasti 1, 2, 3, 4 (il monitor seriale li scrive) e poi #: il servo ruota a 90° e il LED verde si accende per 3 secondi. Prova un codice sbagliato: lampeggia il LED rosso. Ferma la simulazione e cambia il codice nel programma."
     },
     {
+      "file": "arduino-74hc595.elab",
+      "modulo": "arduino",
+      "titolo": "Contatore binario con il registro a scorrimento 74HC595",
+      "descrizione": "Il registro a scorrimento 74HC595 dà 8 uscite usando solo 3 pin dell'Arduino: dato (DS), clock (SH_CP) e latch (ST_CP). shiftOut manda gli 8 bit uno alla volta, ognuno con un impulso di clock; il fronte di salita del latch li fa comparire tutti insieme su Q0…Q7. Gli 8 LED contano da 0 a 255 in binario: nella fila in alto i 4 bit alti (Q7 = 128 … Q4 = 16), in quella sotto i 4 bit bassi (Q3 = 8 … Q0 = 1).",
+      "prova": "Premi ▶ AVVIA: i LED contano in binario (1, 10, 11, 100…) e il monitor seriale scrive il numero e i suoi bit. Confronta i LED accesi con il numero: per esempio 5 = 101 accende nella fila sotto il secondo e il quarto LED (Q2 e Q0). Prova a cambiare MSBFIRST in LSBFIRST: l'ordine dei LED si rovescia."
+    },
+    {
       "file": "elettronica-partitore.elab",
       "modulo": "elettronica",
       "titolo": "Partitore di tensione e multimetro",

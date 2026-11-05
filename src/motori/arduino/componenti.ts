@@ -67,7 +67,25 @@ export interface Interazioni {
   luce: Readonly<Record<string, number>>;
   /** Sensori di temperatura: gradi Celsius (se manca vale TEMPERATURA_PREDEFINITA). */
   temperature?: Readonly<Record<string, number>>;
+  /** Registri a scorrimento 74HC595: uscite memorizzate, uscite abilitate, uscita seriale Q7'. */
+  registri?: Readonly<Record<string, StatoRegistro>>;
 }
+
+/** Stato di un 74HC595 (aggiornato dalla sessione a ogni fronte di clock e di latch). */
+export interface StatoRegistro {
+  /** Registro a scorrimento (8 bit, Q0 = bit 0). */
+  scorrimento: number;
+  /** Registro di uscita (copiato dallo scorrimento sul fronte di ST_CP). */
+  uscite: number;
+  /** OE a LOW e chip alimentato: le uscite pilotano i piedini. */
+  abilitato: boolean;
+  /** Livelli precedenti di SH_CP e ST_CP, per riconoscere i fronti di salita. */
+  clock: number;
+  latch: number;
+}
+
+/** Uscite del 74HC595 nell'ordine dei bit. */
+export const USCITE_595 = ["Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"];
 
 /** Temperatura iniziale dei sensori (°C) e passo del clic. */
 export const TEMPERATURA_PREDEFINITA = 20;
@@ -247,6 +265,17 @@ export function elementiCircuito(
       case "resistenza":
         R(c.id, n("1"), n("2"), c.valore ?? RESISTENZA_PREDEFINITA);
         break;
+      case "74hc595": {
+        // Alimentazione del chip; uscite come i pin dell'Arduino (circa 50 Ω),
+        // riferite al GND (collegato a quello della scheda).
+        R(`${c.id}:alim`, n("VCC"), n("GND"), 10000);
+        const st = interazioni.registri?.[c.id];
+        if (st?.abilitato) {
+          USCITE_595.forEach((q, i) => el.push({ tipo: "generatore", id: `${c.id}:${q}`, nodo: n(q), volt: 5 * ((st.uscite >> i) & 1), ohm: 50 }));
+          el.push({ tipo: "generatore", id: `${c.id}:Q7S`, nodo: n("Q7S"), volt: 5 * ((st.scorrimento >> 7) & 1), ohm: 50 });
+        }
+        break;
+      }
       case "tastierino": {
         // Tasto premuto: unisce la sua riga alla sua colonna (matrice di contatti).
         const tasto = interazioni.premuti.has(c.id) ? interazioni.posizioni[c.id] : undefined;

@@ -778,6 +778,42 @@ voce(
   ),
 );
 
+// ---------------------------------------------------------- Registro a scorrimento 74HC595
+{
+  const basso: [string, string][] = [["Q1", "Q1"], ["Q2", "Q2"], ["Q3", "Q3"], ["Q4", "Q4"], ["Q5", "Q5"], ["Q6", "Q6"], ["Q7", "Q7"], ["GND", "GND"]];
+  const alto: [string, string][] = [["VCC", "VCC"], ["Q0", "Q0"], ["DS", "DS"], ["OE", "OE"], ["STCP", "ST_CP"], ["SHCP", "SH_CP"], ["MR", "MR"], ["Q7S", "Q7'"]];
+  voce(
+    {
+      id: "74hc595",
+      nome: "Registro a scorrimento 74HC595",
+      categoria: "uscite",
+      sigla: "U",
+      descrizione:
+        "Integrato che dà 8 uscite (Q0…Q7) usando solo 3 pin dell'Arduino. Si infila a cavallo del solco. DS = dato, SH_CP = clock (a ogni impulso i bit scorrono di un posto e Q0 prende DS), ST_CP = latch (al fronte di salita le uscite mostrano i bit arrivati). Con shiftOut(DS, SH_CP, MSBFIRST, valore) si mandano 8 bit in un colpo. VCC a 5 V, GND a GND, MR (reset) a 5 V, OE (abilitazione) a GND. Q7' esce il bit che «cade fuori»: serve per collegare più registri in cascata.",
+      paroleChiave: ["74hc595", "595", "registro", "scorrimento", "shift register", "shiftout", "uscite", "led"],
+      larghezza: 140,
+      altezza: 60,
+      morsetti: [...basso.map(([id], i) => ({ id, x: i * 20, y: 60 })), ...alto.map(([id], i) => ({ id, x: i * 20, y: 0 }))],
+    },
+    svg(
+      140,
+      60,
+      [
+        ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((i) => [
+          `<rect x="${i * 20 - 3}" y="0" width="6" height="12" fill="#bdbdbd"/>`,
+          `<rect x="${i * 20 - 3}" y="48" width="6" height="12" fill="#bdbdbd"/>`,
+        ]),
+        `<rect x="1" y="10" width="138" height="40" rx="3" fill="#262626" stroke="#000"/>`,
+        `<path d="M1 24 A6 6 0 0 1 1 36" fill="#111"/>`,
+        `<circle cx="9" cy="42" r="2.5" fill="#3a3a3a"/>`,
+        testo(70, 33, "74HC595", 10, "#e0e0e0", 'font-weight="bold"'),
+        ...basso.map(([, t], i) => testo(Math.min(134, Math.max(6, i * 20)), 47, t, 4.6, "#bdbdbd")),
+        ...alto.map(([, t], i) => testo(Math.min(134, Math.max(6, i * 20)), 18, t, 4.6, "#bdbdbd")),
+      ].join("\n"),
+    ),
+  );
+}
+
 // ---------------------------------------------------------- Ponte H L293D
 {
   // Piedini: in basso 1…8 da sinistra, in alto 16…9 da sinistra (come guardando

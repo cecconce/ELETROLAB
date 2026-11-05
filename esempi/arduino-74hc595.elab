@@ -1,0 +1,505 @@
+{
+  "formato": "elettrolab",
+  "versione": 1,
+  "modulo": "arduino",
+  "programma": "0.1.0",
+  "salvato": "2026-11-05T19:31:34.995Z",
+  "schema": {
+    "componenti": [
+      {
+        "id": "arduino-uno-1",
+        "tipo": "arduino-uno",
+        "etichetta": "U1",
+        "x": 0,
+        "y": 100,
+        "larghezza": 420,
+        "altezza": 300
+      },
+      {
+        "id": "breadboard-1",
+        "tipo": "breadboard",
+        "etichetta": "",
+        "x": 480,
+        "y": 0,
+        "larghezza": 660,
+        "altezza": 380
+      },
+      {
+        "id": "74hc595-1",
+        "tipo": "74hc595",
+        "etichetta": "U2",
+        "x": 740,
+        "y": 160,
+        "larghezza": 140,
+        "altezza": 60
+      },
+      {
+        "id": "led-rosso-1",
+        "tipo": "led-rosso",
+        "etichetta": "D1",
+        "x": 1060,
+        "y": -220,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-1",
+        "tipo": "resistenza",
+        "etichetta": "R1",
+        "x": 980,
+        "y": -160,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-2",
+        "tipo": "led-rosso",
+        "etichetta": "D2",
+        "x": 920,
+        "y": -220,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-2",
+        "tipo": "resistenza",
+        "etichetta": "R2",
+        "x": 840,
+        "y": -160,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-3",
+        "tipo": "led-rosso",
+        "etichetta": "D3",
+        "x": 780,
+        "y": -220,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-3",
+        "tipo": "resistenza",
+        "etichetta": "R3",
+        "x": 700,
+        "y": -160,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-4",
+        "tipo": "led-rosso",
+        "etichetta": "D4",
+        "x": 640,
+        "y": -220,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-4",
+        "tipo": "resistenza",
+        "etichetta": "R4",
+        "x": 560,
+        "y": -160,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-5",
+        "tipo": "led-rosso",
+        "etichetta": "D5",
+        "x": 1060,
+        "y": -380,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-5",
+        "tipo": "resistenza",
+        "etichetta": "R5",
+        "x": 980,
+        "y": -320,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-6",
+        "tipo": "led-rosso",
+        "etichetta": "D6",
+        "x": 920,
+        "y": -380,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-6",
+        "tipo": "resistenza",
+        "etichetta": "R6",
+        "x": 840,
+        "y": -320,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-7",
+        "tipo": "led-rosso",
+        "etichetta": "D7",
+        "x": 780,
+        "y": -380,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-7",
+        "tipo": "resistenza",
+        "etichetta": "R7",
+        "x": 700,
+        "y": -320,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      },
+      {
+        "id": "led-rosso-8",
+        "tipo": "led-rosso",
+        "etichetta": "D8",
+        "x": 640,
+        "y": -380,
+        "larghezza": 40,
+        "altezza": 80
+      },
+      {
+        "id": "resistenza-8",
+        "tipo": "resistenza",
+        "etichetta": "R8",
+        "x": 560,
+        "y": -320,
+        "larghezza": 80,
+        "altezza": 40,
+        "valore": 220
+      }
+    ],
+    "fili": [
+      {
+        "id": "filo-1",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "5V"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap1"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-2",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "GND1"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am2"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-3",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "Am30"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bm30"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-4",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a12"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap12"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-5",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a18"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Ap18"
+        },
+        "colore": "#d32f2f"
+      },
+      {
+        "id": "filo-6",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "a15"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am15"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-7",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j19"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Bm19"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-8",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D11"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b14"
+        },
+        "colore": "#1565c0"
+      },
+      {
+        "id": "filo-9",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D8"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b16"
+        },
+        "colore": "#f9a825"
+      },
+      {
+        "id": "filo-10",
+        "da": {
+          "componente": "arduino-uno-1",
+          "morsetto": "D12"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "b17"
+        },
+        "colore": "#ef6c00"
+      },
+      {
+        "id": "filo-11",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "c13"
+        },
+        "a": {
+          "componente": "resistenza-1",
+          "morsetto": "1"
+        },
+        "colore": "#7e57c2"
+      },
+      {
+        "id": "filo-12",
+        "da": {
+          "componente": "led-rosso-1",
+          "morsetto": "K"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am30"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-13",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j12"
+        },
+        "a": {
+          "componente": "resistenza-2",
+          "morsetto": "1"
+        },
+        "colore": "#7e57c2"
+      },
+      {
+        "id": "filo-14",
+        "da": {
+          "componente": "led-rosso-2",
+          "morsetto": "K"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am23"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-15",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j13"
+        },
+        "a": {
+          "componente": "resistenza-3",
+          "morsetto": "1"
+        },
+        "colore": "#7e57c2"
+      },
+      {
+        "id": "filo-16",
+        "da": {
+          "componente": "led-rosso-3",
+          "morsetto": "K"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am16"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-17",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j14"
+        },
+        "a": {
+          "componente": "resistenza-4",
+          "morsetto": "1"
+        },
+        "colore": "#7e57c2"
+      },
+      {
+        "id": "filo-18",
+        "da": {
+          "componente": "led-rosso-4",
+          "morsetto": "K"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am9"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-19",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j15"
+        },
+        "a": {
+          "componente": "resistenza-5",
+          "morsetto": "1"
+        },
+        "colore": "#7e57c2"
+      },
+      {
+        "id": "filo-20",
+        "da": {
+          "componente": "led-rosso-5",
+          "morsetto": "K"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am29"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-21",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j16"
+        },
+        "a": {
+          "componente": "resistenza-6",
+          "morsetto": "1"
+        },
+        "colore": "#7e57c2"
+      },
+      {
+        "id": "filo-22",
+        "da": {
+          "componente": "led-rosso-6",
+          "morsetto": "K"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am22"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-23",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j17"
+        },
+        "a": {
+          "componente": "resistenza-7",
+          "morsetto": "1"
+        },
+        "colore": "#7e57c2"
+      },
+      {
+        "id": "filo-24",
+        "da": {
+          "componente": "led-rosso-7",
+          "morsetto": "K"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am15"
+        },
+        "colore": "#212121"
+      },
+      {
+        "id": "filo-25",
+        "da": {
+          "componente": "breadboard-1",
+          "morsetto": "j18"
+        },
+        "a": {
+          "componente": "resistenza-8",
+          "morsetto": "1"
+        },
+        "colore": "#7e57c2"
+      },
+      {
+        "id": "filo-26",
+        "da": {
+          "componente": "led-rosso-8",
+          "morsetto": "K"
+        },
+        "a": {
+          "componente": "breadboard-1",
+          "morsetto": "Am8"
+        },
+        "colore": "#212121"
+      }
+    ],
+    "codice": "// Contatore binario con il registro a scorrimento 74HC595.\n// Con soli 3 pin (dato, clock e latch) si comandano 8 LED: shiftOut manda gli\n// 8 bit uno alla volta sul pin del dato, con un impulso di clock per bit;\n// poi un impulso sul latch li fa comparire tutti insieme sulle uscite Q0…Q7.\n// I LED mostrano il numero in binario: in alto i 4 bit alti (Q7 = 128 … Q4 = 16),\n// sotto i 4 bit bassi (Q3 = 8 … Q0 = 1), sempre con il bit più alto a sinistra.\n\nconst int DATI = 11;    // DS\nconst int CLOCK = 12;   // SH_CP\nconst int LATCH = 8;    // ST_CP\n\nvoid setup() {\n  pinMode(DATI, OUTPUT);\n  pinMode(CLOCK, OUTPUT);\n  pinMode(LATCH, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  for (int numero = 0; numero < 256; numero++) {\n    digitalWrite(LATCH, LOW);\n    shiftOut(DATI, CLOCK, MSBFIRST, numero);\n    digitalWrite(LATCH, HIGH);   // fronte di salita: le uscite cambiano\n    Serial.print(numero);\n    Serial.print(\" = \");\n    Serial.println(numero, BIN);\n    delay(300);\n  }\n}\n"
+  }
+}

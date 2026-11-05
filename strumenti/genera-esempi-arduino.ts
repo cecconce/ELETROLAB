@@ -1158,3 +1158,67 @@ void loop() {
 `),
   );
 }
+
+// 23. Contatore binario a 8 LED con il registro a scorrimento 74HC595
+{
+  const b = costruttore();
+  alimenta(b);
+  b.filo("Am30", "Bm30"); // GND anche sulla linea blu in basso
+  // 74HC595 a cavallo del solco: piedini 16…9 in e12…e19, piedini 1…8 in f12…f19.
+  const p = foro("e12");
+  b.posa("74hc595", p.x, p.y);
+  b.filo("a12", "Ap12", "#d32f2f"); // VCC (16)
+  b.filo("a18", "Ap18", "#d32f2f"); // MR (10) a 5 V: nessun reset
+  b.filo("a15", "Am15"); // OE (13) a GND: uscite abilitate
+  b.filo("j19", "Bm19"); // GND (8)
+  b.filo("U:D11", "b14", BLU); // DS (14)
+  b.filo("U:D8", "b16", GIALLO); // ST_CP (12), latch
+  b.filo("U:D12", "b17", ARANCIONE); // SH_CP (11), clock
+  // Otto LED sopra la breadboard in due file: in alto Q7…Q4 (i bit alti), sotto
+  // Q3…Q0 (i bit bassi), sempre con il bit più alto a sinistra.
+  // Ogni resistenza ha il secondo piedino nello stesso punto dell'anodo del suo LED.
+  const fori = ["c13", "j12", "j13", "j14", "j15", "j16", "j17", "j18"]; // Q0…Q7
+  for (let k = 0; k < 8; k++) {
+    const colonna = 3 - (k % 4); // 0 = a sinistra
+    const x = 640 + colonna * 140;
+    const y = k >= 4 ? -380 : -220;
+    b.posa("led-rosso", x, y);
+    b.posa("resistenza", x - 80, y + 60, { valore: 220 });
+    b.filo(fori[k], `resistenza-${k + 1}:1`, "#7e57c2");
+    // Catodo sulla linea GND sotto il LED (colonna della breadboard più vicina).
+    b.filo(`led-rosso-${k + 1}:K`, `Am${(x + 40 - 500) / 20 - (k >= 4 ? 1 : 0)}`, "#212121");
+  }
+  scrivi(
+    "arduino-74hc595.elab",
+    b.schema(`// Contatore binario con il registro a scorrimento 74HC595.
+// Con soli 3 pin (dato, clock e latch) si comandano 8 LED: shiftOut manda gli
+// 8 bit uno alla volta sul pin del dato, con un impulso di clock per bit;
+// poi un impulso sul latch li fa comparire tutti insieme sulle uscite Q0…Q7.
+// I LED mostrano il numero in binario: in alto i 4 bit alti (Q7 = 128 … Q4 = 16),
+// sotto i 4 bit bassi (Q3 = 8 … Q0 = 1), sempre con il bit più alto a sinistra.
+
+const int DATI = 11;    // DS
+const int CLOCK = 12;   // SH_CP
+const int LATCH = 8;    // ST_CP
+
+void setup() {
+  pinMode(DATI, OUTPUT);
+  pinMode(CLOCK, OUTPUT);
+  pinMode(LATCH, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  for (int numero = 0; numero < 256; numero++) {
+    digitalWrite(LATCH, LOW);
+    shiftOut(DATI, CLOCK, MSBFIRST, numero);
+    digitalWrite(LATCH, HIGH);   // fronte di salita: le uscite cambiano
+    Serial.print(numero);
+    Serial.print(" = ");
+    Serial.println(numero, BIN);
+    delay(300);
+  }
+}
+`),
+  );
+}

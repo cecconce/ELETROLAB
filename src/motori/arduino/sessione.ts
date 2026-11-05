@@ -31,6 +31,8 @@ import {
   type Interazioni,
   type NodoDi,
   type StatoPin,
+  type StatoRegistro,
+  USCITE_595,
 } from "./componenti";
 import { ErroreArduino, preparaSketch, type Esecutore, type Hardware } from "./linguaggio";
 
@@ -59,7 +61,7 @@ export interface SessioneArduino {
   seriale: string;
   ingressoSeriale: number[];
   distanze: Record<string, number>;
-  interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number>; temperature: Record<string, number> };
+  interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number>; temperature: Record<string, number>; registri: Record<string, StatoRegistro> };
   risultato: RisultatoCircuito;
   /** Moduli relè con la bobina eccitata (si ricordano fra un calcolo e l'altro: isteresi). */
   releEccitati: Set<string>;
@@ -71,6 +73,8 @@ export interface SessioneArduino {
 
 function ricalcola(s: SessioneArduino) {
   const interazioni: Interazioni = s.interazioni;
+  const registri = s.componenti.filter((c) => c.tipo === "74hc595");
+  if (registri.length) aggiornaRegistri(s, registri);
   const { risultato, inCorrenteCostante, releEccitati, statiPonti } = risolviBanco(s.componenti, s.nodoDi, s.pin, interazioni, s.releEccitati);
   s.risultato = risultato;
   s.releEccitati = releEccitati;
@@ -98,7 +102,7 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     distanze: {},
     seriale: "",
     ingressoSeriale: [],
-    interazioni: { premuti: new Set(), posizioni: {}, luce: {}, temperature: {} },
+    interazioni: { premuti: new Set(), posizioni: {}, luce: {}, temperature: {}, registri: {} },
     risultato: risolviCircuito([]),
     releEccitati: new Set(),
     aspetto: {},
@@ -114,7 +118,10 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     if (prima && prima.modo === nuovo.modo && prima.livello === nuovo.livello) return;
     s.pin[pin] = nuovo;
     cambia();
+    // I registri a scorrimento reagiscono subito ai fronti (shiftOut ne fa 16 di fila).
+    if (registri.length) aggiornaRegistri(s, registri);
   };
+  const registri = componenti.filter((c) => c.tipo === "74hc595");
   const hw: Hardware = {
     pinMode(pin, modo) {
       const prima = s.pin[pin];
@@ -190,6 +197,49 @@ export function passoArduino(s: SessioneArduino, ms: number): void {
     if (s.esecutore.errore) s.errore = s.esecutore.errore;
   }
   if (s.sporco) ricalcola(s);
+}
+
+/**
+ * Livello logico di un nodo per i circuiti integrati digitali: se il nodo è un
+ * pin della scheda in uscita (o 5V, 3,3V, GND) si usa direttamente quello,
+ * senza ricalcolare il circuito; altrimenti la tensione dell'ultimo calcolo.
+ */
+function livelloNodo(s: SessioneArduino, nodo: string): number {
+  if (s.scheda) {
+    for (const [p, st] of Object.entries(s.pin)) if (st.modo === "OUTPUT" && s.nodoDi(s.scheda, p) === nodo) return st.livello >= 0.5 ? 1 : 0;
+    if (s.nodoDi(s.scheda, "5V") === nodo || s.nodoDi(s.scheda, "3V3") === nodo) return 1;
+    if (["GND1", "GND2", "GND3"].some((g) => s.nodoDi(s.scheda!, g) === nodo)) return 0;
+  }
+  return (s.risultato.tensioni[nodo] ?? 0) > 2.5 ? 1 : 0;
+}
+
+/**
+ * 74HC595: sul fronte di salita di SH_CP il registro scorre (Q0 prende DS),
+ * sul fronte di salita di ST_CP il registro di uscita copia quello di
+ * scorrimento; MR a LOW lo azzera; OE a LOW abilita le uscite.
+ */
+function aggiornaRegistri(s: SessioneArduino, registri: readonly ComponenteArduino[]) {
+  for (const c of registri) {
+    const n = (m: string) => livelloNodo(s, s.nodoDi(c.id, m));
+    const st = s.interazioni.registri[c.id] ?? { scorrimento: 0, uscite: 0, abilitato: false, clock: 0, latch: 0 };
+    const clock = n("SHCP");
+    const latch = n("STCP");
+    let scorrimento = st.scorrimento;
+    if (n("MR") === 0) scorrimento = 0;
+    else if (clock === 1 && st.clock === 0) scorrimento = ((scorrimento << 1) | n("DS")) & 0xff;
+    const uscite = latch === 1 && st.latch === 0 ? scorrimento : st.uscite;
+    const alimentato = n("VCC") === 1 && n("GND") === 0;
+    const nuovo: StatoRegistro = { scorrimento, uscite, abilitato: alimentato && n("OE") === 0, clock, latch };
+    const visibile = nuovo.uscite !== st.uscite || nuovo.abilitato !== st.abilitato || (nuovo.scorrimento >> 7) !== (st.scorrimento >> 7);
+    s.interazioni.registri[c.id] = nuovo;
+    if (visibile) s.sporco = true;
+  }
+}
+
+/** Uscite del registro come testo di bit (Q7…Q0), per i messaggi e i test. */
+export function bitRegistro(s: SessioneArduino, id: string): string {
+  const u = s.interazioni.registri[id]?.uscite ?? 0;
+  return USCITE_595.map((_, i) => (u >> (7 - i)) & 1).join("");
 }
 
 /** Tempo trascorso dall'accensione (secondi). */

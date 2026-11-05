@@ -3154,6 +3154,108 @@
       "icona": "ard-tastierino.svg"
     },
     {
+      "id": "74hc595",
+      "nome": "Registro a scorrimento 74HC595",
+      "categoria": "uscite",
+      "sigla": "U",
+      "descrizione": "Integrato che dà 8 uscite (Q0…Q7) usando solo 3 pin dell'Arduino. Si infila a cavallo del solco. DS = dato, SH_CP = clock (a ogni impulso i bit scorrono di un posto e Q0 prende DS), ST_CP = latch (al fronte di salita le uscite mostrano i bit arrivati). Con shiftOut(DS, SH_CP, MSBFIRST, valore) si mandano 8 bit in un colpo. VCC a 5 V, GND a GND, MR (reset) a 5 V, OE (abilitazione) a GND. Q7' esce il bit che «cade fuori»: serve per collegare più registri in cascata.",
+      "paroleChiave": [
+        "74hc595",
+        "595",
+        "registro",
+        "scorrimento",
+        "shift register",
+        "shiftout",
+        "uscite",
+        "led"
+      ],
+      "larghezza": 140,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "Q1",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Q2",
+          "x": 20,
+          "y": 60
+        },
+        {
+          "id": "Q3",
+          "x": 40,
+          "y": 60
+        },
+        {
+          "id": "Q4",
+          "x": 60,
+          "y": 60
+        },
+        {
+          "id": "Q5",
+          "x": 80,
+          "y": 60
+        },
+        {
+          "id": "Q6",
+          "x": 100,
+          "y": 60
+        },
+        {
+          "id": "Q7",
+          "x": 120,
+          "y": 60
+        },
+        {
+          "id": "GND",
+          "x": 140,
+          "y": 60
+        },
+        {
+          "id": "VCC",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "Q0",
+          "x": 20,
+          "y": 0
+        },
+        {
+          "id": "DS",
+          "x": 40,
+          "y": 0
+        },
+        {
+          "id": "OE",
+          "x": 60,
+          "y": 0
+        },
+        {
+          "id": "STCP",
+          "x": 80,
+          "y": 0
+        },
+        {
+          "id": "SHCP",
+          "x": 100,
+          "y": 0
+        },
+        {
+          "id": "MR",
+          "x": 120,
+          "y": 0
+        },
+        {
+          "id": "Q7S",
+          "x": 140,
+          "y": 0
+        }
+      ],
+      "icona": "ard-74hc595.svg"
+    },
+    {
       "id": "l293d",
       "nome": "Ponte H L293D",
       "categoria": "uscite",

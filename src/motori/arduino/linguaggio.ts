@@ -1258,6 +1258,21 @@ export class Esecutore {
         this.hw.digitalWrite(this.pin(p, riga, nome), v !== 0 ? 1 : 0);
         return VOID;
       }
+      case "shiftOut": {
+        // shiftOut(dati, clock, ordine, valore): 8 bit, uno alla volta, con un
+        // impulso sul clock per ciascuno (come la funzione originale).
+        const [pd, pc, ordine, valore] = yield* args([4]);
+        const dati = this.pin(pd, riga, nome);
+        const clock = this.pin(pc, riga, nome);
+        for (let i = 0; i < 8; i++) {
+          const bit = ordine === 0 ? (valore >> i) & 1 : (valore >> (7 - i)) & 1;
+          this.hw.digitalWrite(dati, bit ? 1 : 0);
+          this.hw.digitalWrite(clock, 1);
+          this.hw.digitalWrite(clock, 0);
+        }
+        this.tempoUs += 100; // circa 100 µs per 8 bit
+        return VOID;
+      }
       case "digitalRead": {
         const [p] = yield* args([1]);
         return num(this.hw.digitalRead(this.pin(p, riga, nome)));
