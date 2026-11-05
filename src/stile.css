@@ -1105,6 +1105,9 @@ button.io-plc {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* Con l'elenco dei componenti può essere più alta dello schermo: scorre. */
+  max-height: 94vh;
+  overflow-y: auto;
 }
 /* Finestra Lista istruzioni del PLC */
 .finestra-lista-istruzioni {
@@ -1414,4 +1417,36 @@ button.io-plc {
 }
 .tasto-strumento.fermo {
   background: linear-gradient(180deg, #e53935, #b71c1c);
+}
+
+/* Elenco dei componenti nella finestra Esporta */
+.distinta h3 {
+  margin: 14px 0 6px;
+  font-size: 1rem;
+}
+.distinta-tabella {
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--bordo);
+  border-radius: 6px;
+}
+.distinta table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.distinta th,
+.distinta td {
+  padding: 3px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--bordo);
+}
+.distinta th {
+  position: sticky;
+  top: 0;
+  background: var(--superficie);
+}
+.distinta td:first-child {
+  text-align: right;
+  width: 3em;
 }

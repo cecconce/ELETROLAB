@@ -31,7 +31,7 @@ export interface Archivio {
   leggiAutosalvataggio(modulo: IdModulo): Promise<string | null>;
   scriviAutosalvataggio(modulo: IdModulo, contenuto: string): Promise<void>;
   /** Finestra "Salva con nome" per un'esportazione (png o pdf): percorso o null. */
-  scegliFileEsportazione(nomeSuggerito: string, estensione: "png" | "pdf"): Promise<string | null>;
+  scegliFileEsportazione(nomeSuggerito: string, estensione: "png" | "pdf" | "csv"): Promise<string | null>;
   /** Scrive un file binario esportato (nel browser lo scarica). */
   scriviEsportazione(percorso: string, dati: Uint8Array): Promise<void>;
   /** Domanda sì/no (es. "perdere le modifiche?"). */

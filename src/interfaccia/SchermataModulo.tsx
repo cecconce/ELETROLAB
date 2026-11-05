@@ -11,6 +11,7 @@
 // Durante la simulazione, sotto il foglio, il pannello "Problemi nello schema"
 // spiega in italiano gli errori trovati (circuito aperto, cortocircuito,
 // contatti non associati, oscillazioni…) ed evidenzia sul foglio il punto.
+import { csvDistinta, distintaComponenti } from "../editor/distinta";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { t } from "../testi";
 import { AreaDisegno } from "../editor/AreaDisegno";
@@ -285,6 +286,23 @@ export function SchermataModulo(props: PropsSchermataModulo) {
     [archivio, onErrore, tema],
   );
 
+  // --- Elenco dei componenti (distinta materiali) come CSV ---
+  const esportaCsv = useCallback(
+    async (titolo: string) => {
+      try {
+        const testo = csvDistinta(distintaComponenti(schema, libreria), [t("distinta.quantita"), t("distinta.componente"), t("distinta.valore"), t("distinta.sigle")]);
+        const nome = `${(titolo || t("file.nomePredefinito")).replace(/[\\/:*?"<>|]/g, "_")} - ${t("distinta.nomeFile")}`;
+        const destinazione = await archivio.scegliFileEsportazione(nome, "csv");
+        if (!destinazione) return;
+        // Con il BOM iniziale Excel riconosce l'UTF-8 (lettere accentate, Ω, µ).
+        await archivio.scriviEsportazione(destinazione, new TextEncoder().encode("\ufeff" + testo));
+      } catch (e) {
+        onErrore(t("esporta.errore", { motivo: (e as Error).message }));
+      }
+    },
+    [archivio, onErrore, schema, libreria],
+  );
+
   // --- Modalità Esercizio: consegna, verifica automatica, preparazione (docente) ---
   const [finestraEsercizio, setFinestraEsercizio] = useState(false);
   const [esitoVerifica, setEsitoVerifica] = useState<EsitoMostrato | null>(null);
@@ -500,6 +518,8 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           modulo={t(modulo.chiaveTitolo)}
           vuoto={schema.componenti.length === 0}
           onEsporta={(f, c) => void esporta(f, c)}
+          distinta={distintaComponenti(schema, libreria)}
+          onCsv={(titolo) => void esportaCsv(titolo)}
           onChiudi={() => setFinestraEsporta(false)}
         />
       )}

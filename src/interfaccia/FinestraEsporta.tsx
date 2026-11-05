@@ -1,9 +1,11 @@
 // Finestra "Esporta e stampa": dati del cartiglio (titolo, nome, classe, data)
-// e tre pulsanti: immagine PNG, documento PDF, stampa. Nome e classe vengono
+// e tre pulsanti: immagine PNG, documento PDF, stampa. Sotto, l'elenco dei
+// componenti (distinta materiali) da copiare o salvare come CSV. Nome e classe vengono
 // ricordati su questo computer, così lo studente non li riscrive ogni volta.
 import { useEffect, useRef, useState } from "react";
 import { t } from "../testi";
 import { dataDiOggi, type Cartiglio } from "../editor/esportazione";
+import { testoDistinta, type RigaDistinta } from "../editor/distinta";
 
 const CHIAVE = "elettrolab.cartiglio";
 
@@ -23,9 +25,14 @@ export interface PropsFinestraEsporta {
   onChiudi: () => void;
   /** Lo schema è vuoto: niente da esportare. */
   vuoto: boolean;
+  /** Elenco dei componenti dello schema. */
+  distinta: RigaDistinta[];
+  /** Salva l'elenco dei componenti come CSV (con il titolo come nome del file). */
+  onCsv: (titolo: string) => void;
 }
 
-export function FinestraEsporta({ titoloIniziale, modulo, onEsporta, onChiudi, vuoto }: PropsFinestraEsporta) {
+export function FinestraEsporta({ titoloIniziale, modulo, onEsporta, onChiudi, vuoto, distinta, onCsv }: PropsFinestraEsporta) {
+  const [copiato, setCopiato] = useState(false);
   const [titolo, setTitolo] = useState(titoloIniziale);
   const [{ nome, classe }, setDati] = useState(ricordati);
   const [data, setData] = useState(dataDiOggi());
@@ -76,6 +83,47 @@ export function FinestraEsporta({ titoloIniziale, modulo, onEsporta, onChiudi, v
             {t("comune.chiudi")}
           </button>
         </div>
+        {distinta.length > 0 && (
+          <section className="distinta">
+            <h3>{t("distinta.titolo")}</h3>
+            <div className="distinta-tabella">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t("distinta.quantita")}</th>
+                    <th>{t("distinta.componente")}</th>
+                    <th>{t("distinta.valore")}</th>
+                    <th>{t("distinta.sigle")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {distinta.map((r) => (
+                    <tr key={`${r.nome}|${r.valore}`}>
+                      <td>{r.quantita}</td>
+                      <td>{r.nome}</td>
+                      <td>{r.valore}</td>
+                      <td>{r.sigle.join(", ")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="pulsanti-finestra">
+              <button
+                type="button"
+                className="pulsante"
+                onClick={() => {
+                  void navigator.clipboard?.writeText(testoDistinta(distinta)).then(() => setCopiato(true));
+                }}
+              >
+                📋 {copiato ? t("distinta.copiato") : t("distinta.copia")}
+              </button>
+              <button type="button" className="pulsante" onClick={() => onCsv(titolo)}>
+                📊 {t("distinta.csv")}
+              </button>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
