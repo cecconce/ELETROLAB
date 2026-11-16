@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 10 – Correzioni segnalate da Pierluigi: interruttori civili e codice Arduino** — in corso
+**Fase 10 – Correzioni segnalate da Pierluigi: interruttori civili e codice Arduino** — completata — in attesa di conferma
 
 Fase 9 confermata da Pierluigi il 2026-11-16. Problemi segnalati provando l'.exe: «gli interruttori negli impianti civili non si riesce ad usarli per chiuderli ed aprirli sia nella parte realistica che quella a schema» e «arduino non si riesce ad usare la parte del codice, solo la programmazione a blocchi».
 
@@ -15,7 +15,40 @@ Fase 9 confermata da Pierluigi il 2026-11-16. Problemi segnalati provando l'.exe
 - [x] 10.3 Tutto l'editor usabile con il dito e la penna (LIM, portatili touch): posare i componenti funzionava già, ma collegare i fili, selezionare e spostare i fili no (stesso motivo della 10.2). Ora foglio, morsetti, fili e componenti usano gli eventi pointer; doppio tocco su un filo come il doppio clic; `touch-action: none` sul foglio (il dito non fa scorrere la pagina). Controllo Playwright: circuito rete → interruttore → lampada posato, collegato e provato solo con il dito.
 - [x] 10.4 Vista Simboli: un comando manuale azionato ora si disegna con la leva nella nuova posizione (come in CADe_SIMU): interruttore civile, bipolare, deviatore (il comune passa da 1 a 2), invertitore (collegamenti incrociati), interruttori a leva NA/NC, selettori NA/NC. Sono icone SVG in più nella libreria (`<nome>-azionato.svg`): per un altro componente basta aggiungere il file. La vista Realistica aveva già il tasto basculante premuto.
 - [x] 10.5 Editor a blocchi nell'.exe: Blockly chiede il nome con `window.prompt` per «Crea variabile…» (e usa confirm e alert), che nell'.exe non funzionano: nuove finestre di domanda disegnate dall'app (`src/interfaccia/finestraDomanda.ts`: avviso, conferma, testo; Invio = OK, Esc = Annulla, colori del tema) collegate a `Blockly.dialog`.
-- [ ] 10.6 Verifica finale: `npm test`, build, build Actions, prova Playwright; resoconto della Fase 10.
+- [x] 10.6 Verifica finale: `npm test`, build, build Actions, prova Playwright; resoconto della Fase 10.
+
+## Resoconto della Fase 10 (2026-11-16, sessione di giorno 10–12)
+
+### Cosa funziona
+- **Arduino, codice di testo**: il pulsante «⌨ Testo» passa davvero al codice anche nell'.exe. La conferma ora è la finestra Sì/No di Tauri: prima usava una finestra del browser che nell'.exe non funziona.
+- **Editor a blocchi**: «Crea variabile…» (e le altre domande di Blockly) apre una finestra disegnata dall'app; prima usava `window.prompt`, che nell'.exe non funziona.
+- **Comandi in simulazione con il dito e la penna** (LIM, portatili touch): interruttori, deviatori, invertitori, pulsanti, selettori, protezioni, componenti di Arduino ed Elettronica. Prima il tocco non faceva niente.
+- **Tutto l'editor con il dito**: posare i componenti, collegare i fili (tocco su un morsetto e poi sull'altro), selezionare e spostare i fili, doppio tocco su un filo; il dito sul foglio non fa scorrere la pagina.
+- **Sigla cliccabile**: in simulazione anche un clic sulla sigla (S1, Q1…) aziona il componente.
+- **Leva che si sposta nella vista Simboli** (come in CADe_SIMU): interruttore civile, bipolare, deviatore, invertitore, interruttori a leva e selettori si disegnano nella posizione azionata, non più solo con la striscia verde.
+- Suggerimento in basso durante la simulazione: nomina interruttori, deviatori e invertitori.
+
+### Come provarlo passo per passo
+1. GitHub → **Actions** → ultima esecuzione «Build Windows» verde → **Artifacts** → `ElettroLab-portable`; avviare `ElettroLab.exe`.
+2. **Arduino** → clic su «⌨ Testo» → rispondere **Sì**: compare l'editor del codice; scrivere qualcosa.
+3. Tornare ai blocchi («🧩 Blocchi» → Sì) → categoria **Variabili** → «Crea variabile…»: si apre la finestra con il campo, scrivere «conteggio» e premere Invio; nella categoria compare la variabile.
+4. **Impianti elettrici** → Sfoglia gli esempi → «Lampada da tre punti» → ▶ AVVIA → clic su S1, S2, S3: la lampada cambia ogni volta e nel simbolo la leva cambia posizione. Provare anche in vista **Realistica**.
+5. Libreria → «Impianti civili»: posare un interruttore e una lampada, collegarli alla rete monofase, ▶ AVVIA e cliccare sull'interruttore (anche sulla sigla S1).
+6. Su un PC con schermo touch o sulla LIM: rifare i passi 4 e 5 con il dito, compresi i collegamenti dei fili.
+
+### Test eseguiti
+- `npm test`: **732 test Vitest** in 69 file, tutti superati (6 nuovi: nessuna finestra del browser fuori dall'archivio di prova, finestre di Blockly collegate a quelle dell'app, icone azionate).
+- `npm run build` OK.
+- **GitHub Actions** (`windows-latest`: test, `cargo test`, `tauri build`, portable e installer): verdi tutte le esecuzioni della fase, n. 99–103 (l'ultima sul commit dell'attività 10.5).
+- **Prova dell'interfaccia con Playwright** (`npm run prova-interfaccia`): **171 controlli superati**, nessun errore in console. Nuova sezione «Fase 10» (13 controlli) con schermo touch: interruttori dell'esempio toccati col dito in Simboli e Realistica, interruttore/bipolare/deviatore/invertitore posati dalla libreria (anche ruotati) col tocco e col mouse, clic sulla sigla, circuito rete → interruttore → lampada disegnato e provato solo col dito, «Crea variabile…» con la finestra dell'app, passaggio al testo e scrittura.
+- Prove a parte (non nella prova automatica): interruttori con lo schermo di Windows al 125 % e al 150 %.
+
+### Limiti noti
+- **Le correzioni non sono state provate sull'.exe vero**, ma solo nel browser Chromium di Playwright (stesso motore della WebView2). Se gli interruttori non si azionano ancora usando il mouse, servono i passi esatti (esempio o schema proprio, quale interruttore, dove si clicca).
+- La causa del problema dell'.exe col codice Arduino è dedotta (le finestre del browser non funzionano in Tauri 2): non è stata vista su Windows.
+- Il tocco con due dita (zoom con le dita, pizzico) non è gestito: per ingrandire si usano i pulsanti + e −.
+- La sigla è cliccabile solo nel modulo Impianti e per i componenti non ruotati.
+- Un filo può passare sopra a un simbolo (instradamento automatico, limite già noto dalla Fase 2).
 
 ## Fase 9 – Arduino più simile a Tinkercad: alimentazione esterna, transistor, relè, sensori, plotter (confermata il 2026-11-16)
 
@@ -522,3 +555,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-16 — attività 10.3: con lo schermo touch simulato da Playwright i fili non si collegavano col dito (Konva blocca i finti eventi del mouse sui morsetti). Tutti i gestori del foglio in `AreaDisegno.tsx` passati da mouse a pointer (`onPointerDown/Move/Up`, `onDblTap` sui fili), `touch-action: none` sul foglio. La prova completa con il mouse resta verde (nessun cambiamento per chi usa il mouse). 4 nuovi controlli Playwright (circuito disegnato col dito); `npm test` 728 OK, build OK, prova Playwright **169 controlli superati**.
 - 2026-11-16 — attività 10.4: 8 nuove icone `libreria/icone/*-azionato.svg` disegnate da zero (stesse dimensioni e morsetti del simbolo a riposo); `iconaAzionata()` in `caricaLibreria.ts`, l'editor le carica e le usa in simulazione, vista Simboli, quando il componente è azionato. 3 nuovi test (`iconeAzionate.test.ts`: varianti presenti, solo per comandi manuali, stesso viewBox). `npm test` 731 OK, build OK, prova Playwright 169 controlli superati.
 - 2026-11-16 — attività 10.5: cercando altri usi delle finestre del browser ho trovato Blockly (`window.prompt` per «Crea variabile…», confirm e alert): nell'.exe gli studenti non avrebbero potuto creare variabili coi blocchi. Finestre dell'app in `finestraDomanda.ts`, impostate in `caricaBlockly` con `Blockly.dialog.setPrompt/setConfirm/setAlert`. Controllati anche gli altri usi (stampa, appunti, localStorage): funzionano nella WebView2. 1 nuovo test Vitest (con le finestre simulate) e 2 controlli Playwright (finestra dell'app e variabile creata, nessuna finestra del browser). `npm test` 732 OK, build OK, prova Playwright **171 controlli superati**.
+- 2026-11-16 — attività 10.6, verifica finale e chiusura della Fase 10: `npm test` 732 OK, `npm run build` OK, prova Playwright 171 controlli superati, build Actions n. 103 verde. Scritto il resoconto della Fase 10; fase completata, in attesa di conferma. Da provare sull'.exe vero (mouse e, se c'è, LIM o schermo touch).
