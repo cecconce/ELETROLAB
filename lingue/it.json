@@ -235,7 +235,7 @@
   "simulazione.nonDisponibile": "La simulazione di questo modulo arriverà nelle prossime fasi",
   "simulazione.tempo": "Tempo trascorso dall'avvio della simulazione",
   "simulazione.suggerimentoPlc": "PLC in funzione · Quadro: tieni premuti i pulsanti, clic su interruttori, selettori, finecorsa e sensori · Puoi anche tenere premuto un contatto del Ladder che legge un ingresso · Verde = contatto chiuso o bobina alimentata, rosso = segnale",
-  "simulazione.suggerimento": "Simulazione in corso · Clic sui pulsanti (tieni premuto), selettori, finecorsa, sensori e sezionatori · Clic su un motore: sovraccarico · Clic su una protezione intervenuta: riarmo",
+  "simulazione.suggerimento": "Simulazione in corso · Clic su interruttori, deviatori, invertitori, selettori, finecorsa, sensori e sezionatori per chiuderli e aprirli · Pulsanti: tieni premuto · Clic su un motore: sovraccarico · Clic su una protezione intervenuta: riarmo",
   "simulazione.intervenuto": "INTERVENUTO · clic per riarmare",
   "simulazione.sovraccarico": "SOVRACCARICO",
   "problemi.titolo": "Problemi nello schema",

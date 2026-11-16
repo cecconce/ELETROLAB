@@ -682,6 +682,42 @@ export function AreaDisegno({
     };
   }
 
+  /**
+   * In simulazione anche la sigla scritta a sinistra del simbolo (S1, Q1…)
+   * aziona il componente: gli studenti spesso cliccano lì. Le aree stanno
+   * sotto a tutti i componenti, così in uno schema fitto la sigla di un
+   * componente non "ruba" il clic al simbolo vicino.
+   */
+  const disegnaAreaSigla = (c: ComponenteSchema) => {
+    const aspetto = simulazione?.vista.componenti[c.id];
+    if (!simulazione || !aspetto?.clic || libreria.modulo !== "impianti" || c.rotazione) return null;
+    const sigla = siglaMostrata(c);
+    if (!sigla) return null;
+    // Larghezza approssimata del testo (grassetto da 14 px) e margine di 4 px.
+    const larghezza = Math.min(58, sigla.length * 9 + 4);
+    return (
+      <Rect
+        key={`sigla-${c.id}`}
+        x={c.x - 6 - larghezza}
+        y={c.y + c.altezza / 2 - 10}
+        width={larghezza}
+        height={20}
+        fill="rgba(0,0,0,0)"
+        onMouseEnter={() => setCliccabileSotto(c.id)}
+        onMouseLeave={() => setCliccabileSotto((x) => (x === c.id ? null : x))}
+        onPointerDown={(e) => {
+          if (e.evt.button !== 0 || spazioPremuto) return;
+          e.cancelBubble = true;
+          simulazione.onGiu(c.id);
+        }}
+        onPointerUp={() => simulazione.onSu(c.id)}
+        onMouseDown={(e) => {
+          e.cancelBubble = true;
+        }}
+      />
+    );
+  };
+
   const disegnaComponente = (c: ComponenteSchema) => {
                 const scelto = selezionati.has(c.id);
                 const aspetto = simulazione?.vista.componenti[c.id];
@@ -701,16 +737,24 @@ export function AreaDisegno({
                     draggable={!spazioPremuto && !voceDaPosare && !inSimulazione}
                     onMouseEnter={() => aspetto?.clic && setCliccabileSotto(c.id)}
                     onMouseLeave={() => setCliccabileSotto((x) => (x === c.id ? null : x))}
-                    onMouseUp={() => simulazione?.onSu(c.id)}
+                    // In simulazione si usano gli eventi "pointer": arrivano dal mouse,
+                    // ma anche dal dito (schermi touch, LIM) e dalla penna. Con il tocco
+                    // Konva blocca i finti eventi del mouse, quindi onMouseDown da solo
+                    // non bastava e su LIM e portatili touch i comandi non si azionavano.
+                    onPointerUp={() => simulazione?.onSu(c.id)}
+                    onPointerDown={(e) => {
+                      // In simulazione il clic aziona il componente (se si può).
+                      if (!simulazione || e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
+                      e.cancelBubble = true;
+                      // Punto del clic nel disegno non ruotato (serve a impianti e banco).
+                      const gruppo = ((e.currentTarget as Konva.Group).findOne(".disegno") ?? e.currentTarget) as Konva.Group;
+                      const locale = gruppo.getRelativePointerPosition();
+                      simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
+                    }}
                     onMouseDown={(e) => {
                       if (simulazione) {
-                        // In simulazione il clic aziona il componente (se si può).
-                        if (e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
-                        e.cancelBubble = true;
-                        // Punto del clic nel disegno non ruotato (serve a impianti e banco).
-                        const gruppo = ((e.currentTarget as Konva.Group).findOne(".disegno") ?? e.currentTarget) as Konva.Group;
-                        const locale = gruppo.getRelativePointerPosition();
-                        simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
+                        // Il clic in simulazione è già gestito da onPointerDown.
+                        if (aspetto?.clic) e.cancelBubble = true;
                         return;
                       }
                       // Con un componente da posare il clic passa al foglio (posa anche sopra un altro).
@@ -905,6 +949,7 @@ export function AreaDisegno({
             <Layer>
               {/* Nel modulo Arduino la breadboard e i suoi fori stanno sotto agli
                   altri componenti: i piedini infilati restano cliccabili. */}
+              {schema.componenti.map(disegnaAreaSigla)}
               {componentiFondo.map(disegnaComponente)}
               {morsettiFondo.map(disegnaMorsetto)}
               {componentiSopra.map(disegnaComponente)}

@@ -330,6 +330,9 @@ async function collega(pagina, a, b) {
   // === Funzioni per il docente: esportazione e modalità Esercizio ===========
   await provaDocente(pagina, controlla, foto, apriEsempio);
 
+  // === Fase 10: tocco (LIM, schermi touch), sigle cliccabili, codice Arduino ==
+  await provaFase10(browser, controlla, errori);
+
   controlla(errori.length === 0, `nessun errore nella console${errori.length ? ": " + errori.join(" | ") : ""}`);
   await browser.close();
   console.log(falliti === 0 ? "\nTutti i controlli superati." : `\n${falliti} controlli NON superati.`);
@@ -1160,4 +1163,126 @@ async function provaDocente(pagina, controlla, foto, apriEsempio) {
   await pagina.waitForTimeout(400);
   controlla((await pagina.getByTestId("esito-verifica").innerText()).includes("Bravo"), "schema completato: la verifica dice «Bravo!»");
   await foto("28-esercizio-riuscito");
+}
+
+// --- Fase 10 ----------------------------------------------------------------
+
+/**
+ * Correzioni della Fase 10, segnalate provando l'.exe:
+ * - interruttori civili da azionare anche con il dito o la penna (LIM, schermi
+ *   touch): prima Konva bloccava i finti eventi del mouse e il tocco non faceva
+ *   niente; ora la simulazione usa gli eventi "pointer";
+ * - clic anche sulla sigla (S1) accanto al simbolo;
+ * - modulo Arduino: passaggio dai blocchi al codice di testo e scrittura.
+ * Usa una pagina a parte con lo schermo touch.
+ */
+async function provaFase10(browser, controlla, errori) {
+  const contesto = await browser.newContext({ viewport: { width: 1366, height: 768 }, hasTouch: true });
+  const pagina = await contesto.newPage();
+  pagina.on("console", (m) => m.type() === "error" && errori.push(m.text()));
+  pagina.on("pageerror", (e) => errori.push(String(e)));
+  const foto = (nome) => pagina.screenshot({ path: path.join(CARTELLA_IMMAGINI, `${nome}.png`) });
+  await pagina.goto(INDIRIZZO);
+  await pagina.waitForTimeout(800);
+  const tocca = async (sigla) => {
+    const r = await rettangoloComponente(pagina, sigla);
+    await pagina.touchscreen.tap(r.x + r.w / 2, r.y + r.h / 2);
+    await pagina.waitForTimeout(300);
+  };
+
+  console.log("Fase 10: interruttori civili azionati con il tocco");
+  await pagina.getByText("Sfoglia gli esempi").click();
+  await pagina.click('[data-esempio="lampada-tre-punti.elab"]');
+  await pagina.waitForTimeout(500);
+  if (await pagina.getByText("Ho capito").count()) await pagina.getByText("Ho capito").click();
+  for (const vista of ["Simboli", "Realistica"]) {
+    await pagina.getByRole("radio", { name: new RegExp(vista) }).click();
+    await pagina.waitForTimeout(300);
+    await avvia(pagina);
+    let stato = await aspetto(pagina, "H1");
+    let tuttiCambiano = true;
+    for (const s of ["S1", "S2", "S3"]) {
+      await tocca(s);
+      const nuovo = await aspetto(pagina, "H1");
+      if (nuovo === stato) tuttiCambiano = false;
+      stato = nuovo;
+    }
+    controlla(tuttiCambiano, `vista ${vista}: toccando S1, S2 (invertitore) e S3 la lampada cambia ogni volta`);
+    await avvia(pagina); // ferma
+  }
+  await pagina.getByRole("radio", { name: /Simboli/ }).click();
+
+  console.log("Fase 10: interruttori posati dalla libreria, anche ruotati");
+  await pagina.getByRole("button", { name: /Nuovo/ }).click();
+  await pagina.waitForTimeout(400);
+  const tela = await pagina.locator("canvas").first().boundingBox();
+  const voci = ["interruttore-unipolare", "interruttore-bipolare", "deviatore", "invertitore"];
+  for (let i = 0; i < voci.length; i++) {
+    await pagina.locator(`[data-voce="${voci[i]}"]`).click();
+    await pagina.mouse.click(tela.x + 180 + i * 150, tela.y + 200);
+    await pagina.waitForTimeout(250);
+    await pagina.keyboard.press("Escape");
+  }
+  // S3 e S4 ruotati (selezione con il clic, poi tasto R).
+  for (const s of ["S3", "S4"]) {
+    await clicSu(pagina, s);
+    await pagina.keyboard.press("r");
+    await pagina.waitForTimeout(200);
+  }
+  await pagina.mouse.click(tela.x + 30, tela.y + 30);
+  await avvia(pagina);
+  let tutti = true;
+  for (const s of ["S1", "S2", "S3", "S4"]) {
+    const prima = await aspetto(pagina, s);
+    await tocca(s);
+    const dopoTocco = await aspetto(pagina, s);
+    await clicSu(pagina, s); // con il mouse torna com'era
+    const dopoClic = await aspetto(pagina, s);
+    if (dopoTocco === prima || dopoClic === dopoTocco) tutti = false;
+  }
+  controlla(tutti, "interruttore, bipolare, deviatore e invertitore (anche ruotati) si azionano con il tocco e con il mouse");
+  await foto("10a-interruttori-civili");
+  await avvia(pagina);
+
+  console.log("Fase 10: clic sulla sigla");
+  await pagina.getByText("Schermata iniziale").click();
+  await pagina.waitForTimeout(300);
+  await pagina.getByText("Sfoglia gli esempi").click();
+  await pagina.click('[data-esempio="impianto-civile.elab"]');
+  await pagina.waitForTimeout(500);
+  if (await pagina.getByText("Ho capito").count()) await pagina.getByText("Ho capito").click();
+  await avvia(pagina);
+  const h1 = await aspetto(pagina, "H1");
+  const sigla = await pagina.evaluate(() => {
+    const st = window.Konva.stages[0];
+    const t = st.find("Text").find((x) => x.text() === "S1");
+    const r = t.getClientRect();
+    const c = st.container().getBoundingClientRect();
+    return { x: c.left + r.x + r.width - 8, y: c.top + r.y + r.height / 2 };
+  });
+  await pagina.mouse.click(sigla.x, sigla.y);
+  await pagina.waitForTimeout(300);
+  controlla((await aspetto(pagina, "H1")) !== h1, "clic sulla sigla «S1»: l'interruttore si chiude e la lampada si accende");
+  await avvia(pagina);
+
+  console.log("Fase 10: Arduino, dai blocchi al codice di testo");
+  await pagina.getByText("Schermata iniziale").click();
+  await pagina.waitForTimeout(300);
+  await pagina.locator('[data-modulo="arduino"]').click();
+  await pagina.waitForTimeout(800);
+  let domanda = "";
+  pagina.once("dialog", (d) => {
+    domanda = d.message();
+    d.accept();
+  });
+  await pagina.getByRole("radio", { name: /Testo/ }).click();
+  await pagina.waitForTimeout(400);
+  controlla(domanda.length > 0, "il passaggio al testo chiede conferma");
+  controlla((await pagina.locator(".codice-editor .cm-content").count()) === 1, "dopo la conferma compare l'editor del codice");
+  await pagina.locator(".cm-content").click();
+  await pagina.keyboard.press("Control+End");
+  await pagina.keyboard.type("\n// scritto dalla prova");
+  controlla((await pagina.locator(".cm-content").innerText()).includes("scritto dalla prova"), "nell'editor del codice si può scrivere");
+  await foto("10b-arduino-testo");
+  await contesto.close();
 }

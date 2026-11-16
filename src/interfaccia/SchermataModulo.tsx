@@ -451,10 +451,15 @@ export function SchermataModulo(props: PropsSchermataModulo) {
         aggiornaSessione(s);
       } else aggiornaSessione(eSessionePlc(s) ? rilasciaTuttiPlc(s) : rilasciaTutti(s));
     };
+    // "pointerup" e "pointercancel" coprono anche il dito e la penna (LIM, schermi touch).
     window.addEventListener("mouseup", rilascia);
+    window.addEventListener("pointerup", rilascia);
+    window.addEventListener("pointercancel", rilascia);
     window.addEventListener("blur", rilascia);
     return () => {
       window.removeEventListener("mouseup", rilascia);
+      window.removeEventListener("pointerup", rilascia);
+      window.removeEventListener("pointercancel", rilascia);
       window.removeEventListener("blur", rilascia);
     };
   }, [inSimulazione, aggiornaSessione]);
