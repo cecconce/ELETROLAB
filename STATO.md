@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 10 – Correzioni segnalate da Pierluigi: interruttori civili e codice Arduino** — completata — in attesa di conferma
+**Fase 10 – Correzioni segnalate da Pierluigi: interruttori civili e codice Arduino** — completata — in attesa di conferma (riaperta e richiusa il 2026-11-16 per l'attività 10.7)
 
 Fase 9 confermata da Pierluigi il 2026-11-16. Problemi segnalati provando l'.exe: «gli interruttori negli impianti civili non si riesce ad usarli per chiuderli ed aprirli sia nella parte realistica che quella a schema» e «arduino non si riesce ad usare la parte del codice, solo la programmazione a blocchi».
 
@@ -16,6 +16,7 @@ Fase 9 confermata da Pierluigi il 2026-11-16. Problemi segnalati provando l'.exe
 - [x] 10.4 Vista Simboli: un comando manuale azionato ora si disegna con la leva nella nuova posizione (come in CADe_SIMU): interruttore civile, bipolare, deviatore (il comune passa da 1 a 2), invertitore (collegamenti incrociati), interruttori a leva NA/NC, selettori NA/NC. Sono icone SVG in più nella libreria (`<nome>-azionato.svg`): per un altro componente basta aggiungere il file. La vista Realistica aveva già il tasto basculante premuto.
 - [x] 10.5 Editor a blocchi nell'.exe: Blockly chiede il nome con `window.prompt` per «Crea variabile…» (e usa confirm e alert), che nell'.exe non funzionano: nuove finestre di domanda disegnate dall'app (`src/interfaccia/finestraDomanda.ts`: avviso, conferma, testo; Invio = OK, Esc = Annulla, colori del tema) collegate a `Blockly.dialog`.
 - [x] 10.6 Verifica finale: `npm test`, build, build Actions, prova Playwright; resoconto della Fase 10.
+- [x] 10.7 Colore dei fili, chiesto da Pierluigi («come faccio con arduino a cambiare il colore del cavo? sistema questa cosa, verifica anche nello schema funzionale»). In Arduino il colore si sceglieva solo nella scheda «Proprietà», nascosta dietro «Codice». Ora, selezionando un filo, compare sopra il foglio la **barra «Colore del filo»** (come l'ispettore di Tinkercad), in Arduino, Impianti ed Elettronica; la stessa scelta resta anche in Proprietà. Negli **Impianti** (schema funzionale e di potenza) i colori sono quelli della norma: fasi nero/marrone/grigio, neutro blu chiaro, protezione giallo-verde (a strisce), comando rosso (c.a.) o blu scuro (c.c.), più arancione. In simulazione il filo in tensione prende il colore della tensione, quello senza tensione mantiene il colore scelto.
 
 ## Resoconto della Fase 10 (2026-11-16, sessione di giorno 10–12)
 
@@ -27,6 +28,7 @@ Fase 9 confermata da Pierluigi il 2026-11-16. Problemi segnalati provando l'.exe
 - **Sigla cliccabile**: in simulazione anche un clic sulla sigla (S1, Q1…) aziona il componente.
 - **Leva che si sposta nella vista Simboli** (come in CADe_SIMU): interruttore civile, bipolare, deviatore, invertitore, interruttori a leva e selettori si disegnano nella posizione azionata, non più solo con la striscia verde.
 - Suggerimento in basso durante la simulazione: nomina interruttori, deviatori e invertitori.
+- **Colore dei fili** (attività 10.7): clic su un filo → barra «Colore del filo» sopra il foglio. Arduino ed Elettronica: cavetti colorati; Impianti: colori della norma (neutro blu chiaro, PE giallo-verde a strisce…). Il colore si salva nel file e compare in stampa e PDF.
 
 ### Come provarlo passo per passo
 1. GitHub → **Actions** → ultima esecuzione «Build Windows» verde → **Artifacts** → `ElettroLab-portable`; avviare `ElettroLab.exe`.
@@ -35,12 +37,13 @@ Fase 9 confermata da Pierluigi il 2026-11-16. Problemi segnalati provando l'.exe
 4. **Impianti elettrici** → Sfoglia gli esempi → «Lampada da tre punti» → ▶ AVVIA → clic su S1, S2, S3: la lampada cambia ogni volta e nel simbolo la leva cambia posizione. Provare anche in vista **Realistica**.
 5. Libreria → «Impianti civili»: posare un interruttore e una lampada, collegarli alla rete monofase, ▶ AVVIA e cliccare sull'interruttore (anche sulla sigla S1).
 6. Su un PC con schermo touch o sulla LIM: rifare i passi 4 e 5 con il dito, compresi i collegamenti dei fili.
+7. Colore dei fili: **Arduino** → esempio «Semaforo» → clic su un cavetto: in alto sul foglio compare «Colore del filo», scegliere il viola. **Impianti** → «Marcia/arresto» → clic sul filo del neutro → blu chiaro; su un altro filo provare il giallo-verde.
 
 ### Test eseguiti
-- `npm test`: **732 test Vitest** in 69 file, tutti superati (6 nuovi: nessuna finestra del browser fuori dall'archivio di prova, finestre di Blockly collegate a quelle dell'app, icone azionate).
+- `npm test`: **736 test Vitest** in 70 file, tutti superati (10 nuovi: colore dei fili (tavolozze, colore disegnato, modifica dello schema), nessuna finestra del browser fuori dall'archivio di prova, finestre di Blockly collegate a quelle dell'app, icone azionate).
 - `npm run build` OK.
 - **GitHub Actions** (`windows-latest`: test, `cargo test`, `tauri build`, portable e installer): verdi tutte le esecuzioni della fase, n. 99–103 (l'ultima sul commit dell'attività 10.5).
-- **Prova dell'interfaccia con Playwright** (`npm run prova-interfaccia`): **171 controlli superati**, nessun errore in console. Nuova sezione «Fase 10» (13 controlli) con schermo touch: interruttori dell'esempio toccati col dito in Simboli e Realistica, interruttore/bipolare/deviatore/invertitore posati dalla libreria (anche ruotati) col tocco e col mouse, clic sulla sigla, circuito rete → interruttore → lampada disegnato e provato solo col dito, «Crea variabile…» con la finestra dell'app, passaggio al testo e scrittura.
+- **Prova dell'interfaccia con Playwright** (`npm run prova-interfaccia`): **177 controlli superati**, nessun errore in console. Nuove sezioni «Fase 10» (13 controlli) e «Colore dei fili» (6 controlli: barra, cambio di colore, colore che resta, in Arduino e negli Impianti) con schermo touch: interruttori dell'esempio toccati col dito in Simboli e Realistica, interruttore/bipolare/deviatore/invertitore posati dalla libreria (anche ruotati) col tocco e col mouse, clic sulla sigla, circuito rete → interruttore → lampada disegnato e provato solo col dito, «Crea variabile…» con la finestra dell'app, passaggio al testo e scrittura.
 - Prove a parte (non nella prova automatica): interruttori con lo schermo di Windows al 125 % e al 150 %.
 
 ### Limiti noti
@@ -556,3 +559,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-16 — attività 10.4: 8 nuove icone `libreria/icone/*-azionato.svg` disegnate da zero (stesse dimensioni e morsetti del simbolo a riposo); `iconaAzionata()` in `caricaLibreria.ts`, l'editor le carica e le usa in simulazione, vista Simboli, quando il componente è azionato. 3 nuovi test (`iconeAzionate.test.ts`: varianti presenti, solo per comandi manuali, stesso viewBox). `npm test` 731 OK, build OK, prova Playwright 169 controlli superati.
 - 2026-11-16 — attività 10.5: cercando altri usi delle finestre del browser ho trovato Blockly (`window.prompt` per «Crea variabile…», confirm e alert): nell'.exe gli studenti non avrebbero potuto creare variabili coi blocchi. Finestre dell'app in `finestraDomanda.ts`, impostate in `caricaBlockly` con `Blockly.dialog.setPrompt/setConfirm/setAlert`. Controllati anche gli altri usi (stampa, appunti, localStorage): funzionano nella WebView2. 1 nuovo test Vitest (con le finestre simulate) e 2 controlli Playwright (finestra dell'app e variabile creata, nessuna finestra del browser). `npm test` 732 OK, build OK, prova Playwright **171 controlli superati**.
 - 2026-11-16 — attività 10.6, verifica finale e chiusura della Fase 10: `npm test` 732 OK, `npm run build` OK, prova Playwright 171 controlli superati, build Actions n. 103 verde. Scritto il resoconto della Fase 10; fase completata, in attesa di conferma. Da provare sull'.exe vero (mouse e, se c'è, LIM o schermo touch).
+- 2026-11-16 — attività 10.7 (richiesta di Pierluigi in chat): barra «Colore del filo» sopra il foglio quando si seleziona un filo (`TavolozzaFilo.tsx`, usata anche in Proprietà); colori CEI negli Impianti (`COLORI_FILI_SCHEMA` in `fili.ts`, giallo-verde disegnato a strisce, alone di selezione dietro il filo colorato); cavetti colorati anche in Elettronica. 4 nuovi test Vitest, 6 controlli Playwright. `npm test` 736 OK, build OK, prova Playwright **177 controlli superati**. Fase 10 di nuovo completata, in attesa di conferma.

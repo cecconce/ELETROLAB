@@ -36,6 +36,7 @@ import { t } from "../testi";
 import type { Tema } from "../interfaccia/tema";
 import { coloriEditor } from "./colori";
 import { iconaAzionata, testoIcona, trovaVoce } from "./caricaLibreria";
+import { TavolozzaFilo } from "./TavolozzaFilo";
 import { componenteDaVoce, svgComeDataUrl, tipiContatto, type Libreria, type VoceLibreria } from "./libreria";
 import { numeroMorsetto } from "./associazioni";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
@@ -67,6 +68,9 @@ import {
   inserisciPiega,
   spostaPiega,
   colorePropostoFilo,
+  coloreDisegnoFilo,
+  GIALLO_VERDE,
+  tavolozzaFili,
   type MorsettiDelTipo,
   type MorsettoPosato,
 } from "./fili";
@@ -660,6 +664,11 @@ export function AreaDisegno({
   // poi gli altri componenti (che vi si infilano sopra), i fili e i piedini.
   const banco = libreria.modulo === "arduino";
   const eFondo = (tipo: string) => banco && tipo === "breadboard";
+  // Un solo filo selezionato (fuori dalla simulazione): si mostra la barra del colore.
+  const filoScelto =
+    !inSimulazione && selezione.length === 1 && tavolozzaFili(libreria.modulo).length > 0
+      ? schema.fili.find((f) => f.id === selezione[0])
+      : undefined;
   const componentiFondo = schema.componenti.filter((c) => eFondo(c.tipo));
   const componentiSopra = schema.componenti.filter((c) => !eFondo(c.tipo));
   const tipoDi = new Map(schema.componenti.map((c) => [c.id, c.tipo]));
@@ -901,6 +910,14 @@ export function AreaDisegno({
         data-simulazione={inSimulazione}
         data-evidenziati={evidenzia ? evidenzia.componenti.join(",") : ""}
       >
+        {filoScelto && (
+          // Barra del colore sopra il foglio (come l'ispettore di Tinkercad): appare
+          // appena si seleziona un filo, senza cercare la scheda Proprietà.
+          <div className="barra-colore-filo" onPointerDown={(e) => e.stopPropagation()}>
+            <span>{t("filo.barraColore")}</span>
+            <TavolozzaFilo modulo={libreria.modulo} schema={schema} filo={filoScelto} onCambiaSchema={onCambiaSchema} />
+          </div>
+        )}
         {larghezza > 0 && altezza > 0 && (
           <Stage
             ref={stageRif}
@@ -996,12 +1013,18 @@ export function AreaDisegno({
                 // In simulazione: colore del polo che raggiunge il filo (più spesso se in tensione).
                 const poli = simulazione?.vista.poliDeiFili[f.id] ?? [];
                 const coloreTensione = coloreFilo(poli, colori);
+                // Colore scelto dallo studente (Proprietà o barra sopra il foglio); in simulazione vince la tensione.
+                const coloreScelto = coloreDisegnoFilo(libreria.modulo, f);
                 return (
+                  <Group key={f.id}>
+                  {/* Filo colorato e selezionato: alone del colore di selezione dietro, così il colore scelto resta visibile. */}
+                  {scelto && coloreScelto && !coloreTensione && (
+                    <Line points={punti.flatMap((p) => [p.x, p.y])} stroke={colori.selezione} strokeWidth={7} opacity={0.5} lineCap="round" lineJoin="round" listening={false} />
+                  )}
                   <Line
-                    key={f.id}
                     points={punti.flatMap((p) => [p.x, p.y])}
-                    stroke={coloreTensione ?? (scelto ? colori.selezione : colori.filo)}
-                    strokeWidth={coloreTensione ? 3 : scelto ? 3 : 2}
+                    stroke={coloreTensione ?? (coloreScelto === GIALLO_VERDE ? "#43a047" : (coloreScelto ?? (scelto ? colori.selezione : colori.filo)))}
+                    strokeWidth={coloreTensione ? 3 : scelto || coloreScelto ? 3 : 2}
                     dash={poli.length > 1 ? [8, 4] : undefined}
                     hitStrokeWidth={12}
                     lineCap="round"
@@ -1023,6 +1046,11 @@ export function AreaDisegno({
                     onDblClick={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
                         onDblTap={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
                   />
+                  {/* Conduttore di protezione: strisce gialle sopra il verde. */}
+                  {coloreScelto === GIALLO_VERDE && !coloreTensione && (
+                    <Line points={punti.flatMap((p) => [p.x, p.y])} stroke="#fdd835" strokeWidth={3} dash={[6, 6]} listening={false} />
+                  )}
+                  </Group>
                 );
               })}
               {anteprimaFilo && (

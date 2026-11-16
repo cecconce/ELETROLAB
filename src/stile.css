@@ -191,6 +191,7 @@ button {
   gap: 8px;
 }
 .area-disegno-canvas {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -1504,4 +1505,31 @@ button.io-plc {
   background: var(--sfondo, var(--superficie));
   color: var(--testo);
   margin-bottom: 12px;
+}
+
+/* Barra del colore del filo selezionato, in alto al centro del foglio. */
+.barra-colore-filo {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: var(--superficie);
+  color: var(--testo);
+  border: 1px solid var(--bordo);
+  border-radius: 999px;
+  box-shadow: var(--ombra);
+  max-width: calc(100% - 24px);
+  flex-wrap: wrap;
+}
+.barra-colore-filo .tavolozza-fili {
+  flex-wrap: nowrap;
+}
+.barra-colore-filo .colore-filo {
+  width: 24px;
+  height: 24px;
 }

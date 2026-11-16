@@ -11,7 +11,8 @@ import { associaContatto, cambiaSigla, contattoAssociato, numeroMorsetto, propri
 import { vocePerTipo, type Libreria } from "./libreria";
 import { COMMENTO_MASSIMO, TIPO_COMMENTO, impostaCollegamento, impostaCommento } from "./ladder";
 import { leggiOhm, PARAMETRI_ARDUINO, scriviOhm, valoreParametroArduino } from "./arduino";
-import { COLORI_FILI, colorePropostoFilo } from "./fili";
+import { tavolozzaFili } from "./fili";
+import { TavolozzaFilo } from "./TavolozzaFilo";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
 import type { Schema, Selezione } from "./schema";
@@ -51,31 +52,21 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
     setErrorePreset(null);
   }, [componente?.id, componente?.preset]);
 
-  // Banco Arduino: un cavetto selezionato → scelta del colore.
-  const filo = selezione.length === 1 && libreria.modulo === "arduino" ? schema.fili.find((f) => f.id === selezione[0]) : undefined;
+  // Un filo selezionato → scelta del colore (cavetti di Arduino ed Elettronica, conduttori CEI negli Impianti).
+  const filo = selezione.length === 1 && tavolozzaFili(libreria.modulo).length > 0 ? schema.fili.find((f) => f.id === selezione[0]) : undefined;
   if (!componente && filo) {
+    const banco = libreria.modulo === "arduino";
     return (
       <aside className="proprieta" aria-label={t("proprieta.titolo")}>
         <h2>{t("proprieta.titolo")}</h2>
-        <p className="proprieta-tipo">{t("proprieta.cavetto")}</p>
+        <p className="proprieta-tipo">{t(banco ? "proprieta.cavetto" : "proprieta.filo")}</p>
         <div className="proprieta-campo">
           <span>{t("proprieta.coloreCavetto")}</span>
-          <div className="tavolozza-fili">
-            {COLORI_FILI.map((c) => (
-              <button
-                key={c.valore}
-                type="button"
-                className={(filo.colore ?? colorePropostoFilo(filo.da, filo.a)) === c.valore ? "colore-filo scelto" : "colore-filo"}
-                style={{ background: c.valore }}
-                title={c.nome}
-                aria-label={c.nome}
-                data-colore={c.nome}
-                onClick={() => onCambiaSchema({ ...schema, fili: schema.fili.map((f) => (f.id === filo.id ? { ...f, colore: c.valore } : f)) })}
-              />
-            ))}
-          </div>
+          <TavolozzaFilo modulo={libreria.modulo} schema={schema} filo={filo} onCambiaSchema={onCambiaSchema} />
         </div>
-        <p className="proprieta-nota">{t("proprieta.cavettoSuggerimento")}</p>
+        <p className="proprieta-nota">
+          {t(banco ? "proprieta.cavettoSuggerimento" : libreria.modulo === "impianti" ? "proprieta.filoSuggerimentoImpianti" : "proprieta.filoSuggerimento")}
+        </p>
       </aside>
     );
   }

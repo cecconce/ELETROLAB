@@ -366,6 +366,40 @@ export const COLORI_FILI: { nome: string; valore: string }[] = [
   { nome: "viola", valore: "#6a1b9a" },
 ];
 
+/** Valore speciale del conduttore di protezione: si disegna a strisce gialle e verdi. */
+export const GIALLO_VERDE = "giallo-verde";
+
+/**
+ * Colori dei conduttori negli schemi degli Impianti (CEI 64-8 / CEI EN 60445):
+ * fasi marrone, nero o grigio, neutro blu chiaro, protezione giallo-verde;
+ * nei quadri i circuiti di comando si fanno spesso rossi (in alternata) o blu
+ * scuri (in continua). "Nero" toglie il colore: il filo torna del colore del
+ * tema (nero sul foglio chiaro, chiaro sul foglio scuro).
+ */
+export const COLORI_FILI_SCHEMA: { nome: string; valore: string | undefined }[] = [
+  { nome: "nero (fase)", valore: undefined },
+  { nome: "marrone (fase)", valore: "#795548" },
+  { nome: "grigio (fase)", valore: "#9e9e9e" },
+  { nome: "blu chiaro (neutro)", valore: "#42a5f5" },
+  { nome: "giallo-verde (protezione PE)", valore: GIALLO_VERDE },
+  { nome: "rosso (comando in alternata)", valore: "#d32f2f" },
+  { nome: "blu scuro (comando in continua)", valore: "#1a237e" },
+  { nome: "arancione", valore: "#ef6c00" },
+];
+
+/** Tavolozza dei fili del modulo: cavetti colorati (Arduino, Elettronica) o colori CEI (Impianti). */
+export function tavolozzaFili(modulo: string): { nome: string; valore: string | undefined }[] {
+  if (modulo === "impianti") return COLORI_FILI_SCHEMA;
+  if (modulo === "arduino" || modulo === "elettronica") return COLORI_FILI;
+  return [];
+}
+
+/** Colore con cui disegnare un filo fuori dalla simulazione (undefined = colore del tema). */
+export function coloreDisegnoFilo(modulo: string, filo: { colore?: string; da: EstremoFilo; a: EstremoFilo }): string | undefined {
+  if (modulo === "arduino") return filo.colore ?? colorePropostoFilo(filo.da, filo.a);
+  return filo.colore;
+}
+
 /**
  * Colore proposto per un nuovo cavetto, secondo l'abitudine del laboratorio:
  * rosso se tocca un'alimentazione positiva (5V, 3V3, linea + della

@@ -332,6 +332,7 @@ async function collega(pagina, a, b) {
 
   // === Fase 10: tocco (LIM, schermi touch), sigle cliccabili, codice Arduino ==
   await provaFase10(browser, controlla, errori);
+  await provaColoriFili(pagina, controlla, foto, apriEsempio);
 
   controlla(errori.length === 0, `nessun errore nella console${errori.length ? ": " + errori.join(" | ") : ""}`);
   await browser.close();
@@ -1356,4 +1357,50 @@ async function provaFase10(browser, controlla, errori) {
   controlla((await pagina.locator(".cm-content").innerText()).includes("scritto dalla prova"), "nell'editor del codice si può scrivere");
   await foto("10b-arduino-testo");
   await contesto.close();
+}
+
+/**
+ * Colore dei fili (attività 10.7): selezionando un filo compare sopra il foglio
+ * la barra dei colori (come l'ispettore di Tinkercad), in Arduino (cavetti) e
+ * negli Impianti (colori CEI: fase, neutro, giallo-verde).
+ */
+async function provaColoriFili(pagina, controlla, foto, apriEsempio) {
+  const pulsante = pagina.locator(".pulsante-simulazione");
+  if ((await pulsante.innerText()).includes("FERMA")) await pulsante.click();
+  // Centro del primo tratto del filo n. i (linee dei fili: hitStrokeWidth 12).
+  const centroFilo = (i) =>
+    pagina.evaluate((i) => {
+      const st = window.Konva.stages[0];
+      const c = st.container().getBoundingClientRect();
+      const l = st.find("Line").filter((x) => x.hitStrokeWidth() === 12 && x.listening())[i];
+      const p = l.points();
+      const t = l.getAbsoluteTransform();
+      const a = t.point({ x: p[0], y: p[1] });
+      const b = t.point({ x: p[2], y: p[3] });
+      return { x: c.left + (a.x + b.x) / 2, y: c.top + (a.y + b.y) / 2 };
+    }, i);
+  const coloriFili = () => pagina.evaluate(() => window.Konva.stages[0].find("Line").map((l) => l.stroke()));
+
+  for (const [esempio, colore, valore, nome] of [
+    ["arduino-semaforo.elab", "viola", "#6a1b9a", "Arduino: cavetto viola"],
+    ["marcia-arresto.elab", "blu chiaro (neutro)", "#42a5f5", "Impianti: neutro blu chiaro"],
+  ]) {
+    console.log(`Colore dei fili – ${nome}`);
+    await apriEsempio(pagina, esempio);
+    const f = await centroFilo(2);
+    await pagina.mouse.click(f.x, f.y);
+    await pagina.waitForTimeout(300);
+    controlla((await pagina.locator(".barra-colore-filo").count()) === 1, `${nome}: selezionando un filo compare la barra del colore sopra il foglio`);
+    const prima = (await coloriFili()).filter((c) => c === valore).length;
+    await pagina.locator(`.barra-colore-filo [data-colore="${colore}"]`).click();
+    await pagina.waitForTimeout(300);
+    controlla((await coloriFili()).filter((c) => c === valore).length > prima, `${nome}: il filo cambia colore`);
+    await pagina.mouse.click((await pagina.locator("canvas").first().boundingBox()).x + 15, (await pagina.locator("canvas").first().boundingBox()).y + 15);
+    await pagina.waitForTimeout(200);
+    controlla(
+      (await pagina.locator(".barra-colore-filo").count()) === 0 && (await coloriFili()).includes(valore),
+      `${nome}: clic sul vuoto, la barra sparisce e il colore resta`,
+    );
+  }
+  await foto("10f-colore-fili-impianti");
 }
