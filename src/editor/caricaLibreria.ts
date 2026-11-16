@@ -40,6 +40,17 @@ export function haVistaRealistica(libreria: Libreria): boolean {
   return libreria.componenti.length > 0 && libreria.componenti.every((v) => ICONE_REALISTICHE.has(v.icona));
 }
 
+/**
+ * Nome dell'icona del simbolo "azionato" (per esempio
+ * "deviatore-azionato.svg"), se c'è: in simulazione, nella vista Simboli, un
+ * comando manuale azionato si disegna con la leva nella nuova posizione, come
+ * negli schemi di CADe_SIMU. Per un componente nuovo basta aggiungere il file.
+ */
+export function iconaAzionata(icona: string): string | null {
+  const nome = icona.replace(/\.svg$/i, "-azionato.svg");
+  return nome !== icona && ICONE.has(nome) ? nome : null;
+}
+
 /** Testo SVG da disegnare per un'icona nello stile scelto. */
 export function testoIcona(icona: string, realistico: boolean): string {
   return (realistico ? ICONE_REALISTICHE.get(icona) : undefined) ?? ICONE.get(icona) ?? "";

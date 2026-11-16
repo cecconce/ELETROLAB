@@ -35,7 +35,7 @@ import Konva from "konva";
 import { t } from "../testi";
 import type { Tema } from "../interfaccia/tema";
 import { coloriEditor } from "./colori";
-import { testoIcona, trovaVoce } from "./caricaLibreria";
+import { iconaAzionata, testoIcona, trovaVoce } from "./caricaLibreria";
 import { componenteDaVoce, svgComeDataUrl, tipiContatto, type Libreria, type VoceLibreria } from "./libreria";
 import { numeroMorsetto } from "./associazioni";
 import { MIME_COMPONENTE } from "./LibreriaLaterale";
@@ -159,7 +159,9 @@ function useImmaginiIcone(libreria: Libreria, colore: string, realistico: boolea
   useEffect(() => {
     let attivo = true;
     const mappa = new Map<string, HTMLImageElement>();
-    const nomi = [...new Set(libreria.componenti.map((v) => v.icona))];
+    // Anche le icone dei simboli "azionati" (leva spostata), quando esistono.
+    const varianti = realistico ? [] : libreria.componenti.map((v) => iconaAzionata(v.icona));
+    const nomi = [...new Set([...libreria.componenti.map((v) => v.icona), ...varianti.filter((n): n is string => n !== null)])];
     let mancanti = nomi.length;
     for (const nome of nomi) {
       const img = new window.Image();
@@ -599,9 +601,12 @@ export function AreaDisegno({
     }
   }, [adatta, larghezza, altezza]);
 
-  const immagine = (tipo: string) => {
+  /** Icona del componente; `azionato` = comando manuale azionato (leva spostata, solo vista Simboli). */
+  const immagine = (tipo: string, azionato = false) => {
     const voce = vociPerTipo.get(tipo);
-    return voce ? immagini.get(voce.icona) : undefined;
+    if (!voce) return undefined;
+    const variante = azionato && !realistico ? iconaAzionata(voce.icona) : null;
+    return (variante ? immagini.get(variante) : undefined) ?? immagini.get(voce.icona);
   };
   /** Sigla da disegnare: un contatto senza bobina mostra "K?" (lettera della libreria + "?"). */
   const siglaMostrata = (c: { tipo: string; etichetta: string }) => {
@@ -769,7 +774,7 @@ export function AreaDisegno({
                       etichetta={ruotato ? "" : sigla}
                       nonAssociato={siglaMostrata(c) !== c.etichetta}
                       numeri={numeriDa(c)}
-                      immagine={immagine(c.tipo)}
+                      immagine={immagine(c.tipo, aspetto?.azionato === true)}
                       scelto={scelto}
                       colori={colori}
                       siglaSopra={libreria.modulo === "plc" || libreria.modulo === "arduino"}
