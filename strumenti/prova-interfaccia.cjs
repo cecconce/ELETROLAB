@@ -1319,7 +1319,28 @@ async function provaFase10(browser, controlla, errori) {
   await pagina.getByText("Schermata iniziale").click();
   await pagina.waitForTimeout(300);
   await pagina.locator('[data-modulo="arduino"]').click();
-  await pagina.waitForTimeout(800);
+  await pagina.waitForTimeout(1500);
+  // «Crea variabile…» dei blocchi: finestra dell'app, non window.prompt (che nell'.exe non va).
+  let nativa = false;
+  const segnaNativa = (d) => {
+    nativa = true;
+    d.dismiss();
+  };
+  pagina.on("dialog", segnaNativa);
+  await pagina.locator(".blocklyToolboxCategory", { hasText: "Variabili" }).click({ force: true });
+  await pagina.waitForTimeout(500);
+  await pagina.locator(".blocklyFlyout").getByText(/Crea variabile/).click({ force: true });
+  await pagina.waitForTimeout(400);
+  controlla((await pagina.locator(".finestra-domanda input").count()) === 1 && !nativa, "blocchi: «Crea variabile…» apre la finestra dell'app");
+  await pagina.keyboard.type("conteggio");
+  await pagina.keyboard.press("Enter");
+  await pagina.waitForTimeout(400);
+  await pagina.locator(".blocklyToolboxCategory", { hasText: "Variabili" }).click({ force: true });
+  await pagina.waitForTimeout(500);
+  controlla((await pagina.locator(".blocklyFlyout").getByText("conteggio").count()) > 0, "la variabile «conteggio» compare fra i blocchi");
+  await foto("10e-blocchi-variabile");
+  await pagina.locator(".blocklyToolboxCategory", { hasText: "Variabili" }).click({ force: true }); // chiude la cassetta
+  pagina.off("dialog", segnaNativa);
   let domanda = "";
   pagina.once("dialog", (d) => {
     domanda = d.message();

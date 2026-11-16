@@ -1,5 +1,13 @@
 // Test dell'editor a blocchi: il codice generato è corretto e gira nell'interprete.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Le finestre dell'app (DOM) sostituite da finte risposte: qui non c'è una pagina.
+const finestre = vi.hoisted(() => ({
+  avviso: vi.fn(async () => undefined),
+  conferma: vi.fn(async () => true),
+  chiediTesto: vi.fn(async () => "conteggio" as string | null),
+}));
+vi.mock("../interfaccia/finestraDomanda", () => finestre);
 import { analizzaSketch, preparaSketch, type Hardware } from "../motori/arduino";
 import { BLOCCHI_INIZIALI, caricaBlockly, CASSETTA, codiceDaBlocchi } from "./blocchi";
 
@@ -196,5 +204,19 @@ describe("editor a blocchi", () => {
     expect(e.errore).toBeNull();
     expect(inviati[0]).toEqual([0, 0x00ff00, 0, 0, 0, 0, 0, 0]);
     expect(s.pin.D8).toBe(1);
+  });
+});
+
+describe("finestre di Blockly", () => {
+  it("«Crea variabile…», conferme e avvisi usano le finestre dell'app, non window.prompt/confirm/alert (non funzionano nell'.exe)", async () => {
+    const Blockly = await caricaBlockly();
+    const nome = await new Promise<string | null>((fatto) => Blockly.dialog.prompt("Nome della variabile:", "", fatto));
+    expect(finestre.chiediTesto).toHaveBeenCalledWith("Nome della variabile:", "");
+    expect(nome).toBe("conteggio");
+    const si = await new Promise<boolean>((fatto) => Blockly.dialog.confirm("Eliminare?", fatto));
+    expect(finestre.conferma).toHaveBeenCalledWith("Eliminare?");
+    expect(si).toBe(true);
+    await new Promise<void>((fatto) => Blockly.dialog.alert("Nome già usato", fatto));
+    expect(finestre.avviso).toHaveBeenCalledWith("Nome già usato");
   });
 });

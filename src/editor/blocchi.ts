@@ -10,6 +10,7 @@
 //
 // Blockly (licenza Apache-2.0) viene caricato solo quando serve, così l'avvio
 // del programma resta leggero.
+import { avviso, chiediTesto, conferma } from "../interfaccia/finestraDomanda";
 import type * as BlocklyTipo from "blockly/core";
 
 type Blockly = typeof BlocklyTipo;
@@ -346,6 +347,11 @@ export function caricaBlockly(): Promise<Blockly> {
       const it = (await import("blockly/msg/it")) as unknown as Record<string, string> & { default?: Record<string, string> };
       Blockly.setLocale((it.default ?? it) as Record<string, string>);
       Blockly.common.defineBlocksWithJsonArray(DEFINIZIONI);
+      // Blockly chiede i nomi delle variabili con window.prompt, e usa confirm
+      // e alert: nell'.exe (Tauri 2) non funzionano, si usano le finestre dell'app.
+      Blockly.dialog.setAlert((messaggio, fatto) => void avviso(messaggio).then(() => fatto?.()));
+      Blockly.dialog.setConfirm((messaggio, fatto) => void conferma(messaggio).then(fatto));
+      Blockly.dialog.setPrompt((messaggio, predefinito, fatto) => void chiediTesto(messaggio, predefinito).then(fatto));
       return Blockly;
     })();
   }

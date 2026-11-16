@@ -1486,3 +1486,22 @@ button.io-plc {
   text-align: right;
   width: 3em;
 }
+
+/* Finestre di domanda dell'app (Blockly: «Crea variabile…», conferme, avvisi). */
+.finestra-domanda {
+  z-index: 100; /* sopra ai menu di Blockly */
+}
+.finestra-domanda .finestra {
+  max-width: 420px;
+}
+.campo-domanda {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font: inherit;
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  background: var(--sfondo, var(--superficie));
+  color: var(--testo);
+  margin-bottom: 12px;
+}
