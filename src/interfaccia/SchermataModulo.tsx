@@ -724,6 +724,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                 modo={schema.modoCodice ?? (schema.codice !== undefined ? "testo" : "blocchi")}
                 blocchi={schema.blocchi}
                 onCambiaBlocchi={(blocchi, codice, definitivo) => cambiaSchema({ ...schema, blocchi, codice, modoCodice: "blocchi" }, !definitivo)}
+                conferma={archivio.conferma}
                 onCambiaModo={(modoCodice) => cambiaSchema({ ...schema, modoCodice, codice: schema.codice ?? SKETCH_PREDEFINITO })}
                 onPulisciSeriale={() => {
                   const s = sessioneRif.current;

@@ -37,6 +37,12 @@ export interface PropsPannelloCodice {
   blocchi: string | undefined;
   onCambiaBlocchi: (blocchi: string, codice: string, definitivo: boolean) => void;
   onCambiaModo: (modo: "blocchi" | "testo") => void;
+  /**
+   * Domanda di conferma (Sì/No). Nell'.exe è la finestra di Tauri: il
+   * `window.confirm` del browser nella WebView di Tauri 2 non è affidabile e
+   * impediva di passare dai blocchi al testo.
+   */
+  conferma: (domanda: string) => Promise<boolean>;
 }
 
 
@@ -54,10 +60,10 @@ export function PannelloCodice(props: PropsPannelloCodice) {
   // Cambio di modo: dai blocchi al testo il programma resta (ma le modifiche
   // al testo non tornano nei blocchi); dal testo ai blocchi il codice scritto
   // a mano viene sostituito da quello dei blocchi.
-  const cambiaModo = (nuovo: "blocchi" | "testo") => {
+  const cambiaModo = async (nuovo: "blocchi" | "testo") => {
     if (nuovo === modo || inSimulazione) return;
     const avviso = nuovo === "testo" ? t("arduino.modo.versoTesto") : t("arduino.modo.versoBlocchi");
-    if (window.confirm(avviso)) props.onCambiaModo(nuovo);
+    if (await props.conferma(avviso)) props.onCambiaModo(nuovo);
   };
 
   return (
@@ -71,7 +77,7 @@ export function PannelloCodice(props: PropsPannelloCodice) {
             aria-checked={modo === m}
             className={modo === m ? "modo attivo" : "modo"}
             disabled={inSimulazione}
-            onClick={() => cambiaModo(m)}
+            onClick={() => void cambiaModo(m)}
           >
             {m === "blocchi" ? `🧩 ${t("arduino.modo.blocchi")}` : `⌨ ${t("arduino.modo.testo")}`}
           </button>
