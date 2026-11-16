@@ -469,7 +469,7 @@ export function AreaDisegno({
     if (p) setVista((v) => zoomRotellina(v, e.evt.deltaY, p));
   };
 
-  const suPressione = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const suPressione = (e: Konva.KonvaEventObject<PointerEvent>) => {
     const p = puntatore(e);
     if (!p) return;
     // Tasto centrale (1), destro (2) o spazio + sinistro: si sposta la vista.
@@ -502,7 +502,7 @@ export function AreaDisegno({
     }
   };
 
-  const suMovimento = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const suMovimento = (e: Konva.KonvaEventObject<PointerEvent>) => {
     const p = puntatore(e);
     if (!p) return;
     if (voceDaPosare) setAnteprima(schermoAFoglio(vista, p));
@@ -530,7 +530,7 @@ export function AreaDisegno({
     if (rettangolo) setRettangolo({ ...rettangolo, fine: schermoAFoglio(vista, p) });
   };
 
-  const suRilascio = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const suRilascio = (e: Konva.KonvaEventObject<PointerEvent>) => {
     if (filoTrascinato.current) {
       // Fine dello spostamento del filo: un solo passo nella cronologia.
       filoTrascinato.current = null;
@@ -711,9 +711,6 @@ export function AreaDisegno({
           simulazione.onGiu(c.id);
         }}
         onPointerUp={() => simulazione.onSu(c.id)}
-        onMouseDown={(e) => {
-          e.cancelBubble = true;
-        }}
       />
     );
   };
@@ -737,24 +734,20 @@ export function AreaDisegno({
                     draggable={!spazioPremuto && !voceDaPosare && !inSimulazione}
                     onMouseEnter={() => aspetto?.clic && setCliccabileSotto(c.id)}
                     onMouseLeave={() => setCliccabileSotto((x) => (x === c.id ? null : x))}
-                    // In simulazione si usano gli eventi "pointer": arrivano dal mouse,
-                    // ma anche dal dito (schermi touch, LIM) e dalla penna. Con il tocco
-                    // Konva blocca i finti eventi del mouse, quindi onMouseDown da solo
-                    // non bastava e su LIM e portatili touch i comandi non si azionavano.
+                    // Eventi "pointer" (non "mouse"): arrivano dal mouse, ma anche dal
+                    // dito (schermi touch, LIM) e dalla penna. Con il tocco Konva blocca
+                    // i finti eventi del mouse: con onMouseDown su LIM e portatili touch
+                    // i comandi non si azionavano e i fili non si collegavano.
                     onPointerUp={() => simulazione?.onSu(c.id)}
                     onPointerDown={(e) => {
-                      // In simulazione il clic aziona il componente (se si può).
-                      if (!simulazione || e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
-                      e.cancelBubble = true;
-                      // Punto del clic nel disegno non ruotato (serve a impianti e banco).
-                      const gruppo = ((e.currentTarget as Konva.Group).findOne(".disegno") ?? e.currentTarget) as Konva.Group;
-                      const locale = gruppo.getRelativePointerPosition();
-                      simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
-                    }}
-                    onMouseDown={(e) => {
                       if (simulazione) {
-                        // Il clic in simulazione è già gestito da onPointerDown.
-                        if (aspetto?.clic) e.cancelBubble = true;
+                        // In simulazione il clic aziona il componente (se si può).
+                        if (e.evt.button !== 0 || spazioPremuto || !aspetto?.clic) return;
+                        e.cancelBubble = true;
+                        // Punto del clic nel disegno non ruotato (serve a impianti e banco).
+                        const gruppo = ((e.currentTarget as Konva.Group).findOne(".disegno") ?? e.currentTarget) as Konva.Group;
+                        const locale = gruppo.getRelativePointerPosition();
+                        simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
                         return;
                       }
                       // Con un componente da posare il clic passa al foglio (posa anche sopra un altro).
@@ -855,7 +848,7 @@ export function AreaDisegno({
                       hitStrokeWidth={14}
                       onMouseEnter={() => setMorsettoSotto(chiave)}
                       onMouseLeave={() => setMorsettoSotto((x) => (x === chiave ? null : x))}
-                      onMouseDown={(e) => {
+                      onPointerDown={(e) => {
                         if (e.evt.button !== 0) return;
                         e.cancelBubble = true; // né rettangolo di selezione né trascinamento
                         clicMorsetto(m);
@@ -888,7 +881,9 @@ export function AreaDisegno({
       <div
         ref={contenitore}
         className="area-disegno-canvas"
-        style={{ cursor: cursore, background: colori.foglio }}
+        // touchAction "none": con il dito o la penna il browser non deve scorrere
+        // o ingrandire la pagina, i gesti sul foglio li gestisce l'editor.
+        style={{ cursor: cursore, background: colori.foglio, touchAction: "none" }}
         onContextMenu={(e) => e.preventDefault()}
         onDragOver={suTrascinaSopra}
         onDrop={suRilascioLibreria}
@@ -911,9 +906,9 @@ export function AreaDisegno({
             x={vista.x}
             y={vista.y}
             onWheel={suRotellina}
-            onMouseDown={suPressione}
-            onMouseMove={suMovimento}
-            onMouseUp={suRilascio}
+            onPointerDown={suPressione}
+            onPointerMove={suMovimento}
+            onPointerUp={suRilascio}
             onMouseLeave={suRilascio}
           >
             {/* Griglia: un'unica forma disegnata a mano, molto più leggera di centinaia di linee. */}
@@ -976,7 +971,7 @@ export function AreaDisegno({
                         lineCap="round"
                         lineJoin="round"
                         listening={!voceDaPosare && !filoInCorso && !inSimulazione}
-                        onMouseDown={(e) => {
+                        onPointerDown={(e) => {
                           if (e.evt.button !== 0 || spazioPremuto) return;
                           e.cancelBubble = true;
                           const aggiuntivo = e.evt.shiftKey || e.evt.ctrlKey;
@@ -988,6 +983,7 @@ export function AreaDisegno({
                           filoTrascinato.current = { id: f.id, tratto: trattoPiuVicino(punti, punto), percorso: punti, diretto: { da: punto } };
                         }}
                         onDblClick={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
+                        onDblTap={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
                       />
                     </Group>
                   );
@@ -1006,7 +1002,7 @@ export function AreaDisegno({
                     lineCap="round"
                     lineJoin="round"
                     listening={!voceDaPosare && !filoInCorso && !inSimulazione}
-                    onMouseDown={(e) => {
+                    onPointerDown={(e) => {
                       if (e.evt.button !== 0 || spazioPremuto) return;
                       e.cancelBubble = true;
                       const aggiuntivo = e.evt.shiftKey || e.evt.ctrlKey;
@@ -1020,6 +1016,7 @@ export function AreaDisegno({
                       }
                     }}
                     onDblClick={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
+                        onDblTap={() => onCambiaSchema(ripristinaPercorso(schema, f.id))}
                   />
                 );
               })}

@@ -1265,6 +1265,56 @@ async function provaFase10(browser, controlla, errori) {
   controlla((await aspetto(pagina, "H1")) !== h1, "clic sulla sigla «S1»: l'interruttore si chiude e la lampada si accende");
   await avvia(pagina);
 
+  console.log("Fase 10: circuito disegnato tutto con il dito (LIM)");
+  await pagina.getByText("Schermata iniziale").click();
+  await pagina.waitForTimeout(300);
+  await pagina.locator('[data-modulo="impianti"]').tap();
+  await pagina.waitForTimeout(600);
+  if ((await pagina.getByText("Nuovo", { exact: true }).count()) > 0) {
+    await pagina.getByText("Nuovo", { exact: true }).tap();
+    await pagina.waitForTimeout(300);
+  }
+  const telaT = await pagina.locator("canvas").first().boundingBox();
+  const posaT = async (voce, x, y) => {
+    await pagina.locator(`[data-voce="${voce}"]`).tap();
+    await pagina.touchscreen.tap(telaT.x + x, telaT.y + y);
+    await pagina.waitForTimeout(250);
+  };
+  // Tutto nella parte alta del foglio: i morsetti devono essere visibili.
+  await posaT("rete-monofase", 200, 60);
+  await posaT("interruttore-unipolare", 200, 190);
+  await posaT("lampada", 200, 330);
+  await pagina.touchscreen.tap(telaT.x + 600, telaT.y + 500); // tocco sul vuoto: deseleziona
+  const reteT = (await morsettiDi(pagina, null)).slice(0, 2);
+  const s1T = await morsettiDi(pagina, "S1");
+  const h1T = await morsettiDi(pagina, "H1");
+  const [faseT, neutroT] = [...reteT].sort((a, b) => a.x - b.x);
+  const collegaT = async (a, b) => {
+    await pagina.touchscreen.tap(a.x, a.y);
+    await pagina.waitForTimeout(150);
+    await pagina.touchscreen.tap(b.x, b.y);
+    await pagina.waitForTimeout(150);
+  };
+  if (reteT.length === 2 && s1T.length === 2 && h1T.length === 2) {
+    await collegaT(faseT, s1T[0]);
+    await collegaT(s1T[1], h1T[0]);
+    await collegaT(h1T[1], neutroT);
+  }
+  const nFiliT = await pagina.evaluate(() => window.Konva.stages[0].find("Line").filter((l) => l.hitStrokeWidth() === 12).length);
+  controlla(nFiliT === 3, `tre fili collegati con il dito (trovati ${nFiliT})`);
+  await avvia(pagina);
+  controlla(await nessunProblema(pagina), "componenti posati e fili collegati con il dito, nessun problema");
+  const spentaT = await aspetto(pagina, "H1");
+  await tocca("S1");
+  controlla(
+    (await aspetto(pagina, "H1")) !== spentaT && (await nessunProblema(pagina)),
+    "toccando S1 la lampada si accende (e nessun cortocircuito)",
+  );
+  await tocca("S1");
+  controlla((await aspetto(pagina, "H1")) === spentaT, "toccandolo di nuovo si spegne");
+  await foto("10c-disegnato-col-dito");
+  await avvia(pagina);
+
   console.log("Fase 10: Arduino, dai blocchi al codice di testo");
   await pagina.getByText("Schermata iniziale").click();
   await pagina.waitForTimeout(300);
