@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 11 – Rifiniture: LIM con due dita, PWM vero, altri componenti Arduino** — in corso
+**Fase 11 – Rifiniture: LIM con due dita, PWM vero, altri componenti Arduino** — completata — in attesa di conferma
 
 Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Attività scelte fra i limiti noti delle fasi precedenti, per avvicinarsi ancora a Tinkercad.
 
@@ -13,7 +13,36 @@ Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Atti
 - [x] 11.1 Zoom e spostamento della vista con due dita (pizzico) su LIM e schermi touch: allargare/stringere le dita ingrandisce/rimpicciolisce attorno al punto fra le dita, spostarle insieme sposta la vista; durante il gesto il foglio non seleziona e non disegna.
 - [x] 11.2 PWM vero nel modulo Arduino: sull'oscilloscopio un pin con `analogWrite` mostra l'onda quadra a 490 Hz (980 Hz sui pin 5 e 6, come sulla Uno) con il duty cycle giusto, non più la tensione media; con la base dei tempi lenta diventa una banda piena come su un oscilloscopio vero. LED e motori continuano a usare il valore medio. Nuovo esempio «PWM: il LED che si attenua visto con l'oscilloscopio».
 - [x] 11.3 Transistor PNP (stesso modello dell'NPN con le tensioni al contrario) e MOSFET a canale N «logic level» (interruttore comandato in tensione, soglia 2 V, 0,05 Ω; con il PWM sul gate conduce per la frazione di tempo giusta) nel modulo Arduino; esempio «Motorino comandato con un MOSFET».
-- [ ] 11.4 Verifica finale: `npm test`, build, build Actions, prova Playwright; resoconto della Fase 11.
+- [x] 11.4 Verifica finale: `npm test`, build, build Actions, prova Playwright; resoconto della Fase 11.
+
+## Resoconto della Fase 11 (2026-11-17)
+
+### Cosa funziona
+- **Due dita sul foglio** (LIM, schermi touch), in tutti i moduli: allargare o stringere le dita ingrandisce o rimpicciolisce attorno al punto fra le dita; spostarle insieme sposta la vista. Durante il gesto il foglio non seleziona e non disegna.
+- **PWM vero sull'oscilloscopio di Arduino**: un pin con `analogWrite` mostra l'onda quadra fra 0 e 5 V a 490 Hz (980 Hz sui pin 5 e 6, come sulla Uno), con la parte alta proporzionale al valore; con la base dei tempi lenta la traccia diventa una banda piena, come su un oscilloscopio vero. LED e motori continuano a usare il valore medio.
+- **Transistor PNP**: conduce con la base tirata verso massa (pin LOW), per accendere un carico dal lato del positivo; stessi avvisi dell'NPN (base senza resistenza, transistor bruciato).
+- **MOSFET a canale N** (tipo IRLZ44N, TO-220): interruttore comandato in tensione, il gate non assorbe corrente; con il PWM sul gate il motore riceve la tensione media giusta.
+- **2 esempi nuovi** (28 in tutto nel modulo Arduino): «PWM: il LED che si attenua visto con l'oscilloscopio» e «Motorino comandato con un MOSFET».
+
+### Come provarlo passo per passo
+1. GitHub → **Actions** → ultima esecuzione «Build Windows» verde → **Artifacts** → `ElettroLab-portable`; avviare `ElettroLab.exe`.
+2. Su LIM o schermo touch: apri un esempio qualsiasi e allarga due dita sul foglio (zoom), poi spostale insieme (la vista segue).
+3. **Arduino** → Sfoglia gli esempi → «PWM: il LED che si attenua…» → ▶ AVVIA: sull'oscilloscopio c'è l'onda quadra (un periodo ≈ una divisione da 2 ms). Clic a destra del potenziometro: il tratto alto si allarga e il LED è più luminoso.
+4. «Motorino comandato con un MOSFET» → ▶ AVVIA: a metà del potenziometro l'alimentatore indica circa 0,22 A; tutto a destra circa il doppio; tutto a sinistra il motore si ferma.
+5. Libreria → «Transistor PNP» e «MOSFET a canale N»: si posano sulla breadboard come l'NPN.
+
+### Test eseguiti
+- `npm test`: **752 test Vitest** in 71 file, tutti superati (16 nuovi: pizzico, campioni PWM e traccia a onda quadra o a banda, 980 Hz sui pin 5/6, PNP saturo/interdetto/attivo, MOSFET acceso/spento/gate isolato/PWM, i due esempi nuovi).
+- `npm run build` OK.
+- **GitHub Actions** (`windows-latest`: test, `cargo test`, `tauri build`, portable e installer): verdi tutte le esecuzioni della fase, n. 106–108 (l'ultima sul commit dell'attività 11.3).
+- **Prova dell'interfaccia con Playwright**: **180 controlli superati**, nessun errore in console (3 nuovi: zoom con due dita vere tramite il protocollo di Chromium, nessuna selezione durante il gesto).
+
+### Limiti noti
+- Non provato sull'.exe vero né su una LIM vera (solo Chromium con tocchi simulati).
+- Durante il pizzico il primo dito ha già toccato il foglio: se cade su un morsetto può iniziare un filo (si annulla con Esc o toccando il vuoto).
+- PWM: l'onda quadra si vede solo con il puntale + collegato direttamente al pin (o allo stesso nodo); dopo una resistenza o un LED si vede la media. Il NPN comandato in PWM resta calcolato con la corrente di base media.
+- MOSFET: modello a interruttore (niente zona lineare): con una tensione fissa fra 0 e 5 V sul gate è acceso sopra 2 V e spento sotto. Nessun avviso di surriscaldamento.
+- PNP senza un esempio dedicato.
 
 ## Fase 10 – Correzioni segnalate da Pierluigi: interruttori civili e codice Arduino (confermata il 2026-11-17)
 
@@ -574,3 +603,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-17 — Fase 10 confermata da Pierluigi («continua a svilupparlo fino al 10% di consumo settimanale»). Aperta la Fase 11 (attività scelte fra i limiti noti). Attività 11.1: `vistaPizzico()` in `geometria.ts` (3 test) e gestione delle due dita in `AreaDisegno.tsx` con gli eventi del riquadro in fase di cattura (Konva non riceve il gesto). Nuova sezione Playwright «Fase 11» con due dita vere (protocollo CDP di Chromium): 3 controlli. `npm test` 739 OK, build OK, prova Playwright **180 controlli superati**.
 - 2026-11-17 — attività 11.2: i campioni dell'oscilloscopio Arduino ricordano il PWM del pin misurato (`pwm: duty, alto, basso, periodoUs` in `oscilloscopio.ts`); `tracciaOscilloscopio` riscritta a tratti: onda quadra con fase fissa nel tempo, banda piena se i periodi sono più dei punti dello schermo. Esempio `arduino-pwm.elab` (27 esempi Arduino). 5 nuovi test (campioni PWM, 980 Hz sui pin 5/6, frazione alta della traccia, banda, esempio con il potenziometro). `npm test` 744 OK, build OK, prova Playwright 180 controlli superati.
 - 2026-11-17 — attività 11.3: risolutore (`circuito.ts`) con PNP (`pnp: true` sull'elemento bipolare: giunzione E→B, saturazione E→C, generatore comandato con le correnti costanti al contrario) e MOSFET N (`nmos`: interruttore secondo Vgs; con un pin in PWM sul gate, direttamente o attraverso una resistenza, caduta media (1 − duty)·Vds da spento). Libreria Arduino: «Transistor PNP» e «MOSFET a canale N» con icone originali (TO-92 e TO-220). Esempio `arduino-motore-mosfet.elab` (28 esempi Arduino). Problema incontrato: la libreria rifiuta altezze non multiple di 20 (il MOSFET da 70 non compariva): portato a 60. 8 nuovi test (PNP saturo/interdetto/attivo, MOSFET acceso/spento/gate isolato/PWM, esempio). `npm test` 752 OK, build OK, prova Playwright 180 controlli superati.
+- 2026-11-17 — attività 11.4, verifica finale e chiusura della Fase 11: `npm test` 752 OK, `npm run build` OK, prova Playwright 180 controlli superati, build Actions n. 108 verde. Scritto il resoconto; fase completata, in attesa di conferma. Nota: la richiesta era di lavorare «fino al 10% di consumo settimanale», che da qui non si può misurare: la sessione si è fermata a fine fase, come vuole CLAUDE.md.
