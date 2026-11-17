@@ -12,6 +12,7 @@ import {
   schermoAFoglio,
   spostaVista,
   vistaPerAdattare,
+  vistaPizzico,
   zoomRotellina,
   zoomVerso,
 } from "./geometria";
@@ -111,5 +112,22 @@ describe("adatta alla finestra", () => {
     const b = foglioASchermo(v, { x: r.x + r.larghezza, y: r.y + r.altezza });
     expect(a.x).toBeGreaterThanOrEqual(39.9);
     expect(b.x).toBeLessThanOrEqual(760.1);
+  });
+});
+
+describe("pizzico con due dita", () => {
+  const v = { scala: 1, x: 0, y: 0 };
+  it("allargare le dita al doppio raddoppia lo zoom tenendo fermo il punto in mezzo", () => {
+    const n = vistaPizzico(v, [{ x: 90, y: 100 }, { x: 110, y: 100 }], [{ x: 80, y: 100 }, { x: 120, y: 100 }]);
+    expect(n.scala).toBeCloseTo(2);
+    expect(schermoAFoglio(n, { x: 100, y: 100 })).toEqual({ x: 100, y: 100 });
+  });
+  it("spostare le dita insieme sposta la vista senza cambiare lo zoom", () => {
+    const n = vistaPizzico(v, [{ x: 0, y: 0 }, { x: 50, y: 0 }], [{ x: 30, y: 20 }, { x: 80, y: 20 }]);
+    expect(n).toEqual({ scala: 1, x: 30, y: 20 });
+  });
+  it("lo zoom resta nei limiti", () => {
+    const n = vistaPizzico(v, [{ x: 0, y: 0 }, { x: 1, y: 0 }], [{ x: 0, y: 0 }, { x: 1000, y: 0 }]);
+    expect(n.scala).toBe(ZOOM_MAX);
   });
 });

@@ -83,6 +83,7 @@ import {
   schermoAFoglio,
   spostaVista,
   vistaPerAdattare,
+  vistaPizzico,
   zoomRotellina,
   zoomVerso,
   type Punto,
@@ -678,6 +679,48 @@ export function AreaDisegno({
   // Esportazione: lo strato dei componenti e dei fili (non la griglia) disegnato
   // su un canvas a risoluzione doppia, qualunque sia lo zoom attuale.
   const stageRif = useRef<Konva.Stage>(null);
+
+  // --- Due dita sul foglio (LIM, schermi touch): pizzico per lo zoom e spostamento ---
+  // Le dita si seguono con gli eventi del riquadro in fase di cattura, prima di Konva:
+  // durante il gesto Konva non riceve niente, così non parte né una selezione né un filo.
+  const dita = useRef(new Map<number, Punto>());
+  const pizzico = useRef<{ vista: Vista; inizio: [Punto, Punto]; id: [number, number] } | null>(null);
+  const puntoNelRiquadro = (e: React.PointerEvent): Punto => {
+    const r = contenitore.current!.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  const ditoGiu = (e: React.PointerEvent) => {
+    if (e.pointerType !== "touch") return;
+    dita.current.set(e.pointerId, puntoNelRiquadro(e));
+    if (dita.current.size === 2 && !pizzico.current) {
+      const [[ia, a], [ib, b]] = [...dita.current.entries()];
+      pizzico.current = { vista, inizio: [a, b], id: [ia, ib] };
+      // Si abbandona quello che il primo dito aveva cominciato.
+      setRettangolo(null);
+      filoTrascinato.current = null;
+      stageRif.current?.find((n: Konva.Node) => n.isDragging()).forEach((n) => n.stopDrag());
+      e.stopPropagation();
+    } else if (pizzico.current) e.stopPropagation();
+  };
+  const ditoMosso = (e: React.PointerEvent) => {
+    if (e.pointerType !== "touch" || !dita.current.has(e.pointerId)) return;
+    dita.current.set(e.pointerId, puntoNelRiquadro(e));
+    const p = pizzico.current;
+    if (!p) return;
+    e.stopPropagation();
+    const a = dita.current.get(p.id[0]);
+    const b = dita.current.get(p.id[1]);
+    if (a && b) setVista(vistaPizzico(p.vista, p.inizio, [a, b]));
+  };
+  const ditoSu = (e: React.PointerEvent) => {
+    if (e.pointerType !== "touch") return;
+    dita.current.delete(e.pointerId);
+    if (pizzico.current) {
+      e.stopPropagation();
+      // Il gesto finisce quando si alzano tutte le dita.
+      if (dita.current.size === 0) pizzico.current = null;
+    }
+  };
   if (esportatore) {
     esportatore.current = () => {
       const stage = stageRif.current;
@@ -899,6 +942,10 @@ export function AreaDisegno({
         // o ingrandire la pagina, i gesti sul foglio li gestisce l'editor.
         style={{ cursor: cursore, background: colori.foglio, touchAction: "none" }}
         onContextMenu={(e) => e.preventDefault()}
+        onPointerDownCapture={ditoGiu}
+        onPointerMoveCapture={ditoMosso}
+        onPointerUpCapture={ditoSu}
+        onPointerCancelCapture={ditoSu}
         onDragOver={suTrascinaSopra}
         onDrop={suRilascioLibreria}
         onMouseLeave={() => setAnteprima(null)}

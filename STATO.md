@@ -4,7 +4,18 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 10 – Correzioni segnalate da Pierluigi: interruttori civili e codice Arduino** — completata — in attesa di conferma (riaperta e richiusa il 2026-11-16 per l'attività 10.7)
+**Fase 11 – Rifiniture: LIM con due dita, PWM vero, altri componenti Arduino** — in corso
+
+Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Attività scelte fra i limiti noti delle fasi precedenti, per avvicinarsi ancora a Tinkercad.
+
+### Attività (in ordine)
+
+- [x] 11.1 Zoom e spostamento della vista con due dita (pizzico) su LIM e schermi touch: allargare/stringere le dita ingrandisce/rimpicciolisce attorno al punto fra le dita, spostarle insieme sposta la vista; durante il gesto il foglio non seleziona e non disegna.
+- [ ] 11.2 PWM vero nel modulo Arduino: sull'oscilloscopio un pin con `analogWrite` mostra l'onda quadra a circa 490 Hz con il duty cycle giusto (non più la tensione media); LED e motori continuano a usare il valore medio.
+- [ ] 11.3 Transistor PNP e MOSFET a canale N nel modulo Arduino (stesso modello semplificato dell'NPN); esempio.
+- [ ] 11.4 Verifica finale: `npm test`, build, build Actions, prova Playwright; resoconto della Fase 11.
+
+## Fase 10 – Correzioni segnalate da Pierluigi: interruttori civili e codice Arduino (confermata il 2026-11-17)
 
 Fase 9 confermata da Pierluigi il 2026-11-16. Problemi segnalati provando l'.exe: «gli interruttori negli impianti civili non si riesce ad usarli per chiuderli ed aprirli sia nella parte realistica che quella a schema» e «arduino non si riesce ad usare la parte del codice, solo la programmazione a blocchi».
 
@@ -560,3 +571,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-16 — attività 10.5: cercando altri usi delle finestre del browser ho trovato Blockly (`window.prompt` per «Crea variabile…», confirm e alert): nell'.exe gli studenti non avrebbero potuto creare variabili coi blocchi. Finestre dell'app in `finestraDomanda.ts`, impostate in `caricaBlockly` con `Blockly.dialog.setPrompt/setConfirm/setAlert`. Controllati anche gli altri usi (stampa, appunti, localStorage): funzionano nella WebView2. 1 nuovo test Vitest (con le finestre simulate) e 2 controlli Playwright (finestra dell'app e variabile creata, nessuna finestra del browser). `npm test` 732 OK, build OK, prova Playwright **171 controlli superati**.
 - 2026-11-16 — attività 10.6, verifica finale e chiusura della Fase 10: `npm test` 732 OK, `npm run build` OK, prova Playwright 171 controlli superati, build Actions n. 103 verde. Scritto il resoconto della Fase 10; fase completata, in attesa di conferma. Da provare sull'.exe vero (mouse e, se c'è, LIM o schermo touch).
 - 2026-11-16 — attività 10.7 (richiesta di Pierluigi in chat): barra «Colore del filo» sopra il foglio quando si seleziona un filo (`TavolozzaFilo.tsx`, usata anche in Proprietà); colori CEI negli Impianti (`COLORI_FILI_SCHEMA` in `fili.ts`, giallo-verde disegnato a strisce, alone di selezione dietro il filo colorato); cavetti colorati anche in Elettronica. 4 nuovi test Vitest, 6 controlli Playwright. `npm test` 736 OK, build OK, prova Playwright **177 controlli superati**. Fase 10 di nuovo completata, in attesa di conferma.
+- 2026-11-17 — Fase 10 confermata da Pierluigi («continua a svilupparlo fino al 10% di consumo settimanale»). Aperta la Fase 11 (attività scelte fra i limiti noti). Attività 11.1: `vistaPizzico()` in `geometria.ts` (3 test) e gestione delle due dita in `AreaDisegno.tsx` con gli eventi del riquadro in fase di cattura (Konva non riceve il gesto). Nuova sezione Playwright «Fase 11» con due dita vere (protocollo CDP di Chromium): 3 controlli. `npm test` 739 OK, build OK, prova Playwright **180 controlli superati**.

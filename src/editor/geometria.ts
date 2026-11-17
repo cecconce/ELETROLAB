@@ -81,6 +81,23 @@ export function zoomRotellina(vista: Vista, deltaY: number, centro: Punto): Vist
   return zoomVerso(vista, vista.scala * fattore, centro);
 }
 
+/**
+ * Pizzico con due dita (LIM, schermi touch): `inizio` sono le due dita quando
+ * il gesto comincia (con la vista `vista` di quel momento), `ora` dove sono
+ * adesso. Allargare le dita ingrandisce; il punto del foglio che stava fra le
+ * dita all'inizio resta fra le dita, così spostandole insieme si sposta anche
+ * la vista.
+ */
+export function vistaPizzico(vista: Vista, inizio: readonly [Punto, Punto], ora: readonly [Punto, Punto]): Vista {
+  const distanza = (d: readonly [Punto, Punto]) => Math.hypot(d[1].x - d[0].x, d[1].y - d[0].y);
+  const centro = (d: readonly [Punto, Punto]) => ({ x: (d[0].x + d[1].x) / 2, y: (d[0].y + d[1].y) / 2 });
+  const d0 = distanza(inizio);
+  const scala = limitaScala(d0 > 0 ? (vista.scala * distanza(ora)) / d0 : vista.scala);
+  const fra = schermoAFoglio(vista, centro(inizio));
+  const c = centro(ora);
+  return { scala, x: c.x - fra.x * scala, y: c.y - fra.y * scala };
+}
+
 /** Sposta la vista di (dx, dy) pixel dello schermo. */
 export function spostaVista(vista: Vista, dx: number, dy: number): Vista {
   return { ...vista, x: vista.x + dx, y: vista.y + dy };

@@ -333,6 +333,7 @@ async function collega(pagina, a, b) {
   // === Fase 10: tocco (LIM, schermi touch), sigle cliccabili, codice Arduino ==
   await provaFase10(browser, controlla, errori);
   await provaColoriFili(pagina, controlla, foto, apriEsempio);
+  await provaFase11(browser, controlla, errori);
 
   controlla(errori.length === 0, `nessun errore nella console${errori.length ? ": " + errori.join(" | ") : ""}`);
   await browser.close();
@@ -1403,4 +1404,48 @@ async function provaColoriFili(pagina, controlla, foto, apriEsempio) {
     );
   }
   await foto("10f-colore-fili-impianti");
+}
+
+// --- Fase 11 ----------------------------------------------------------------
+
+/** Fase 11: pizzico con due dita (LIM). Pagina a parte con schermo touch. */
+async function provaFase11(browser, controlla, errori) {
+  const contesto = await browser.newContext({ viewport: { width: 1366, height: 768 }, hasTouch: true });
+  const pagina = await contesto.newPage();
+  pagina.on("console", (m) => m.type() === "error" && errori.push(m.text()));
+  pagina.on("pageerror", (e) => errori.push(String(e)));
+  await pagina.goto(INDIRIZZO);
+  await pagina.waitForTimeout(800);
+
+  console.log("Fase 11: zoom con due dita (pizzico)");
+  await pagina.getByText("Sfoglia gli esempi").click();
+  await pagina.click('[data-esempio="marcia-arresto.elab"]');
+  await pagina.waitForTimeout(600);
+  if (await pagina.getByText("Ho capito").count()) await pagina.getByText("Ho capito").click();
+  const zoom = async () => Number(await pagina.locator(".area-disegno-canvas").getAttribute("data-zoom"));
+  const tela = await pagina.locator("canvas").first().boundingBox();
+  const cx = tela.x + tela.width / 2;
+  const cy = tela.y + tela.height / 2;
+  // Due dita vere con il protocollo di Chromium (Playwright ha solo il tocco singolo).
+  const cdp = await contesto.newCDPSession(pagina);
+  const tocchi = (tipo, punti) => cdp.send("Input.dispatchTouchEvent", { type: tipo, touchPoints: punti.map(([x, y], id) => ({ x, y, id })) });
+  const pizzica = async (da, a) => {
+    await tocchi("touchStart", [[cx - da, cy], [cx + da, cy]]);
+    for (let k = 1; k <= 10; k++) {
+      const d = da + ((a - da) * k) / 10;
+      await tocchi("touchMove", [[cx - d, cy], [cx + d, cy]]);
+      await pagina.waitForTimeout(16);
+    }
+    await tocchi("touchEnd", []);
+    await pagina.waitForTimeout(300);
+  };
+  const z0 = await zoom();
+  await pizzica(40, 100);
+  const z1 = await zoom();
+  controlla(z1 > z0 * 2, `allargando due dita lo schema si ingrandisce (${z0} % → ${z1} %)`);
+  controlla((await pagina.locator(".area-disegno-canvas").getAttribute("data-selezionati")) === "", "il pizzico non seleziona niente");
+  await pizzica(100, 50);
+  const z2 = await zoom();
+  controlla(z2 < z1 * 0.6, `stringendole si rimpicciolisce (${z1} % → ${z2} %)`);
+  await contesto.close();
 }
