@@ -317,6 +317,13 @@
       "prova": "Premi ▶ AVVIA: sullo schermo scorre l'onda quadra. Clic a destra del potenziometro: l'onda si allarga (periodo più lungo), a sinistra si stringe. Conta le divisioni di un periodo e confronta con il monitor seriale. Ferma la simulazione e cambia nelle Proprietà dell'oscilloscopio il tempo per divisione."
     },
     {
+      "file": "arduino-pwm.elab",
+      "modulo": "arduino",
+      "titolo": "PWM: il LED che si attenua visto con l’oscilloscopio",
+      "descrizione": "analogWrite(9, valore) non dà una tensione intermedia: il pin 9 si accende e si spegne circa 490 volte al secondo e il LED sembra più o meno luminoso secondo la frazione di tempo in cui il pin è alto (duty cycle). L'oscilloscopio XSC1, con 2 ms per divisione, mostra l'onda quadra; il potenziometro sceglie il valore da 0 a 255 e il monitor seriale scrive il duty cycle in percentuale.",
+      "prova": "Premi ▶ AVVIA: sullo schermo dell'oscilloscopio c'è un'onda quadra fra 0 V e 5 V, con un periodo di circa una divisione (2 ms). Clic a destra del potenziometro: il tratto alto si allarga e il LED è più luminoso; a sinistra si stringe. A 0 % e a 100 % l'onda diventa una linea. Prova anche il pin 5 (cambia LED = 5 e il filo): lì il PWM va a 980 Hz, il doppio."
+    },
+    {
       "file": "arduino-lcd-i2c.elab",
       "modulo": "arduino",
       "titolo": "Termometro con il display LCD I2C",

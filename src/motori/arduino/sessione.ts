@@ -35,6 +35,7 @@ import {
   USCITE_595,
 } from "./componenti";
 import { ErroreArduino, preparaSketch, type Esecutore, type Hardware } from "./linguaggio";
+import { periodoPwmUs, type CampioneOscilloscopio } from "./oscilloscopio";
 
 /** Distanza iniziale dell'ostacolo davanti al sensore a ultrasuoni (cm). */
 export const DISTANZA_PREDEFINITA = 50;
@@ -56,7 +57,7 @@ export interface SessioneArduino {
   toni: Record<string, number>;
   servi: Record<string, number>;
   /** Oscilloscopi: campioni (tempo in µs, tensione fra + e − in V), i più vecchi in testa. */
-  campioni: Record<string, { t: number; v: number }[]>;
+  campioni: Record<string, CampioneOscilloscopio[]>;
   /** Colori inviati con show() alle strisce NeoPixel, per pin del dato (0xRRGGBB). */
   neopixel: Record<string, number[]>;
   /** Contenuto dei display creati dal programma, con i pin del costruttore. */
@@ -109,10 +110,24 @@ function campiona(s: SessioneArduino, oscilloscopi: readonly ComponenteArduino[]
   };
   for (const c of oscilloscopi) {
     const lista = (s.campioni[c.id] ??= []);
-    const v = tensione(s.nodoDi(c.id, "+")) - tensione(s.nodoDi(c.id, "-"));
+    const piu = s.nodoDi(c.id, "+");
+    const vMeno = tensione(s.nodoDi(c.id, "-"));
+    const v = tensione(piu) - vMeno;
+    // Puntale + su un pin in PWM (analogWrite): si registra anche l'onda quadra
+    // (0 V / 5 V rispetto alla massa della scheda), così la traccia la mostra.
+    let pwm: CampioneOscilloscopio["pwm"];
+    if (s.scheda) {
+      for (const [p, st] of Object.entries(s.pin)) {
+        if (st.modo === "OUTPUT" && st.livello > 0 && st.livello < 1 && s.nodoDi(s.scheda, p) === piu) {
+          pwm = { duty: st.livello, alto: 5 - vMeno, basso: -vMeno, periodoUs: periodoPwmUs(p) };
+        }
+      }
+    }
+    const nuovo: CampioneOscilloscopio = pwm ? { t, v, pwm } : { t, v };
     const ultimo = lista[lista.length - 1];
-    if (ultimo && ultimo.t === t) ultimo.v = v;
-    else if (!ultimo || Math.abs(ultimo.v - v) > 1e-3 || t - ultimo.t > 5000) lista.push({ t, v });
+    const stessoPwm = (ultimo?.pwm?.duty ?? -1) === (pwm?.duty ?? -1);
+    if (ultimo && ultimo.t === t) lista[lista.length - 1] = nuovo;
+    else if (!ultimo || Math.abs(ultimo.v - v) > 1e-3 || !stessoPwm || t - ultimo.t > 5000) lista.push(nuovo);
     while (lista.length > CAMPIONI_MASSIMI || (lista.length > 2 && t - lista[1].t > REGISTRAZIONE_US)) lista.shift();
   }
 }

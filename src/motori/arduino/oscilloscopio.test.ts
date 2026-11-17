@@ -40,3 +40,50 @@ describe("campioni registrati dalla sessione", () => {
     expect(new Set(fronti.map((f) => Math.round(f.v)))).toEqual(new Set([0, 5]));
   });
 });
+
+describe("PWM sull'oscilloscopio", () => {
+  const sessionePwm = (pin: number, valore: number) => {
+    const componenti: ComponenteArduino[] = [{ id: "U", tipo: "arduino-uno" }, { id: "X", tipo: "oscilloscopio" }];
+    const s = avviaSessioneArduino(
+      `void setup() { pinMode(${pin}, OUTPUT); analogWrite(${pin}, ${valore}); }\nvoid loop() { delay(100); }`,
+      componenti,
+      nodi({ [`U.D${pin}`]: "p", "X.+": "p", "U.GND1": "g", "X.-": "g" }),
+    );
+    for (let k = 0; k < 4; k++) passoArduino(s, 50);
+    return s;
+  };
+
+  it("analogWrite(9, 64): il campione ricorda l'onda quadra (duty 25 %, 0–5 V, 490 Hz)", () => {
+    const s = sessionePwm(9, 64);
+    const ultimo = s.campioni.X[s.campioni.X.length - 1];
+    expect(ultimo.pwm?.duty).toBeCloseTo(64 / 255);
+    expect(ultimo.pwm?.alto).toBeCloseTo(5);
+    expect(ultimo.pwm?.basso).toBeCloseTo(0);
+    expect(ultimo.pwm?.periodoUs).toBe(2040);
+    expect(ultimo.v).toBeCloseTo((5 * 64) / 255, 1); // il circuito vede la media
+  });
+
+  it("sui pin 5 e 6 il PWM va a 980 Hz", () => {
+    const s = sessionePwm(5, 128);
+    expect(s.campioni.X[s.campioni.X.length - 1].pwm?.periodoUs).toBe(1024);
+  });
+
+  it("traccia a 1 ms/div: onda quadra fra 0 e 5 V con la giusta frazione alta", () => {
+    const campioni = [{ t: 0, v: 1.25, pwm: { duty: 0.25, alto: 5, basso: 0, periodoUs: 2000 } }];
+    // Finestra di 10 ms (5 periodi), 1 V/div, schermo 1000 × 80: 5 V = 40 − 5·10 = 0 (bordo alto).
+    const p = tracciaOscilloscopio(campioni, 100000, 0.001, 1, 1000, 80);
+    const ys = p.filter((_, i) => i % 2 === 1);
+    expect(new Set(ys)).toEqual(new Set([0, 40]));
+    // Somma delle lunghezze dei tratti orizzontali in alto: un quarto dello schermo.
+    let alto = 0;
+    for (let i = 2; i < p.length; i += 2) if (p[i + 1] === 0 && p[i - 1] === 0) alto += p[i] - p[i - 2];
+    expect(alto).toBeCloseTo(250, 0);
+  });
+
+  it("base dei tempi lenta: banda piena invece di migliaia di fronti", () => {
+    const campioni = [{ t: 0, v: 2.5, pwm: { duty: 0.5, alto: 5, basso: 0, periodoUs: 2040 } }];
+    const p = tracciaOscilloscopio(campioni, 10e6, 1, 2, 100, 80);
+    expect(p.length).toBeLessThan(1000);
+    expect(new Set(p.filter((_, i) => i % 2 === 1)).size).toBe(2);
+  });
+});

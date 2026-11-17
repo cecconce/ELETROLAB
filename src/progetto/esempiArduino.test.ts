@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(26);
+    expect(arduino).toHaveLength(27);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -480,6 +480,34 @@ describe("esempio dell'oscilloscopio", () => {
     // 2 V/div su 80 unità (10 per divisione): 0 V a y = 40, 5 V a y = 15.
     expect(ys.some((y) => Math.abs(y - 40) < 0.5)).toBe(true);
     expect(ys.some((y) => Math.abs(y - 15) < 0.5)).toBe(true);
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio del PWM", () => {
+  it("l'oscilloscopio mostra l'onda quadra a 490 Hz; il potenziometro cambia la parte alta", () => {
+    const { schema, s } = apri("arduino-pwm.elab");
+    aspetta(s, 600);
+    expect(s.errore).toBeNull();
+    const x = id(schema, "oscilloscopio");
+    const traccia = () => vistaDaSessioneArduino(s, schema, lib).componenti[x].arduino!.traccia!;
+    // Frazione dello schermo (100 unità) passata a 5 V (y = 15 con 2 V/div).
+    const frazioneAlta = () => {
+      const p = traccia();
+      let alto = 0;
+      for (let i = 2; i < p.length; i += 2) if (Math.abs(p[i + 1] - 15) < 0.5 && Math.abs(p[i - 1] - 15) < 0.5) alto += p[i] - p[i - 2];
+      return alto / 100;
+    };
+    // Finestra di 20 ms (2 ms/div) = circa 10 periodi da 2,04 ms: una ventina di fronti.
+    const ys = traccia().filter((_, i) => i % 2 === 1);
+    const fronti = ys.filter((y, i) => i > 0 && Math.abs(y - ys[i - 1]) > 20).length;
+    expect(fronti).toBeGreaterThanOrEqual(15);
+    const prima = frazioneAlta();
+    expect(prima).toBeGreaterThan(0.3);
+    expect(prima).toBeLessThan(0.7); // potenziometro a metà: circa 50 %
+    for (let i = 0; i < 2; i++) clicGiuArduino(s, id(schema, "potenziometro"));
+    aspetta(s, 600);
+    expect(frazioneAlta()).toBeGreaterThan(prima + 0.1);
     expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });
