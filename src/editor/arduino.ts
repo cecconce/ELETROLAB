@@ -226,7 +226,7 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.funzione = a.funzione;
       arduino.lettura = testoMultimetro(a.funzione, a.misura ?? 0);
     }
-    if (c.tipo === "transistor-npn") arduino.bruciato = a.bruciato ?? false;
+    if (c.tipo === "transistor-npn" || c.tipo === "transistor-pnp") arduino.bruciato = a.bruciato ?? false;
     if (c.tipo === "lampadina") {
       arduino.luminosita = a.luminosita ?? 0;
       arduino.bruciato = a.bruciato ?? false;
@@ -342,7 +342,7 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
         morsetti: [],
       });
     }
-    if (c.tipo === "transistor-npn" && a && (a.correnteBase ?? 0) > CORRENTE_BASE_MAX) {
+    if ((c.tipo === "transistor-npn" || c.tipo === "transistor-pnp") && a && (a.correnteBase ?? 0) > CORRENTE_BASE_MAX) {
       problemi.push({
         chiave: `base-${c.id}`,
         gravita: "errore",
@@ -369,7 +369,7 @@ export function problemiArduino(s: SessioneArduino, schema: Schema, libreria: Li
         componenti: [c.id],
         morsetti: [],
       });
-    } else if (a?.bruciato && c.tipo === "transistor-npn") {
+    } else if (a?.bruciato && (c.tipo === "transistor-npn" || c.tipo === "transistor-pnp")) {
       problemi.push({
         chiave: `bruciato-${c.id}`,
         gravita: "errore",

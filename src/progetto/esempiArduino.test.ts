@@ -32,7 +32,7 @@ const luminosita = (s: SessioneArduino, schema: Schema, tipo: string) => s.aspet
 describe("esempi Arduino", () => {
   it("ci sono gli esempi, tutti senza errori né problemi all'avvio", () => {
     const arduino = ESEMPI.filter((e) => e.modulo === "arduino");
-    expect(arduino).toHaveLength(27);
+    expect(arduino).toHaveLength(28);
     for (const e of arduino) {
       const { schema, s } = apri(e.file);
       aspetta(s, 300);
@@ -480,6 +480,34 @@ describe("esempio dell'oscilloscopio", () => {
     // 2 V/div su 80 unità (10 per divisione): 0 V a y = 40, 5 V a y = 15.
     expect(ys.some((y) => Math.abs(y - 40) < 0.5)).toBe(true);
     expect(ys.some((y) => Math.abs(y - 15) < 0.5)).toBe(true);
+    expect(problemiArduino(s, schema, lib)).toEqual([]);
+  });
+});
+
+describe("esempio del MOSFET", () => {
+  it("il motore gira con il PWM sul gate e si ferma con il potenziometro a zero", () => {
+    const { schema, s } = apri("arduino-motore-mosfet.elab");
+    aspetta(s, 500);
+    expect(s.errore).toBeNull();
+    const motore = id(schema, "motore-dc");
+    const q = id(schema, "mosfet-n");
+    const velocita = () => s.aspetto[motore]?.velocita ?? 0;
+    const corrente = () => s.aspetto[motore]?.corrente ?? 0;
+    const meta = velocita();
+    const correnteMeta = corrente();
+    expect(meta).toBeGreaterThan(0.2);
+    expect(s.aspetto[q].statoTransistor).toBe("saturo");
+    const pot = id(schema, "potenziometro");
+    for (let k = 0; k < 5; k++) clicGiuArduino(s, pot);
+    aspetta(s, 700);
+    expect(velocita()).toBeGreaterThan(meta);
+    // A metà corsa il PWM al 50 % dà circa metà corrente (media), non tutta.
+    expect(correnteMeta / corrente()).toBeGreaterThan(0.35);
+    expect(correnteMeta / corrente()).toBeLessThan(0.65);
+    for (let k = 0; k < 10; k++) clicGiuArduino(s, pot, true);
+    aspetta(s, 700);
+    expect(velocita()).toBe(0);
+    expect(s.aspetto[q].statoTransistor).toBe("interdizione");
     expect(problemiArduino(s, schema, lib)).toEqual([]);
   });
 });

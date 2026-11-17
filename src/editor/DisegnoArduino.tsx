@@ -374,6 +374,7 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
       );
     }
     case "transistor-npn":
+    case "transistor-pnp":
       return a?.bruciato ? (
         <Group listening={false}>
           <Rect x={6} y={6} width={28} height={28} cornerRadius={6} fill="#5d4037" opacity={0.8} shadowColor="#ff6d00" shadowBlur={14} shadowOpacity={1} />

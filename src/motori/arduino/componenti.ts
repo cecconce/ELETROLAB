@@ -189,6 +189,10 @@ export const BETA_TRANSISTOR = 100;
 /** Oltre questa corrente di collettore il transistor (piccolo, TO-92) si surriscalda (A). */
 export const CORRENTE_TRANSISTOR_MAX = 0.8;
 
+/** MOSFET a canale N della libreria: soglia del gate (V) e resistenza in conduzione (Ω). */
+export const MOSFET_SOGLIA = 2;
+export const MOSFET_RON = 0.05;
+
 /** Resistenza dell'avvolgimento del motorino in continua (Ω). */
 export const R_MOTORE_DC = 20;
 
@@ -352,6 +356,16 @@ export function elementiCircuito(
       case "transistor-npn":
         el.push({ tipo: "npn", id: c.id, c: n("C"), b: n("B"), e: n("E"), beta: BETA_TRANSISTOR });
         break;
+      case "transistor-pnp":
+        // Stesso modello dell'NPN con le tensioni al contrario: conduce quando
+        // la base è tirata verso massa (circa 0,7 V sotto l'emettitore).
+        el.push({ tipo: "npn", id: c.id, c: n("C"), b: n("B"), e: n("E"), beta: BETA_TRANSISTOR, pnp: true });
+        break;
+      case "mosfet-n":
+        // MOSFET «logic level» (comandabile con i 5 V di un pin): interruttore
+        // fra drain e source quando Vgs supera la soglia.
+        el.push({ tipo: "nmos", id: c.id, d: n("D"), g: n("G"), s: n("S"), vth: MOSFET_SOGLIA, ron: MOSFET_RON });
+        break;
       case "diodo":
         el.push({ tipo: "diodo", id: c.id, anodo: n("A"), catodo: n("K"), vf: 0.7, ron: 0.5 });
         break;
@@ -457,6 +471,27 @@ export function elementiCircuito(
         break;
       default:
         break;
+    }
+  }
+  // MOSFET con il gate comandato da un pin in PWM (direttamente o attraverso una
+  // resistenza): si accende per la frazione di tempo in cui il pin è alto.
+  const scheda = componenti.find((c) => c.tipo === "arduino-uno");
+  if (scheda) {
+    const pwm = new Map<string, number>();
+    for (const [p, st] of Object.entries(pin)) if (st.modo === "OUTPUT" && st.livello > 0 && st.livello < 1) pwm.set(nodoDi(scheda.id, p), st.livello);
+    if (pwm.size) {
+      for (const m of el) {
+        if (m.tipo !== "nmos") continue;
+        let duty = pwm.get(m.g);
+        if (duty === undefined) {
+          for (const r of el) {
+            if (r.tipo !== "resistenza" || r.ohm > 100000) continue;
+            if (r.a === m.g && pwm.has(r.b)) duty = pwm.get(r.b);
+            else if (r.b === m.g && pwm.has(r.a)) duty = pwm.get(r.a);
+          }
+        }
+        if (duty !== undefined) m.duty = duty;
+      }
     }
   }
   return el;
@@ -614,7 +649,12 @@ export function aspettoComponenti(
       aspetto[c.id] = { luminosita: watt < 0.02 ? 0 : Math.min(1, watt / LAMPADINA_WATT), bruciato: watt > 2 * LAMPADINA_WATT, corrente: Math.abs(volt) / R_LAMPADINA };
       continue;
     }
-    if (c.tipo === "transistor-npn") {
+    if (c.tipo === "mosfet-n") {
+      const i = r.correnti[c.id] ?? 0;
+      aspetto[c.id] = { statoTransistor: r.mosAccesi.has(c.id) ? "saturo" : "interdizione", corrente: i, alimentato: r.mosAccesi.has(c.id) };
+      continue;
+    }
+    if (c.tipo === "transistor-npn" || c.tipo === "transistor-pnp") {
       const ib = r.correnti[`${c.id}:BE`] ?? 0;
       const ic = r.correnti[c.id] ?? 0;
       aspetto[c.id] = {

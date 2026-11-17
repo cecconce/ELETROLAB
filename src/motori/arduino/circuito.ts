@@ -24,8 +24,32 @@ export type Elemento =
   /** Generatore fra `piu` e `meno` (nessuno dei due è la massa): `volt` con resistenza interna `ohm`. */
   | { tipo: "alimentatore"; id: string; piu: string; meno: string; volt: number; ohm: number }
   | { tipo: "diodo"; id: string; anodo: string; catodo: string; vf: number; ron: number }
-  /** Transistor NPN: collettore, base, emettitore e guadagno di corrente β. */
-  | { tipo: "npn"; id: string; c: string; b: string; e: string; beta: number };
+  /**
+   * Transistor bipolare: collettore, base, emettitore e guadagno di corrente β.
+   * `pnp: true` per il PNP (tutte le tensioni e le correnti al contrario:
+   * conduce quando la base è circa 0,7 V sotto l'emettitore).
+   */
+  | { tipo: "npn"; id: string; c: string; b: string; e: string; beta: number; pnp?: boolean }
+  /**
+   * MOSFET a canale N ad arricchimento (modello a interruttore): fra drain e
+   * source c'è `ron` ohm quando Vgs supera la soglia `vth`, altrimenti è
+   * aperto. Il gate non assorbe corrente.
+   */
+  | {
+      tipo: "nmos";
+      id: string;
+      d: string;
+      g: string;
+      s: string;
+      vth: number;
+      ron: number;
+      /**
+       * Gate comandato da un pin in PWM: acceso per la frazione `duty` del tempo.
+       * Si risolve con la media, come per i LED: fra drain e source resta la
+       * parte (1 − duty) della tensione che ci sarebbe da spento.
+       */
+      duty?: number;
+    };
 
 export const MASSA = "massa";
 
@@ -41,6 +65,8 @@ export interface RisultatoCircuito {
   diodiAccesi: Set<string>;
   /** Transistor in saturazione (in conduzione piena, come un interruttore chiuso). */
   saturi: Set<string>;
+  /** MOSFET in conduzione. */
+  mosAccesi: Set<string>;
   /** Nodi senza alcun collegamento a un generatore o alla massa. */
   flottanti: Set<string>;
 }
@@ -61,7 +87,9 @@ const R_CE_SAT = 0.5;
 type Npn = Extract<Elemento, { tipo: "npn" }>;
 type Diodo = Extract<Elemento, { tipo: "diodo" }>;
 /** Giunzione base-emettitore di un transistor, trattata come un diodo. */
-const giunzioneBE = (t: Npn): Diodo => ({ tipo: "diodo", id: `${t.id}:BE`, anodo: t.b, catodo: t.e, vf: VBE, ron: R_BE });
+const giunzioneBE = (t: Npn): Diodo =>
+  t.pnp ? { tipo: "diodo", id: `${t.id}:BE`, anodo: t.e, catodo: t.b, vf: VBE, ron: R_BE } : { tipo: "diodo", id: `${t.id}:BE`, anodo: t.b, catodo: t.e, vf: VBE, ron: R_BE };
+type Nmos = Extract<Elemento, { tipo: "nmos" }>;
 
 export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuito {
   // Elenco dei nodi (la massa è esclusa: è il riferimento).
@@ -73,15 +101,17 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
   [...nodi].forEach((n, i) => indice.set(n, i));
   const transistor = elementi.filter((e): e is Npn => e.tipo === "npn");
   const diodi = [...elementi.filter((e): e is Diodo => e.tipo === "diodo"), ...transistor.map(giunzioneBE)];
+  const mos = elementi.filter((e): e is Nmos => e.tipo === "nmos");
   const accesi = new Set<string>();
   const saturi = new Set<string>();
+  const mosAccesi = new Set<string>();
 
   let v = new Array<number>(nodi.size).fill(0);
   const tensione = (n: string) => (n === MASSA ? 0 : v[indice.get(n)!]);
   const correnteDiodo = (d: Diodo) => (accesi.has(d.id) ? Math.max(0, (tensione(d.anodo) - tensione(d.catodo) - d.vf) / Math.max(d.ron, R_MINIMA)) : 0);
 
   for (let giro = 0; giro < ITERAZIONI_DIODI; giro++) {
-    v = risolviLineare(elementi, indice, accesi, saturi);
+    v = risolviLineare(elementi, indice, accesi, saturi, mosAccesi);
     // Correggi lo stato dei diodi: si accende chi ha più di Vf ai capi, si
     // spegne chi conduce "al contrario". Uno alla volta il più sbagliato,
     // così la ricerca non oscilla.
@@ -105,7 +135,8 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
     let cambiato = false;
     for (const t of transistor) {
       const ib = correnteDiodo(giunzioneBE(t));
-      const vce = tensione(t.c) - tensione(t.e);
+      // Per il PNP Vce si misura al contrario (emettitore più alto del collettore).
+      const vce = t.pnp ? tensione(t.e) - tensione(t.c) : tensione(t.c) - tensione(t.e);
       if (!saturi.has(t.id)) {
         // In zona attiva il generatore di corrente non può portare Vce sotto
         // la tensione di saturazione: il transistor è saturo.
@@ -124,8 +155,33 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
       }
       if (cambiato) break;
     }
+    // MOSFET: acceso se Vgs supera la soglia (uno alla volta).
+    if (!cambiato) {
+      for (const m of mos) {
+        // Con il PWM sul gate conta il livello alto del pin (5 V), non la media.
+        const on = m.duty !== undefined ? m.duty > 0 : tensione(m.g) - tensione(m.s) > m.vth;
+        if (on !== mosAccesi.has(m.id)) {
+          if (on) mosAccesi.add(m.id);
+          else mosAccesi.delete(m.id);
+          cambiato = true;
+          break;
+        }
+      }
+    }
     if (!cambiato) break;
   }
+
+  // MOSFET in PWM: tensione fra drain e source da spento, poi la media.
+  const cadute = new Map<string, number>();
+  for (const m of mos) {
+    if (m.duty === undefined || m.duty >= 1 || !mosAccesi.has(m.id)) continue;
+    const senza = new Set(mosAccesi);
+    senza.delete(m.id);
+    const vOff = risolviLineare(elementi, indice, accesi, saturi, senza, cadute);
+    const vds = (m.d === MASSA ? 0 : vOff[indice.get(m.d)!]) - (m.s === MASSA ? 0 : vOff[indice.get(m.s)!]);
+    cadute.set(m.id, (1 - m.duty) * Math.max(0, vds));
+  }
+  if (cadute.size) v = risolviLineare(elementi, indice, accesi, saturi, mosAccesi, cadute);
 
   const tensioni: Record<string, number> = { [MASSA]: 0 };
   for (const [n, i] of indice) tensioni[n] = v[i];
@@ -138,10 +194,17 @@ export function risolviCircuito(elementi: readonly Elemento[]): RisultatoCircuit
       // Corrente di base (giunzione) e di collettore (nel verso C → E).
       const ib = correnteDiodo(giunzioneBE(e));
       correnti[`${e.id}:BE`] = ib;
-      correnti[e.id] = ib <= 0 ? 0 : saturi.has(e.id) ? Math.max(0, (tensione(e.c) - tensione(e.e) - VCE_SAT) / R_CE_SAT) : e.beta * ib;
+      const vce = e.pnp ? tensione(e.e) - tensione(e.c) : tensione(e.c) - tensione(e.e);
+      correnti[e.id] = ib <= 0 ? 0 : saturi.has(e.id) ? Math.max(0, (vce - VCE_SAT) / R_CE_SAT) : e.beta * ib;
+    }
+    // MOSFET: corrente da drain a source.
+    if (e.tipo === "nmos") {
+      const vds = tensione(e.d) - tensione(e.s);
+      const caduta = cadute.get(e.id);
+      correnti[e.id] = !mosAccesi.has(e.id) ? 0 : caduta !== undefined ? Math.max(0, (vds - caduta) / Math.max(e.ron, R_MINIMA)) : vds / Math.max(e.ron, R_MINIMA);
     }
   }
-  return { tensioni, correnti, diodiAccesi: accesi, saturi, flottanti: nodiFlottanti(elementi, nodi) };
+  return { tensioni, correnti, diodiAccesi: accesi, saturi, mosAccesi, flottanti: nodiFlottanti(elementi, nodi) };
 }
 
 function nodiDi(e: Elemento): string[] {
@@ -149,11 +212,20 @@ function nodiDi(e: Elemento): string[] {
   if (e.tipo === "generatore") return [e.nodo];
   if (e.tipo === "alimentatore") return [e.piu, e.meno];
   if (e.tipo === "npn") return [e.c, e.b, e.e];
+  if (e.tipo === "nmos") return [e.d, e.g, e.s];
   return [e.anodo, e.catodo];
 }
 
 /** Costruisce e risolve G · V = I con i diodi nello stato indicato. */
-function risolviLineare(elementi: readonly Elemento[], indice: Map<string, number>, accesi: ReadonlySet<string>, saturi: ReadonlySet<string>): number[] {
+function risolviLineare(
+  elementi: readonly Elemento[],
+  indice: Map<string, number>,
+  accesi: ReadonlySet<string>,
+  saturi: ReadonlySet<string>,
+  mosAccesi: ReadonlySet<string> = new Set(),
+  /** MOSFET in PWM: caduta media fra drain e source (V). */
+  cadute: ReadonlyMap<string, number> = new Map(),
+): number[] {
   const n = indice.size;
   const G = Array.from({ length: n }, () => new Array<number>(n).fill(0));
   const I = new Array<number>(n).fill(0);
@@ -202,6 +274,27 @@ function risolviLineare(elementi: readonly Elemento[], indice: Map<string, numbe
       iniezione(e.meno, -e.volt * g);
     } else if (e.tipo === "diodo" && accesi.has(e.id)) {
       diodoAcceso(e.anodo, e.catodo, e.vf, e.ron);
+    } else if (e.tipo === "nmos" && mosAccesi.has(e.id)) {
+      const caduta = cadute.get(e.id);
+      if (caduta !== undefined) diodoAcceso(e.d, e.s, caduta, e.ron);
+      else conduttanza(e.d, e.s, 1 / Math.max(e.ron, R_MINIMA));
+    } else if (e.tipo === "npn" && e.pnp && accesi.has(`${e.id}:BE`)) {
+      // PNP: giunzione emettitore → base; in saturazione 0,2 V da emettitore a
+      // collettore; in zona attiva Ic = β·Ib esce dal collettore. Le
+      // conduttanze del generatore comandato sono le stesse dell'NPN, cambia
+      // solo il verso della corrente costante.
+      diodoAcceso(e.e, e.b, VBE, R_BE);
+      if (saturi.has(e.id)) diodoAcceso(e.e, e.c, VCE_SAT, R_CE_SAT);
+      else {
+        const gm = e.beta / R_BE;
+        const i0 = (e.beta * VBE) / R_BE;
+        termine(e.e, e.e, gm);
+        termine(e.e, e.b, -gm);
+        termine(e.c, e.e, -gm);
+        termine(e.c, e.b, gm);
+        iniezione(e.e, i0);
+        iniezione(e.c, -i0);
+      }
     } else if (e.tipo === "npn" && accesi.has(`${e.id}:BE`)) {
       diodoAcceso(e.b, e.e, VBE, R_BE);
       if (saturi.has(e.id)) {
@@ -268,6 +361,8 @@ function nodiFlottanti(elementi: readonly Elemento[], nodi: ReadonlySet<string>)
       unisci(e.b, e.e);
       unisci(e.c, e.e);
     }
+    // Il gate del MOSFET è isolato: unisce solo drain e source.
+    if (e.tipo === "nmos") unisci(e.d, e.s);
     if (e.tipo === "generatore") radici.push(e.nodo);
     // Un alimentatore unisce i suoi due morsetti ma non è un riferimento: se
     // il suo circuito non tocca il GND della scheda (o un pin), per l'Arduino

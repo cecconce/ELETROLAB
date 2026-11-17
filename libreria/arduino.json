@@ -3552,6 +3552,78 @@
       "icona": "ard-transistor-npn.svg"
     },
     {
+      "id": "transistor-pnp",
+      "nome": "Transistor PNP",
+      "categoria": "passivi",
+      "sigla": "Q",
+      "descrizione": "Transistor bipolare PNP (TO-92, β = 100), il «gemello» dell'NPN con le tensioni al contrario. Piedini da sinistra, faccia piatta davanti: E, B, C. L'emettitore va al positivo (per esempio +5 V o +9 V) e il carico fra collettore e massa: il transistor conduce quando la base è tirata verso massa (pin LOW attraverso una resistenza da 1 kΩ) e si blocca con il pin HIGH. Si usa per accendere un carico «dal lato del positivo».",
+      "paroleChiave": [
+        "transistor",
+        "transistore",
+        "pnp",
+        "bjt",
+        "bc327",
+        "2n2907",
+        "high side"
+      ],
+      "larghezza": 40,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "E",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "B",
+          "x": 20,
+          "y": 60
+        },
+        {
+          "id": "C",
+          "x": 40,
+          "y": 60
+        }
+      ],
+      "icona": "ard-transistor-pnp.svg"
+    },
+    {
+      "id": "mosfet-n",
+      "nome": "MOSFET a canale N",
+      "categoria": "passivi",
+      "sigla": "Q",
+      "descrizione": "MOSFET a canale N «logic level» (contenitore TO-220, come l'IRLZ44N): un interruttore elettronico comandato in tensione. Piedini da sinistra: G (gate), D (drain), S (source). Con il gate a 5 V rispetto al source (pin HIGH) fra drain e source c'è quasi un filo (0,05 Ω), con il gate a 0 V è aperto. Il gate non assorbe corrente: basta una resistenza da 220 Ω in serie e una da 10 kΩ verso GND perché resti spento quando il pin è scollegato. Regge correnti grandi: motori, strisce di LED, lampadine.",
+      "paroleChiave": [
+        "mosfet",
+        "mos",
+        "fet",
+        "irlz44n",
+        "canale n",
+        "transistor",
+        "interruttore elettronico"
+      ],
+      "larghezza": 40,
+      "altezza": 60,
+      "morsetti": [
+        {
+          "id": "G",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "D",
+          "x": 20,
+          "y": 60
+        },
+        {
+          "id": "S",
+          "x": 40,
+          "y": 60
+        }
+      ],
+      "icona": "ard-mosfet-n.svg"
+    },
+    {
       "id": "diodo",
       "nome": "Diodo (1N4007)",
       "categoria": "passivi",
