@@ -28,11 +28,16 @@ I programmi di riferimento servono **solo** come modello del flusso di lavoro: c
 
 ## Per i laboratori: scaricare e installare
 
-Le versioni pronte si scaricano da GitHub: scheda **Actions** → ultima esecuzione verde di «Build Windows» → sezione **Artifacts**.
+Le versioni pronte si scaricano dalla pagina **Releases** del repository (release «ElettroLab – ultima versione», aggiornata in automatico a ogni modifica con i test superati). Link diretti, senza bisogno di accedere a GitHub:
+
+- versione portable: <https://github.com/cecconce/ELETROLAB/releases/latest/download/ElettroLab-portable.zip>
+- installer: <https://github.com/cecconce/ELETROLAB/releases/latest/download/ElettroLab-installer.exe>
+
+Gli stessi file si trovano anche nella scheda **Actions** → ultima esecuzione verde di «Build Windows» → **Artifacts** (richiede l'accesso a GitHub; su alcune reti scolastiche il download da lì è bloccato).
 
 ### Versione portable (consigliata nei laboratori)
 
-1. Scaricare `ElettroLab-portable` ed estrarre lo zip in una cartella o su una chiavetta.
+1. Scaricare `ElettroLab-portable.zip` ed estrarre lo zip in una cartella o su una chiavetta.
 2. Avviare `ElettroLab.exe`.
 
 Finché accanto all'eseguibile c'è il file `portable.txt`, impostazioni, salvataggi automatici e file recenti vanno nella cartella `dati\` accanto all'exe (niente viene scritto sul PC). Cancellando `portable.txt` il programma usa invece `%APPDATA%\ElettroLab`. Non servono mai permessi di amministratore.
