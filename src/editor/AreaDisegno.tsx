@@ -137,6 +137,8 @@ export interface PropsAreaDisegno {
     /** `punto`: dove si è cliccato, in coordinate del componente (serve agli impianti animati). */
     onGiu: (id: string, punto?: Punto) => void;
     onSu: (id: string) => void;
+    /** Movimento con il tasto premuto su un componente (es. ostacolo del sensore a ultrasuoni). */
+    onTrascina?: (id: string, punto: Punto) => void;
   } | null;
   /** Componenti e morsetti ("id:morsetto") da evidenziare in rosso (punti di un problema). */
   evidenzia?: { componenti: readonly string[]; morsetti: readonly string[] } | null;
@@ -476,6 +478,19 @@ export function AreaDisegno({
     if (p) setVista((v) => zoomRotellina(v, e.evt.deltaY, p));
   };
 
+  /** Componente premuto in simulazione (per il trascinamento), con il gruppo del suo disegno. */
+  const componentePremuto = useRef<{ id: string; gruppo: Konva.Group } | null>(null);
+  useEffect(() => {
+    // Rilascio anche fuori dal foglio: il trascinamento finisce.
+    const fine = () => (componentePremuto.current = null);
+    window.addEventListener("pointerup", fine);
+    window.addEventListener("pointercancel", fine);
+    return () => {
+      window.removeEventListener("pointerup", fine);
+      window.removeEventListener("pointercancel", fine);
+    };
+  }, []);
+
   const suPressione = (e: Konva.KonvaEventObject<PointerEvent>) => {
     const p = puntatore(e);
     if (!p) return;
@@ -512,6 +527,13 @@ export function AreaDisegno({
   const suMovimento = (e: Konva.KonvaEventObject<PointerEvent>) => {
     const p = puntatore(e);
     if (!p) return;
+    // In simulazione, tasto premuto su un componente: il trascinamento lo regola.
+    if (componentePremuto.current && simulazione?.onTrascina) {
+      const { id, gruppo } = componentePremuto.current;
+      const locale = gruppo.getRelativePointerPosition();
+      if (locale) simulazione.onTrascina(id, { x: locale.x, y: locale.y });
+      return;
+    }
     if (voceDaPosare) setAnteprima(schermoAFoglio(vista, p));
     if (filoInCorso) setMouseFoglio(schermoAFoglio(vista, p));
     if (filoTrascinato.current) {
@@ -538,6 +560,7 @@ export function AreaDisegno({
   };
 
   const suRilascio = (e: Konva.KonvaEventObject<PointerEvent>) => {
+    componentePremuto.current = null;
     if (filoTrascinato.current) {
       // Fine dello spostamento del filo: un solo passo nella cronologia.
       filoTrascinato.current = null;
@@ -804,6 +827,7 @@ export function AreaDisegno({
                         // Punto del clic nel disegno non ruotato (serve a impianti e banco).
                         const gruppo = ((e.currentTarget as Konva.Group).findOne(".disegno") ?? e.currentTarget) as Konva.Group;
                         const locale = gruppo.getRelativePointerPosition();
+                        componentePremuto.current = { id: c.id, gruppo };
                         simulazione.onGiu(c.id, locale ? { x: locale.x, y: locale.y } : undefined);
                         return;
                       }

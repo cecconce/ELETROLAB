@@ -201,7 +201,7 @@
   "arduino.plotter.testo": "Testo",
   "arduino.plotter.grafico": "Grafico",
   "arduino.plotter.vuoto": "Il grafico compare quando il programma scrive dei numeri con Serial.println (per esempio Serial.println(analogRead(A0)); per più grafici: «Luce:512,Soglia:300»).",
-  "simulazione.suggerimentoArduino": "Simulazione in corso · Tieni premuti i pulsanti · Clic a destra o a sinistra di potenziometro, fotoresistenza e sensori per cambiarne il valore, dell’alimentatore per cambiare la tensione · Il monitor seriale è sotto il codice · Per cambiare il programma ferma la simulazione",
+  "simulazione.suggerimentoArduino": "Simulazione in corso · Tieni premuti i pulsanti · Clic a destra o a sinistra di potenziometro, fotoresistenza e sensori per cambiarne il valore, dell’alimentatore per cambiare la tensione · Clic sul sensore a ultrasuoni e trascina l’ostacolo · Il monitor seriale è sotto il codice · Per cambiare il programma ferma la simulazione",
   "arduino.problema.codice": "Riga {riga} del programma: {messaggio}",
   "arduino.problema.senzaScheda": "Sul banco non c'è la scheda Arduino Uno: posala dalla libreria (Scheda e breadboard) e collega i componenti ai suoi pin.",
   "arduino.problema.lcdNonCollegato": "Il display è acceso ma non mostra niente: nel programma c'è LiquidCrystal(…) con RS sul pin {rs} ed E sul pin {en}, collega lì i piedini RS ed E del display (e D4–D7 ai pin seguenti).",

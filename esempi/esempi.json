@@ -188,7 +188,7 @@
       "modulo": "arduino",
       "titolo": "Arduino – Sensore a ultrasuoni",
       "descrizione": "Il programma manda un impulso su TRIG, misura con pulseIn la durata dell'eco su ECHO e calcola la distanza in centimetri (durata / 58); sotto i 20 cm accende il LED.",
-      "prova": "Premi ▶ AVVIA e guarda il monitor seriale. Clic sulla parte sinistra del sensore per avvicinare l'ostacolo, sulla destra per allontanarlo: sotto i 20 cm il LED si accende."
+      "prova": "Premi ▶ AVVIA e guarda il monitor seriale. Clic sul sensore: sopra compare la zona di rilevamento con l'ostacolo (il pallino arancione). Trascina il pallino (o clicca nella zona) per scegliere la distanza, da 2 a 400 cm: sotto i 20 cm il LED si accende. Un altro clic sul sensore chiude la zona."
     },
     {
       "file": "arduino-temperatura.elab",

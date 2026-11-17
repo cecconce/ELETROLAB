@@ -8,7 +8,7 @@ import { datiPlotter } from "../editor/letturaPlotter";
 import { componentiDaSchema, nodiDaSchema, problemiArduino, vistaDaSessioneArduino } from "../editor/arduino";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { vocePerTipo } from "../editor/libreria";
-import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, passoArduino, TASTI_TASTIERINO, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, type SessioneArduino } from "../motori/arduino";
+import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, passoArduino, puntoDaDistanza, trascinaArduino, TASTI_TASTIERINO, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, type SessioneArduino } from "../motori/arduino";
 
 const lib = libreriaDelModulo("arduino");
 const morsettiDi = (tipo: string) => vocePerTipo(lib, tipo)?.morsetti;
@@ -107,7 +107,9 @@ describe("esempi Arduino", () => {
     aspetta(s, 400);
     expect(s.seriale).toMatch(/Distanza: 50 cm/);
     expect(luminosita(s, schema, "led-rosso")).toBe(0);
-    for (let i = 0; i < 3; i++) clicGiuArduino(s, id(schema, "ultrasuoni"), true); // 50 → 30 → 20 → 10
+    // Come lo studente: clic sul sensore (si apre la zona), poi l'ostacolo trascinato a 10 cm.
+    clicGiuArduino(s, id(schema, "ultrasuoni"), false, { x: 70, y: 40 });
+    trascinaArduino(s, id(schema, "ultrasuoni"), { x: 70, y: puntoDaDistanza(10) });
     aspetta(s, 700);
     expect(s.seriale).toMatch(/Distanza: 10 cm/);
     expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.5);

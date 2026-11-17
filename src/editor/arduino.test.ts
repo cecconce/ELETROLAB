@@ -1,9 +1,9 @@
 // Test del banco Arduino: nodi dal disegno (fili, piedini nei fori,
 // breadboard), resistenze, sessione completa con programma e circuito.
 import { describe, expect, it } from "vitest";
-import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, inviaSeriale, passoArduino, pinCollegato } from "../motori/arduino";
+import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, DISTANZA_MAX, DISTANZA_MIN, distanzaDaPunto, inviaSeriale, passoArduino, pinCollegato, puntoDaDistanza, trascinaArduino, ZONA_ALTEZZA } from "../motori/arduino";
 import { leggiProgetto, serializzaProgetto } from "../progetto/formato";
-import { componentiDaSchema, fasceResistenza, leggiOhm, nodiDaSchema, scriviOhm, SKETCH_PREDEFINITO } from "./arduino";
+import { componentiDaSchema, fasceResistenza, leggiOhm, nodiDaSchema, scriviOhm, SKETCH_PREDEFINITO, vistaDaSessioneArduino } from "./arduino";
 import { libreriaDelModulo } from "./caricaLibreria";
 import { collega } from "./fili";
 import { vocePerTipo } from "./libreria";
@@ -249,7 +249,7 @@ describe("display LCD e sensore a ultrasuoni", () => {
     expect(problemiArduino(sess, s, lib)[0].testo).toMatch(/RS sul pin 12 ed E sul pin 11/);
   });
 
-  it("ultrasuoni: pulseIn misura la distanza scelta con il clic", () => {
+  it("ultrasuoni: pulseIn misura la distanza scelta spostando l'ostacolo", () => {
     let s: Schema = { componenti: [comp("U", "arduino-uno", 0, 0), comp("S", "ultrasuoni", 600, 0)], fili: [] };
     s = filo(s, "S/VCC", "U/5V");
     s = filo(s, "S/GND", "U/GND1");
@@ -260,11 +260,36 @@ describe("display LCD e sensore a ultrasuoni", () => {
         long durata = pulseIn(10, HIGH); Serial.println(durata / 58); delay(200); }`;
     const sess = avviaSessioneArduino(codice, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
     passoArduino(sess, 100);
-    clicGiuArduino(sess, "S"); // 50 → 100 cm
+    // Clic sul sensore: si apre la zona; clic nella zona all'altezza dei 100 cm.
+    clicGiuArduino(sess, "S", false, { x: 70, y: 40 });
+    expect(vistaDaSessioneArduino(sess, s, lib).componenti.S.arduino?.zonaAperta).toBe(true);
+    clicGiuArduino(sess, "S", false, { x: 70, y: puntoDaDistanza(100) });
     passoArduino(sess, 300);
-    const valori = sess.seriale.trim().split("\n").map(Number);
+    let valori = sess.seriale.trim().split("\n").map(Number);
     expect(valori[0]).toBe(50);
     expect(valori[valori.length - 1]).toBe(100);
+    // Trascinamento fino ai 17 cm.
+    trascinaArduino(sess, "S", { x: 75, y: puntoDaDistanza(17) });
+    passoArduino(sess, 300);
+    valori = sess.seriale.trim().split("\n").map(Number);
+    expect(valori[valori.length - 1]).toBe(17);
+    // Nuovo clic sul sensore: la zona si chiude e la distanza resta.
+    clicGiuArduino(sess, "S", false, { x: 70, y: 40 });
+    const a = vistaDaSessioneArduino(sess, s, lib).componenti.S.arduino;
+    expect(a?.zonaAperta).toBe(false);
+    expect(a?.distanza).toBe(17);
+  });
+
+  it("ultrasuoni: scala della zona di rilevamento", () => {
+    // Estremi: sul bordo del sensore 2 cm, in cima alla zona (e oltre) 400 cm.
+    expect(distanzaDaPunto(0)).toBe(DISTANZA_MIN);
+    expect(distanzaDaPunto(10)).toBe(DISTANZA_MIN);
+    expect(distanzaDaPunto(-ZONA_ALTEZZA)).toBe(DISTANZA_MAX);
+    expect(distanzaDaPunto(-ZONA_ALTEZZA * 3)).toBe(DISTANZA_MAX);
+    // Andata e ritorno su tutti i centimetri: ogni distanza intera si può scegliere.
+    for (let d = DISTANZA_MIN; d <= DISTANZA_MAX; d++) expect(distanzaDaPunto(puntoDaDistanza(d))).toBe(d);
+    // Vicino al sensore la scala è fine: fra 10 e 30 cm ci sono più di 25 pixel (meno di 1 cm per pixel).
+    expect(puntoDaDistanza(10) - puntoDaDistanza(30)).toBeGreaterThan(25);
   });
 });
 

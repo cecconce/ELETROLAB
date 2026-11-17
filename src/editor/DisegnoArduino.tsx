@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
 import Konva from "konva";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
 import { displayAlimentatore, fasceResistenza, scriviOhm, valoreParametroArduino } from "./arduino";
-import { TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, testoScala } from "../motori/arduino";
+import { TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, ZONA_ALTEZZA, ZONA_CENTRO_X, puntoDaDistanza, testoScala } from "../motori/arduino";
 import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI, SEGMENTI } from "./segmenti7";
 import type { ComponenteSchema } from "./schema";
 import { t } from "../testi";
@@ -143,12 +143,48 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
     case "ultrasuoni": {
       if (!inSimulazione) return null;
       const d = a?.distanza ?? 50;
+      if (!a?.zonaAperta)
+        // Zona chiusa: onde e distanza, con l'invito a cliccare.
+        return (
+          <Group listening={false}>
+            {[0, 1, 2].map((i) => (
+              <Line key={i} points={[60 + i * 8, -6 - i * 6, 70, -14 - i * 8, 80 - i * 8, -6 - i * 6]} stroke="#1565c0" strokeWidth={2} opacity={0.5} tension={0.5} />
+            ))}
+            <Text x={-20} y={-52} width={180} align="center" text={`↕ ostacolo a ${d} cm`} fontSize={12} fontStyle="bold" fill="#0d47a1" fontFamily={FONT} />
+            <Text x={-20} y={-38} width={180} align="center" text="clic sul sensore per regolarlo" fontSize={10} fill="#1565c0" fontFamily={FONT} />
+          </Group>
+        );
+      const yO = puntoDaDistanza(d);
+      const cx = ZONA_CENTRO_X;
+      const h = ZONA_ALTEZZA;
+      // Ventaglio di rilevamento (come in Tinkercad): si clicca o si trascina
+      // dentro per spostare l'ostacolo; è "in ascolto" così il clic arriva al
+      // componente con il punto nel suo disegno.
       return (
-        <Group listening={false}>
-          {[0, 1, 2].map((i) => (
-            <Line key={i} points={[60 + i * 8, -6 - i * 6, 70, -14 - i * 8, 80 - i * 8, -6 - i * 6]} stroke="#1565c0" strokeWidth={2} opacity={0.5} tension={0.5} />
-          ))}
-          <Text x={0} y={-40} width={140} align="center" text={`↕ ostacolo a ${d} cm`} fontSize={11} fontStyle="bold" fill="#0d47a1" fontFamily={FONT} />
+        <Group>
+          <Line
+            points={[cx - 8, 0, cx - 95, -h, cx + 95, -h, cx + 8, 0]}
+            closed
+            fill="rgba(33,150,243,0.10)"
+            stroke="#64b5f6"
+            strokeWidth={1}
+            dash={[5, 4]}
+          />
+          {/* Tacche della scala: 10, 20, 50, 100, 200 e 400 cm. */}
+          {[10, 20, 50, 100, 200, 400].map((v) => {
+            const y = puntoDaDistanza(v);
+            const mezza = 8 + (87 * -y) / h;
+            return (
+              <Group key={v} listening={false}>
+                <Line points={[cx - mezza, y, cx - mezza + 8, y]} stroke="#90caf9" strokeWidth={1} />
+                <Text x={cx - mezza + 10} y={y - 5} text={`${v}`} fontSize={9} fill="#64b5f6" fontFamily={FONT} />
+              </Group>
+            );
+          })}
+          <Line points={[cx, 0, cx, yO]} stroke="#1565c0" strokeWidth={1} dash={[3, 3]} opacity={0.6} listening={false} />
+          {/* Ostacolo da trascinare. */}
+          <Circle x={cx} y={yO} radius={11} fill="#ffb300" stroke="#e65100" strokeWidth={2} shadowColor="#000" shadowBlur={4} shadowOpacity={0.3} />
+          <Text x={cx + 16} y={yO - 7} text={`${d} cm`} fontSize={13} fontStyle="bold" fill="#0d47a1" fontFamily={FONT} listening={false} />
         </Group>
       );
     }

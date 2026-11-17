@@ -41,6 +41,7 @@ import {
   avviaSessioneArduino,
   clicGiuArduino,
   clicSuArduino,
+  trascinaArduino,
   inviaSeriale,
   passoArduino,
   rilasciaTuttiArduino,
@@ -493,6 +494,13 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                 clicSuArduino(s, id);
                 aggiornaSessione(s);
               } else aggiornaSessione(eSessionePlc(s) ? clicSuPlc(s, id) : clicSu(s, id));
+            },
+            onTrascina: (id: string, punto: { x: number; y: number }) => {
+              const s = sessioneRif.current;
+              if (!s || !eSessioneArduino(s)) return;
+              const prima = s.versione;
+              trascinaArduino(s, id, punto);
+              if (s.versione !== prima) aggiornaSessione(s);
             },
           }
         : null,

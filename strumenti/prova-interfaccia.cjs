@@ -936,6 +936,39 @@ async function provaArduino(pagina, controlla, foto, apriEsempio) {
   await apri("arduino-ultrasuoni.elab");
   await pagina.waitForTimeout(700);
   controlla((await pagina.locator(".monitor-testo").innerText()).includes("Distanza: 50 cm"), "il monitor seriale mostra la distanza");
+  // Come in Tinkercad: clic sul sensore apre la zona di rilevamento, poi si
+  // trascina l'ostacolo. Punti del disegno del sensore (140 × 80) → pagina.
+  const puntoSensore = (x, y) =>
+    pagina.evaluate(([x, y]) => {
+      const st = window.Konva.stages[0];
+      const t = st.find("Text").find((n) => n.text() === "clic sul sensore per regolarlo");
+      if (!t) return null;
+      const p = t.getParent().getParent().getAbsoluteTransform().point({ x, y });
+      const c = st.container().getBoundingClientRect();
+      return { x: c.left + p.x, y: c.top + p.y };
+    }, [x, y]);
+  const quota = (d) => -220 * Math.sqrt((d - 2) / 398);
+  const corpo = await puntoSensore(70, 40);
+  const da = await puntoSensore(70, quota(50));
+  const a = await puntoSensore(70, quota(10));
+  controlla(corpo !== null, "il sensore invita a cliccarlo per regolarlo");
+  if (corpo && da && a) {
+    await pagina.mouse.click(corpo.x, corpo.y);
+    await pagina.waitForTimeout(300);
+    const testi = await pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+    controlla(testi.includes("50 cm") && testi.includes("200"), "clic sul sensore: compare la zona con la scala e l'ostacolo a 50 cm");
+    await pagina.mouse.move(da.x, da.y);
+    await pagina.mouse.down();
+    await pagina.mouse.move((da.x + a.x) / 2, (da.y + a.y) / 2, { steps: 4 });
+    await pagina.mouse.move(a.x, a.y, { steps: 4 });
+    await pagina.mouse.up();
+    await pagina.waitForTimeout(900);
+    const monitor = await pagina.locator(".monitor-testo").innerText();
+    const ultima = monitor.trim().split("\n").filter((r) => r.includes("Distanza")).pop() ?? "";
+    const cm = Number((/Distanza: (\d+)/.exec(ultima) ?? [])[1]);
+    controlla(cm >= 9 && cm <= 11, `ostacolo trascinato a circa 10 cm: il monitor legge ${cm} cm`);
+    await foto("17b-arduino-ultrasuoni-zona");
+  }
   await ferma();
 }
 

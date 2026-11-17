@@ -39,8 +39,35 @@ import { periodoPwmUs, type CampioneOscilloscopio } from "./oscilloscopio";
 
 /** Distanza iniziale dell'ostacolo davanti al sensore a ultrasuoni (cm). */
 export const DISTANZA_PREDEFINITA = 50;
-/** Distanze proposte cliccando sul sensore (cm). */
-export const DISTANZE = [2, 5, 10, 20, 30, 50, 100, 200, 400];
+
+// Zona di rilevamento del sensore a ultrasuoni, disegnata in simulazione sopra
+// il sensore (come in Tinkercad): un ventaglio con l'ostacolo da trascinare.
+// Coordinate nel disegno del sensore (140 × 80): le capsule sono in alto, al
+// centro (x = 70); la zona va da y = 0 verso l'alto per ZONA_ALTEZZA pixel.
+/** Distanza minima e massima misurata dall'HC-SR04 (cm). */
+export const DISTANZA_MIN = 2;
+export const DISTANZA_MAX = 400;
+/** Altezza della zona di rilevamento sopra il sensore (pixel del foglio). */
+export const ZONA_ALTEZZA = 220;
+/** Centro orizzontale del sensore, da dove parte il ventaglio. */
+export const ZONA_CENTRO_X = 70;
+
+/**
+ * Distanza (cm, intera) corrispondente a un punto della zona di rilevamento.
+ * La scala è quadratica: vicino al sensore 1 pixel vale meno di 1 cm (si
+ * regolano bene 10, 15, 20 cm), lontano i passi sono più larghi. Un punto
+ * sotto il bordo del sensore vale la distanza minima, oltre la zona la massima.
+ */
+export function distanzaDaPunto(y: number): number {
+  const f = Math.min(1, Math.max(0, -y / ZONA_ALTEZZA));
+  return Math.round(DISTANZA_MIN + (DISTANZA_MAX - DISTANZA_MIN) * f * f);
+}
+
+/** Inversa di `distanzaDaPunto`: quota (y, negativa) dell'ostacolo a quella distanza. */
+export function puntoDaDistanza(d: number): number {
+  const dd = Math.min(DISTANZA_MAX, Math.max(DISTANZA_MIN, d));
+  return -ZONA_ALTEZZA * Math.sqrt((dd - DISTANZA_MIN) / (DISTANZA_MAX - DISTANZA_MIN));
+}
 
 /** Caratteri massimi tenuti nel monitor seriale. */
 export const SERIALE_MASSIMA = 20000;
@@ -66,6 +93,8 @@ export interface SessioneArduino {
   seriale: string;
   ingressoSeriale: number[];
   distanze: Record<string, number>;
+  /** Sensori a ultrasuoni con la zona di rilevamento aperta (clic sul sensore la apre e la chiude). */
+  zoneAperte: Set<string>;
   interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number>; temperature: Record<string, number>; registri: Record<string, StatoRegistro> };
   risultato: RisultatoCircuito;
   /** Moduli relè con la bobina eccitata (si ricordano fra un calcolo e l'altro: isteresi). */
@@ -151,6 +180,7 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     campioni: {},
     lcd: {},
     distanze: {},
+    zoneAperte: new Set(),
     seriale: "",
     ingressoSeriale: [],
     interazioni: { premuti: new Set(), posizioni: {}, luce: {}, temperature: {}, registri: {} },
@@ -329,10 +359,15 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false,
     const pos = s.interazioni.posizioni[id] ?? 0.5;
     s.interazioni.posizioni[id] = Math.round(Math.min(1, Math.max(0, pos + (indietro ? -0.1 : 0.1))) * 10) / 10;
   } else if (c.tipo === "ultrasuoni") {
-    const ora = s.distanze[id] ?? DISTANZA_PREDEFINITA;
-    const i = Math.max(0, DISTANZE.indexOf(ora));
-    s.distanze[id] = DISTANZE[Math.min(DISTANZE.length - 1, Math.max(0, i + (indietro ? -1 : 1)))];
-    s.versione++;
+    // Clic nella zona di rilevamento (sopra il sensore): l'ostacolo va lì e
+    // si può trascinare; clic sul sensore: la zona si apre o si chiude, come
+    // in Tinkercad (chiusa non copre i componenti che stanno sopra).
+    if (punto && punto.y < 0) impostaDistanza(s, id, distanzaDaPunto(punto.y));
+    else {
+      if (s.zoneAperte.has(id)) s.zoneAperte.delete(id);
+      else s.zoneAperte.add(id);
+      s.versione++;
+    }
     return;
   } else if (c.tipo === "tmp36") {
     const ora = s.interazioni.temperature[id] ?? TEMPERATURA_PREDEFINITA;
@@ -362,6 +397,23 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false,
     s.interazioni.luce[id] = livelli[Math.min(livelli.length - 1, Math.max(0, (i < 0 ? 2 : i) + (indietro ? -1 : 1)))];
   } else return;
   ricalcola(s);
+}
+
+/** Nuova distanza dell'ostacolo davanti al sensore (cm, fra 2 e 400). */
+function impostaDistanza(s: SessioneArduino, id: string, d: number): void {
+  const nuova = Math.min(DISTANZA_MAX, Math.max(DISTANZA_MIN, Math.round(d)));
+  if (s.distanze[id] === nuova) return;
+  s.distanze[id] = nuova;
+  s.versione++;
+}
+
+/**
+ * Trascinamento con il tasto premuto su un componente (punto nel suo disegno):
+ * per ora sposta l'ostacolo davanti al sensore a ultrasuoni, come in Tinkercad.
+ */
+export function trascinaArduino(s: SessioneArduino, id: string, punto: { x: number; y: number }): void {
+  const c = s.componenti.find((x) => x.id === id);
+  if (c?.tipo === "ultrasuoni") impostaDistanza(s, id, distanzaDaPunto(punto.y));
 }
 
 /** Rilascio del mouse: il pulsante torna a riposo. */

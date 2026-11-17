@@ -271,7 +271,10 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       arduino.righe = lcd ? lcd.righe : [];
       arduino.retro = lcd?.i2c?.retro ? 1 : 0;
     }
-    if (c.tipo === "ultrasuoni") arduino.distanza = s.distanze[c.id] ?? DISTANZA_PREDEFINITA;
+    if (c.tipo === "ultrasuoni") {
+      arduino.distanza = s.distanze[c.id] ?? DISTANZA_PREDEFINITA;
+      arduino.zonaAperta = s.zoneAperte.has(c.id);
+    }
     if (c.tipo === "arduino-uno") arduino.ledL = (s.pin.D13?.modo === "OUTPUT" && s.pin.D13.livello > 0) || false;
     componenti[c.id] = {
       clic: clicArduino(c.tipo),

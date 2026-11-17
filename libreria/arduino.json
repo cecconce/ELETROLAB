@@ -2728,7 +2728,7 @@
       "nome": "Sensore a ultrasuoni",
       "categoria": "ingressi",
       "sigla": "US",
-      "descrizione": "Misura la distanza di un ostacolo con un impulso di ultrasuoni: VCC a 5V, GND a GND, TRIG ed ECHO a due pin. Con pulseIn(echo, HIGH) leggi la durata dell'eco: distanza in cm = durata / 58. In simulazione: clic a destra allontana l'ostacolo, a sinistra lo avvicina.",
+      "descrizione": "Misura la distanza di un ostacolo con un impulso di ultrasuoni: VCC a 5V, GND a GND, TRIG ed ECHO a due pin. Con pulseIn(echo, HIGH) leggi la durata dell'eco: distanza in cm = durata / 58. In simulazione: clic sul sensore per aprire la zona di rilevamento, poi trascina l'ostacolo (il pallino) alla distanza voluta.",
       "paroleChiave": [
         "ultrasuoni",
         "distanza",
