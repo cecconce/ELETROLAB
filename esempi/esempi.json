@@ -195,7 +195,7 @@
       "modulo": "arduino",
       "titolo": "Termometro con il sensore di temperatura",
       "descrizione": "Il sensore di temperatura dà una tensione che cresce di 10 mV per grado (0,5 V a 0 °C): il programma la legge con analogRead, la trasforma in gradi e la scrive sul monitor seriale; sopra i 30 °C accende il LED «L» della scheda.",
-      "prova": "Premi ▶ AVVIA: sul monitor seriale compare «Temperatura: 20 C». Clic a destra del sensore per scaldarlo (+5 °C a ogni clic), a sinistra per raffreddarlo: sopra i 30 °C si accende il LED L. Prova a cambiare la soglia nel programma."
+      "prova": "Premi ▶ AVVIA: sul monitor seriale compare «Temperatura: 20 C». Clic sul sensore: sopra compare il cursore della temperatura; trascina la manopola verso destra per scaldarlo, verso sinistra per raffreddarlo: sopra i 30 °C si accende il LED L. Prova a cambiare la soglia nel programma."
     },
     {
       "file": "arduino-7-segmenti.elab",
@@ -321,7 +321,7 @@
       "modulo": "arduino",
       "titolo": "Onda quadra vista con l’oscilloscopio",
       "descrizione": "Il pin 8 si accende e si spegne e l'oscilloscopio XSC1 (puntale + sul pin, − su GND) disegna la sua tensione nel tempo: un'onda quadra fra 0 V e 5 V. Il potenziometro sceglie la durata di ogni mezzo periodo (da 20 a 531 ms). Sullo schermo ogni divisione orizzontale vale 100 ms e ogni divisione verticale 2 V: contando le divisioni si misurano periodo e ampiezza.",
-      "prova": "Premi ▶ AVVIA: sullo schermo scorre l'onda quadra. Clic a destra del potenziometro: l'onda si allarga (periodo più lungo), a sinistra si stringe. Conta le divisioni di un periodo e confronta con il monitor seriale. Ferma la simulazione e cambia nelle Proprietà dell'oscilloscopio il tempo per divisione."
+      "prova": "Premi ▶ AVVIA: sullo schermo scorre l'onda quadra (doppio clic sull'oscilloscopio per vederlo ingrandito). Clic a destra del potenziometro: l'onda si allarga (periodo più lungo), a sinistra si stringe. Conta le divisioni di un periodo e confronta con il monitor seriale. Ferma la simulazione e cambia nelle Proprietà dell'oscilloscopio il tempo per divisione."
     },
     {
       "file": "arduino-pwm.elab",
@@ -335,7 +335,7 @@
       "modulo": "arduino",
       "titolo": "Termometro con il display LCD I2C",
       "descrizione": "Il display LCD con il modulo I2C usa solo 4 fili: GND, 5V, SDA sul pin A4 e SCL sul pin A5. Si programma con la libreria LiquidCrystal_I2C (indirizzo 0x27, 16 colonne, 2 righe): init() e backlight() all'avvio, poi setCursor e print come con il display normale. Il programma legge il sensore di temperatura su A0 e scrive i gradi con un decimale.",
-      "prova": "Premi ▶ AVVIA: il display si illumina e scrive «Temperatura:» e circa 20 gradi (la lettura a 10 bit arrotonda: 19.9). Clic a destra sul sensore per scaldarlo, a sinistra per raffreddarlo: il valore cambia. Prova a scambiare i fili SDA e SCL: il display resta vuoto e ElettroLab spiega perché."
+      "prova": "Premi ▶ AVVIA: il display si illumina e scrive «Temperatura:» e circa 20 gradi (la lettura a 10 bit arrotonda: 19.9). Clic sul sensore e trascina la manopola del cursore della temperatura: il valore cambia. Prova a scambiare i fili SDA e SCL: il display resta vuoto e ElettroLab spiega perché."
     },
     {
       "file": "elettronica-partitore.elab",

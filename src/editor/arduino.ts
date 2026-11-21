@@ -193,7 +193,7 @@ void loop() {
 /** Che cosa fa un clic sui componenti del banco durante la simulazione. */
 function clicArduino(tipo: string): AspettoComponente["clic"] {
   if (tipo === "pulsante" || tipo === "tastierino") return "pulsante";
-  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro" || tipo === "sensore-pir" || tipo === "alimentatore" || tipo === "sensore-inclinazione" || SENSORI_A_LIVELLI.has(tipo)) return "manuale";
+  if (tipo === "potenziometro" || tipo === "fotoresistenza" || tipo === "ultrasuoni" || tipo === "tmp36" || tipo === "interruttore-slitta" || tipo === "multimetro" || tipo === "sensore-pir" || tipo === "alimentatore" || tipo === "sensore-inclinazione" || tipo === "oscilloscopio" || SENSORI_A_LIVELLI.has(tipo)) return "manuale";
   return null;
 }
 
@@ -220,7 +220,10 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
     }
     if (c.tipo === "sensore-pir") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
     if (c.tipo === "interruttore-slitta") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
-    if (c.tipo === "tmp36") arduino.temperatura = s.interazioni.temperature[c.id] ?? TEMPERATURA_PREDEFINITA;
+    if (c.tipo === "tmp36") {
+      arduino.temperatura = s.interazioni.temperature[c.id] ?? TEMPERATURA_PREDEFINITA;
+      arduino.zonaAperta = s.zoneAperte.has(c.id);
+    }
     if (c.tipo === "motore-dc") arduino.velocita = a.velocita ?? 0;
     if (c.tipo === "multimetro" && a.funzione) {
       arduino.funzione = a.funzione;

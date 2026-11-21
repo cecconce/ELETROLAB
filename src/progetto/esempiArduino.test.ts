@@ -8,7 +8,7 @@ import { datiPlotter } from "../editor/letturaPlotter";
 import { componentiDaSchema, nodiDaSchema, problemiArduino, vistaDaSessioneArduino } from "../editor/arduino";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { vocePerTipo } from "../editor/libreria";
-import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, passoArduino, puntoDaDistanza, trascinaArduino, TASTI_TASTIERINO, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, type SessioneArduino } from "../motori/arduino";
+import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, passoArduino, puntoDaDistanza, puntoDaTemperatura, CURSORE_Y, trascinaArduino, TASTI_TASTIERINO, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, type SessioneArduino } from "../motori/arduino";
 
 const lib = libreriaDelModulo("arduino");
 const morsettiDi = (tipo: string) => vocePerTipo(lib, tipo)?.morsetti;
@@ -123,7 +123,9 @@ describe("esempio del termometro", () => {
     expect(s.errore).toBeNull();
     expect(s.seriale).toContain("Temperatura: 20 C");
     const sensore = id(schema, "tmp36");
-    for (let k = 0; k < 3; k++) clicGiuArduino(s, sensore);
+    // Clic sul sensore: si apre il cursore; trascinamento della manopola fino a 35 °C.
+    clicGiuArduino(s, sensore, false, { x: 20, y: 30 });
+    trascinaArduino(s, sensore, { x: puntoDaTemperatura(35), y: CURSORE_Y });
     aspetta(s, 1200);
     expect(s.seriale.trim().split("\n").pop()).toContain("Temperatura: 35 C");
     expect(s.pin.D13?.livello).toBe(1);
@@ -553,7 +555,9 @@ describe("esempio del display LCD I2C", () => {
     // La conversione a 10 bit arrotonda: circa 20 gradi.
     expect(Math.abs(parseFloat(a().righe![1]) - 20)).toBeLessThan(0.3);
     expect(a().retro).toBe(1);
-    clicGiuArduino(s, id(schema, "tmp36"));
+    // Cursore aperto con un clic sul sensore, poi clic sulla barra a 25 °C.
+    clicGiuArduino(s, id(schema, "tmp36"), false, { x: 20, y: 30 });
+    clicGiuArduino(s, id(schema, "tmp36"), false, { x: puntoDaTemperatura(25), y: CURSORE_Y });
     aspetta(s, 700);
     expect(Math.abs(parseFloat(a().righe![1]) - 25)).toBeLessThan(0.3);
     expect(a().righe![1]).toContain("gradi C");

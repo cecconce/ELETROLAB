@@ -4,7 +4,7 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 11 – Rifiniture: LIM con due dita, PWM vero, altri componenti Arduino** — completata — in attesa di conferma (riaperta e richiusa il 2026-11-17 per l'attività 11.5)
+**Fase 11 – Rifiniture: LIM con due dita, PWM vero, altri componenti Arduino** — completata — in attesa di conferma (riaperta e richiusa il 2026-11-17 per l'attività 11.5 e il 2026-11-21 per l'attività 11.6)
 
 Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Attività scelte fra i limiti noti delle fasi precedenti, per avvicinarsi ancora a Tinkercad.
 
@@ -15,6 +15,7 @@ Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Atti
 - [x] 11.3 Transistor PNP (stesso modello dell'NPN con le tensioni al contrario) e MOSFET a canale N «logic level» (interruttore comandato in tensione, soglia 2 V, 0,05 Ω; con il PWM sul gate conduce per la frazione di tempo giusta) nel modulo Arduino; esempio «Motorino comandato con un MOSFET».
 - [x] 11.4 Verifica finale: `npm test`, build, build Actions, prova Playwright; resoconto della Fase 11.
 - [x] 11.5 Sensore a ultrasuoni regolabile come in Tinkercad, chiesto da Pierluigi («il sensore ad ultrasuoni non riesco a regolarlo bene»): prima si cambiava la distanza solo a scatti (2, 5, 10, 20, 30, 50, 100, 200, 400 cm) cliccando a destra o a sinistra del sensore. Ora in simulazione il clic sul sensore apre sopra di esso la zona di rilevamento (ventaglio azzurro con la scala 10–400 cm) e l'ostacolo (pallino arancione) si trascina o si posa con un clic a qualsiasi distanza intera fra 2 e 400 cm; un altro clic sul sensore chiude la zona.
+- [x] 11.6 Due segnalazioni di Pierluigi sul modulo Arduino (2026-11-21): «l'oscilloscopio non si vede nulla, bisognerebbe ingrandire l'immagine quando si fa doppio clic» e «il sensore di temperatura non si capisce come modificarne la temperatura». Doppio clic sull'oscilloscopio in simulazione → finestra grande con traccia, reticolo, massimo/minimo e tasti delle scale; sensore di temperatura regolabile come in Tinkercad, con un cursore da −40 a 125 °C che si apre con un clic sul sensore.
 
 ## Resoconto della Fase 11 (2026-11-17)
 
@@ -23,6 +24,8 @@ Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Atti
 - **PWM vero sull'oscilloscopio di Arduino**: un pin con `analogWrite` mostra l'onda quadra fra 0 e 5 V a 490 Hz (980 Hz sui pin 5 e 6, come sulla Uno), con la parte alta proporzionale al valore; con la base dei tempi lenta la traccia diventa una banda piena, come su un oscilloscopio vero. LED e motori continuano a usare il valore medio.
 - **Transistor PNP**: conduce con la base tirata verso massa (pin LOW), per accendere un carico dal lato del positivo; stessi avvisi dell'NPN (base senza resistenza, transistor bruciato).
 - **Sensore a ultrasuoni come in Tinkercad** (attività 11.5): ▶ AVVIA, clic sul sensore → compare la zona di rilevamento con la scala; trascina il pallino arancione (l'ostacolo) alla distanza voluta, da 2 a 400 cm al centimetro (scala più fine vicino al sensore); un altro clic sul sensore chiude la zona, così non copre i componenti sopra. Prova: esempio «Arduino – Sensore a ultrasuoni», porta il pallino sotto i 20 cm e il LED si accende.
+- **Oscilloscopio di Arduino ingrandito** (attività 11.6): in simulazione, doppio clic sullo strumento (anche con il dito: due tocchi ravvicinati) → finestra grande con la stessa traccia, il reticolo 10 × 8, massimo e minimo della tensione sullo schermo, tasti − / + per tempo/divisione e volt/divisione (partono da quelli delle Proprietà), «⏸ Blocca» per congelare l'immagine; Esc o «Chiudi» la chiude. Sopra lo strumento c'è l'invito «🔍 doppio clic: ingrandisci».
+- **Sensore di temperatura come in Tinkercad** (attività 11.6): ▶ AVVIA, sopra il sensore c'è la temperatura e l'invito «🌡 clic sul sensore per regolarla»; il clic apre un cursore colorato da −40 a 125 °C (i limiti del TMP36) con la manopola da trascinare (o un clic sulla barra), al grado; un altro clic sul sensore lo chiude. Prima si cambiava a scatti di 5 °C cliccando a destra o a sinistra, e non si capiva.
 - **MOSFET a canale N** (tipo IRLZ44N, TO-220): interruttore comandato in tensione, il gate non assorbe corrente; con il PWM sul gate il motore riceve la tensione media giusta.
 - **2 esempi nuovi** (28 in tutto nel modulo Arduino): «PWM: il LED che si attenua visto con l'oscilloscopio» e «Motorino comandato con un MOSFET».
 
@@ -30,8 +33,10 @@ Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Atti
 1. GitHub → **Actions** → ultima esecuzione «Build Windows» verde → **Artifacts** → `ElettroLab-portable`; avviare `ElettroLab.exe`.
 2. Su LIM o schermo touch: apri un esempio qualsiasi e allarga due dita sul foglio (zoom), poi spostale insieme (la vista segue).
 3. **Arduino** → Sfoglia gli esempi → «PWM: il LED che si attenua…» → ▶ AVVIA: sull'oscilloscopio c'è l'onda quadra (un periodo ≈ una divisione da 2 ms). Clic a destra del potenziometro: il tratto alto si allarga e il LED è più luminoso.
-4. «Motorino comandato con un MOSFET» → ▶ AVVIA: a metà del potenziometro l'alimentatore indica circa 0,22 A; tutto a destra circa il doppio; tutto a sinistra il motore si ferma.
-5. Libreria → «Transistor PNP» e «MOSFET a canale N»: si posano sulla breadboard come l'NPN.
+4. «Onda quadra vista con l'oscilloscopio» → ▶ AVVIA → doppio clic sull'oscilloscopio: si apre grande, con «Massimo 5,00 V · Minimo 0,00 V»; prova − / + delle scale e «Blocca»; Esc chiude.
+5. «Termometro con il sensore di temperatura» → ▶ AVVIA → clic sul sensore: compare il cursore; trascina la manopola verso destra oltre i 30 °C: il monitor seriale segue e si accende il LED L.
+6. «Motorino comandato con un MOSFET» → ▶ AVVIA: a metà del potenziometro l'alimentatore indica circa 0,22 A; tutto a destra circa il doppio; tutto a sinistra il motore si ferma.
+7. Libreria → «Transistor PNP» e «MOSFET a canale N»: si posano sulla breadboard come l'NPN.
 
 ### Test eseguiti
 - `npm test`: **752 test Vitest** in 71 file, tutti superati (16 nuovi: pizzico, campioni PWM e traccia a onda quadra o a banda, 980 Hz sui pin 5/6, PNP saturo/interdetto/attivo, MOSFET acceso/spento/gate isolato/PWM, i due esempi nuovi).
@@ -45,6 +50,8 @@ Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Atti
 - PWM: l'onda quadra si vede solo con il puntale + collegato direttamente al pin (o allo stesso nodo); dopo una resistenza o un LED si vede la media. Il NPN comandato in PWM resta calcolato con la corrente di base media.
 - MOSFET: modello a interruttore (niente zona lineare): con una tensione fissa fra 0 e 5 V sul gate è acceso sopra 2 V e spento sotto. Nessun avviso di surriscaldamento.
 - PNP senza un esempio dedicato.
+- Oscilloscopio ingrandito: le scale cambiate nella finestra grande valgono solo lì (lo schermo piccolo sul banco resta con quelle delle Proprietà); la finestra copre il banco, quindi per girare un potenziometro bisogna chiuderla (oppure usare «Blocca» e confrontare). Solo nel modulo Arduino (nell'Elettronica l'oscilloscopio ha già la sua finestra).
+- Cursore della temperatura: largo 220 pixel del foglio; con lo zoom molto basso diventa piccolo (si ingrandisce con la rotellina o con due dita).
 
 ## Fase 10 – Correzioni segnalate da Pierluigi: interruttori civili e codice Arduino (confermata il 2026-11-17)
 
@@ -608,3 +615,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-17 — attività 11.4, verifica finale e chiusura della Fase 11: `npm test` 752 OK, `npm run build` OK, prova Playwright 180 controlli superati, build Actions n. 108 verde. Scritto il resoconto; fase completata, in attesa di conferma. Nota: la richiesta era di lavorare «fino al 10% di consumo settimanale», che da qui non si può misurare: la sessione si è fermata a fine fase, come vuole CLAUDE.md.
 - 2026-11-17 — attività 11.5 (richiesta di Pierluigi in chat): sensore a ultrasuoni regolabile trascinando l'ostacolo. Nel motore (`sessione.ts`) `distanzaDaPunto`/`puntoDaDistanza` (zona alta 220 px, scala quadratica 2–400 cm, meno di 1 cm per pixel vicino al sensore), `trascinaArduino` e `zoneAperte` (clic sul sensore apre/chiude la zona); tolte le distanze a scatti. `AreaDisegno` passa il movimento col tasto premuto su un componente (`onTrascina`); `DisegnoArduino` disegna ventaglio, tacche, pallino e distanza. Aggiornati descrizione in libreria, «Come provarlo» dell'esempio e suggerimento della barra. Test: 1 nuovo (scala, andata e ritorno su ogni centimetro) e 2 aggiornati; `npm test` 753 OK, build OK; `prova-interfaccia` con 3 controlli nuovi (zona che compare, ostacolo trascinato a 10 cm letto dal monitor seriale), tutti superati.
 - 2026-11-17 — richiesta di Pierluigi in chat («non si scarica nulla, il link non funziona»): il download degli artefatti di Actions passa da `blob.core.windows.net`, che dal suo PC non funziona. Il workflow `build-windows.yml` ora, a ogni push su `main` con i test superati, sposta il tag `ultima-versione` sul commit e pubblica nella release omonima (impostata come «latest») `ElettroLab-portable.zip` ed `ElettroLab-installer.exe` (nome fisso), con link diretti `releases/latest/download/…` che non richiedono l'accesso a GitHub; permesso `contents: write`. README aggiornato con i link. Nessuna modifica all'app.
+- 2026-11-21 — attività 11.6 (richiesta di Pierluigi in chat): oscilloscopio Arduino ingrandito con il doppio clic (nuovo `src/editor/OscilloscopioIngrandito.tsx`: SVG 800 × 640 con `tracciaOscilloscopio`, `estremiTraccia` per massimo e minimo, scale − / +, Blocca; doppio clic riconosciuto in `SchermataModulo` con due clic entro 500 ms, così funziona anche col dito sulla LIM; l'oscilloscopio ora riceve i clic in simulazione) e sensore di temperatura regolabile con un cursore come in Tinkercad (motore `sessione.ts`: `temperaturaDaPunto`/`puntoDaTemperatura`, −40…125 °C, clic sul sensore apre/chiude il cursore in `zoneAperte`, `trascinaArduino` sposta la manopola; tolto l'elenco a scatti `TEMPERATURE`). Aggiornati testi in `lingue/it.json`, descrizioni della libreria e «Come provarlo» di 3 esempi. Test: `npm test` 757 OK (4 nuovi, 2 aggiornati per il cursore), `npm run build` OK, prova Playwright con 11 controlli nuovi (cursore trascinato a 40 °C letto dal monitor seriale, finestra grande con traccia e misure, Esc), tutti superati. Problema trovato e corretto: le misure mostravano «−0,00 V».

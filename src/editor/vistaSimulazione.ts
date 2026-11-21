@@ -63,7 +63,7 @@ export interface AspettoComponente {
     retro?: number;
     /** Sensore a ultrasuoni: distanza dell'ostacolo (cm). */
     distanza?: number;
-    /** Sensore a ultrasuoni: zona di rilevamento aperta (ostacolo da trascinare). */
+    /** Ultrasuoni: zona di rilevamento aperta (ostacolo da trascinare); sensore di temperatura: cursore aperto. */
     zonaAperta?: boolean;
     /** LED RGB: luminosità di rosso, verde e blu. */
     rgb?: [number, number, number];

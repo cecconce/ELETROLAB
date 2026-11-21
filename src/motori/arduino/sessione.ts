@@ -25,7 +25,6 @@ import {
   letturaDigitale,
   PIN_PWM,
   TEMPERATURA_PREDEFINITA,
-  TEMPERATURE,
   type AspettoArduino,
   type ComponenteArduino,
   type Interazioni,
@@ -69,6 +68,39 @@ export function puntoDaDistanza(d: number): number {
   return -ZONA_ALTEZZA * Math.sqrt((dd - DISTANZA_MIN) / (DISTANZA_MAX - DISTANZA_MIN));
 }
 
+// Cursore della temperatura del sensore TMP36, disegnato in simulazione sopra
+// il sensore (come in Tinkercad): una barra da −40 a 125 °C con la manopola da
+// trascinare. Coordinate nel disegno del sensore (40 × 60): la barra è centrata
+// sul sensore (x = 20) e sta CURSORE_Y pixel sopra il suo bordo superiore.
+/** Temperature minima e massima misurate dal TMP36 (°C). */
+export const TEMPERATURA_MIN = -40;
+export const TEMPERATURA_MAX = 125;
+/** Larghezza della barra del cursore (pixel del foglio). */
+export const CURSORE_LARGHEZZA = 220;
+/** Centro orizzontale del sensore di temperatura. */
+export const CURSORE_CENTRO_X = 20;
+/** Quota della barra del cursore (negativa: sopra il sensore). */
+export const CURSORE_Y = -34;
+/** Un clic più in alto di questa quota è sul cursore, non sul sensore. */
+export const CURSORE_BORDO = -10;
+
+/**
+ * Temperatura (°C, intera) corrispondente a un punto orizzontale del cursore.
+ * Scala lineare: 220 pixel per 165 gradi, circa 1,3 pixel per grado; fuori
+ * dalla barra vale l'estremo più vicino.
+ */
+export function temperaturaDaPunto(x: number): number {
+  const sinistra = CURSORE_CENTRO_X - CURSORE_LARGHEZZA / 2;
+  const f = Math.min(1, Math.max(0, (x - sinistra) / CURSORE_LARGHEZZA));
+  return Math.round(TEMPERATURA_MIN + (TEMPERATURA_MAX - TEMPERATURA_MIN) * f);
+}
+
+/** Inversa di `temperaturaDaPunto`: ascissa della manopola a quella temperatura. */
+export function puntoDaTemperatura(gradi: number): number {
+  const g = Math.min(TEMPERATURA_MAX, Math.max(TEMPERATURA_MIN, gradi));
+  return CURSORE_CENTRO_X - CURSORE_LARGHEZZA / 2 + (CURSORE_LARGHEZZA * (g - TEMPERATURA_MIN)) / (TEMPERATURA_MAX - TEMPERATURA_MIN);
+}
+
 /** Caratteri massimi tenuti nel monitor seriale. */
 export const SERIALE_MASSIMA = 20000;
 
@@ -93,7 +125,7 @@ export interface SessioneArduino {
   seriale: string;
   ingressoSeriale: number[];
   distanze: Record<string, number>;
-  /** Sensori a ultrasuoni con la zona di rilevamento aperta (clic sul sensore la apre e la chiude). */
+  /** Sensori con la zona di regolazione aperta (clic sul sensore la apre e la chiude): ostacolo degli ultrasuoni, cursore della temperatura. */
   zoneAperte: Set<string>;
   interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number>; temperature: Record<string, number>; registri: Record<string, StatoRegistro> };
   risultato: RisultatoCircuito;
@@ -370,9 +402,15 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false,
     }
     return;
   } else if (c.tipo === "tmp36") {
-    const ora = s.interazioni.temperature[id] ?? TEMPERATURA_PREDEFINITA;
-    const i = Math.max(0, TEMPERATURE.indexOf(ora));
-    s.interazioni.temperature[id] = TEMPERATURE[Math.min(TEMPERATURE.length - 1, Math.max(0, i + (indietro ? -1 : 1)))];
+    // Come in Tinkercad: clic sul sensore apre (o chiude) il cursore della
+    // temperatura sopra di lui; clic o trascinamento sul cursore la regola.
+    if (punto && punto.y < CURSORE_BORDO && s.zoneAperte.has(id)) impostaTemperatura(s, id, temperaturaDaPunto(punto.x));
+    else {
+      if (s.zoneAperte.has(id)) s.zoneAperte.delete(id);
+      else s.zoneAperte.add(id);
+      s.versione++;
+    }
+    return;
   } else if (c.tipo === "multimetro") {
     // Il selettore passa alla funzione seguente (o precedente con il clic destro).
     const n = FUNZIONI_MULTIMETRO.length;
@@ -407,13 +445,24 @@ function impostaDistanza(s: SessioneArduino, id: string, d: number): void {
   s.versione++;
 }
 
+/** Nuova temperatura del sensore (°C, fra −40 e 125): il circuito si ricalcola. */
+function impostaTemperatura(s: SessioneArduino, id: string, gradi: number): void {
+  const nuova = Math.min(TEMPERATURA_MAX, Math.max(TEMPERATURA_MIN, Math.round(gradi)));
+  if ((s.interazioni.temperature[id] ?? TEMPERATURA_PREDEFINITA) === nuova) return;
+  s.interazioni.temperature[id] = nuova;
+  s.versione++;
+  ricalcola(s);
+}
+
 /**
- * Trascinamento con il tasto premuto su un componente (punto nel suo disegno):
- * per ora sposta l'ostacolo davanti al sensore a ultrasuoni, come in Tinkercad.
+ * Trascinamento con il tasto premuto su un componente (punto nel suo disegno),
+ * come in Tinkercad: sposta l'ostacolo davanti al sensore a ultrasuoni o la
+ * manopola del cursore della temperatura (solo se il cursore è aperto).
  */
 export function trascinaArduino(s: SessioneArduino, id: string, punto: { x: number; y: number }): void {
   const c = s.componenti.find((x) => x.id === id);
   if (c?.tipo === "ultrasuoni") impostaDistanza(s, id, distanzaDaPunto(punto.y));
+  else if (c?.tipo === "tmp36" && s.zoneAperte.has(id)) impostaTemperatura(s, id, temperaturaDaPunto(punto.x));
 }
 
 /** Rilascio del mouse: il pulsante torna a riposo. */

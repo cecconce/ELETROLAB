@@ -1533,3 +1533,58 @@ button.io-plc {
   width: 24px;
   height: 24px;
 }
+
+/* --- Oscilloscopio Arduino ingrandito (doppio clic sullo strumento) --- */
+.finestra-oscilloscopio-grande {
+  max-width: min(1100px, 96vw);
+}
+.schermo-oscilloscopio-grande {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  touch-action: none;
+}
+.schermo-oscilloscopio-grande .fondo {
+  fill: #0b1a14;
+}
+.schermo-oscilloscopio-grande .reticolo line {
+  stroke: rgba(120, 200, 160, 0.25);
+  stroke-width: 1;
+}
+.schermo-oscilloscopio-grande .reticolo line.asse {
+  stroke: rgba(120, 200, 160, 0.55);
+}
+.schermo-oscilloscopio-grande .traccia {
+  fill: none;
+  stroke: #76ff03;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px #76ff03);
+}
+.schermo-oscilloscopio-grande .scritta {
+  fill: #9ccc65;
+  font: bold 20px Consolas, "Courier New", monospace;
+}
+.schermo-oscilloscopio-grande .scritta.bloccato {
+  fill: #ffb300;
+}
+.comandi-oscilloscopio-grande {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-top: 12px;
+}
+.comandi-oscilloscopio-grande .misure {
+  flex: 1 1 240px;
+  font-weight: 600;
+}
+.comandi-oscilloscopio-grande .gruppo-scala {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.comandi-oscilloscopio-grande .gruppo-scala button {
+  min-width: 36px;
+  font-size: 1.1rem;
+}

@@ -89,9 +89,8 @@ export interface StatoRegistro {
 /** Uscite del 74HC595 nell'ordine dei bit. */
 export const USCITE_595 = ["Q0", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"];
 
-/** Temperatura iniziale dei sensori (°C) e passo del clic. */
+/** Temperatura iniziale dei sensori (°C). */
 export const TEMPERATURA_PREDEFINITA = 20;
-export const TEMPERATURE = [-10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 /** Funzioni del multimetro, scelte con un clic in simulazione (indice in `interazioni.posizioni`). */
 export const FUNZIONI_MULTIMETRO = ["V", "A", "Ω"] as const;
 export type FunzioneMultimetro = (typeof FUNZIONI_MULTIMETRO)[number];

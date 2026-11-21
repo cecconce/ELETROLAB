@@ -48,7 +48,8 @@ import {
   tempoArduino,
   type SessioneArduino,
 } from "../motori/arduino";
-import { componentiDaSchema, nodiDaSchema, SKETCH_PREDEFINITO, vistaDaSessioneArduino } from "../editor/arduino";
+import { componentiDaSchema, nodiDaSchema, SKETCH_PREDEFINITO, valoreParametroArduino, vistaDaSessioneArduino } from "../editor/arduino";
+import { OscilloscopioIngrandito } from "../editor/OscilloscopioIngrandito";
 import { PannelloCodice } from "../editor/PannelloCodice";
 import {
   avviaSessioneElettronica,
@@ -349,6 +350,14 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const firmaRif = useRef("");
   const [vista, setVista] = useState<VistaSimulazione | null>(null);
   const inSimulazione = vista !== null;
+  // Oscilloscopio del banco Arduino aperto in grande (doppio clic durante la simulazione).
+  const [oscilloscopioGrande, setOscilloscopioGrande] = useState<string | null>(null);
+  // Ultimo clic su un componente in simulazione, per riconoscere il doppio clic
+  // (anche con il dito sulla LIM, dove il "dblclick" del browser non arriva).
+  const ultimoClic = useRef<{ id: string; ora: number } | null>(null);
+  useEffect(() => {
+    if (!inSimulazione) setOscilloscopioGrande(null);
+  }, [inSimulazione]);
   // Pannello dei problemi: riga scelta e pannello aperto o ridotto.
   const [problemaScelto, setProblemaScelto] = useState<string | null>(null);
   const [problemiAperti, setProblemiAperti] = useState(true);
@@ -480,6 +489,17 @@ export function SchermataModulo(props: PropsSchermataModulo) {
                 clicGiuElettronica(s, id, indietro);
                 aggiornaSessione(s);
               } else if (eSessioneArduino(s)) {
+                if (c?.tipo === "oscilloscopio") {
+                  // Doppio clic (due clic entro mezzo secondo): oscilloscopio ingrandito.
+                  const ora = Date.now();
+                  const prima = ultimoClic.current;
+                  ultimoClic.current = { id, ora };
+                  if (prima && prima.id === id && ora - prima.ora < 500) {
+                    ultimoClic.current = null;
+                    setOscilloscopioGrande(id);
+                  }
+                  return;
+                }
                 clicGiuArduino(s, id, indietro, punto);
                 aggiornaSessione(s);
               } else aggiornaSessione(eSessionePlc(s) ? clicGiuPlc(s, id, punto) : clicGiu(s, id));
@@ -553,6 +573,23 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           onChiudi={() => setFinestraEsporta(false)}
         />
       )}
+      {(() => {
+        // Oscilloscopio del banco Arduino ingrandito: parte dalle scale scelte nelle Proprietà.
+        const c = oscilloscopioGrande ? schema.componenti.find((x) => x.id === oscilloscopioGrande) : undefined;
+        const s = sessioneRif.current;
+        if (!c || !s || !eSessioneArduino(s)) return null;
+        return (
+          <OscilloscopioIngrandito
+            key={c.id}
+            id={c.id}
+            sigla={c.etichetta ?? ""}
+            tempoDiv={valoreParametroArduino(c.parametri, c.tipo, "tempoDiv")}
+            voltDiv={valoreParametroArduino(c.parametri, c.tipo, "voltDiv")}
+            sessione={sessioneRif as React.MutableRefObject<SessioneArduino | null>}
+            onChiudi={() => setOscilloscopioGrande(null)}
+          />
+        );
+      })()}
       <header className="intestazione intestazione-modulo" style={{ borderColor: modulo.coloreAccento }}>
         <button type="button" className="pulsante" onClick={props.onIndietro}>
           ← {t("comune.home")}

@@ -531,7 +531,7 @@ voce(
     nome: "Sensore di temperatura",
     categoria: "ingressi",
     sigla: "U",
-    descrizione: "Dà una tensione che cresce con la temperatura: 0,5 V a 0 °C e 10 mV in più per ogni grado (0,75 V a 25 °C). Piedini: +5V, uscita (verso un ingresso analogico), GND. In simulazione: clic a destra scalda, a sinistra raffredda.",
+    descrizione: "Dà una tensione che cresce con la temperatura: 0,5 V a 0 °C e 10 mV in più per ogni grado (0,75 V a 25 °C). Piedini: +5V, uscita (verso un ingresso analogico), GND. In simulazione: clic sul sensore per aprire il cursore della temperatura (da −40 a 125 °C), poi trascina la manopola.",
     paroleChiave: ["temperatura", "tmp36", "termometro", "sensore"],
     larghezza: 40,
     altezza: 60,
@@ -1211,7 +1211,7 @@ voce(
     categoria: "strumenti",
     sigla: "XSC",
     descrizione:
-      "Disegna la tensione fra il puntale + e il puntale − nel tempo: si vedono le onde quadre di un pin che lampeggia, il PWM (come valore medio), le tensioni che cambiano girando un potenziometro. Lo schermo ha 10 divisioni orizzontali e 8 verticali, con lo zero al centro; tempo per divisione e volt per divisione si scelgono nelle Proprietà. Il − va di solito al GND.",
+      "Disegna la tensione fra il puntale + e il puntale − nel tempo: si vedono le onde quadre di un pin che lampeggia, il PWM (come valore medio), le tensioni che cambiano girando un potenziometro. Lo schermo ha 10 divisioni orizzontali e 8 verticali, con lo zero al centro; tempo per divisione e volt per divisione si scelgono nelle Proprietà. In simulazione: doppio clic sullo strumento per vederlo ingrandito, con le misure e i tasti delle scale. Il − va di solito al GND.",
     paroleChiave: ["oscilloscopio", "onda", "segnale", "tensione nel tempo", "traccia", "misura"],
     larghezza: 160,
     altezza: 120,

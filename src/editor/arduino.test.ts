@@ -1,7 +1,7 @@
 // Test del banco Arduino: nodi dal disegno (fili, piedini nei fori,
 // breadboard), resistenze, sessione completa con programma e circuito.
 import { describe, expect, it } from "vitest";
-import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, DISTANZA_MAX, DISTANZA_MIN, distanzaDaPunto, inviaSeriale, passoArduino, pinCollegato, puntoDaDistanza, trascinaArduino, ZONA_ALTEZZA } from "../motori/arduino";
+import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, DISTANZA_MAX, DISTANZA_MIN, distanzaDaPunto, inviaSeriale, passoArduino, pinCollegato, puntoDaDistanza, trascinaArduino, ZONA_ALTEZZA, CURSORE_Y, TEMPERATURA_MAX, TEMPERATURA_MIN, puntoDaTemperatura, temperaturaDaPunto } from "../motori/arduino";
 import { leggiProgetto, serializzaProgetto } from "../progetto/formato";
 import { componentiDaSchema, fasceResistenza, leggiOhm, nodiDaSchema, scriviOhm, SKETCH_PREDEFINITO, vistaDaSessioneArduino } from "./arduino";
 import { libreriaDelModulo } from "./caricaLibreria";
@@ -290,6 +290,46 @@ describe("display LCD e sensore a ultrasuoni", () => {
     for (let d = DISTANZA_MIN; d <= DISTANZA_MAX; d++) expect(distanzaDaPunto(puntoDaDistanza(d))).toBe(d);
     // Vicino al sensore la scala è fine: fra 10 e 30 cm ci sono più di 25 pixel (meno di 1 cm per pixel).
     expect(puntoDaDistanza(10) - puntoDaDistanza(30)).toBeGreaterThan(25);
+  });
+});
+
+describe("sensore di temperatura con il cursore (come in Tinkercad)", () => {
+  it("clic sul sensore apre il cursore; clic e trascinamento cambiano la temperatura letta", () => {
+    let s: Schema = { componenti: [comp("U", "arduino-uno", 0, 0), comp("T", "tmp36", 600, 200)], fili: [] };
+    s = filo(s, "T/VCC", "U/5V");
+    s = filo(s, "T/GND", "U/GND1");
+    s = filo(s, "T/OUT", "U/A0");
+    const codice = `void setup(){ Serial.begin(9600); }
+      void loop(){ long v = analogRead(A0); Serial.println(v * 500 / 1023 - 50); delay(100); }`;
+    const sess = avviaSessioneArduino(codice, componentiDaSchema(s), nodiDaSchema(s, morsettiDi));
+    passoArduino(sess, 150);
+    const ultimo = () => Number(sess.seriale.trim().split("\n").pop());
+    expect(Math.abs(ultimo() - 20)).toBeLessThanOrEqual(1);
+    // Cursore chiuso: un clic "sopra" non cambia niente, apre soltanto il cursore.
+    clicGiuArduino(sess, "T", false, { x: 20, y: 30 });
+    expect(vistaDaSessioneArduino(sess, s, lib).componenti.T.arduino?.zonaAperta).toBe(true);
+    expect(vistaDaSessioneArduino(sess, s, lib).componenti.T.arduino?.temperatura).toBe(20);
+    // Clic sulla barra a 60 °C, poi trascinamento a −10 °C.
+    clicGiuArduino(sess, "T", false, { x: puntoDaTemperatura(60), y: CURSORE_Y });
+    passoArduino(sess, 300);
+    expect(Math.abs(ultimo() - 60)).toBeLessThanOrEqual(1);
+    trascinaArduino(sess, "T", { x: puntoDaTemperatura(-10), y: CURSORE_Y + 3 });
+    passoArduino(sess, 300);
+    expect(Math.abs(ultimo() + 10)).toBeLessThanOrEqual(1);
+    // Nuovo clic sul sensore: il cursore si chiude, la temperatura resta e il trascinamento non agisce più.
+    clicGiuArduino(sess, "T", false, { x: 20, y: 30 });
+    trascinaArduino(sess, "T", { x: puntoDaTemperatura(100), y: CURSORE_Y });
+    const a = vistaDaSessioneArduino(sess, s, lib).componenti.T.arduino;
+    expect(a?.zonaAperta).toBe(false);
+    expect(a?.temperatura).toBe(-10);
+  });
+
+  it("scala del cursore: da −40 a 125 °C, ogni grado intero raggiungibile", () => {
+    expect(temperaturaDaPunto(-1000)).toBe(TEMPERATURA_MIN);
+    expect(temperaturaDaPunto(1000)).toBe(TEMPERATURA_MAX);
+    for (let g = TEMPERATURA_MIN; g <= TEMPERATURA_MAX; g++) expect(temperaturaDaPunto(puntoDaTemperatura(g))).toBe(g);
+    // Almeno un pixel per grado, così si regola bene anche con il dito sulla LIM.
+    expect(puntoDaTemperatura(21) - puntoDaTemperatura(20)).toBeGreaterThanOrEqual(1);
   });
 });
 

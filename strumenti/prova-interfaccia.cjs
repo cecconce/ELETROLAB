@@ -969,6 +969,69 @@ async function provaArduino(pagina, controlla, foto, apriEsempio) {
     controlla(cm >= 9 && cm <= 11, `ostacolo trascinato a circa 10 cm: il monitor legge ${cm} cm`);
     await foto("17b-arduino-ultrasuoni-zona");
   }
+
+  console.log("Arduino: sensore di temperatura con il cursore");
+  await apri("arduino-temperatura.elab");
+  await pagina.waitForTimeout(700);
+  controlla((await pagina.locator(".monitor-testo").innerText()).includes("Temperatura: 20 C"), "il monitor seriale mostra 20 °C");
+  // Punti del disegno del sensore (40 × 60) → pagina, a partire dall'invito sopra di lui.
+  const puntoTermometro = (x, y) =>
+    pagina.evaluate(([x, y]) => {
+      const st = window.Konva.stages[0];
+      const t = st.find("Text").find((n) => n.text().includes("clic sul sensore per regolarla"));
+      if (!t) return null;
+      const p = t.getParent().getParent().getAbsoluteTransform().point({ x, y });
+      const c = st.container().getBoundingClientRect();
+      return { x: c.left + p.x, y: c.top + p.y };
+    }, [x, y]);
+  // Scala del cursore: 220 pixel da −40 a 125 °C, centrata sul sensore (x = 20), alla quota −34.
+  const ascissa = (g) => 20 - 110 + (220 * (g + 40)) / 165;
+  const corpoT = await puntoTermometro(20, 30);
+  const daT = await puntoTermometro(ascissa(20), -34);
+  const aT = await puntoTermometro(ascissa(40), -34);
+  controlla(corpoT !== null, "il sensore di temperatura invita a cliccarlo per regolarla");
+  if (corpoT && daT && aT) {
+    await pagina.mouse.click(corpoT.x, corpoT.y);
+    await pagina.waitForTimeout(300);
+    const testi = await pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+    controlla(testi.some((t) => t.includes("20 °C")) && testi.includes("125"), "clic sul sensore: compare il cursore da −40 a 125 °C");
+    await pagina.mouse.move(daT.x, daT.y);
+    await pagina.mouse.down();
+    await pagina.mouse.move(aT.x, aT.y, { steps: 6 });
+    await pagina.mouse.up();
+    await pagina.waitForTimeout(1300);
+    const righe = (await pagina.locator(".monitor-testo").innerText()).trim().split("\n").filter((r) => r.includes("Temperatura"));
+    const gradi = Number((/Temperatura: (-?\d+)/.exec(righe.pop() ?? "") ?? [])[1]);
+    controlla(gradi >= 38 && gradi <= 42, `manopola trascinata a circa 40 °C: il monitor legge ${gradi} °C`);
+    await foto("17c-arduino-temperatura-cursore");
+  }
+
+  console.log("Arduino: oscilloscopio ingrandito");
+  await apri("arduino-oscilloscopio.elab");
+  await pagina.waitForTimeout(1500);
+  const invito = await pagina.evaluate(() => {
+    const st = window.Konva.stages[0];
+    const t = st.find("Text").find((n) => n.text().includes("doppio clic"));
+    if (!t) return null;
+    const p = t.getParent().getParent().getAbsoluteTransform().point({ x: 80, y: 60 });
+    const c = st.container().getBoundingClientRect();
+    return { x: c.left + p.x, y: c.top + p.y };
+  });
+  controlla(invito !== null, "l'oscilloscopio invita al doppio clic per ingrandirlo");
+  if (invito) {
+    await pagina.mouse.dblclick(invito.x, invito.y);
+    await pagina.waitForTimeout(600);
+    const finestra = pagina.locator(".finestra-oscilloscopio-grande");
+    controlla((await finestra.count()) === 1, "doppio clic: si apre l'oscilloscopio ingrandito");
+    const punti = await pagina.locator(".schermo-oscilloscopio-grande .traccia").getAttribute("points").catch(() => "");
+    controlla((punti ?? "").split(" ").length > 8, "lo schermo grande disegna la traccia");
+    const misure = await pagina.locator("[data-testid=misure-oscilloscopio]").innerText();
+    controlla(misure.includes("Massimo 5,00 V") && misure.includes("Minimo 0,00 V"), `misure dell'onda quadra: «${misure}»`);
+    await foto("17d-arduino-oscilloscopio-grande");
+    await pagina.keyboard.press("Escape");
+    await pagina.waitForTimeout(200);
+    controlla((await finestra.count()) === 0, "Esc chiude l'oscilloscopio ingrandito");
+  }
   await ferma();
 }
 

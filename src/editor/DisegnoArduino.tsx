@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
 import Konva from "konva";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
 import { displayAlimentatore, fasceResistenza, scriviOhm, valoreParametroArduino } from "./arduino";
-import { TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, ZONA_ALTEZZA, ZONA_CENTRO_X, puntoDaDistanza, testoScala } from "../motori/arduino";
+import { CURSORE_CENTRO_X, CURSORE_LARGHEZZA, CURSORE_Y, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, TEMPERATURA_MAX, TEMPERATURA_MIN, ZONA_ALTEZZA, ZONA_CENTRO_X, puntoDaDistanza, puntoDaTemperatura, testoScala } from "../motori/arduino";
 import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI, SEGMENTI } from "./segmenti7";
 import type { ComponenteSchema } from "./schema";
 import { t } from "../testi";
@@ -318,6 +318,7 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
           )}
           <Text x={11} y={11} text={`${testoScala(tempoDiv, "s")}/div`} fontSize={7} fill="#9ccc65" fontFamily="Consolas, 'Courier New', monospace" />
           <Text x={11} y={82} width={98} align="right" text={`${testoScala(voltDiv, "V")}/div`} fontSize={7} fill="#9ccc65" fontFamily="Consolas, 'Courier New', monospace" />
+          {inSimulazione && <Text x={0} y={-14} width={c.larghezza} align="center" text={`🔍 ${t("arduino.oscilloscopio.suggerimento")}`} fontSize={10} fill="#33691e" fontFamily={FONT} />}
         </Group>
       );
     }
@@ -440,13 +441,54 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
           <Text x={0} y={-15} width={80} align="center" text="MOVIMENTO" fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
         </Group>
       ) : null;
-    case "tmp36":
-      return a?.temperatura !== undefined ? (
-        <Group listening={false}>
-          <Rect x={-6} y={-18} width={52} height={16} cornerRadius={4} fill="#263238" />
-          <Text x={-6} y={-15} width={52} align="center" text={`${a.temperatura} °C`} fontSize={11} fontStyle="bold" fill={a.temperatura >= 30 ? "#ff8a65" : a.temperatura <= 5 ? "#81d4fa" : "#ffffff"} fontFamily={FONT} />
+    case "tmp36": {
+      if (a?.temperatura === undefined) return null;
+      const gradi = a.temperatura;
+      const coloreGradi = gradi >= 30 ? "#ff8a65" : gradi <= 5 ? "#81d4fa" : "#ffffff";
+      if (!a.zonaAperta)
+        // Cursore chiuso: temperatura e invito a cliccare (come per gli ultrasuoni).
+        return (
+          <Group listening={false}>
+            <Rect x={-6} y={-18} width={52} height={16} cornerRadius={4} fill="#263238" />
+            <Text x={-6} y={-15} width={52} align="center" text={`${gradi} °C`} fontSize={11} fontStyle="bold" fill={coloreGradi} fontFamily={FONT} />
+            <Text x={-60} y={-32} width={160} align="center" text={t("arduino.temperatura.suggerimento")} fontSize={10} fill="#bf360c" fontFamily={FONT} />
+          </Group>
+        );
+      // Cursore aperto (come in Tinkercad): barra da −40 a 125 °C, dal blu al
+      // rosso, con la manopola da trascinare. Il rettangolo trasparente è "in
+      // ascolto" così il clic arriva al componente con il punto nel disegno.
+      const sx = CURSORE_CENTRO_X - CURSORE_LARGHEZZA / 2;
+      const xm = puntoDaTemperatura(gradi);
+      return (
+        <Group>
+          <Rect x={sx - 14} y={CURSORE_Y - 34} width={CURSORE_LARGHEZZA + 28} height={56} cornerRadius={8} fill="rgba(255,255,255,0.92)" stroke="#ff8a65" strokeWidth={1} shadowColor="#000" shadowBlur={6} shadowOpacity={0.25} />
+          <Rect
+            x={sx}
+            y={CURSORE_Y - 4}
+            width={CURSORE_LARGHEZZA}
+            height={8}
+            cornerRadius={4}
+            fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+            fillLinearGradientEndPoint={{ x: CURSORE_LARGHEZZA, y: 0 }}
+            fillLinearGradientColorStops={[0, "#1e88e5", 0.3, "#4fc3f7", 0.45, "#fff176", 0.7, "#ff9800", 1, "#d32f2f"]}
+            listening={false}
+          />
+          {/* Tacche: −40, 0, 25, 50, 100 e 125 °C. */}
+          {[TEMPERATURA_MIN, 0, 25, 50, 100, TEMPERATURA_MAX].map((v) => {
+            const x = puntoDaTemperatura(v);
+            return (
+              <Group key={v} listening={false}>
+                <Line points={[x, CURSORE_Y + 5, x, CURSORE_Y + 9]} stroke="#78909c" strokeWidth={1} />
+                <Text x={x - 15} y={CURSORE_Y + 11} width={30} align="center" text={`${v}`} fontSize={8} fill="#546e7a" fontFamily={FONT} />
+              </Group>
+            );
+          })}
+          {/* Manopola da trascinare e valore sopra. */}
+          <Circle x={xm} y={CURSORE_Y} radius={9} fill="#ffffff" stroke="#e65100" strokeWidth={2.5} shadowColor="#000" shadowBlur={4} shadowOpacity={0.3} />
+          <Text x={sx} y={CURSORE_Y - 28} width={CURSORE_LARGHEZZA} align="center" text={`🌡 ${gradi} °C`} fontSize={14} fontStyle="bold" fill="#bf360c" fontFamily={FONT} listening={false} />
         </Group>
-      ) : null;
+      );
+    }
     case "interruttore-slitta":
       // Levetta spostata a destra (centrale collegato al piedino 2).
       return (a?.posizione ?? 0) >= 0.5 ? (
