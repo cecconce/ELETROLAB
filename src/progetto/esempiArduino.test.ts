@@ -8,7 +8,7 @@ import { datiPlotter } from "../editor/letturaPlotter";
 import { componentiDaSchema, nodiDaSchema, problemiArduino, vistaDaSessioneArduino } from "../editor/arduino";
 import { libreriaDelModulo } from "../editor/caricaLibreria";
 import { vocePerTipo } from "../editor/libreria";
-import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, passoArduino, puntoDaDistanza, puntoDaTemperatura, CURSORE_Y, trascinaArduino, TASTI_TASTIERINO, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, type SessioneArduino } from "../motori/arduino";
+import { avviaSessioneArduino, clicGiuArduino, impostaLivelloSensore, clicSuArduino, passoArduino, puntoDaDistanza, puntoDaTemperatura, CURSORE_Y, trascinaArduino, TASTI_TASTIERINO, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, type SessioneArduino } from "../motori/arduino";
 
 const lib = libreriaDelModulo("arduino");
 const morsettiDi = (tipo: string) => vocePerTipo(lib, tipo)?.morsetti;
@@ -182,11 +182,13 @@ describe("esempio del sensore di movimento", () => {
     expect(s.seriale).toContain("Allarme pronto");
     expect(s.pin.D13?.livello ?? 0).toBe(0);
     const pir = id(schema, "sensore-pir");
-    clicGiuArduino(s, pir);
+    impostaLivelloSensore(s, pir, 0.3); // persona a 3 m: dentro la portata
     aspetta(s, 1000);
     expect(s.pin.D13?.livello).toBe(1);
+    impostaLivelloSensore(s, pir, 0.2); // si avvicina: il movimento continua, nessun nuovo messaggio
+    aspetta(s, 500);
     expect(s.seriale.match(/Movimento rilevato!/g)).toHaveLength(1);
-    clicGiuArduino(s, pir);
+    impostaLivelloSensore(s, pir, 0.9); // a 9 m: fuori portata
     aspetta(s, 500);
     expect(s.pin.D13?.livello).toBe(0);
     expect(s.seriale.trim().split("\n").pop()).toContain("Nessun movimento");
@@ -301,8 +303,7 @@ describe("esempio del lampione con il plotter seriale", () => {
     const ldr = id(schema, "fotoresistenza");
     // Luce media (0,5): sopra la soglia, LED spento.
     expect(luminosita(s, schema, "led-giallo")).toBe(0);
-    clicGiuArduino(s, ldr, true);
-    clicGiuArduino(s, ldr, true); // buio
+    impostaLivelloSensore(s, ldr, 0.05); // quasi buio
     aspetta(s, 500);
     expect(luminosita(s, schema, "led-giallo")).toBeGreaterThan(0.5);
     const d = datiPlotter(s.seriale);
@@ -336,8 +337,8 @@ describe("esempi con i sensori nuovi", () => {
     const fsr = id(schema, "sensore-forza");
     expect(luminosita(s, schema, "led-rosso")).toBe(0);
     const livelli: number[] = [];
-    for (let k = 0; k < 4; k++) {
-      clicGiuArduino(s, fsr);
+    for (let k = 1; k <= 4; k++) {
+      impostaLivelloSensore(s, fsr, k * 0.25);
       aspetta(s, 300);
       livelli.push(luminosita(s, schema, "led-rosso"));
     }
@@ -353,16 +354,14 @@ describe("esempi con i sensori nuovi", () => {
     const motore = id(schema, "motore-dc");
     const gira = () => (s.aspetto[motore]?.velocita ?? 0) !== 0;
     expect(gira()).toBe(false);
-    clicGiuArduino(s, sonda, true);
-    clicGiuArduino(s, sonda, true); // 0 %: secco
+    impostaLivelloSensore(s, sonda, 0.1); // 10 %: secco
     aspetta(s, 500);
     expect(s.aspetto[id(schema, "modulo-rele")].eccitato).toBe(true);
     expect(gira()).toBe(true);
-    clicGiuArduino(s, sonda);
-    clicGiuArduino(s, sonda); // 50 %: fra le soglie, la pompa continua
+    impostaLivelloSensore(s, sonda, 0.5); // 50 %: fra le soglie, la pompa continua
     aspetta(s, 500);
     expect(gira()).toBe(true);
-    clicGiuArduino(s, sonda); // 75 %: bagnato
+    impostaLivelloSensore(s, sonda, 0.75); // 75 %: bagnato
     aspetta(s, 500);
     expect(gira()).toBe(false);
     expect(problemiArduino(s, schema, lib)).toEqual([]);
@@ -374,10 +373,10 @@ describe("esempi con i sensori nuovi", () => {
     const gas = id(schema, "sensore-gas");
     const buzzer = id(schema, "buzzer");
     expect(luminosita(s, schema, "led-rosso")).toBe(0);
-    clicGiuArduino(s, gas);
+    impostaLivelloSensore(s, gas, 0.25);
     aspetta(s, 400); // 25 %: sotto la soglia
     expect(luminosita(s, schema, "led-rosso")).toBe(0);
-    clicGiuArduino(s, gas);
+    impostaLivelloSensore(s, gas, 0.5);
     aspetta(s, 400); // 50 %
     expect(luminosita(s, schema, "led-rosso")).toBeGreaterThan(0.5);
     expect(vistaDaSessioneArduino(s, schema, lib).componenti[buzzer].arduino!.suona).toBe(true);

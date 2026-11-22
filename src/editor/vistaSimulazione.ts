@@ -61,9 +61,9 @@ export interface AspettoComponente {
     /** Display LCD: righe di testo (vuote se il display non è comandato) e retroilluminazione 0…1. */
     righe?: string[];
     retro?: number;
-    /** Sensore a ultrasuoni: distanza dell'ostacolo (cm). */
+    /** Sensore a ultrasuoni: distanza dell'ostacolo (cm); sensore PIR: distanza della persona (cm). */
     distanza?: number;
-    /** Ultrasuoni: zona di rilevamento aperta (ostacolo da trascinare); sensore di temperatura: cursore aperto. */
+    /** Ultrasuoni: zona di rilevamento aperta (ostacolo da trascinare); sensori di temperatura, luce, forza, umidità, gas e PIR: cursore aperto. */
     zonaAperta?: boolean;
     /** LED RGB: luminosità di rosso, verde e blu. */
     rgb?: [number, number, number];

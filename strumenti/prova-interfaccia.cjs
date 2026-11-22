@@ -1006,6 +1006,67 @@ async function provaArduino(pagina, controlla, foto, apriEsempio) {
     await foto("17c-arduino-temperatura-cursore");
   }
 
+  // Cursori continui degli altri sensori (attività 12.2): gas e PIR.
+  // Punti del disegno di un sensore → pagina, a partire dall'invito «clic sul sensore per regolarlo».
+  const puntoCursoreSensore = (x, y, indice = 0) =>
+    pagina.evaluate(([x, y, indice]) => {
+      const st = window.Konva.stages[0];
+      const t = st.find("Text").filter((n) => n.text() === "clic sul sensore per regolarlo")[indice];
+      if (!t) return null;
+      const p = t.getParent().getParent().getParent().getAbsoluteTransform().point({ x, y });
+      const c = st.container().getBoundingClientRect();
+      return { x: c.left + p.x, y: c.top + p.y };
+    }, [x, y, indice]);
+  // Barra larga 220 pixel, centrata sul sensore (x = 40 per gas e PIR), alla quota −34.
+  const ascissaLivello = (l, centro) => centro - 110 + 220 * l;
+  const trascinaCursore = async (corpo, da, a) => {
+    await pagina.mouse.click(corpo.x, corpo.y);
+    await pagina.waitForTimeout(300);
+    await pagina.mouse.move(da.x, da.y);
+    await pagina.mouse.down();
+    await pagina.mouse.move(a.x, a.y, { steps: 6 });
+    await pagina.mouse.up();
+    await pagina.waitForTimeout(1200);
+  };
+
+  console.log("Arduino: sensore di gas con il cursore continuo");
+  await apri("arduino-gas.elab");
+  await pagina.waitForTimeout(700);
+  {
+    const corpo = await puntoCursoreSensore(40, 40);
+    const da = await puntoCursoreSensore(ascissaLivello(0, 40), -34);
+    const a = await puntoCursoreSensore(ascissaLivello(0.63, 40), -34);
+    controlla(corpo !== null, "il sensore di gas invita a cliccarlo per regolarlo");
+    if (corpo && da && a) {
+      await trascinaCursore(corpo, da, a);
+      const testi = await pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+      const etichetta = testi.find((t) => t.startsWith("💨 Gas")) ?? "";
+      const percento = Number((/(\d+) %/.exec(etichetta) ?? [])[1]);
+      controlla(percento >= 61 && percento <= 65, `manopola del gas trascinata a circa 63 %: il cursore indica «${etichetta}»`);
+      const righe = (await pagina.locator(".monitor-testo").innerText()).trim().split("\n").filter((r) => r.startsWith("Gas:"));
+      const lettura = Number((/Gas:(\d+)/.exec(righe.pop() ?? "") ?? [])[1]);
+      controlla(lettura > 400, `gas sopra la soglia: il monitor legge ${lettura}`);
+      await foto("17f-arduino-gas-cursore");
+    }
+  }
+
+  console.log("Arduino: sensore PIR con il cursore della distanza");
+  await apri("arduino-movimento.elab");
+  await pagina.waitForTimeout(700);
+  {
+    const corpo = await puntoCursoreSensore(40, 40);
+    const da = await puntoCursoreSensore(ascissaLivello(1, 40), -34);
+    const a = await puntoCursoreSensore(ascissaLivello(0.3, 40), -34);
+    controlla(corpo !== null, "il sensore PIR invita a cliccarlo per regolarlo");
+    if (corpo && da && a) {
+      await trascinaCursore(corpo, da, a);
+      const testi = await pagina.evaluate(() => window.Konva.stages[0].find("Text").map((t) => t.text()));
+      controlla(testi.some((t) => t.startsWith("🚶") && t.includes("MOVIMENTO")), "persona trascinata a circa 3 m: il cursore indica «MOVIMENTO»");
+      controlla((await pagina.locator(".monitor-testo").innerText()).includes("Movimento rilevato!"), "il monitor scrive «Movimento rilevato!»");
+      await foto("17g-arduino-pir-cursore");
+    }
+  }
+
   console.log("Arduino: potenziometro girato trascinando la manopola");
   await apri("arduino-potenziometro.elab");
   await pagina.waitForTimeout(700);

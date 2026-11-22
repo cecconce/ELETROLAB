@@ -216,7 +216,7 @@
       "modulo": "arduino",
       "titolo": "Allarme con il sensore di movimento",
       "descrizione": "Il sensore di movimento (PIR) porta la sua uscita a HIGH quando vede muoversi qualcuno: il programma la legge con digitalRead sul pin 2, accende il LED «L» e scrive sul monitor seriale solo quando lo stato cambia (riconoscimento del fronte, con la variabile «prima»).",
-      "prova": "Premi ▶ AVVIA: il monitor scrive «Allarme pronto». Clic sul sensore: compare «MOVIMENTO», si accende il LED L e il monitor scrive «Movimento rilevato!» una volta sola. Un altro clic: «Nessun movimento»."
+      "prova": "Premi ▶ AVVIA: il monitor scrive «Allarme pronto». Clic sul sensore: sopra compare il cursore con una persona a 10 m (fuori portata). Trascina la manopola verso sinistra: sotto i 7 m compare «MOVIMENTO», si accende il LED L e il monitor scrive «Movimento rilevato!» una volta sola. Riportala oltre i 7 m: «Nessun movimento»."
     },
     {
       "file": "arduino-alimentatore.elab",
@@ -258,7 +258,7 @@
       "modulo": "arduino",
       "titolo": "Lampione automatico con la fotoresistenza e il plotter",
       "descrizione": "La fotoresistenza e una resistenza da 10 kΩ formano un partitore di tensione: con più luce la resistenza della fotoresistenza scende e su A0 arriva più tensione. Sotto la soglia di 500 il programma accende il LED (il «lampione»). Il programma scrive «Luce:…,Soglia:…» e il plotter seriale disegna le due linee, come nell'IDE di Arduino.",
-      "prova": "Premi ▶ AVVIA e passa al «📈 Grafico» del monitor seriale. Clic sulla fotoresistenza per cambiare la luce (clic a sinistra per meno luce): la linea blu sale e scende, quella rossa della soglia resta ferma. Quando la linea blu va sotto la rossa il LED si accende."
+      "prova": "Premi ▶ AVVIA e passa al «📈 Grafico» del monitor seriale. Clic sulla fotoresistenza: sopra compare il cursore della luce; trascina la manopola verso sinistra (buio) e verso destra (sole): la linea blu sale e scende, quella rossa della soglia resta ferma. Quando la linea blu va sotto la rossa il LED si accende."
     },
     {
       "file": "arduino-inclinazione.elab",
@@ -272,21 +272,21 @@
       "modulo": "arduino",
       "titolo": "Sensore di forza e luminosità del LED",
       "descrizione": "Il sensore di forza (FSR) e una resistenza da 10 kΩ formano un partitore su A0: senza pressione l'FSR è quasi un circuito aperto e A0 legge circa 0; premendo la sua resistenza scende e A0 sale. Con map() il valore 0…1023 diventa 0…255 per la luminosità del LED (PWM).",
-      "prova": "Premi ▶ AVVIA. Clic a destra sul sensore per premere di più (25 %, 50 %, 75 %, 100 %), a sinistra per premere di meno: il LED si illumina sempre di più. Apri il «📈 Grafico» del monitor per vedere la forza nel tempo."
+      "prova": "Premi ▶ AVVIA. Clic sul sensore: sopra compare il cursore della forza; trascinando la manopola verso destra premi di più e il LED si illumina sempre di più. Apri il «📈 Grafico» del monitor per vedere la forza nel tempo."
     },
     {
       "file": "arduino-annaffiatoio.elab",
       "modulo": "arduino",
       "titolo": "Annaffiatoio automatico (umidità, relè e pompa)",
       "descrizione": "La sonda di umidità nel terreno dà una tensione che cresce con l'acqua (A1). Quando il terreno è secco (sotto 300) il pin 7 fa scattare il relè, che accende la pompa (il motorino M1, alimentato dal portapile da 6 V); sopra 600 la spegne. Le due soglie diverse (isteresi) evitano che la pompa si accenda e si spenga di continuo.",
-      "prova": "Premi ▶ AVVIA: il terreno è a metà (50 %) e la pompa è ferma. Clic a sinistra sulla sonda due volte (terreno secco): il relè scatta e il motorino gira. Clic a destra: a 50 % la pompa continua (isteresi), a 75 % si ferma. Guarda le tre linee nel «📈 Grafico»."
+      "prova": "Premi ▶ AVVIA: il terreno è a metà (50 %) e la pompa è ferma. Clic sulla sonda per aprire il cursore dell'umidità e trascina la manopola verso sinistra (terreno secco, sotto il 32 % circa): il relè scatta e il motorino gira. Riportala verso destra: a 50 % la pompa continua (isteresi), oltre il 65 % circa si ferma. Guarda le tre linee nel «📈 Grafico»."
     },
     {
       "file": "arduino-gas.elab",
       "modulo": "arduino",
       "titolo": "Rilevatore di gas con allarme",
       "descrizione": "Il modulo del sensore di gas dà circa 0,4 V in aria pulita (A2 circa 80) e una tensione più alta quando c'è gas. Sopra la soglia di 400 il programma accende il LED rosso e il buzzer. Il sensore si scalda per funzionare e consuma circa 150 mA dal pin 5V.",
-      "prova": "Premi ▶ AVVIA: aria pulita, tutto spento. Clic a destra sul sensore per aggiungere gas: a 50 % («GAS 50 %») si accendono il LED rosso e il buzzer. Clic a sinistra per tornare all'aria pulita."
+      "prova": "Premi ▶ AVVIA: aria pulita, tutto spento. Clic sul sensore per aprire il cursore del gas e trascina la manopola verso destra: oltre circa il 37 % si accendono il LED rosso e il buzzer. Riportala a sinistra per tornare all'aria pulita."
     },
     {
       "file": "arduino-ponte-h.elab",

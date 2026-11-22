@@ -20,6 +20,8 @@ import {
   testoScala,
   tracciaOscilloscopio,
   SENSORI_A_LIVELLI,
+  SENSORI_A_CURSORE,
+  PIR_DISTANZA_MAX,
   livelloSensore,
   R_LAMPADINA,
   TEMPERATURA_PREDEFINITA,
@@ -218,7 +220,13 @@ export function vistaDaSessioneArduino(s: SessioneArduino, schema: Schema, libre
       const comp = s.componenti.find((x) => x.id === c.id);
       arduino.posizione = comp ? livelloSensore(s.interazioni, comp) : 0;
     }
-    if (c.tipo === "sensore-pir") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
+    if (c.tipo === "sensore-pir") {
+      // Movimento rilevato (0/1) e distanza della persona sul cursore.
+      arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
+      arduino.distanza = s.distanze[c.id] ?? PIR_DISTANZA_MAX;
+    }
+    // Sensori con il cursore continuo: aperto o chiuso (clic sul sensore).
+    if (c.tipo in SENSORI_A_CURSORE) arduino.zonaAperta = s.zoneAperte.has(c.id);
     if (c.tipo === "interruttore-slitta") arduino.posizione = s.interazioni.posizioni[c.id] ?? 0;
     if (c.tipo === "tmp36") {
       arduino.temperatura = s.interazioni.temperature[c.id] ?? TEMPERATURA_PREDEFINITA;

@@ -1,7 +1,7 @@
-// Test dei sensori comandati con i clic: inclinazione, forza, umidità, gas.
+// Test dei sensori comandati con i clic e con i cursori continui: inclinazione, forza, umidità, gas, luce, PIR.
 import { describe, expect, it } from "vitest";
 import { letturaAnalogica, letturaDigitale, resistenzaFsr, risolviBanco, type ComponenteArduino, type Interazioni } from "./componenti";
-import { avviaSessioneArduino, clicGiuArduino } from "./sessione";
+import { avviaSessioneArduino, clicGiuArduino, CURSORE_Y, distanzaPirDaLivello, impostaLivelloSensore, livelloDaPunto, PIR_PORTATA, puntoDaLivello, SENSORI_A_CURSORE, trascinaArduino } from "./sessione";
 
 const nodi = (tabella: Record<string, string>) => (c: string, m: string) => tabella[`${c}.${m}`] ?? `${c}.${m}`;
 const interazioni = (posizioni: Record<string, number> = {}): Interazioni => ({ premuti: new Set(), posizioni, luce: {} });
@@ -37,24 +37,60 @@ describe("moduli con uscita analogica", () => {
     expect(letturaAnalogica(bagnato, "a1")).toBe(Math.round((4.6 / 5) * 1023));
   });
 
-  it("i clic cambiano il livello a passi del 25 %, senza ricominciare dal fondo", () => {
+  it("cursore come in Tinkercad: il clic sul sensore lo apre, il clic sulla barra sceglie il livello al centesimo", () => {
     const s = avviaSessioneArduino("void setup(){}\nvoid loop(){}", c, tab);
-    clicGiuArduino(s, "H"); // 50 % → 75 %
-    expect(s.interazioni.posizioni.H).toBe(0.75);
-    clicGiuArduino(s, "H");
-    clicGiuArduino(s, "H"); // resta al 100 %
-    expect(s.interazioni.posizioni.H).toBe(1);
-    for (let k = 0; k < 6; k++) clicGiuArduino(s, "G", true); // resta a 0
-    expect(s.interazioni.posizioni.G).toBe(0);
+    const centro = SENSORI_A_CURSORE["sensore-umidita"];
+    // Cursore chiuso: un clic sul sensore apre il cursore e non cambia il livello.
+    clicGiuArduino(s, "H", false, { x: 40, y: 60 });
+    expect(s.zoneAperte.has("H")).toBe(true);
+    expect(s.interazioni.posizioni.H).toBeUndefined();
+    // Clic sulla barra al 37 %, poi trascinamento al 82 %.
+    clicGiuArduino(s, "H", false, { x: puntoDaLivello(0.37, centro), y: CURSORE_Y });
+    expect(s.interazioni.posizioni.H).toBe(0.37);
+    expect(letturaAnalogica(s.risultato, "a0")).toBe(Math.round(((4.5 * 0.37) / 5) * 1023));
+    trascinaArduino(s, "H", { x: puntoDaLivello(0.82, centro), y: CURSORE_Y + 4 });
+    expect(s.interazioni.posizioni.H).toBe(0.82);
+    // Un nuovo clic sul sensore chiude il cursore: il trascinamento non agisce più.
+    clicGiuArduino(s, "H", false, { x: 40, y: 60 });
+    trascinaArduino(s, "H", { x: puntoDaLivello(0.1, centro), y: CURSORE_Y });
+    expect(s.zoneAperte.has("H")).toBe(false);
+    expect(s.interazioni.posizioni.H).toBe(0.82);
+  });
+
+  it("scala dei cursori: da 0 a 100 %, ogni centesimo raggiungibile, estremi fuori dalla barra", () => {
+    for (const centro of Object.values(SENSORI_A_CURSORE)) {
+      expect(livelloDaPunto(-1000, centro)).toBe(0);
+      expect(livelloDaPunto(1000, centro)).toBe(1);
+      for (let k = 0; k <= 100; k++) expect(livelloDaPunto(puntoDaLivello(k / 100, centro), centro)).toBe(k / 100);
+    }
   });
 });
 
 describe("fotoresistenza", () => {
-  it("i clic si fermano al buio e al pieno sole, senza ricominciare dall'altra parte", () => {
+  it("il cursore regola la luce con continuità: più luce, resistenza più bassa", () => {
     const s = avviaSessioneArduino("void setup(){}\nvoid loop(){}", [{ id: "L", tipo: "fotoresistenza" }], nodi({}));
-    for (let k = 0; k < 5; k++) clicGiuArduino(s, "L", true);
-    expect(s.interazioni.luce.L).toBe(0);
-    for (let k = 0; k < 6; k++) clicGiuArduino(s, "L");
+    impostaLivelloSensore(s, "L", 0.13);
+    expect(s.interazioni.luce.L).toBe(0.13);
+    impostaLivelloSensore(s, "L", 2);
     expect(s.interazioni.luce.L).toBe(1);
+    impostaLivelloSensore(s, "L", -1);
+    expect(s.interazioni.luce.L).toBe(0);
+  });
+});
+
+describe("sensore PIR con il cursore della distanza", () => {
+  const c: ComponenteArduino[] = [{ id: "U", tipo: "arduino-uno" }, { id: "P", tipo: "sensore-pir" }];
+  const tab = nodi({ "U.5V": "v", "P.VCC": "v", "U.GND1": "g", "P.GND": "g", "P.OUT": "d2", "U.D2": "d2" });
+  it("all'inizio nessuno è vicino; dentro la portata l'uscita va a HIGH, fuori torna LOW", () => {
+    const s = avviaSessioneArduino("void setup(){}\nvoid loop(){}", c, tab);
+    expect(letturaDigitale(s.risultato, "d2")).toBe(0);
+    impostaLivelloSensore(s, "P", 0.35); // persona a 3,5 m
+    expect(s.distanze.P).toBe(350);
+    expect(letturaDigitale(s.risultato, "d2")).toBe(1);
+    impostaLivelloSensore(s, "P", PIR_PORTATA / 1000 + 0.01); // appena fuori portata
+    expect(letturaDigitale(s.risultato, "d2")).toBe(0);
+    impostaLivelloSensore(s, "P", PIR_PORTATA / 1000); // proprio al limite: la vede
+    expect(letturaDigitale(s.risultato, "d2")).toBe(1);
+    expect(distanzaPirDaLivello(1)).toBe(1000);
   });
 });

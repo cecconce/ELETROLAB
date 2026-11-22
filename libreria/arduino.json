@@ -2517,7 +2517,7 @@
       "nome": "Fotoresistenza",
       "categoria": "ingressi",
       "sigla": "LDR",
-      "descrizione": "La sua resistenza diminuisce con la luce (circa 100 kΩ al buio, 1 kΩ al sole). Mettila in partitore con una resistenza da 10 kΩ e leggi la tensione con analogRead. In simulazione: clic per cambiare la luce.",
+      "descrizione": "La sua resistenza diminuisce con la luce (circa 100 kΩ al buio, 1 kΩ al sole). Mettila in partitore con una resistenza da 10 kΩ e leggi la tensione con analogRead. In simulazione: clic sulla fotoresistenza per aprire il cursore della luce (dal buio al pieno sole), poi trascina la manopola.",
       "paroleChiave": [
         "fotoresistenza",
         "ldr",
@@ -2867,7 +2867,7 @@
       "nome": "Sensore di movimento (PIR)",
       "categoria": "ingressi",
       "sigla": "U",
-      "descrizione": "Sensore a infrarossi passivi: l'uscita OUT va a HIGH quando vede muoversi una persona davanti, altrimenti resta LOW. Piedini: VCC a 5V, OUT a un pin digitale (lo leggi con digitalRead), GND a GND. In simulazione: clic per simulare il movimento (un altro clic per fermarlo).",
+      "descrizione": "Sensore a infrarossi passivi: l'uscita OUT va a HIGH quando vede muoversi una persona davanti, altrimenti resta LOW. Piedini: VCC a 5V, OUT a un pin digitale (lo leggi con digitalRead), GND a GND. Vede il movimento fino a circa 7 m. In simulazione: clic sul sensore per aprire il cursore e trascina la persona più vicino o più lontano (dentro i 7 m l'uscita va a HIGH).",
       "paroleChiave": [
         "pir",
         "movimento",
@@ -3033,7 +3033,7 @@
       "nome": "Sensore di forza (FSR)",
       "categoria": "ingressi",
       "sigla": "R",
-      "descrizione": "Resistenza sensibile alla forza: senza pressione è quasi un circuito aperto (oltre 1 MΩ), premendo la sua resistenza scende fino a poche centinaia di ohm. Con una resistenza da 10 kΩ forma un partitore da leggere con analogRead. In simulazione: clic a destra per premere di più, a sinistra per premere di meno.",
+      "descrizione": "Resistenza sensibile alla forza: senza pressione è quasi un circuito aperto (oltre 1 MΩ), premendo la sua resistenza scende fino a poche centinaia di ohm. Con una resistenza da 10 kΩ forma un partitore da leggere con analogRead. In simulazione: clic sul sensore per aprire il cursore della forza (da 0 a 100 %), poi trascina la manopola.",
       "paroleChiave": [
         "forza",
         "pressione",
@@ -3063,7 +3063,7 @@
       "nome": "Sensore di umidità del terreno",
       "categoria": "ingressi",
       "sigla": "U",
-      "descrizione": "Sonda a forchetta da infilare nel terreno: più il terreno è bagnato, più alta è la tensione sull'uscita SIG (da 0 V, terreno secco, a circa 4,5 V, terreno bagnato). VCC a 5 V, GND a GND, SIG a un ingresso analogico. In simulazione: clic a destra per bagnare il terreno, a sinistra per asciugarlo.",
+      "descrizione": "Sonda a forchetta da infilare nel terreno: più il terreno è bagnato, più alta è la tensione sull'uscita SIG (da 0 V, terreno secco, a circa 4,5 V, terreno bagnato). VCC a 5 V, GND a GND, SIG a un ingresso analogico. In simulazione: clic sulla sonda per aprire il cursore dell'umidità (da secco a bagnato), poi trascina la manopola.",
       "paroleChiave": [
         "umidità",
         "umidita",
@@ -3100,7 +3100,7 @@
       "nome": "Sensore di gas",
       "categoria": "ingressi",
       "sigla": "U",
-      "descrizione": "Modulo con sensore di gas (fumo, GPL, metano): dentro c'è una piccola resistenza che si scalda, quindi consuma circa 150 mA dal 5 V. L'uscita AO dà circa 0,4 V in aria pulita e sale con la concentrazione di gas: si legge con analogRead e si confronta con una soglia. In simulazione: clic a destra per aggiungere gas, a sinistra per toglierlo.",
+      "descrizione": "Modulo con sensore di gas (fumo, GPL, metano): dentro c'è una piccola resistenza che si scalda, quindi consuma circa 150 mA dal 5 V. L'uscita AO dà circa 0,4 V in aria pulita e sale con la concentrazione di gas: si legge con analogRead e si confronta con una soglia. In simulazione: clic sul sensore per aprire il cursore del gas (da aria pulita a 100 %), poi trascina la manopola.",
       "paroleChiave": [
         "gas",
         "fumo",

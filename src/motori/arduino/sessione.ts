@@ -15,8 +15,6 @@ import {
   misureMultimetri,
   ALIMENTATORE_PASSO,
   tastoNelPunto,
-  LIVELLI_SENSORE,
-  SENSORI_A_LIVELLI,
   livelloSensore,
   ALIMENTATORE_TENSIONE_MAX,
   letturaAnalogica,
@@ -128,6 +126,50 @@ export function posizioneDaPunto(x: number, y: number, attuale = 0.5): number {
   return Math.round(((gradi + MANOPOLA_CORSA) / (2 * MANOPOLA_CORSA)) * 1000) / 1000;
 }
 
+// Cursori continui degli altri sensori (come in Tinkercad): fotoresistenza,
+// sensore di forza, umidità del terreno, gas e PIR. Stessa barra del sensore
+// di temperatura (larga CURSORE_LARGHEZZA, alla quota CURSORE_Y sopra il
+// sensore), centrata sul disegno di ciascun sensore. Il valore va da 0 a 1 a
+// passi dell'1 %, così si regola "al punto" e non più a 5 livelli.
+/** Sensori con il cursore continuo e centro orizzontale del loro disegno. */
+export const SENSORI_A_CURSORE: Readonly<Record<string, number>> = {
+  fotoresistenza: 10,
+  "sensore-forza": 20,
+  "sensore-umidita": 40,
+  "sensore-gas": 40,
+  "sensore-pir": 40,
+};
+
+/** Centro orizzontale del cursore di un sensore (il TMP36 ha il suo). */
+export function centroCursore(tipo: string): number {
+  return SENSORI_A_CURSORE[tipo] ?? CURSORE_CENTRO_X;
+}
+
+/** Livello (0…1, al centesimo) indicato da un punto orizzontale del cursore centrato in `centro`. */
+export function livelloDaPunto(x: number, centro: number): number {
+  const sinistra = centro - CURSORE_LARGHEZZA / 2;
+  const f = Math.min(1, Math.max(0, (x - sinistra) / CURSORE_LARGHEZZA));
+  return Math.round(f * 100) / 100;
+}
+
+/** Inversa di `livelloDaPunto`: ascissa della manopola a quel livello. */
+export function puntoDaLivello(livello: number, centro: number): number {
+  return centro - CURSORE_LARGHEZZA / 2 + CURSORE_LARGHEZZA * Math.min(1, Math.max(0, livello));
+}
+
+// Sensore PIR: il cursore sposta una persona che cammina davanti al sensore,
+// da 0 (attaccata) a PIR_DISTANZA_MAX cm. Come l'HC-SR501 con il trimmer
+// della portata al massimo, «vede» il movimento fino a PIR_PORTATA cm.
+/** Distanza massima della persona sul cursore (cm): all'estremo destro non c'è nessuno vicino. */
+export const PIR_DISTANZA_MAX = 1000;
+/** Portata del sensore PIR (cm): più vicino di così il movimento è rilevato. */
+export const PIR_PORTATA = 700;
+
+/** Distanza della persona davanti al PIR (cm, a passi di 10 cm) per un livello del cursore. */
+export function distanzaPirDaLivello(livello: number): number {
+  return Math.round((Math.min(1, Math.max(0, livello)) * PIR_DISTANZA_MAX) / 10) * 10;
+}
+
 /** Caratteri massimi tenuti nel monitor seriale. */
 export const SERIALE_MASSIMA = 20000;
 
@@ -148,11 +190,11 @@ export interface SessioneArduino {
   neopixel: Record<string, number[]>;
   /** Contenuto dei display creati dal programma, con i pin del costruttore. */
   lcd: Record<string, { righe: string[]; pin: number[]; i2c?: { indirizzo: number; retro: boolean } }>;
-  /** Distanza dell'ostacolo davanti a ogni sensore a ultrasuoni (cm). */
   seriale: string;
   ingressoSeriale: number[];
+  /** Distanza dell'ostacolo davanti a ogni sensore a ultrasuoni e della persona davanti a ogni PIR (cm). */
   distanze: Record<string, number>;
-  /** Sensori con la zona di regolazione aperta (clic sul sensore la apre e la chiude): ostacolo degli ultrasuoni, cursore della temperatura. */
+  /** Sensori con la zona di regolazione aperta (clic sul sensore la apre e la chiude): ostacolo degli ultrasuoni, cursori di temperatura, luce, forza, umidità, gas e PIR. */
   zoneAperte: Set<string>;
   /** Punto in cui è stato premuto ogni componente (per distinguere il clic dal trascinamento della manopola). */
   pressioni: Record<string, { x: number; y: number; girando: boolean }>;
@@ -434,10 +476,11 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false,
       s.versione++;
     }
     return;
-  } else if (c.tipo === "tmp36") {
-    // Come in Tinkercad: clic sul sensore apre (o chiude) il cursore della
-    // temperatura sopra di lui; clic o trascinamento sul cursore la regola.
-    if (punto && punto.y < CURSORE_BORDO && s.zoneAperte.has(id)) impostaTemperatura(s, id, temperaturaDaPunto(punto.x));
+  } else if (c.tipo === "tmp36" || c.tipo in SENSORI_A_CURSORE) {
+    // Come in Tinkercad: clic sul sensore apre (o chiude) il suo cursore
+    // sopra di lui; clic o trascinamento sulla barra regola il valore
+    // (temperatura, luce, forza, umidità, gas, distanza della persona).
+    if (punto && punto.y < CURSORE_BORDO && s.zoneAperte.has(id)) regolaCursore(s, c, punto.x);
     else {
       if (s.zoneAperte.has(id)) s.zoneAperte.delete(id);
       else s.zoneAperte.add(id);
@@ -453,19 +496,8 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false,
     const ora = tensioneAlimentatore(s.interazioni, c);
     const nuova = Math.round((ora + (indietro ? -ALIMENTATORE_PASSO : ALIMENTATORE_PASSO)) / ALIMENTATORE_PASSO) * ALIMENTATORE_PASSO;
     s.interazioni.posizioni[id] = Math.min(ALIMENTATORE_TENSIONE_MAX, Math.max(0, nuova));
-  } else if (SENSORI_A_LIVELLI.has(c.tipo)) {
-    // Livello successivo (o precedente con il clic a sinistra), senza ricominciare dal fondo.
-    const ora = livelloSensore(s.interazioni, c);
-    const i = LIVELLI_SENSORE.findIndex((l) => Math.abs(l - ora) < 1e-6);
-    s.interazioni.posizioni[id] = LIVELLI_SENSORE[Math.min(LIVELLI_SENSORE.length - 1, Math.max(0, (i < 0 ? 0 : i) + (indietro ? -1 : 1)))];
-  } else if (c.tipo === "interruttore-slitta" || c.tipo === "sensore-pir" || c.tipo === "sensore-inclinazione") {
+  } else if (c.tipo === "interruttore-slitta" || c.tipo === "sensore-inclinazione") {
     s.interazioni.posizioni[id] = (s.interazioni.posizioni[id] ?? 0) >= 0.5 ? 0 : 1;
-  } else if (c.tipo === "fotoresistenza") {
-    const livelli = [0, 0.25, 0.5, 0.75, 1];
-    const ora = s.interazioni.luce[id] ?? 0.5;
-    const i = livelli.findIndex((l) => Math.abs(l - ora) < 1e-6);
-    // Si ferma agli estremi (buio, pieno sole) invece di ricominciare dall'altra parte.
-    s.interazioni.luce[id] = livelli[Math.min(livelli.length - 1, Math.max(0, (i < 0 ? 2 : i) + (indietro ? -1 : 1)))];
   } else return;
   ricalcola(s);
 }
@@ -487,15 +519,52 @@ function impostaTemperatura(s: SessioneArduino, id: string, gradi: number): void
   ricalcola(s);
 }
 
+/** Punto orizzontale scelto sulla barra del cursore di un sensore: nuovo valore. */
+function regolaCursore(s: SessioneArduino, c: ComponenteArduino, x: number): void {
+  if (c.tipo === "tmp36") impostaTemperatura(s, c.id, temperaturaDaPunto(x));
+  else impostaLivelloSensore(s, c.id, livelloDaPunto(x, centroCursore(c.tipo)));
+}
+
+/**
+ * Livello attuale del cursore di un sensore (0…1): luce della fotoresistenza,
+ * forza, umidità, gas o, per il PIR, distanza della persona sulla scala.
+ */
+export function livelloCursore(s: SessioneArduino, c: ComponenteArduino): number {
+  if (c.tipo === "fotoresistenza") return s.interazioni.luce[c.id] ?? 0.5;
+  if (c.tipo === "sensore-pir") return (s.distanze[c.id] ?? PIR_DISTANZA_MAX) / PIR_DISTANZA_MAX;
+  return livelloSensore(s.interazioni, c);
+}
+
+/**
+ * Nuovo livello (0…1) di un sensore con il cursore; il circuito si ricalcola.
+ * Usata dal cursore e utile ai test. Per il PIR il livello è la distanza della
+ * persona: dentro la portata l'uscita va a HIGH.
+ */
+export function impostaLivelloSensore(s: SessioneArduino, id: string, livello: number): void {
+  const c = s.componenti.find((x) => x.id === id);
+  if (!c || !(c.tipo in SENSORI_A_CURSORE)) return;
+  const nuovo = Math.round(Math.min(1, Math.max(0, livello)) * 100) / 100;
+  if (Math.abs(livelloCursore(s, c) - nuovo) < 1e-9) return;
+  if (c.tipo === "fotoresistenza") s.interazioni.luce[id] = nuovo;
+  else if (c.tipo === "sensore-pir") {
+    const d = distanzaPirDaLivello(nuovo);
+    s.distanze[id] = d;
+    s.interazioni.posizioni[id] = d <= PIR_PORTATA ? 1 : 0;
+  } else s.interazioni.posizioni[id] = nuovo;
+  s.versione++;
+  ricalcola(s);
+}
+
 /**
  * Trascinamento con il tasto premuto su un componente (punto nel suo disegno),
  * come in Tinkercad: sposta l'ostacolo davanti al sensore a ultrasuoni o la
- * manopola del cursore della temperatura (solo se il cursore è aperto).
+ * manopola del cursore dei sensori (temperatura, luce, forza, umidità, gas,
+ * PIR), solo se il cursore è aperto.
  */
 export function trascinaArduino(s: SessioneArduino, id: string, punto: { x: number; y: number }): void {
   const c = s.componenti.find((x) => x.id === id);
   if (c?.tipo === "ultrasuoni") impostaDistanza(s, id, distanzaDaPunto(punto.y));
-  else if (c?.tipo === "tmp36" && s.zoneAperte.has(id)) impostaTemperatura(s, id, temperaturaDaPunto(punto.x));
+  else if (c && (c.tipo === "tmp36" || c.tipo in SENSORI_A_CURSORE) && s.zoneAperte.has(id)) regolaCursore(s, c, punto.x);
   else if (c?.tipo === "potenziometro") {
     // La manopola gira solo dopo qualche pixel di movimento: il tremolio di un
     // clic (o di un dito sulla LIM) non la sposta.

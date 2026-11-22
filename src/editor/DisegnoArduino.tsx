@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
 import Konva from "konva";
 import { Circle, Group, Line, Rect, Text } from "react-konva";
 import { displayAlimentatore, fasceResistenza, scriviOhm, valoreParametroArduino } from "./arduino";
-import { CURSORE_CENTRO_X, CURSORE_LARGHEZZA, CURSORE_Y, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, TEMPERATURA_MAX, TEMPERATURA_MIN, ZONA_ALTEZZA, ZONA_CENTRO_X, puntoDaDistanza, puntoDaTemperatura, testoScala } from "../motori/arduino";
+import { CURSORE_LARGHEZZA, CURSORE_Y, PIR_DISTANZA_MAX, PIR_PORTATA, TASTIERINO_H, TASTIERINO_L, TASTIERINO_X0, TASTIERINO_Y0, TEMPERATURA_MAX, TEMPERATURA_MIN, ZONA_ALTEZZA, ZONA_CENTRO_X, centroCursore, puntoDaDistanza, puntoDaLivello, testoScala } from "../motori/arduino";
 import { PUNTO_DECIMALE, RETTANGOLI_SEGMENTI, SEGMENTI } from "./segmenti7";
 import type { ComponenteSchema } from "./schema";
 import { t } from "../testi";
@@ -70,14 +70,16 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
-    case "fotoresistenza":
+    case "fotoresistenza": {
       if (!inSimulazione) return null;
+      const luce = a?.luce ?? 0.5;
       return (
-        <Group listening={false}>
-          <Circle x={10} y={12} radius={12 + 10 * (a?.luce ?? 0.5)} fill="#ffeb3b" opacity={0.15 + 0.45 * (a?.luce ?? 0.5)} />
-          <Text x={-30} y={-16} width={80} align="center" text={`☀ ${Math.round((a?.luce ?? 0.5) * 100)} %`} fontSize={10} fontStyle="bold" fill="#f57f17" fontFamily={FONT} />
+        <Group>
+          <Circle x={10} y={12} radius={12 + 10 * luce} fill="#ffeb3b" opacity={0.15 + 0.45 * luce} listening={false} />
+          <CursoreSensore tipo={c.tipo} livello={luce} aperto={a?.zonaAperta ?? false} />
         </Group>
       );
+    }
     case "buzzer":
       if (!a?.suona) return null;
       return (
@@ -294,18 +296,15 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
     case "sensore-gas": {
       if (!inSimulazione) return null;
       const livello = a?.posizione ?? 0;
-      const percento = `${Math.round(livello * 100)} %`;
-      const etichetta = { "sensore-forza": "arduino.sensore.forza", "sensore-umidita": "arduino.sensore.umidita", "sensore-gas": "arduino.sensore.gas" }[c.tipo]!;
-      const colore = c.tipo === "sensore-umidita" ? "#1565c0" : c.tipo === "sensore-gas" ? (livello >= 0.5 ? "#c62828" : "#546e7a") : "#6d4c41";
-      const larghezza = c.larghezza;
       return (
-        <Group listening={false}>
-          {c.tipo === "sensore-forza" && livello > 0 && <Circle x={20} y={18} radius={8 + 8 * livello} fill="#ffcc80" opacity={0.35 + 0.4 * livello} />}
-          {c.tipo === "sensore-umidita" && <Rect x={10} y={70} width={60} height={50} fill="#6d4c41" opacity={0.25 + 0.5 * (1 - livello)} cornerRadius={4} />}
-          {c.tipo === "sensore-umidita" && livello > 0 && <Rect x={10} y={120 - 50 * livello} width={60} height={50 * livello} fill="#42a5f5" opacity={0.35} cornerRadius={4} />}
-          {c.tipo === "sensore-gas" && livello > 0 && <Circle x={40} y={32} radius={20 + 10 * livello} fill="#9e9e9e" opacity={0.15 + 0.35 * livello} />}
-          <Rect x={larghezza / 2 - 45} y={-18} width={90} height={16} cornerRadius={4} fill={colore} />
-          <Text x={larghezza / 2 - 45} y={-15} width={90} align="center" text={`${t(etichetta)} ${percento}`} fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+        <Group>
+          <Group listening={false}>
+            {c.tipo === "sensore-forza" && livello > 0 && <Circle x={20} y={18} radius={8 + 8 * livello} fill="#ffcc80" opacity={0.35 + 0.4 * livello} />}
+            {c.tipo === "sensore-umidita" && <Rect x={10} y={70} width={60} height={50} fill="#6d4c41" opacity={0.25 + 0.5 * (1 - livello)} cornerRadius={4} />}
+            {c.tipo === "sensore-umidita" && livello > 0 && <Rect x={10} y={120 - 50 * livello} width={60} height={50 * livello} fill="#42a5f5" opacity={0.35} cornerRadius={4} />}
+            {c.tipo === "sensore-gas" && livello > 0 && <Circle x={40} y={32} radius={20 + 10 * livello} fill="#9e9e9e" opacity={0.15 + 0.35 * livello} />}
+          </Group>
+          <CursoreSensore tipo={c.tipo} livello={livello} aperto={a?.zonaAperta ?? false} />
         </Group>
       );
     }
@@ -434,15 +433,18 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         </Group>
       );
     }
-    case "sensore-pir":
-      // Movimento rilevato: la cupola si illumina e compare la scritta.
-      return inSimulazione && (a?.posizione ?? 0) >= 0.5 ? (
-        <Group listening={false}>
-          <Circle x={40} y={38} radius={24} fill="#ffcc80" opacity={0.45} shadowColor="#ff9800" shadowBlur={20} shadowOpacity={1} />
-          <Rect x={0} y={-18} width={80} height={16} cornerRadius={4} fill="#e65100" />
-          <Text x={0} y={-15} width={80} align="center" text="MOVIMENTO" fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+    case "sensore-pir": {
+      // Movimento rilevato: la cupola si illumina. Sopra, il cursore con la
+      // distanza della persona che cammina davanti al sensore.
+      if (!inSimulazione) return null;
+      const distanza = a?.distanza ?? PIR_DISTANZA_MAX;
+      return (
+        <Group>
+          {(a?.posizione ?? 0) >= 0.5 && <Circle x={40} y={38} radius={24} fill="#ffcc80" opacity={0.45} shadowColor="#ff9800" shadowBlur={20} shadowOpacity={1} listening={false} />}
+          <CursoreSensore tipo={c.tipo} livello={distanza / PIR_DISTANZA_MAX} aperto={a?.zonaAperta ?? false} />
         </Group>
-      ) : null;
+      );
+    }
     case "tmp36": {
       if (a?.temperatura === undefined) return null;
       const gradi = a.temperatura;
@@ -456,40 +458,8 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
             <Text x={-60} y={-32} width={160} align="center" text={t("arduino.temperatura.suggerimento")} fontSize={10} fill="#bf360c" fontFamily={FONT} />
           </Group>
         );
-      // Cursore aperto (come in Tinkercad): barra da −40 a 125 °C, dal blu al
-      // rosso, con la manopola da trascinare. Il rettangolo trasparente è "in
-      // ascolto" così il clic arriva al componente con il punto nel disegno.
-      const sx = CURSORE_CENTRO_X - CURSORE_LARGHEZZA / 2;
-      const xm = puntoDaTemperatura(gradi);
-      return (
-        <Group>
-          <Rect x={sx - 14} y={CURSORE_Y - 34} width={CURSORE_LARGHEZZA + 28} height={56} cornerRadius={8} fill="rgba(255,255,255,0.92)" stroke="#ff8a65" strokeWidth={1} shadowColor="#000" shadowBlur={6} shadowOpacity={0.25} />
-          <Rect
-            x={sx}
-            y={CURSORE_Y - 4}
-            width={CURSORE_LARGHEZZA}
-            height={8}
-            cornerRadius={4}
-            fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-            fillLinearGradientEndPoint={{ x: CURSORE_LARGHEZZA, y: 0 }}
-            fillLinearGradientColorStops={[0, "#1e88e5", 0.3, "#4fc3f7", 0.45, "#fff176", 0.7, "#ff9800", 1, "#d32f2f"]}
-            listening={false}
-          />
-          {/* Tacche: −40, 0, 25, 50, 100 e 125 °C. */}
-          {[TEMPERATURA_MIN, 0, 25, 50, 100, TEMPERATURA_MAX].map((v) => {
-            const x = puntoDaTemperatura(v);
-            return (
-              <Group key={v} listening={false}>
-                <Line points={[x, CURSORE_Y + 5, x, CURSORE_Y + 9]} stroke="#78909c" strokeWidth={1} />
-                <Text x={x - 15} y={CURSORE_Y + 11} width={30} align="center" text={`${v}`} fontSize={8} fill="#546e7a" fontFamily={FONT} />
-              </Group>
-            );
-          })}
-          {/* Manopola da trascinare e valore sopra. */}
-          <Circle x={xm} y={CURSORE_Y} radius={9} fill="#ffffff" stroke="#e65100" strokeWidth={2.5} shadowColor="#000" shadowBlur={4} shadowOpacity={0.3} />
-          <Text x={sx} y={CURSORE_Y - 28} width={CURSORE_LARGHEZZA} align="center" text={`🌡 ${gradi} °C`} fontSize={14} fontStyle="bold" fill="#bf360c" fontFamily={FONT} listening={false} />
-        </Group>
-      );
+      // Cursore aperto (come in Tinkercad): barra da −40 a 125 °C, dal blu al rosso.
+      return <CursoreSensore tipo={c.tipo} livello={(gradi - TEMPERATURA_MIN) / (TEMPERATURA_MAX - TEMPERATURA_MIN)} aperto />;
     }
     case "interruttore-slitta":
       // Levetta spostata a destra (centrale collegato al piedino 2).
@@ -502,6 +472,115 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
     default:
       return null;
   }
+}
+
+/** Come si presenta il cursore di un sensore: testo del valore, colori della barra, tacche. */
+interface AspettoCursore {
+  testo: string;
+  /** Colore del testo e del bordo della manopola. */
+  colore: string;
+  /** Sfumatura della barra (posizione 0…1, colore, …) come vuole Konva. */
+  sfumatura: (string | number)[];
+  /** Tacche della scala: livello 0…1 ed etichetta. */
+  tacche: { livello: number; etichetta: string; evidente?: boolean }[];
+}
+
+const percento = (l: number) => `${Math.round(l * 100)} %`;
+const TACCHE_PERCENTO = [0, 0.25, 0.5, 0.75, 1].map((l) => ({ livello: l, etichetta: `${l * 100}` }));
+
+/** Testo, colori e tacche del cursore di ogni sensore secondo il livello (0…1). */
+function aspettoCursore(tipo: string, livello: number): AspettoCursore {
+  switch (tipo) {
+    case "tmp36": {
+      const gradi = Math.round(TEMPERATURA_MIN + (TEMPERATURA_MAX - TEMPERATURA_MIN) * livello);
+      const scala = (g: number) => (g - TEMPERATURA_MIN) / (TEMPERATURA_MAX - TEMPERATURA_MIN);
+      return {
+        testo: `🌡 ${gradi} °C`,
+        colore: "#bf360c",
+        sfumatura: [0, "#1e88e5", 0.3, "#4fc3f7", 0.45, "#fff176", 0.7, "#ff9800", 1, "#d32f2f"],
+        tacche: [TEMPERATURA_MIN, 0, 25, 50, 100, TEMPERATURA_MAX].map((g) => ({ livello: scala(g), etichetta: `${g}` })),
+      };
+    }
+    case "fotoresistenza":
+      return { testo: `☀ ${t("arduino.cursore.luce")} ${percento(livello)}`, colore: "#f57f17", sfumatura: [0, "#263238", 0.5, "#fbc02d", 1, "#fff59d"], tacche: TACCHE_PERCENTO };
+    case "sensore-forza":
+      return { testo: `✋ ${t("arduino.cursore.forza")} ${percento(livello)}`, colore: "#6d4c41", sfumatura: [0, "#eceff1", 1, "#8d6e63"], tacche: TACCHE_PERCENTO };
+    case "sensore-umidita":
+      return { testo: `💧 ${t("arduino.cursore.umidita")} ${percento(livello)}`, colore: "#1565c0", sfumatura: [0, "#a1887f", 0.5, "#90caf9", 1, "#1e88e5"], tacche: TACCHE_PERCENTO };
+    case "sensore-gas":
+      return { testo: `💨 ${t("arduino.cursore.gas")} ${percento(livello)}`, colore: livello >= 0.5 ? "#c62828" : "#455a64", sfumatura: [0, "#a5d6a7", 0.4, "#bdbdbd", 1, "#e53935"], tacche: TACCHE_PERCENTO };
+    case "sensore-pir": {
+      // Distanza della persona: dentro la portata il sensore la «vede».
+      const cm = Math.round(livello * PIR_DISTANZA_MAX);
+      const metri = (cm / 100).toFixed(1).replace(".", ",");
+      const vista = cm <= PIR_PORTATA;
+      const portata = PIR_PORTATA / PIR_DISTANZA_MAX;
+      return {
+        testo: `🚶 ${t("arduino.cursore.persona")} ${metri} m · ${t(vista ? "arduino.cursore.movimento" : "arduino.cursore.fuoriPortata")}`,
+        colore: vista ? "#e65100" : "#546e7a",
+        sfumatura: [0, "#ff9800", portata, "#ffcc80", portata + 0.001, "#cfd8dc", 1, "#eceff1"],
+        tacche: [
+          ...[0, 200, 400, 600, 800, 1000].map((d) => ({ livello: d / PIR_DISTANZA_MAX, etichetta: `${d / 100} m` })),
+          { livello: portata, etichetta: t("arduino.cursore.portata"), evidente: true },
+        ],
+      };
+    }
+    default:
+      return { testo: percento(livello), colore: "#455a64", sfumatura: [0, "#eceff1", 1, "#90a4ae"], tacche: TACCHE_PERCENTO };
+  }
+}
+
+/**
+ * Cursore di un sensore (come in Tinkercad). Chiuso: un'etichetta con il
+ * valore e l'invito a cliccare sul sensore. Aperto: una barra sopra il sensore
+ * con la manopola da trascinare. Il pannello aperto è "in ascolto", così il
+ * clic arriva al componente con il punto nel suo disegno (il motore calcola
+ * il valore dal punto, con le stesse misure: `livelloDaPunto`).
+ */
+function CursoreSensore({ tipo, livello, aperto }: { tipo: string; livello: number; aperto: boolean }) {
+  const centro = centroCursore(tipo);
+  const asp = aspettoCursore(tipo, livello);
+  if (!aperto) {
+    const suggerimento = tipo === "tmp36" ? "arduino.temperatura.suggerimento" : "arduino.cursore.suggerimento";
+    return (
+      <Group listening={false}>
+        <Rect x={centro - 70} y={-18} width={140} height={16} cornerRadius={4} fill="#263238" />
+        <Text x={centro - 70} y={-15} width={140} align="center" text={asp.testo} fontSize={10} fontStyle="bold" fill="#ffffff" fontFamily={FONT} />
+        <Text x={centro - 90} y={-32} width={180} align="center" text={t(suggerimento)} fontSize={10} fill={asp.colore} fontFamily={FONT} />
+      </Group>
+    );
+  }
+  const sx = centro - CURSORE_LARGHEZZA / 2;
+  const xm = puntoDaLivello(livello, centro);
+  return (
+    <Group>
+      <Rect x={sx - 14} y={CURSORE_Y - 34} width={CURSORE_LARGHEZZA + 28} height={56} cornerRadius={8} fill="rgba(255,255,255,0.92)" stroke={asp.colore} strokeWidth={1} shadowColor="#000" shadowBlur={6} shadowOpacity={0.25} />
+      <Rect
+        x={sx}
+        y={CURSORE_Y - 4}
+        width={CURSORE_LARGHEZZA}
+        height={8}
+        cornerRadius={4}
+        fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+        fillLinearGradientEndPoint={{ x: CURSORE_LARGHEZZA, y: 0 }}
+        fillLinearGradientColorStops={asp.sfumatura}
+        stroke="#b0bec5"
+        strokeWidth={0.5}
+        listening={false}
+      />
+      {asp.tacche.map((k) => {
+        const x = puntoDaLivello(k.livello, centro);
+        return (
+          <Group key={`${k.livello}-${k.etichetta}`} listening={false}>
+            <Line points={[x, CURSORE_Y + 5, x, CURSORE_Y + (k.evidente ? 12 : 9)]} stroke={k.evidente ? "#d84315" : "#78909c"} strokeWidth={k.evidente ? 2 : 1} />
+            <Text x={x - 20} y={CURSORE_Y + (k.evidente ? -18 : 11)} width={40} align="center" text={k.etichetta} fontSize={8} fill={k.evidente ? "#d84315" : "#546e7a"} fontFamily={FONT} />
+          </Group>
+        );
+      })}
+      <Circle x={xm} y={CURSORE_Y} radius={9} fill="#ffffff" stroke={asp.colore} strokeWidth={2.5} shadowColor="#000" shadowBlur={4} shadowOpacity={0.3} />
+      <Text x={sx - 10} y={CURSORE_Y - 28} width={CURSORE_LARGHEZZA + 20} align="center" text={asp.testo} fontSize={13} fontStyle="bold" fill={asp.colore} fontFamily={FONT} listening={false} />
+    </Group>
+  );
 }
 
 /**
