@@ -182,13 +182,33 @@ export function SchermataModulo(props: PropsSchermataModulo) {
   const libreriaPlc = useMemo(() => libreriaDelModulo("plc"), []);
   const libreriaAttiva = sulPlc ? libreriaPlc : libreria;
   const schemaAttivo: Schema = useMemo(
-    () => (sulPlc ? { componenti: schema.plc?.componenti ?? [], fili: schema.plc?.fili ?? [] } : schema),
+    () =>
+      sulPlc
+        ? {
+            componenti: schema.plc?.componenti ?? [],
+            fili: schema.plc?.fili ?? [],
+            ...(schema.plc?.tempoCiclo !== undefined ? { tempoCiclo: schema.plc.tempoCiclo } : {}),
+          }
+        : schema,
     [sulPlc, schema],
   );
   const cambiaSchemaAttivo = useCallback(
     (nuovo: Schema, provvisoria?: boolean) => {
       if (!sulPlc) return cambiaSchema(nuovo, provvisoria);
-      setCronologia((c) => modifica(c, { ...c.presente, plc: { componenti: nuovo.componenti, fili: nuovo.fili } }, provvisoria));
+      setCronologia((c) =>
+        modifica(
+          c,
+          {
+            ...c.presente,
+            plc: {
+              componenti: nuovo.componenti,
+              fili: nuovo.fili,
+              ...(nuovo.tempoCiclo !== undefined ? { tempoCiclo: nuovo.tempoCiclo } : {}),
+            },
+          },
+          provvisoria,
+        ),
+      );
     },
     [sulPlc, cambiaSchema],
   );
@@ -411,11 +431,15 @@ export function SchermataModulo(props: PropsSchermataModulo) {
         ? avviaSessionePlc(
             programmaDaSchema(schema),
             Object.fromEntries(schema.componenti.map((c) => [c.id, c.etichetta])),
-            undefined,
+            schema.tempoCiclo,
             Object.fromEntries(schema.componenti.map((c) => [c.id, c.tipo])),
             impiantiDaSchema(schema),
           )
-        : avviaSessione(schema, schema.plc && schema.componenti.some((c) => c.tipo === "plc") ? programmaDaSchema(schema.plc) : undefined),
+        : avviaSessione(
+            schema,
+            schema.plc && schema.componenti.some((c) => c.tipo === "plc") ? programmaDaSchema(schema.plc) : undefined,
+            schema.plc?.tempoCiclo,
+          ),
     );
   }, [aggiornaSessione, schema, simulabile, modulo.id, morsettiDi, puntiInterruzione]);
   const ferma = useCallback(() => {

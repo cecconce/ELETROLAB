@@ -115,9 +115,14 @@ export function problemiSessione(s: SessioneImpianto): Problema[] {
  * Avvio della simulazione: tutto a riposo, tempo zero. Se nello schema c'è un
  * PLC e il file contiene il suo programma Ladder (`programmaPlc`), il PLC parte insieme.
  */
-export function avviaSessione(circuito: Circuito, programmaPlc?: RisultatoConversione): SessioneImpianto {
+export function avviaSessione(
+  circuito: Circuito,
+  programmaPlc?: RisultatoConversione,
+  /** Tempo di ciclo del PLC in secondi (Proprietà del foglio Ladder); assente = predefinito. */
+  tempoCicloPlc?: number,
+): SessioneImpianto {
   const idPlc = circuito.componenti.find((c) => c.tipo === "plc")?.id;
-  const plc = idPlc && programmaPlc ? { id: idPlc, sessione: avviaSessionePlc(programmaPlc, {}) } : undefined;
+  const plc = idPlc && programmaPlc ? { id: idPlc, sessione: avviaSessionePlc(programmaPlc, {}, tempoCicloPlc) } : undefined;
   return ricalcola({
     circuito,
     stato: statoIniziale(),

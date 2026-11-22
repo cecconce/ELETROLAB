@@ -14,7 +14,16 @@ import { leggiOhm, PARAMETRI_ARDUINO, scriviOhm, valoreParametroArduino } from "
 import { tavolozzaFili } from "./fili";
 import { TavolozzaFilo } from "./TavolozzaFilo";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
-import { eContatore, eTemporizzatore, impostaPreset, impostaTempo, presetDaMostrare, tempoDaMostrare } from "./parametri";
+import {
+  eContatore,
+  eTemporizzatore,
+  impostaPreset,
+  impostaTempo,
+  impostaTempoCiclo,
+  presetDaMostrare,
+  tempoCicloDaMostrare,
+  tempoDaMostrare,
+} from "./parametri";
 import type { Schema, Selezione } from "./schema";
 import { COLORI_LAMPADA, coloreLampada, conColoreLampada, impostaColoreLampada } from "./coloriLampade";
 import { impostaParametro, PARAMETRI_ELETTRONICA, valoreParametro, type DefinizioneParametro } from "./elettronica";
@@ -78,6 +87,7 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
         <p className="proprieta-nota">
           {selezione.length > 1 ? t("proprieta.piuComponenti", { numero: selezione.length }) : t("proprieta.nessuna")}
         </p>
+        {libreria.modulo === "plc" && selezione.length === 0 && <ProprietaFoglioLadder schema={schema} onCambiaSchema={onCambiaSchema} />}
       </aside>
     );
   }
@@ -476,5 +486,57 @@ function CampoParametro({ definizione: d, valore, onCambia }: { definizione: Def
         </p>
       )}
     </>
+  );
+}
+
+/**
+ * Proprietà del foglio Ladder (attività 12.3), mostrate quando nulla è
+ * selezionato: il tempo di ciclo del PLC simulato, in millisecondi, come nel
+ * piano iniziale («tempo di ciclo configurabile»). Si applica con Invio o
+ * uscendo dal campo; vale dal prossimo ▶ AVVIA.
+ */
+function ProprietaFoglioLadder({ schema, onCambiaSchema }: { schema: Schema; onCambiaSchema: (schema: Schema) => void }) {
+  const [bozza, setBozza] = useState(tempoCicloDaMostrare(schema.tempoCiclo));
+  const [errore, setErrore] = useState<string | null>(null);
+  useEffect(() => {
+    setBozza(tempoCicloDaMostrare(schema.tempoCiclo));
+    setErrore(null);
+  }, [schema.tempoCiclo]);
+  const applica = () => {
+    const esito = impostaTempoCiclo(schema, bozza);
+    if (esito.ok) {
+      setErrore(null);
+      setBozza(tempoCicloDaMostrare(esito.schema.tempoCiclo));
+      if (esito.schema !== schema) onCambiaSchema(esito.schema);
+    } else setErrore(esito.errore);
+  };
+  return (
+    <section className="proprieta-foglio" aria-label={t("proprieta.foglioLadder")}>
+      <h3>{t("proprieta.foglioLadder")}</h3>
+      <label className="proprieta-campo">
+        <span>{t("proprieta.tempoCiclo")}</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={bozza}
+          maxLength={7}
+          spellCheck={false}
+          title={t("proprieta.tempoCicloSuggerimento")}
+          aria-invalid={errore !== null}
+          onChange={(e) => setBozza(e.target.value)}
+          onBlur={applica}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") applica();
+            if (e.key === "Escape") setBozza(tempoCicloDaMostrare(schema.tempoCiclo));
+          }}
+        />
+      </label>
+      {errore && (
+        <p className="proprieta-avviso" role="alert">
+          {errore}
+        </p>
+      )}
+      <p className="proprieta-nota">{t("proprieta.tempoCicloNota")}</p>
+    </section>
   );
 }

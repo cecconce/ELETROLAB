@@ -69,4 +69,15 @@ describe("PLC nello schema degli impianti", () => {
     s = passo(clicGiu(s, "S1"), 0.1);
     expect(k1(s)).toBe(false);
   });
+
+  it("il PLC usa il tempo di ciclo scelto nelle Proprietà del foglio Ladder (attività 12.3)", () => {
+    expect(avviaSessione(circuito, programma).plc?.sessione.tempoCiclo).toBe(0.05);
+    let s = avviaSessione(circuito, programma, 0.5);
+    expect(s.plc?.sessione.tempoCiclo).toBe(0.5);
+    // Con un ciclo di 500 ms il pulsante premuto è letto solo al ciclo successivo.
+    s = passo(clicGiu(s, "S1"), 0.2);
+    expect(k1(s)).toBe(false);
+    s = passo(s, 0.35);
+    expect(k1(s)).toBe(true);
+  });
 });

@@ -102,7 +102,12 @@ export interface Schema {
    * elettrico (un foglio del modulo PLC con barre, contatti e bobine). Sta
    * nello stesso file, così schema elettrico e programma lavorano insieme.
    */
-  plc?: { componenti: ComponenteSchema[]; fili: Filo[] };
+  plc?: { componenti: ComponenteSchema[]; fili: Filo[]; tempoCiclo?: number };
+  /**
+   * Solo nei fogli Ladder (modulo PLC): tempo di ciclo del PLC simulato in
+   * secondi, scelto nelle Proprietà del foglio. Assente = valore predefinito (50 ms).
+   */
+  tempoCiclo?: number;
 }
 
 export const SCHEMA_VUOTO: Schema = { componenti: [], fili: [] };

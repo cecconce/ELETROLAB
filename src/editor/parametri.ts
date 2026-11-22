@@ -5,6 +5,7 @@ import { t } from "../testi";
 import { MODELLI_IMPIANTI, TEMPO_MASSIMO, TEMPO_MINIMO, TEMPO_PREDEFINITO } from "../motori/impianti/modelli";
 import type { Schema } from "./schema";
 import { eContatoreLadder, eTemporizzatoreLadder, PRESET_CONTATORE_PREDEFINITO } from "./ladder";
+import { TEMPO_CICLO_MASSIMO, TEMPO_CICLO_MINIMO, TEMPO_CICLO_PREDEFINITO } from "../motori/plc/scansione";
 
 /** Dice se il tipo di componente è la bobina di un temporizzatore. */
 export function eTemporizzatore(tipo: string): boolean {
@@ -73,4 +74,34 @@ export function impostaPreset(schema: Schema, id: string, scritto: string): Esit
     ok: true,
     schema: { ...schema, componenti: schema.componenti.map((c) => (c.id === id ? { ...c, preset: valore } : c)) },
   };
+}
+
+// ------------------------------------------------ tempo di ciclo del PLC
+
+/** Tempo di ciclo da mostrare nelle Proprietà del foglio Ladder, in millisecondi. */
+export function tempoCicloDaMostrare(tempoCiclo: number | undefined): string {
+  return String(Math.round((tempoCiclo ?? TEMPO_CICLO_PREDEFINITO) * 1000));
+}
+
+/**
+ * Imposta il tempo di ciclo del foglio Ladder da ciò che ha scritto lo
+ * studente, in millisecondi ("50", "100 ms"). Nel file è salvato in secondi;
+ * il valore predefinito non viene scritto (il campo sparisce), così i file
+ * vecchi e quelli nuovi restano uguali finché nessuno lo cambia.
+ */
+export function impostaTempoCiclo(schema: Schema, scritto: string): EsitoTempo {
+  const pulito = scritto.trim().replace(/\s*ms$/i, "");
+  const ms = /^\d+$/.test(pulito) ? Number(pulito) : NaN;
+  const minimo = Math.round(TEMPO_CICLO_MINIMO * 1000);
+  const massimo = Math.round(TEMPO_CICLO_MASSIMO * 1000);
+  if (!Number.isFinite(ms) || ms < minimo || ms > massimo) {
+    return { ok: false, errore: t("proprieta.tempoCicloNonValido", { tempo: scritto.trim(), minimo, massimo }) };
+  }
+  const secondi = ms / 1000;
+  if ((schema.tempoCiclo ?? TEMPO_CICLO_PREDEFINITO) === secondi) return { ok: true, schema };
+  if (secondi === TEMPO_CICLO_PREDEFINITO) {
+    const { tempoCiclo: _tolto, ...resto } = schema;
+    return { ok: true, schema: resto };
+  }
+  return { ok: true, schema: { ...schema, tempoCiclo: secondi } };
 }

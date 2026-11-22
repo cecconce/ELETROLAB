@@ -16,6 +16,7 @@
 import { t } from "../testi";
 import { trovaModulo, type IdModulo } from "../interfaccia/moduli";
 import type { ComponenteSchema, EstremoFilo, Filo, Schema } from "../editor/schema";
+import { limitaTempoCiclo } from "../motori/plc/scansione";
 
 /** Identificativo scritto in ogni file, per riconoscere i file di ElettroLab. */
 export const NOME_FORMATO = "elettrolab";
@@ -164,7 +165,12 @@ export function leggiProgetto(testo: string): EsitoLettura {
   if (eTesto(schemaGrezzo.blocchi)) schema.blocchi = schemaGrezzo.blocchi;
   if (schemaGrezzo.modoCodice === "blocchi" || schemaGrezzo.modoCodice === "testo") schema.modoCodice = schemaGrezzo.modoCodice;
   // Programma Ladder del PLC posato nello schema degli Impianti (facoltativo).
-  if (eOggetto(schemaGrezzo.plc)) schema.plc = leggiComponentiEFili(schemaGrezzo.plc, avvisi);
+  if (eOggetto(schemaGrezzo.plc)) {
+    schema.plc = leggiComponentiEFili(schemaGrezzo.plc, avvisi);
+    if (eNumero(schemaGrezzo.plc.tempoCiclo)) schema.plc.tempoCiclo = limitaTempoCiclo(schemaGrezzo.plc.tempoCiclo);
+  }
+  // Tempo di ciclo del foglio Ladder (facoltativo, in secondi).
+  if (eNumero(schemaGrezzo.tempoCiclo)) schema.tempoCiclo = limitaTempoCiclo(schemaGrezzo.tempoCiclo);
   // Esercizio (facoltativo): consegna e soluzione codificata.
   if (eOggetto(schemaGrezzo.esercizio) && eTesto(schemaGrezzo.esercizio.consegna)) {
     const esercizio: NonNullable<Schema["esercizio"]> = { consegna: schemaGrezzo.esercizio.consegna };

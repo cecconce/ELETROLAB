@@ -512,6 +512,22 @@ async function provaPlc(pagina, controlla, foto, apriEsempio) {
   if (await avviso.count()) await avviso.click();
   await pagina.getByText("Nuovo", { exact: true }).click();
   await pagina.waitForTimeout(300);
+  // Attività 12.3: tempo di ciclo nelle Proprietà del foglio Ladder (nulla selezionato).
+  {
+    const campo = pagina.locator(".proprieta-foglio input");
+    controlla((await campo.count()) === 1 && (await campo.inputValue()) === "50", "Proprietà del foglio Ladder: tempo di ciclo 50 ms");
+    await campo.fill("5");
+    await campo.press("Enter");
+    controlla((await pagina.locator(".proprieta-foglio [role=alert]").count()) === 1, "tempo di ciclo di 5 ms rifiutato con spiegazione");
+    await campo.fill("200");
+    await campo.press("Enter");
+    controlla(
+      (await pagina.locator(".proprieta-foglio [role=alert]").count()) === 0 && (await campo.inputValue()) === "200",
+      "tempo di ciclo impostato a 200 ms",
+    );
+    await campo.fill("50");
+    await campo.press("Enter");
+  }
   const tela = await pagina.locator("canvas").first().boundingBox();
   const posa = async (nome, x, y) => {
     await pagina.locator(".libreria").getByPlaceholder(/Cerca/).fill(nome);

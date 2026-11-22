@@ -513,6 +513,15 @@ button {
 .proprieta-numeri {
   font-size: 1.1rem;
 }
+.proprieta-foglio {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--bordo);
+}
+.proprieta-foglio h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
 .proprieta-campo {
   display: flex;
   flex-direction: column;
