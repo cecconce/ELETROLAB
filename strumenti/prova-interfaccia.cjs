@@ -1006,6 +1006,34 @@ async function provaArduino(pagina, controlla, foto, apriEsempio) {
     await foto("17c-arduino-temperatura-cursore");
   }
 
+  console.log("Arduino: potenziometro girato trascinando la manopola");
+  await apri("arduino-potenziometro.elab");
+  await pagina.waitForTimeout(700);
+  // Punti del disegno del potenziometro → pagina, a partire dall'etichetta «↻ … %» sopra la manopola (centro in 20, 15).
+  const puntoManopola = (x, y) =>
+    pagina.evaluate(([x, y]) => {
+      const st = window.Konva.stages[0];
+      const t = st.find("Text").find((n) => n.text().startsWith("↻ "));
+      if (!t) return null;
+      const p = t.getParent().getParent().getAbsoluteTransform().point({ x, y });
+      const c = st.container().getBoundingClientRect();
+      return { x: c.left + p.x, y: c.top + p.y };
+    }, [x, y]);
+  const etichettaManopola = () => pagina.evaluate(() => window.Konva.stages[0].find("Text").map((n) => n.text()).find((t) => t.startsWith("↻ ")) ?? "");
+  const daM = await puntoManopola(20, 2);
+  const aM = await puntoManopola(36, 15);
+  controlla(daM !== null, "il potenziometro mostra «↻» sopra la manopola");
+  if (daM && aM) {
+    await pagina.mouse.move(daM.x, daM.y);
+    await pagina.mouse.down();
+    await pagina.mouse.move(aM.x, aM.y, { steps: 8 });
+    await pagina.mouse.up();
+    await pagina.waitForTimeout(400);
+    const testo = await etichettaManopola();
+    controlla(testo === "↻ 83 %", `manopola trascinata a destra (90°): «${testo}»`);
+    await foto("17e-arduino-potenziometro-manopola");
+  }
+
   console.log("Arduino: oscilloscopio ingrandito");
   await apri("arduino-oscilloscopio.elab");
   await pagina.waitForTimeout(1500);

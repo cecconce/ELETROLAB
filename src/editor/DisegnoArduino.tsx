@@ -64,7 +64,9 @@ export function DisegnoArduino({ componente: c, aspetto }: { componente: Compone
         <Group listening={false}>
           <Circle x={20} y={15} radius={10} fill="#eceff1" />
           <Line points={[20, 15, 20 + 9 * Math.cos(ang), 15 + 9 * Math.sin(ang)]} stroke="#455a64" strokeWidth={3} lineCap="round" />
-          {inSimulazione && <Text x={-20} y={-14} width={80} align="center" text={`${Math.round(pos * 100)} %`} fontSize={10} fontStyle="bold" fill="#1565c0" fontFamily={FONT} />}
+          {/* In simulazione: anello attorno alla manopola e freccia «↻», per far capire che si gira trascinando (come in Tinkercad). */}
+          {inSimulazione && <Circle x={20} y={15} radius={13} stroke="#1565c0" strokeWidth={1.5} dash={[3, 3]} />}
+          {inSimulazione && <Text x={-20} y={-14} width={80} align="center" text={`↻ ${Math.round(pos * 100)} %`} fontSize={10} fontStyle="bold" fill="#1565c0" fontFamily={FONT} />}
         </Group>
       );
     }

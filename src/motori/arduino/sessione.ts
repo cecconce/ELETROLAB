@@ -101,6 +101,33 @@ export function puntoDaTemperatura(gradi: number): number {
   return CURSORE_CENTRO_X - CURSORE_LARGHEZZA / 2 + (CURSORE_LARGHEZZA * (g - TEMPERATURA_MIN)) / (TEMPERATURA_MAX - TEMPERATURA_MIN);
 }
 
+// Manopola del potenziometro girata trascinando (come in Tinkercad): l'angolo
+// del puntatore attorno al centro della manopola dà la posizione del cursore.
+// Coordinate nel disegno del potenziometro: manopola al punto (20, 15).
+/** Centro della manopola del potenziometro. */
+export const MANOPOLA_X = 20;
+export const MANOPOLA_Y = 15;
+/** Corsa della manopola: da −135° (tutto a sinistra) a +135° (tutto a destra), 0° in alto. */
+export const MANOPOLA_CORSA = 135;
+/** Spostamento minimo (pixel del foglio) prima che il trascinamento giri la manopola: un clic fermo resta un clic. */
+export const SOGLIA_TRASCINAMENTO = 4;
+
+/**
+ * Posizione del potenziometro (0 = tutto a sinistra, 1 = tutto a destra)
+ * indicata da un punto attorno alla manopola. L'angolo si misura dall'alto in
+ * senso orario. Nella zona morta in basso (oltre ±135°, dove la manopola non
+ * arriva) si resta all'estremo più vicino alla posizione attuale, così passando
+ * sotto la manopola il valore non salta da 0 a 1.
+ */
+export function posizioneDaPunto(x: number, y: number, attuale = 0.5): number {
+  const dx = x - MANOPOLA_X;
+  const dy = y - MANOPOLA_Y;
+  if (Math.hypot(dx, dy) < 2) return attuale; // troppo vicino al centro: angolo incerto
+  const gradi = (Math.atan2(dx, -dy) * 180) / Math.PI; // 0 in alto, positivo a destra
+  if (Math.abs(gradi) > MANOPOLA_CORSA) return attuale >= 0.5 ? 1 : 0;
+  return Math.round(((gradi + MANOPOLA_CORSA) / (2 * MANOPOLA_CORSA)) * 1000) / 1000;
+}
+
 /** Caratteri massimi tenuti nel monitor seriale. */
 export const SERIALE_MASSIMA = 20000;
 
@@ -127,6 +154,8 @@ export interface SessioneArduino {
   distanze: Record<string, number>;
   /** Sensori con la zona di regolazione aperta (clic sul sensore la apre e la chiude): ostacolo degli ultrasuoni, cursore della temperatura. */
   zoneAperte: Set<string>;
+  /** Punto in cui è stato premuto ogni componente (per distinguere il clic dal trascinamento della manopola). */
+  pressioni: Record<string, { x: number; y: number; girando: boolean }>;
   interazioni: { premuti: Set<string>; posizioni: Record<string, number>; luce: Record<string, number>; temperature: Record<string, number>; registri: Record<string, StatoRegistro> };
   risultato: RisultatoCircuito;
   /** Moduli relè con la bobina eccitata (si ricordano fra un calcolo e l'altro: isteresi). */
@@ -213,6 +242,7 @@ export function avviaSessioneArduino(codice: string, componenti: ComponenteArdui
     lcd: {},
     distanze: {},
     zoneAperte: new Set(),
+    pressioni: {},
     seriale: "",
     ingressoSeriale: [],
     interazioni: { premuti: new Set(), posizioni: {}, luce: {}, temperature: {}, registri: {} },
@@ -388,6 +418,9 @@ export function clicGiuArduino(s: SessioneArduino, id: string, indietro = false,
     s.interazioni.premuti.add(id);
   }
   else if (c.tipo === "potenziometro") {
+    // Il clic fa ancora un passo del 10 % (a destra o a sinistra della
+    // manopola); se poi il puntatore si muove, la manopola segue il trascinamento.
+    if (punto) s.pressioni[id] = { x: punto.x, y: punto.y, girando: false };
     const pos = s.interazioni.posizioni[id] ?? 0.5;
     s.interazioni.posizioni[id] = Math.round(Math.min(1, Math.max(0, pos + (indietro ? -0.1 : 0.1))) * 10) / 10;
   } else if (c.tipo === "ultrasuoni") {
@@ -463,6 +496,19 @@ export function trascinaArduino(s: SessioneArduino, id: string, punto: { x: numb
   const c = s.componenti.find((x) => x.id === id);
   if (c?.tipo === "ultrasuoni") impostaDistanza(s, id, distanzaDaPunto(punto.y));
   else if (c?.tipo === "tmp36" && s.zoneAperte.has(id)) impostaTemperatura(s, id, temperaturaDaPunto(punto.x));
+  else if (c?.tipo === "potenziometro") {
+    // La manopola gira solo dopo qualche pixel di movimento: il tremolio di un
+    // clic (o di un dito sulla LIM) non la sposta.
+    const p = s.pressioni[id];
+    if (p && !p.girando && Math.hypot(punto.x - p.x, punto.y - p.y) < SOGLIA_TRASCINAMENTO) return;
+    if (p) p.girando = true;
+    const ora = s.interazioni.posizioni[id] ?? 0.5;
+    const nuova = posizioneDaPunto(punto.x, punto.y, ora);
+    if (nuova === ora) return;
+    s.interazioni.posizioni[id] = nuova;
+    s.versione++;
+    ricalcola(s);
+  }
 }
 
 /** Rilascio del mouse: il pulsante torna a riposo. */

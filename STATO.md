@@ -4,9 +4,21 @@ Questo file guida le sessioni di sviluppo: ogni sessione legge qui da dove ripar
 
 ## Fase corrente
 
-**Fase 11 – Rifiniture: LIM con due dita, PWM vero, altri componenti Arduino** — completata — in attesa di conferma (riaperta e richiusa il 2026-11-17 per l'attività 11.5 e il 2026-11-21 per l'attività 11.6)
+**Fase 12 – Più vicino a Tinkercad, PC_SIMU e CADe_SIMU: regolazioni continue, PLC e Impianti** — in corso
 
-Fase 10 confermata da Pierluigi il 2026-11-17 («continua a svilupparlo»). Attività scelte fra i limiti noti delle fasi precedenti, per avvicinarsi ancora a Tinkercad.
+Fase 11 confermata da Pierluigi il 2026-11-22 («continua»). Attività scelte fra i limiti noti delle fasi precedenti.
+
+### Attività (in ordine)
+
+- [x] 12.1 Potenziometro di Arduino girato trascinando la manopola, come in Tinkercad: l'angolo del puntatore attorno alla manopola (corsa ±135°) dà la posizione al millesimo; il clic a destra/sinistra fa ancora un passo del 10 %; anello tratteggiato e «↻» sopra la manopola in simulazione.
+- [ ] 12.2 Fotoresistenza, sensori di forza, umidità del terreno e gas e sensore PIR di Arduino regolabili con un cursore continuo (clic sul sensore lo apre, come per il sensore di temperatura), non più a 5 livelli.
+- [ ] 12.3 PLC: tempo di ciclo impostabile dall'interfaccia (Proprietà del foglio Ladder), come chiesto nel piano iniziale.
+- [ ] 12.4 PLC: blocchi di confronto (=, <>, <, >, <=, >=) fra valori di temporizzatori/contatori e costanti, e contatore CTUD.
+- [ ] 12.5 Impianti: il pannello Problemi sposta e ingrandisce la vista sul punto evidenziato quando si sceglie una riga.
+- [ ] 12.6 Due dita sul foglio: se il primo dito aveva iniziato un filo, l'arrivo del secondo dito lo annulla.
+- [ ] 12.7 Verifica finale: `npm test`, build, build Actions, prova Playwright; resoconto della Fase 12.
+
+## Fase 11 – Rifiniture: LIM con due dita, PWM vero, altri componenti Arduino (confermata il 2026-11-22)
 
 ### Attività (in ordine)
 
@@ -505,7 +517,11 @@ Attività 1.1–1.10 tutte completate; resoconto qui sotto.
 | 5 | Arduino con breadboard ed editor codice/blocchi | completata (confermata 2026-11-02, anticipata prima della 4) |
 | 6 | Modalità esercizio, esportazioni, installer, README e LICENZE | completata (confermata 2026-11-02) |
 | 7 | Miglioramenti dopo il piano (lampade colorate, editor del codice, Bode, componenti Arduino, multimetro, lista istruzioni, impianti civili, wattmetro) | completata (confermata 2026-11-02) |
-| 8 | Impianti più completi, Impianti + PLC insieme, strumenti realistici | in corso |
+| 8 | Impianti più completi, Impianti + PLC insieme, strumenti realistici | completata (confermata 2026-11-05) |
+| 9 | Arduino più simile a Tinkercad: alimentazione esterna, transistor, relè, sensori, plotter | completata (confermata 2026-11-16) |
+| 10 | Correzioni segnalate: interruttori civili e codice Arduino | completata (confermata 2026-11-17) |
+| 11 | Rifiniture: LIM con due dita, PWM vero, altri componenti Arduino | completata (confermata 2026-11-22) |
+| 12 | Regolazioni continue, PLC e Impianti più vicini ai programmi di riferimento | in corso |
 
 ## Regola
 
@@ -616,3 +632,4 @@ Alla fine di ogni fase: resoconto (cosa funziona, come provarlo, test, limiti) e
 - 2026-11-17 — attività 11.5 (richiesta di Pierluigi in chat): sensore a ultrasuoni regolabile trascinando l'ostacolo. Nel motore (`sessione.ts`) `distanzaDaPunto`/`puntoDaDistanza` (zona alta 220 px, scala quadratica 2–400 cm, meno di 1 cm per pixel vicino al sensore), `trascinaArduino` e `zoneAperte` (clic sul sensore apre/chiude la zona); tolte le distanze a scatti. `AreaDisegno` passa il movimento col tasto premuto su un componente (`onTrascina`); `DisegnoArduino` disegna ventaglio, tacche, pallino e distanza. Aggiornati descrizione in libreria, «Come provarlo» dell'esempio e suggerimento della barra. Test: 1 nuovo (scala, andata e ritorno su ogni centimetro) e 2 aggiornati; `npm test` 753 OK, build OK; `prova-interfaccia` con 3 controlli nuovi (zona che compare, ostacolo trascinato a 10 cm letto dal monitor seriale), tutti superati.
 - 2026-11-17 — richiesta di Pierluigi in chat («non si scarica nulla, il link non funziona»): il download degli artefatti di Actions passa da `blob.core.windows.net`, che dal suo PC non funziona. Il workflow `build-windows.yml` ora, a ogni push su `main` con i test superati, sposta il tag `ultima-versione` sul commit e pubblica nella release omonima (impostata come «latest») `ElettroLab-portable.zip` ed `ElettroLab-installer.exe` (nome fisso), con link diretti `releases/latest/download/…` che non richiedono l'accesso a GitHub; permesso `contents: write`. README aggiornato con i link. Nessuna modifica all'app.
 - 2026-11-21 — attività 11.6 (richiesta di Pierluigi in chat): oscilloscopio Arduino ingrandito con il doppio clic (nuovo `src/editor/OscilloscopioIngrandito.tsx`: SVG 800 × 640 con `tracciaOscilloscopio`, `estremiTraccia` per massimo e minimo, scale − / +, Blocca; doppio clic riconosciuto in `SchermataModulo` con due clic entro 500 ms, così funziona anche col dito sulla LIM; l'oscilloscopio ora riceve i clic in simulazione) e sensore di temperatura regolabile con un cursore come in Tinkercad (motore `sessione.ts`: `temperaturaDaPunto`/`puntoDaTemperatura`, −40…125 °C, clic sul sensore apre/chiude il cursore in `zoneAperte`, `trascinaArduino` sposta la manopola; tolto l'elenco a scatti `TEMPERATURE`). Aggiornati testi in `lingue/it.json`, descrizioni della libreria e «Come provarlo» di 3 esempi. Test: `npm test` 757 OK (4 nuovi, 2 aggiornati per il cursore), `npm run build` OK, prova Playwright con 11 controlli nuovi (cursore trascinato a 40 °C letto dal monitor seriale, finestra grande con traccia e misure, Esc), tutti superati. Problema trovato e corretto: le misure mostravano «−0,00 V».
+- 2026-11-22 — Fase 11 confermata da Pierluigi («continua»); definita la Fase 12. Attività 12.1: potenziometro di Arduino girato trascinando la manopola. Nel motore (`sessione.ts`) `posizioneDaPunto` (angolo dall'alto in senso orario, corsa ±135°, zona morta in basso all'estremo più vicino, centro ignorato) e `trascinaArduino` per il potenziometro con soglia di 4 pixel (`pressioni`: il tremolio di un clic o di un dito non gira la manopola); il clic a passi del 10 % resta. Disegno: anello tratteggiato e «↻ NN %». Aggiornati suggerimento in basso e «Come provarlo» di due esempi. 2 nuovi test Vitest; `npm test` 759 OK, build OK; prova Playwright 197 controlli superati (nuova sezione «potenziometro girato trascinando la manopola»). Nessun problema.

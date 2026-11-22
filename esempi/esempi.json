@@ -167,14 +167,14 @@
       "modulo": "arduino",
       "titolo": "Arduino – Potenziometro e luminosità",
       "descrizione": "analogRead legge il potenziometro (0…1023), map lo porta a 0…255 e analogWrite regola la luminosità del LED sul pin 9 (PWM). I valori compaiono sul monitor seriale.",
-      "prova": "Premi ▶ AVVIA. Clic sulla parte destra del potenziometro per girarlo in avanti, sulla sinistra per tornare indietro: il LED cambia luminosità e il monitor seriale mostra i valori."
+      "prova": "Premi ▶ AVVIA. Trascina la manopola del potenziometro in giro, come in Tinkercad (oppure clic a destra per girarlo in avanti, a sinistra per tornare indietro): il LED cambia luminosità e il monitor seriale mostra i valori."
     },
     {
       "file": "arduino-servo.elab",
       "modulo": "arduino",
       "titolo": "Arduino – Servo comandato dal potenziometro",
       "descrizione": "La libreria Servo porta il braccio del servomotore all'angolo calcolato con map dalla lettura del potenziometro.",
-      "prova": "Premi ▶ AVVIA e gira il potenziometro (clic a destra/sinistra): il braccio del servo ruota fra 0° e 180°."
+      "prova": "Premi ▶ AVVIA e gira il potenziometro trascinando la manopola (o con un clic a destra/sinistra): il braccio del servo ruota fra 0° e 180°."
     },
     {
       "file": "arduino-lcd.elab",

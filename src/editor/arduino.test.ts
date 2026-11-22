@@ -1,7 +1,7 @@
 // Test del banco Arduino: nodi dal disegno (fili, piedini nei fori,
 // breadboard), resistenze, sessione completa con programma e circuito.
 import { describe, expect, it } from "vitest";
-import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, DISTANZA_MAX, DISTANZA_MIN, distanzaDaPunto, inviaSeriale, passoArduino, pinCollegato, puntoDaDistanza, trascinaArduino, ZONA_ALTEZZA, CURSORE_Y, TEMPERATURA_MAX, TEMPERATURA_MIN, puntoDaTemperatura, temperaturaDaPunto } from "../motori/arduino";
+import { avviaSessioneArduino, clicGiuArduino, clicSuArduino, DISTANZA_MAX, DISTANZA_MIN, distanzaDaPunto, inviaSeriale, passoArduino, pinCollegato, puntoDaDistanza, trascinaArduino, ZONA_ALTEZZA, MANOPOLA_X, MANOPOLA_Y, posizioneDaPunto, CURSORE_Y, TEMPERATURA_MAX, TEMPERATURA_MIN, puntoDaTemperatura, temperaturaDaPunto } from "../motori/arduino";
 import { leggiProgetto, serializzaProgetto } from "../progetto/formato";
 import { componentiDaSchema, fasceResistenza, leggiOhm, nodiDaSchema, scriviOhm, SKETCH_PREDEFINITO, vistaDaSessioneArduino } from "./arduino";
 import { libreriaDelModulo } from "./caricaLibreria";
@@ -144,6 +144,51 @@ describe("simulazione del banco", () => {
     expect(valori[0]).toBeGreaterThan(500);
     expect(valori[0]).toBeLessThan(520);
     expect(valori[1]).toBeGreaterThan(600);
+  });
+
+  it("potenziometro girato trascinando la manopola, come in Tinkercad", () => {
+    let s: Schema = { componenti: [comp("U", "arduino-uno", 0, 0), comp("P", "potenziometro", 600, 0)], fili: [] };
+    s = filo(s, "P/1", "U/GND1");
+    s = filo(s, "P/2", "U/5V");
+    s = filo(s, "P/W", "U/A0");
+    const sess = avviaSessioneArduino(
+      `void setup(){ Serial.begin(9600); } void loop(){ Serial.println(analogRead(A0)); delay(100); }`,
+      componentiDaSchema(s),
+      nodiDaSchema(s, morsettiDi),
+    );
+    const ultimo = () => Number(sess.seriale.trim().split("\n").pop());
+    const pos = () => vistaDaSessioneArduino(sess, s, lib).componenti.P.arduino?.posizione;
+    passoArduino(sess, 50);
+    // Pressione sopra la manopola (lato destro: passo +10 %), poi un tremolio di 2 pixel: niente rotazione.
+    const sopra = { x: MANOPOLA_X + 1, y: MANOPOLA_Y - 12 };
+    clicGiuArduino(sess, "P", false, sopra);
+    expect(pos()).toBeCloseTo(0.6, 5);
+    trascinaArduino(sess, "P", { x: sopra.x + 2, y: sopra.y });
+    expect(pos()).toBeCloseTo(0.6, 5);
+    // Trascinamento verso destra (90°): (90 + 135) / 270 ≈ 83 %; poi in basso a destra oltre la corsa: tutto a destra.
+    trascinaArduino(sess, "P", { x: MANOPOLA_X + 15, y: MANOPOLA_Y });
+    expect(pos()).toBeCloseTo(0.833, 3);
+    passoArduino(sess, 200);
+    expect(Math.abs(ultimo() - 852)).toBeLessThanOrEqual(2);
+    trascinaArduino(sess, "P", { x: MANOPOLA_X + 2, y: MANOPOLA_Y + 15 });
+    expect(pos()).toBe(1);
+    passoArduino(sess, 200);
+    expect(ultimo()).toBe(1023);
+    // Verso sinistra (−90°): ≈ 17 %.
+    trascinaArduino(sess, "P", { x: MANOPOLA_X - 15, y: MANOPOLA_Y });
+    expect(pos()).toBeCloseTo(0.167, 3);
+    clicSuArduino(sess, "P");
+  });
+
+  it("scala della manopola: alto 50 %, corsa ±135°, zona morta in basso all'estremo più vicino", () => {
+    expect(posizioneDaPunto(MANOPOLA_X, MANOPOLA_Y - 10)).toBe(0.5);
+    expect(posizioneDaPunto(MANOPOLA_X + 10, MANOPOLA_Y)).toBeCloseTo(0.833, 3);
+    expect(posizioneDaPunto(MANOPOLA_X - 10, MANOPOLA_Y)).toBeCloseTo(0.167, 3);
+    // Esattamente in basso (180°): resta all'estremo dalla parte della posizione attuale.
+    expect(posizioneDaPunto(MANOPOLA_X, MANOPOLA_Y + 10, 0.9)).toBe(1);
+    expect(posizioneDaPunto(MANOPOLA_X, MANOPOLA_Y + 10, 0.1)).toBe(0);
+    // Al centro l'angolo è incerto: la posizione non cambia.
+    expect(posizioneDaPunto(MANOPOLA_X, MANOPOLA_Y, 0.42)).toBe(0.42);
   });
 
   it("servo collegato al pin 9 e monitor seriale in ingresso", () => {
