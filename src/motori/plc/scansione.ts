@@ -18,7 +18,7 @@
 // `dt` a ogni ciclo in cui il blocco viene eseguito, quindi la precisione è
 // quella del tempo di ciclo (come in molti PLC didattici).
 import { leggiBlocco, leggiOperando, normalizzaOperando, operandoScrivibile } from "./operandi";
-import { eContatore, eTemporizzatore, type Logica, type ProgrammaLadder, type Uscita } from "./programma";
+import { eContatore, eTemporizzatore, type Logica, type OperatoreConfronto, type ProgrammaLadder, type Uscita } from "./programma";
 
 /** Tempo di ciclo predefinito del PLC simulato, in secondi. */
 export const TEMPO_CICLO_PREDEFINITO = 0.05;
@@ -52,9 +52,17 @@ export interface StatoContatore {
   preset: number;
   /** Uscita del contatore: è il valore letto dal contatto C…. */
   uscita: boolean;
+  /** Ingresso di conteggio in avanti al ciclo precedente (fronti di CU). */
   ingressoPrima: boolean;
   /**
-   * "CTU" se almeno un blocco CTU usa questo contatore, altrimenti "CTD".
+   * Ingresso di conteggio all'indietro al ciclo precedente (fronti di CD).
+   * Separato da `ingressoPrima`: se CU e CD dello stesso contatore stanno in
+   * segmenti diversi, ognuno deve ricordare il proprio fronte (altrimenti un
+   * ingresso tenuto premuto conterebbe a ogni ciclo).
+   */
+  ingressoPrimaGiu?: boolean;
+  /**
+   * "CTU" se almeno un blocco CTU o CTUD usa questo contatore, altrimenti "CTD".
    * Decide l'uscita (CTU: conteggio ≥ preset; CTD: conteggio ≤ 0) e il reset
    * (CTU: torna a 0; CTD: si ricarica al preset). Così lo stesso contatore
    * può contare in avanti le auto che entrano e all'indietro quelle che
@@ -110,6 +118,43 @@ export function valoreBit(stato: Pick<StatoPlc, "bit" | "temporizzatori" | "cont
   if (blocco?.area === "T") return stato.temporizzatori[chiave]?.uscita === true;
   if (blocco?.area === "C") return stato.contatori[chiave]?.uscita === true;
   return stato.bit[chiave] === true;
+}
+
+/**
+ * Valore numerico di un blocco, letto dai blocchi di confronto: tempo
+ * trascorso (secondi) di un temporizzatore, conteggio di un contatore.
+ * Blocchi mai eseguiti e operandi che non sono T o C valgono 0.
+ */
+export function valoreNumerico(stato: Pick<StatoPlc, "temporizzatori" | "contatori">, operando: string): number {
+  const chiave = normalizzaOperando(operando);
+  const blocco = leggiBlocco(chiave);
+  if (blocco?.area === "T") return stato.temporizzatori[chiave]?.trascorso ?? 0;
+  if (blocco?.area === "C") return stato.contatori[chiave]?.conteggio ?? 0;
+  return 0;
+}
+
+/**
+ * Esito di un confronto. Con una piccola tolleranza: il tempo trascorso è
+ * una somma di passi decimali (0,05 + 0,05 + …) che non è mai esatta, e
+ * «T0 = 2» deve risultare vero quando il tempo è arrivato a 2 secondi.
+ */
+export function esitoConfronto(a: number, operatore: OperatoreConfronto, b: number): boolean {
+  const tolleranza = 1e-6;
+  const uguali = Math.abs(a - b) <= tolleranza;
+  switch (operatore) {
+    case "==":
+      return uguali;
+    case "<>":
+      return !uguali;
+    case "<":
+      return a < b && !uguali;
+    case ">":
+      return a > b && !uguali;
+    case "<=":
+      return a < b || uguali;
+    case ">=":
+      return a > b || uguali;
+  }
 }
 
 /**
@@ -180,6 +225,14 @@ export function scansione(
             memoriaFronti[chiave] = valore;
             conduce = logica.contatto === "P" ? valore && !prima : !valore && prima;
           }
+          if (conduce) {
+            contattiChiusi.push(pos);
+            if (logica.id) idChiusi.add(logica.id);
+          }
+          return conduce;
+        }
+        case "confronto": {
+          const conduce = esitoConfronto(valoreNumerico(immagine, logica.operando), logica.operatore, logica.valore);
           if (conduce) {
             contattiChiusi.push(pos);
             if (logica.id) idChiusi.add(logica.id);
@@ -300,9 +353,9 @@ function eseguiTemporizzatore(
   temporizzatori[chiave] = t;
 }
 
-/** Un ciclo di un contatore CTU/CTD: conta i fronti di salita del segmento. */
+/** Un ciclo di un contatore CTU/CTD/CTUD: conta i fronti di salita del segmento. */
 function eseguiContatore(
-  uscita: { tipo: "CTU" | "CTD"; operando: string; preset: number },
+  uscita: { tipo: "CTU" | "CTD" | "CTUD"; operando: string; preset: number; verso?: "su" | "giu" },
   ingresso: boolean,
   contatori: Record<string, StatoContatore>,
 ) {
@@ -310,14 +363,24 @@ function eseguiContatore(
   if (op?.area !== "C") return;
   const chiave = normalizzaOperando(uscita.operando);
   const pv = Math.round(presetValido(uscita.preset));
-  // Al primo uso: CTU parte da 0, CTD parte dal preset.
-  const c = contatori[chiave] ?? { conteggio: uscita.tipo === "CTD" ? pv : 0, preset: pv, uscita: false, ingressoPrima: false, tipo: uscita.tipo };
+  // Il CTUD conta in avanti sul suo ingresso CU, all'indietro sul CD.
+  const avanti = uscita.tipo === "CTU" || (uscita.tipo === "CTUD" && uscita.verso !== "giu");
+  // Al primo uso: CTU e CTUD partono da 0, CTD parte dal preset.
+  const c = contatori[chiave] ?? {
+    conteggio: uscita.tipo === "CTD" ? pv : 0,
+    preset: pv,
+    uscita: false,
+    ingressoPrima: false,
+    tipo: uscita.tipo === "CTD" ? "CTD" : "CTU",
+  };
   c.preset = pv;
-  if (uscita.tipo === "CTU") c.tipo = "CTU";
-  if (ingresso && !c.ingressoPrima) {
-    c.conteggio = uscita.tipo === "CTU" ? Math.min(CONTEGGIO_MASSIMO, c.conteggio + 1) : Math.max(CONTEGGIO_MINIMO, c.conteggio - 1);
+  if (uscita.tipo !== "CTD") c.tipo = "CTU";
+  const prima = avanti ? c.ingressoPrima : (c.ingressoPrimaGiu ?? false);
+  if (ingresso && !prima) {
+    c.conteggio = avanti ? Math.min(CONTEGGIO_MASSIMO, c.conteggio + 1) : Math.max(CONTEGGIO_MINIMO, c.conteggio - 1);
   }
-  c.ingressoPrima = ingresso;
+  if (avanti) c.ingressoPrima = ingresso;
+  else c.ingressoPrimaGiu = ingresso;
   c.uscita = c.tipo === "CTU" ? c.conteggio >= pv : c.conteggio <= 0;
   contatori[chiave] = c;
 }

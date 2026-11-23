@@ -43,10 +43,25 @@ export function eTemporizzatoreLadder(tipo: string): boolean {
   return m?.ruolo === "uscita" && (m.uscita === "TON" || m.uscita === "TOF" || m.uscita === "TP");
 }
 
-/** Dice se il tipo è un contatore del Ladder (CTU, CTD). */
+/** Dice se il tipo è un contatore del Ladder (CTU, CTD, CTUD). */
 export function eContatoreLadder(tipo: string): boolean {
   const m = MODELLI_LADDER[tipo];
-  return m?.ruolo === "uscita" && (m.uscita === "CTU" || m.uscita === "CTD");
+  return m?.ruolo === "uscita" && (m.uscita === "CTU" || m.uscita === "CTD" || m.uscita === "CTUD");
+}
+
+/** Dice se il tipo è un blocco di confronto del Ladder (=, <>, <, >, <=, >=). */
+export function eConfrontoLadder(tipo: string): boolean {
+  return MODELLI_LADDER[tipo]?.ruolo === "confronto";
+}
+
+/** Costante proposta per i blocchi di confronto appena posati. */
+export const VALORE_CONFRONTO_PREDEFINITO = 0;
+
+/** Simbolo dell'operatore di un blocco di confronto come si scrive a scuola (≥, ≤, ≠). */
+export function simboloConfronto(tipo: string): string {
+  const m = MODELLI_LADDER[tipo];
+  if (m?.ruolo !== "confronto") return "";
+  return { "==": "=", "<>": "≠", "<": "<", ">": ">", "<=": "≤", ">=": "≥" }[m.operatore];
 }
 
 /**
@@ -101,6 +116,8 @@ export function programmaDaSchema(schema: Schema): RisultatoConversione {
       y: c.y,
       ...(eTemporizzatoreLadder(c.tipo) ? { preset: c.tempo ?? PRESET_TEMPORIZZATORE_PREDEFINITO } : {}),
       ...(eContatoreLadder(c.tipo) ? { preset: c.preset ?? PRESET_CONTATORE_PREDEFINITO } : {}),
+      // Nei confronti il campo `preset` del componente è la costante.
+      ...(eConfrontoLadder(c.tipo) ? { preset: c.preset ?? VALORE_CONFRONTO_PREDEFINITO } : {}),
     }));
   return convertiLadder(elementi, schema.fili);
 }

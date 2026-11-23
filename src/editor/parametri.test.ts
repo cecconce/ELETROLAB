@@ -1,7 +1,16 @@
 // Test del tempo dei temporizzatori impostato dal pannello Proprietà.
 import { describe, expect, it } from "vitest";
 import { leggiProgetto, serializzaProgetto } from "../progetto/formato";
-import { eTemporizzatore, impostaTempo, impostaTempoCiclo, tempoCicloDaMostrare, tempoDaMostrare } from "./parametri";
+import {
+  eConfronto,
+  eTemporizzatore,
+  impostaTempo,
+  impostaTempoCiclo,
+  impostaValoreConfronto,
+  tempoCicloDaMostrare,
+  tempoDaMostrare,
+  valoreConfrontoDaMostrare,
+} from "./parametri";
 import { SCHEMA_VUOTO, type Schema } from "./schema";
 
 const schema: Schema = {
@@ -117,5 +126,39 @@ describe("tempo di ciclo del PLC (Proprietà del foglio Ladder, attività 12.3)"
     const testo = serializzaProgetto({ modulo: "plc", schema: { ...foglio, tempoCiclo: 50 } }, "0.1.0");
     const letto = leggiProgetto(testo);
     expect(letto.ok && letto.progetto.schema.tempoCiclo).toBe(1);
+  });
+});
+
+describe("costante dei blocchi di confronto del PLC (attività 12.4)", () => {
+  const conConfronto: Schema = {
+    ...SCHEMA_VUOTO,
+    componenti: [{ id: "c", tipo: "ladder-confronto-maggiore", etichetta: "T0", x: 0, y: 0, larghezza: 80, altezza: 40 }],
+  };
+
+  it("riconosce i confronti e mostra la costante con la virgola", () => {
+    expect(eConfronto("ladder-confronto-uguale")).toBe(true);
+    expect(eConfronto("ladder-ctud")).toBe(false);
+    expect(valoreConfrontoDaMostrare(undefined)).toBe("0");
+    expect(valoreConfrontoDaMostrare(2.5)).toBe("2,5");
+  });
+
+  it("accetta interi e decimali (secondi), rifiuta il resto con spiegazione", () => {
+    for (const [scritto, atteso] of [
+      ["5", 5],
+      ["2,5", 2.5],
+      ["1,256 s", 1.26],
+    ] as const) {
+      const esito = impostaValoreConfronto(conConfronto, "c", scritto);
+      expect(esito.ok, scritto).toBe(true);
+      if (esito.ok) expect(esito.schema.componenti[0].preset, scritto).toBe(atteso);
+    }
+    for (const scritto of ["", "abc", "-1", "40000"]) {
+      const esito = impostaValoreConfronto(conConfronto, "c", scritto);
+      expect(esito.ok, scritto).toBe(false);
+      if (!esito.ok) expect(esito.errore).toContain("non va bene");
+    }
+    // Valore uguale a quello attuale (0 predefinito): stesso schema, nessun passo in Annulla.
+    const uguale = impostaValoreConfronto(conConfronto, "c", "0");
+    expect(uguale.ok && uguale.schema).toBe(conConfronto);
   });
 });

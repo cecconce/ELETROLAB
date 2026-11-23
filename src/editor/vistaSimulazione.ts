@@ -176,7 +176,7 @@ export function coloreFilo(poli: readonly Polo[], colori: ColoriEditor): string 
  */
 export function trattiDelContatto(tipo: string): readonly Tratto[] {
   const l = MODELLI_LADDER[tipo];
-  if (l?.ruolo === "contatto") return [l.morsetti];
+  if (l?.ruolo === "contatto" || l?.ruolo === "confronto") return [l.morsetti];
   const m = MODELLI_IMPIANTI[tipo];
   return m?.tipo === "contatto" ? m.tratti : [];
 }
@@ -263,7 +263,9 @@ export function vistaDaSessionePlc(s: SessionePlc, schema: Schema): VistaSimulaz
     if (m.ruolo === "uscita" && (m.uscita === "TON" || m.uscita === "TOF" || m.uscita === "TP") && tmp) {
       valore = `${numero(tmp.trascorso)} / ${numero(tmp.preset)} s`;
     }
-    if (m.ruolo === "uscita" && (m.uscita === "CTU" || m.uscita === "CTD") && cnt) valore = `${cnt.conteggio} / ${cnt.preset}`;
+    if (m.ruolo === "uscita" && (m.uscita === "CTU" || m.uscita === "CTD" || m.uscita === "CTUD") && cnt) valore = `${cnt.conteggio} / ${cnt.preset}`;
+    // Blocco di confronto: il valore attuale letto, accanto alla condizione.
+    if (m.ruolo === "confronto" && (tmp || cnt)) valore = tmp ? `${operando} = ${numero(tmp.trascorso)} s` : `${operando} = ${cnt!.conteggio}`;
     if (m.ruolo === "comando") {
       componenti[c.id] = {
         clic: m.modo === "pulsante" ? "pulsante" : "manuale",

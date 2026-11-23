@@ -44,6 +44,8 @@ import { DisegnoImpianto } from "./DisegnoImpianti";
 import { DisegnoArduino } from "./DisegnoArduino";
 import { DisegnoElettronica, EtichettaElettronica } from "./DisegnoElettronica";
 import { coloreLampada, conColoreLampada } from "./coloriLampade";
+import { eConfrontoLadder } from "./ladder";
+import { valoreConfrontoDaMostrare } from "./parametri";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import { copiaSelezione, incolla, type Appunti } from "./appunti";
 import {
@@ -864,6 +866,10 @@ export function AreaDisegno({
                         stato={aspetto?.impianto}
                         colori={colori}
                       />
+                    )}
+                    {eConfrontoLadder(c.tipo) && (
+                      // Blocco di confronto: la costante sotto l'operatore, dentro il riquadro.
+                      <Text x={16} y={21} width={48} align="center" text={valoreConfrontoDaMostrare(c.preset)} fontSize={11} fill={colori.testo} fontFamily="Segoe UI, system-ui, sans-serif" listening={false} />
                     )}
                     {libreria.modulo === "arduino" && <DisegnoArduino componente={c} aspetto={aspetto} />}
                     {elettronica && <DisegnoElettronica componente={c} aspetto={aspetto} colori={colori} />}

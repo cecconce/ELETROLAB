@@ -4,7 +4,7 @@
 import { t } from "../testi";
 import { MODELLI_IMPIANTI, TEMPO_MASSIMO, TEMPO_MINIMO, TEMPO_PREDEFINITO } from "../motori/impianti/modelli";
 import type { Schema } from "./schema";
-import { eContatoreLadder, eTemporizzatoreLadder, PRESET_CONTATORE_PREDEFINITO } from "./ladder";
+import { eConfrontoLadder, eContatoreLadder, eTemporizzatoreLadder, PRESET_CONTATORE_PREDEFINITO, VALORE_CONFRONTO_PREDEFINITO } from "./ladder";
 import { TEMPO_CICLO_MASSIMO, TEMPO_CICLO_MINIMO, TEMPO_CICLO_PREDEFINITO } from "../motori/plc/scansione";
 
 /** Dice se il tipo di componente è la bobina di un temporizzatore. */
@@ -73,6 +73,40 @@ export function impostaPreset(schema: Schema, id: string, scritto: string): Esit
   return {
     ok: true,
     schema: { ...schema, componenti: schema.componenti.map((c) => (c.id === id ? { ...c, preset: valore } : c)) },
+  };
+}
+
+// ------------------------------------------------ costante dei blocchi di confronto
+
+/** Dice se il tipo di componente è un blocco di confronto del PLC (ha una costante). */
+export function eConfronto(tipo: string): boolean {
+  return eConfrontoLadder(tipo);
+}
+
+/** Costante da mostrare nel pannello, con la virgola. */
+export function valoreConfrontoDaMostrare(valore: number | undefined): string {
+  return String(valore ?? VALORE_CONFRONTO_PREDEFINITO).replace(".", ",");
+}
+
+/**
+ * Imposta la costante di un blocco di confronto (salvata nel campo `preset`
+ * del componente). Si accettano i decimali ("2,5"), perché con un
+ * temporizzatore si confrontano i secondi; al massimo due decimali, fra 0 e
+ * il massimo dei contatori.
+ */
+export function impostaValoreConfronto(schema: Schema, id: string, scritto: string): EsitoTempo {
+  const componente = schema.componenti.find((c) => c.id === id);
+  if (!componente) return { ok: false, errore: t("proprieta.componenteSparito") };
+  const pulito = scritto.trim().replace(/\s*s$/i, "").replace(",", ".");
+  const valore = /^\d+(\.\d+)?$/.test(pulito) ? Number(pulito) : NaN;
+  if (!Number.isFinite(valore) || valore < PRESET_MINIMO || valore > PRESET_MASSIMO) {
+    return { ok: false, errore: t("proprieta.valoreConfrontoNonValido", { valore: scritto.trim(), minimo: PRESET_MINIMO, massimo: PRESET_MASSIMO }) };
+  }
+  const arrotondato = Math.round(valore * 100) / 100;
+  if ((componente.preset ?? VALORE_CONFRONTO_PREDEFINITO) === arrotondato) return { ok: true, schema };
+  return {
+    ok: true,
+    schema: { ...schema, componenti: schema.componenti.map((c) => (c.id === id ? { ...c, preset: arrotondato } : c)) },
   };
 }
 

@@ -198,6 +198,40 @@ describe("aspetto del Ladder in simulazione", () => {
     expect(Object.values(v.poliDeiFili)).toEqual([["+"], ["+"]]);
   });
 
+  it("confronto e CTUD disegnati: operando proposto, costante, valore mostrato e contatto chiuso (attività 12.4)", async () => {
+    const { avviaSessionePlc, clicGiuPlc, clicSuPlc, passoPlc } = await import("../motori/plc");
+    const { vistaDaSessionePlc, trattiDelContatto } = await import("./vistaSimulazione");
+    const { impostaValoreConfronto } = await import("./parametri");
+    let s = SCHEMA_VUOTO;
+    const barra = posa(s, "ladder-barra-sinistra", 0, 0);
+    s = barra.schema;
+    const c = posa(s, "ladder-contatto-na", 60, 0);
+    s = c.schema;
+    const ctud = posa(s, "ladder-ctud", 200, 0);
+    s = ctud.schema;
+    const cmp = posa(s, "ladder-confronto-maggiore-uguale", 60, 160);
+    s = cmp.schema;
+    const h = posa(s, "ladder-bobina", 200, 160);
+    s = h.schema;
+    // Il confronto propone C0, come il primo contatore.
+    expect(s.componenti.find((x) => x.id === cmp.id)?.etichetta).toBe("C0");
+    expect(trattiDelContatto("ladder-confronto-maggiore-uguale")).toEqual([["in", "out"]]);
+    const e = impostaValoreConfronto(s, cmp.id, "2");
+    if (!e.ok) throw new Error(e.errore);
+    s = filo(filo(e.schema, `${barra.id}/p1`, `${c.id}/in`), `${c.id}/out`, `${ctud.id}/CU`);
+    s = filo(filo(s, `${barra.id}/p2`, `${cmp.id}/in`), `${cmp.id}/out`, `${h.id}/in`);
+    const conv = programmaDaSchema(s);
+    expect(conv.problemi).toEqual([]);
+    const operandi = Object.fromEntries(s.componenti.map((x) => [x.id, x.etichetta]));
+    let sess = avviaSessionePlc(conv, operandi);
+    for (let i = 0; i < 2; i++) sess = passoPlc(clicSuPlc(passoPlc(clicGiuPlc(sess, c.id), 0.1), c.id), 0.1);
+    const v = vistaDaSessionePlc(sess, s);
+    expect(v.componenti[ctud.id].valore).toBe("2 / 5");
+    expect(v.componenti[cmp.id].valore).toBe("C0 = 2");
+    expect(v.componenti[cmp.id].chiuso).toBe(true);
+    expect(v.componenti[h.id].alimentato).toBe(true);
+  });
+
   it("i problemi della conversione diventano frasi in italiano", async () => {
     const { problemiLadder } = await import("./vistaSimulazione");
     const { schema, id } = posa(SCHEMA_VUOTO, "ladder-bobina", 0, 0);

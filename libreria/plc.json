@@ -19,6 +19,10 @@
       "nome": "Temporizzatori e contatori"
     },
     {
+      "id": "confronti",
+      "nome": "Confronti"
+    },
+    {
       "id": "quadro",
       "nome": "Quadro di comando"
     },
@@ -515,6 +519,228 @@
         },
         {
           "id": "Q",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-ctud",
+      "nome": "Contatore CTUD (avanti/indietro)",
+      "categoria": "funzioni",
+      "sigla": "C",
+      "descrizione": "Conta in avanti e all'indietro con un solo blocco: ogni fronte di salita sull'ingresso CU aggiunge 1, ogni fronte su CD toglie 1 (es. auto che entrano ed escono da un parcheggio). L'uscita va a 1 quando il conteggio raggiunge il valore PV; una bobina RESET sullo stesso contatore lo riporta a 0. Per sapere quando è a zero usa un confronto «C… ≤ 0».",
+      "paroleChiave": [
+        "contatore",
+        "avanti",
+        "indietro",
+        "up down",
+        "incremento",
+        "decremento",
+        "parcheggio"
+      ],
+      "icona": "ladder-ctud.svg",
+      "larghezza": 80,
+      "altezza": 80,
+      "morsetti": [
+        {
+          "id": "CU",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "CD",
+          "x": 0,
+          "y": 60
+        },
+        {
+          "id": "Q",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-confronto-uguale",
+      "nome": "Confronto = (=)",
+      "categoria": "confronti",
+      "sigla": "C",
+      "descrizione": "Si comporta come un contatto: lascia passare il segnale quando il valore del contatore (C) o del temporizzatore (T) scritto sopra è uguale a il numero scritto dentro. Per un contatore si confronta il conteggio, per un temporizzatore i secondi trascorsi.",
+      "paroleChiave": [
+        "confronto",
+        "compare",
+        "CMP",
+        "valore",
+        "uguale",
+        "EQ",
+        "=="
+      ],
+      "icona": "ladder-confronto-uguale.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-confronto-diverso",
+      "nome": "Confronto ≠ (<>)",
+      "categoria": "confronti",
+      "sigla": "C",
+      "descrizione": "Si comporta come un contatto: lascia passare il segnale quando il valore del contatore (C) o del temporizzatore (T) scritto sopra è diverso da il numero scritto dentro. Per un contatore si confronta il conteggio, per un temporizzatore i secondi trascorsi.",
+      "paroleChiave": [
+        "confronto",
+        "compare",
+        "CMP",
+        "valore",
+        "diverso",
+        "NE",
+        "<>"
+      ],
+      "icona": "ladder-confronto-diverso.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-confronto-minore",
+      "nome": "Confronto < (<)",
+      "categoria": "confronti",
+      "sigla": "C",
+      "descrizione": "Si comporta come un contatto: lascia passare il segnale quando il valore del contatore (C) o del temporizzatore (T) scritto sopra è minore di il numero scritto dentro. Per un contatore si confronta il conteggio, per un temporizzatore i secondi trascorsi.",
+      "paroleChiave": [
+        "confronto",
+        "compare",
+        "CMP",
+        "valore",
+        "minore",
+        "LT",
+        "<"
+      ],
+      "icona": "ladder-confronto-minore.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-confronto-maggiore",
+      "nome": "Confronto > (>)",
+      "categoria": "confronti",
+      "sigla": "C",
+      "descrizione": "Si comporta come un contatto: lascia passare il segnale quando il valore del contatore (C) o del temporizzatore (T) scritto sopra è maggiore di il numero scritto dentro. Per un contatore si confronta il conteggio, per un temporizzatore i secondi trascorsi.",
+      "paroleChiave": [
+        "confronto",
+        "compare",
+        "CMP",
+        "valore",
+        "maggiore",
+        "GT",
+        ">"
+      ],
+      "icona": "ladder-confronto-maggiore.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-confronto-minore-uguale",
+      "nome": "Confronto ≤ (<=)",
+      "categoria": "confronti",
+      "sigla": "C",
+      "descrizione": "Si comporta come un contatto: lascia passare il segnale quando il valore del contatore (C) o del temporizzatore (T) scritto sopra è minore o uguale a il numero scritto dentro. Per un contatore si confronta il conteggio, per un temporizzatore i secondi trascorsi.",
+      "paroleChiave": [
+        "confronto",
+        "compare",
+        "CMP",
+        "valore",
+        "minore o uguale",
+        "LE",
+        "<="
+      ],
+      "icona": "ladder-confronto-minore-uguale.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
+          "x": 80,
+          "y": 20
+        }
+      ]
+    },
+    {
+      "id": "ladder-confronto-maggiore-uguale",
+      "nome": "Confronto ≥ (>=)",
+      "categoria": "confronti",
+      "sigla": "C",
+      "descrizione": "Si comporta come un contatto: lascia passare il segnale quando il valore del contatore (C) o del temporizzatore (T) scritto sopra è maggiore o uguale a il numero scritto dentro. Per un contatore si confronta il conteggio, per un temporizzatore i secondi trascorsi.",
+      "paroleChiave": [
+        "confronto",
+        "compare",
+        "CMP",
+        "valore",
+        "maggiore o uguale",
+        "GE",
+        ">="
+      ],
+      "icona": "ladder-confronto-maggiore-uguale.svg",
+      "larghezza": 80,
+      "altezza": 40,
+      "morsetti": [
+        {
+          "id": "in",
+          "x": 0,
+          "y": 20
+        },
+        {
+          "id": "out",
           "x": 80,
           "y": 20
         }

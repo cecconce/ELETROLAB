@@ -10,7 +10,8 @@
 //   (ST T0.IN, ST C0.CU) e il blocco si richiama con CAL e il suo preset;
 // - nello stesso segmento prima tutte le uscite che usano il risultato, poi
 //   i richiami dei blocchi (dopo un CAL il risultato non è più quello del segmento).
-import { eContatore, eTemporizzatore, type Logica, type ProgrammaLadder, type TipoContatto, type Uscita } from "./programma";
+import { leggiBlocco } from "./operandi";
+import { eContatore, eTemporizzatore, type Logica, type OperatoreConfronto, type ProgrammaLadder, type TipoContatto, type Uscita } from "./programma";
 
 /** Suffisso dell'istruzione secondo il tipo di contatto. */
 const SUFFISSO: Record<TipoContatto, string> = { NA: "", NC: "N", P: "P", N: "F" };
@@ -32,6 +33,7 @@ function elementiDi(l: Logica, tipo: "serie" | "parallelo"): Logica[] {
  */
 function righeLogica(l: Logica, inizio: boolean, legame: "AND" | "OR"): string[] {
   if (l.tipo === "contatto") return [riga(`${inizio ? "LD" : legame}${SUFFISSO[l.contatto]}`, l.operando)];
+  if (l.tipo === "confronto") return righeConfronto(l, inizio, legame);
   const tipo = l.tipo;
   const parti = elementiDi(l, tipo);
   if (parti.length === 1) return righeLogica(parti[0], inizio, legame);
@@ -40,6 +42,23 @@ function righeLogica(l: Logica, inizio: boolean, legame: "AND" | "OR"): string[]
   if (inizio || interno === legame) return parti.flatMap((p, i) => righeLogica(p, inizio && i === 0, interno));
   // Gruppo diverso: fra parentesi, con il suo primo operando caricato da capo.
   return [riga(`${legame}(`), ...parti.flatMap((p, i) => righeLogica(p, i === 0, interno)).map((r) => `  ${r}`), riga(")")];
+}
+
+/** Istruzioni IEC dei confronti. */
+const ISTRUZIONE_CONFRONTO: Record<OperatoreConfronto, string> = { "==": "EQ", "<>": "NE", "<": "LT", ">": "GT", "<=": "LE", ">=": "GE" };
+
+/**
+ * Blocco di confronto: si carica il valore del blocco (tempo trascorso T….ET
+ * o conteggio C….CV) e lo si confronta con la costante. Se non è il primo
+ * operando, il confronto va fra parentesi: AND( C0.CV / GE 5 / ).
+ */
+function righeConfronto(l: Extract<Logica, { tipo: "confronto" }>, inizio: boolean, legame: "AND" | "OR"): string[] {
+  const tempo = leggiBlocco(l.operando)?.area === "T";
+  const valore = `${l.operando}.${tempo ? "ET" : "CV"}`;
+  const costante = tempo ? durata(l.valore) : String(l.valore);
+  const confronto = riga(ISTRUZIONE_CONFRONTO[l.operatore], costante);
+  if (inizio) return [riga("LD", valore), confronto];
+  return [riga(`${legame}(`, valore), `  ${confronto}`, riga(")")];
 }
 
 /** Durata IEC di un temporizzatore: T#5s, T#1.5s. */
@@ -51,6 +70,7 @@ const NOMI_BLOCCO: Record<string, string> = {
   TP: "impulso",
   CTU: "contatore in avanti",
   CTD: "contatore all'indietro",
+  CTUD: "contatore avanti/indietro",
 };
 
 function righeUscite(uscite: readonly Uscita[]): string[] {
@@ -61,7 +81,8 @@ function righeUscite(uscite: readonly Uscita[]): string[] {
       subito.push(riga("ST", `${u.operando}.IN`));
       blocchi.push(riga("CAL", `${u.operando}(PT := ${durata(u.preset)})`, `${u.tipo}: ${NOMI_BLOCCO[u.tipo]}`));
     } else if (eContatore(u)) {
-      subito.push(riga("ST", `${u.operando}.${u.tipo === "CTU" ? "CU" : "CD"}`));
+      const ingresso = u.tipo === "CTU" || (u.tipo === "CTUD" && u.verso !== "giu") ? "CU" : "CD";
+      subito.push(riga("ST", `${u.operando}.${ingresso}`));
       blocchi.push(riga("CAL", `${u.operando}(PV := ${Math.round(u.preset)})`, `${u.tipo}: ${NOMI_BLOCCO[u.tipo]}`));
     } else {
       const istruzione = { bobina: "ST", bobinaNegata: "STN", set: "S", reset: "R" }[u.tipo];

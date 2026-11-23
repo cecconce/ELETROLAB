@@ -15,9 +15,12 @@ import { tavolozzaFili } from "./fili";
 import { TavolozzaFilo } from "./TavolozzaFilo";
 import { MODELLI_IMPIANTI_PLC, operandiImpianto } from "../motori/plc";
 import {
+  eConfronto,
   eContatore,
   eTemporizzatore,
   impostaPreset,
+  impostaValoreConfronto,
+  valoreConfrontoDaMostrare,
   impostaTempo,
   impostaTempoCiclo,
   presetDaMostrare,
@@ -53,12 +56,16 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
     setBozzaTempo(tempoDaMostrare(componente?.tempo));
     setErroreTempo(null);
   }, [componente?.id, componente?.tempo]);
-  // Preset dei contatori del PLC, con lo stesso meccanismo.
+  // Preset dei contatori del PLC, con lo stesso meccanismo; nei blocchi di
+  // confronto lo stesso campo è la costante (con i decimali).
+  const confronto = componente ? eConfronto(componente.tipo) : false;
+  const presetMostrato = (c: typeof componente) => (c && eConfronto(c.tipo) ? valoreConfrontoDaMostrare(c.preset) : presetDaMostrare(c?.preset));
   const [bozzaPreset, setBozzaPreset] = useState("");
   const [errorePreset, setErrorePreset] = useState<string | null>(null);
   useEffect(() => {
-    setBozzaPreset(presetDaMostrare(componente?.preset));
+    setBozzaPreset(presetMostrato(componente));
     setErrorePreset(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [componente?.id, componente?.preset]);
 
   // Un filo selezionato → scelta del colore (cavetti di Arduino ed Elettronica, conduttori CEI negli Impianti).
@@ -101,7 +108,7 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
   };
 
   const applicaPreset = () => {
-    const esito = impostaPreset(schema, componente.id, bozzaPreset);
+    const esito = (confronto ? impostaValoreConfronto : impostaPreset)(schema, componente.id, bozzaPreset);
     if (esito.ok) {
       setErrorePreset(null);
       if (esito.schema !== schema) onCambiaSchema(esito.schema);
@@ -315,23 +322,23 @@ export function PannelloProprieta({ schema, selezione, libreria, onCambiaSchema 
         </label>
       )}
 
-      {eContatore(componente.tipo) && (
+      {(eContatore(componente.tipo) || confronto) && (
         <>
           <label className="proprieta-campo">
-            <span>{t("proprieta.preset")}</span>
+            <span>{t(confronto ? "proprieta.valoreConfronto" : "proprieta.preset")}</span>
             <input
               type="text"
-              inputMode="numeric"
+              inputMode={confronto ? "decimal" : "numeric"}
               value={bozzaPreset}
-              maxLength={6}
+              maxLength={confronto ? 9 : 6}
               spellCheck={false}
-              title={t("proprieta.presetSuggerimento")}
+              title={t(confronto ? "proprieta.valoreConfrontoSuggerimento" : "proprieta.presetSuggerimento")}
               aria-invalid={errorePreset !== null}
               onChange={(e) => setBozzaPreset(e.target.value)}
               onBlur={applicaPreset}
               onKeyDown={(e) => {
                 if (e.key === "Enter") applicaPreset();
-                if (e.key === "Escape") setBozzaPreset(presetDaMostrare(componente.preset));
+                if (e.key === "Escape") setBozzaPreset(presetMostrato(componente));
               }}
             />
           </label>

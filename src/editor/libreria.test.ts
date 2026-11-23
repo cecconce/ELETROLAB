@@ -65,6 +65,8 @@ describe("file della libreria forniti con l'app", () => {
         expect(svg, v.icona).not.toMatch(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/);
         // Un attributo scritto due volte nello stesso elemento rende l'immagine illeggibile.
         expect(attributiDoppi(svg), v.icona).toEqual([]);
+        // Un "<" nel testo (es. il simbolo del confronto «minore») va scritto &lt;.
+        expect(svg, v.icona).not.toMatch(/<(?![a-zA-Z/?!])/);
       }
     }
   });

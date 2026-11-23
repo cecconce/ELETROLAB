@@ -22,7 +22,7 @@
 // versi (in un PLC vero il Ladder si legge solo da sinistra a destra); nei
 // disegni normali non fa differenza.
 import { leggiBlocco, leggiOperando, normalizzaOperando, operandoContattoValido, operandoScrivibile } from "./operandi";
-import type { Logica, ProgrammaLadder, Segmento, TipoContatto, Uscita } from "./programma";
+import type { Logica, OperatoreConfronto, ProgrammaLadder, Segmento, TipoContatto, Uscita } from "./programma";
 
 /** Ruolo di un tipo di componente della libreria PLC. */
 export type ModelloLadder =
@@ -42,7 +42,10 @@ export type ModelloLadder =
   /** Impianto animato (nastro, semaforo, cancello…): segnali in impianti/. */
   | { ruolo: "impianto" }
   | { ruolo: "contatto"; contatto: TipoContatto; morsetti: [string, string] }
-  | { ruolo: "uscita"; uscita: Uscita["tipo"]; ingresso: string };
+  /** Blocco di confronto: nel disegno è un ponte fra due morsetti, come un contatto. */
+  | { ruolo: "confronto"; operatore: OperatoreConfronto; morsetti: [string, string] }
+  /** `ingressoGiu`: secondo ingresso (CD) del contatore CTUD. */
+  | { ruolo: "uscita"; uscita: Uscita["tipo"]; ingresso: string; ingressoGiu?: string };
 
 /** Modelli dei componenti della libreria PLC (chiave = id della voce in libreria/plc.json). */
 export const MODELLI_LADDER: Record<string, ModelloLadder> = {
@@ -77,6 +80,13 @@ export const MODELLI_LADDER: Record<string, ModelloLadder> = {
   "ladder-tp": { ruolo: "uscita", uscita: "TP", ingresso: "IN" },
   "ladder-ctu": { ruolo: "uscita", uscita: "CTU", ingresso: "CU" },
   "ladder-ctd": { ruolo: "uscita", uscita: "CTD", ingresso: "CD" },
+  "ladder-ctud": { ruolo: "uscita", uscita: "CTUD", ingresso: "CU", ingressoGiu: "CD" },
+  "ladder-confronto-uguale": { ruolo: "confronto", operatore: "==", morsetti: ["in", "out"] },
+  "ladder-confronto-diverso": { ruolo: "confronto", operatore: "<>", morsetti: ["in", "out"] },
+  "ladder-confronto-minore": { ruolo: "confronto", operatore: "<", morsetti: ["in", "out"] },
+  "ladder-confronto-maggiore": { ruolo: "confronto", operatore: ">", morsetti: ["in", "out"] },
+  "ladder-confronto-minore-uguale": { ruolo: "confronto", operatore: "<=", morsetti: ["in", "out"] },
+  "ladder-confronto-maggiore-uguale": { ruolo: "confronto", operatore: ">=", morsetti: ["in", "out"] },
 };
 
 /** Componente del Ladder disegnato, ridotto a ciò che serve alla conversione. */
@@ -85,7 +95,7 @@ export interface ElementoLadder {
   tipo: string;
   /** Operando scritto dallo studente (I0.0, Q0.1, T0…). */
   operando: string;
-  /** Solo blocchi: secondi (temporizzatori) o impulsi (contatori). */
+  /** Solo blocchi: secondi (temporizzatori), impulsi (contatori) o costante (confronti). */
   preset?: number;
   /** Posizione sul foglio: decide l'ordine dei segmenti. */
   x: number;
@@ -104,6 +114,7 @@ export type CodiceProblemaLadder =
   | "operandoNonValido" //     operando vuoto o scritto male
   | "bobinaSuIngresso" //      una bobina non può scrivere un ingresso I
   | "operandoBloccoErrato" //  un temporizzatore deve usare T…, un contatore C…
+  | "operandoConfronto" //     un blocco di confronto legge un temporizzatore T… o un contatore C…
   | "troppiPercorsi" //        disegno troppo intricato da convertire
   | "bobinaDoppia" //          due bobine normali sullo stesso operando (avviso: vale l'ultima)
   | "comandoSenzaIngresso" //  un comando del quadro deve essere collegato a un ingresso I
@@ -163,17 +174,29 @@ export function convertiLadder(elementi: readonly ElementoLadder[], fili: readon
   if (!alimentato) problemi.push({ codice: "senzaBarra", componenti: [] });
 
   // --- 2. Contatti come ponti fra nodi ---
+  // Contatti e blocchi di confronto sono entrambi "ponti": cambia solo la
+  // foglia della logica che li rappresenta.
   interface Ponte {
     elemento: ElementoLadder;
-    contatto: TipoContatto;
+    foglia: Logica;
+    morsetti: [string, string];
     nodi: [string, string];
   }
   const ponti: Ponte[] = [];
   for (const e of elementi) {
     const m = MODELLI_LADDER[e.tipo];
-    if (m?.ruolo !== "contatto") continue;
-    if (!operandoContattoValido(e.operando)) problemi.push({ codice: "operandoNonValido", componenti: [e.id] });
-    ponti.push({ elemento: e, contatto: m.contatto, nodi: [radice(chiave(e.id, m.morsetti[0])), radice(chiave(e.id, m.morsetti[1]))] });
+    if (m?.ruolo !== "contatto" && m?.ruolo !== "confronto") continue;
+    const operando = normalizzaOperando(e.operando);
+    let foglia: Logica;
+    if (m.ruolo === "contatto") {
+      if (!operandoContattoValido(e.operando)) problemi.push({ codice: "operandoNonValido", componenti: [e.id] });
+      foglia = { tipo: "contatto", contatto: m.contatto, operando, id: e.id };
+    } else {
+      if (!leggiBlocco(e.operando)) problemi.push({ codice: "operandoConfronto", componenti: [e.id] });
+      const valore = Number.isFinite(e.preset) ? (e.preset as number) : 0;
+      foglia = { tipo: "confronto", operatore: m.operatore, operando, valore, id: e.id };
+    }
+    ponti.push({ elemento: e, foglia, morsetti: m.morsetti, nodi: [radice(chiave(e.id, m.morsetti[0])), radice(chiave(e.id, m.morsetti[1]))] });
   }
   const pontiDelNodo = new Map<string, Ponte[]>();
   for (const p of ponti) {
@@ -209,17 +232,32 @@ export function convertiLadder(elementi: readonly ElementoLadder[], fili: readon
   };
 
   // --- 3. Uscite raggruppate per nodo d'ingresso ---
-  const gruppi = new Map<string, ElementoLadder[]>();
+  // Il CTUD ha due ingressi: entra nel gruppo del nodo di CU (verso "su") e
+  // in quello del nodo di CD (verso "giu"). Un suo ingresso senza fili si
+  // ignora (il blocco conta solo in un verso), purché l'altro sia collegato.
+  const conFilo = new Set(fili.flatMap((f) => [`${f.da.componente}/${f.da.morsetto}`, `${f.a.componente}/${f.a.morsetto}`]));
+  interface UscitaPosata {
+    e: ElementoLadder;
+    verso?: "su" | "giu";
+  }
+  const gruppi = new Map<string, UscitaPosata[]>();
+  const aggiungi = (nodo: string, u: UscitaPosata) => gruppi.set(nodo, [...(gruppi.get(nodo) ?? []), u]);
   for (const e of elementi) {
     const m = MODELLI_LADDER[e.tipo];
     if (m?.ruolo !== "uscita") continue;
     controllaOperandoUscita(e, m.uscita, problemi);
-    const nodo = radice(chiave(e.id, m.ingresso));
-    gruppi.set(nodo, [...(gruppi.get(nodo) ?? []), e]);
+    if (m.ingressoGiu) {
+      const su = conFilo.has(`${e.id}/${m.ingresso}`);
+      const giu = conFilo.has(`${e.id}/${m.ingressoGiu}`);
+      if (su || !giu) aggiungi(radice(chiave(e.id, m.ingresso)), { e, verso: "su" });
+      if (giu) aggiungi(radice(chiave(e.id, m.ingressoGiu)), { e, verso: "giu" });
+      continue;
+    }
+    aggiungi(radice(chiave(e.id, m.ingresso)), { e });
   }
 
   // Ordine di lettura: dall'alto in basso, poi da sinistra a destra.
-  const ordine = (a: ElementoLadder, b: ElementoLadder) => a.y - b.y || a.x - b.x;
+  const ordine = (a: UscitaPosata, b: UscitaPosata) => a.e.y - b.e.y || a.e.x - b.e.x;
   const elenco = [...gruppi.entries()]
     .map(([nodo, uscite]) => ({ nodo, uscite: [...uscite].sort(ordine) }))
     .sort((a, b) => ordine(a.uscite[0], b.uscite[0]));
@@ -228,13 +266,13 @@ export function convertiLadder(elementi: readonly ElementoLadder[], fili: readon
   const usciteDeiSegmenti: string[][] = [];
   for (const { nodo, uscite } of elenco) {
     const trovati = percorsi(nodo);
-    const ids = uscite.map((u) => u.id);
+    const ids = [...new Set(uscite.map((u) => u.e.id))];
     if (trovati === null) {
       problemi.push({ codice: "troppiPercorsi", componenti: ids });
       continue;
     }
     if (trovati.length === 0 && alimentato) problemi.push({ codice: "uscitaNonAlimentata", componenti: ids });
-    segmenti.push({ logica: logicaDaPercorsi(trovati), uscite: uscite.map(uscitaDa) });
+    segmenti.push({ logica: logicaDaPercorsi(trovati), uscite: uscite.map((u) => uscitaDa(u.e, u.verso)) });
     usciteDeiSegmenti.push(ids);
   }
   // Quadro virtuale: i comandi leggono ingressi I, gli attuatori uscite Q o merker M.
@@ -266,9 +304,8 @@ export function convertiLadder(elementi: readonly ElementoLadder[], fili: readon
     for (const e of [f.da, f.a]) if (perId.has(e.componente)) nodi[`${e.componente}/${e.morsetto}`] = radice(chiave(e.componente, e.morsetto));
   }
   for (const p of ponti) {
-    const m = MODELLI_LADDER[p.elemento.tipo] as Extract<ModelloLadder, { ruolo: "contatto" }>;
-    nodi[`${p.elemento.id}/${m.morsetti[0]}`] = p.nodi[0];
-    nodi[`${p.elemento.id}/${m.morsetti[1]}`] = p.nodi[1];
+    nodi[`${p.elemento.id}/${p.morsetti[0]}`] = p.nodi[0];
+    nodi[`${p.elemento.id}/${p.morsetti[1]}`] = p.nodi[1];
   }
   return {
     programma: { segmenti },
@@ -305,24 +342,20 @@ export function nodiAlimentati(conversione: Pick<RisultatoConversione, "nodoAlim
 }
 
 /** Somma di prodotti: OR dei percorsi, ognuno AND dei suoi contatti. */
-function logicaDaPercorsi(percorsi: { elemento: ElementoLadder; contatto: TipoContatto }[][]): Logica | null {
+function logicaDaPercorsi(percorsi: { foglia: Logica }[][]): Logica | null {
   // Un percorso senza contatti (uscita collegata direttamente alla barra): sempre alimentata.
   if (percorsi.some((p) => p.length === 0)) return null;
   const rami: Logica[] = percorsi.map((p) => {
-    const contatti: Logica[] = p.map(({ elemento, contatto }) => ({
-      tipo: "contatto",
-      contatto,
-      operando: normalizzaOperando(elemento.operando),
-      id: elemento.id,
-    }));
+    const contatti: Logica[] = p.map(({ foglia }) => foglia);
     return contatti.length === 1 ? contatti[0] : { tipo: "serie", elementi: contatti };
   });
   return rami.length === 1 ? rami[0] : { tipo: "parallelo", rami };
 }
 
-function uscitaDa(e: ElementoLadder): Uscita {
+function uscitaDa(e: ElementoLadder, verso?: "su" | "giu"): Uscita {
   const m = MODELLI_LADDER[e.tipo] as Extract<ModelloLadder, { ruolo: "uscita" }>;
   const operando = normalizzaOperando(e.operando);
+  if (m.uscita === "CTUD") return { tipo: "CTUD", operando, preset: e.preset ?? 0, verso: verso ?? "su" };
   if (m.uscita === "TON" || m.uscita === "TOF" || m.uscita === "TP" || m.uscita === "CTU" || m.uscita === "CTD") {
     return { tipo: m.uscita, operando, preset: e.preset ?? 0 };
   }
@@ -335,7 +368,7 @@ function controllaOperandoUscita(e: ElementoLadder, tipo: Uscita["tipo"], proble
     if (blocco?.area !== "T") problemi.push({ codice: "operandoBloccoErrato", componenti: [e.id] });
     return;
   }
-  if (tipo === "CTU" || tipo === "CTD") {
+  if (tipo === "CTU" || tipo === "CTD" || tipo === "CTUD") {
     if (blocco?.area !== "C") problemi.push({ codice: "operandoBloccoErrato", componenti: [e.id] });
     return;
   }

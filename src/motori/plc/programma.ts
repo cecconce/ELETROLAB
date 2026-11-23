@@ -17,10 +17,20 @@ export type TipoContatto =
   | "P" //  fronte di salita: conduce per un solo ciclo quando l'operando passa da 0 a 1
   | "N"; // fronte di discesa: conduce per un solo ciclo quando l'operando passa da 1 a 0
 
+/**
+ * Operatori dei blocchi di confronto. Un blocco di confronto si comporta come
+ * un contatto: conduce quando "valore dell'operando OPERATORE costante" è vero.
+ * L'operando è un temporizzatore (si confronta il tempo trascorso, in secondi)
+ * o un contatore (si confronta il conteggio).
+ */
+export type OperatoreConfronto = "==" | "<>" | "<" | ">" | "<=" | ">=";
+
 /** Elemento della logica di un segmento. */
 export type Logica =
   /** `id`: componente disegnato da cui viene il contatto (per colorarlo in simulazione). */
   | { tipo: "contatto"; contatto: TipoContatto; operando: string; id?: string }
+  /** Blocco di confronto (es. C0 >= 5, T1 > 2,5): conduce se il confronto è vero. */
+  | { tipo: "confronto"; operatore: OperatoreConfronto; operando: string; valore: number; id?: string }
   | { tipo: "serie"; elementi: Logica[] }
   | { tipo: "parallelo"; rami: Logica[] };
 
@@ -47,16 +57,22 @@ export type TipoTemporizzatore = "TON" | "TOF" | "TP";
  * - CTU in avanti: +1 a ogni fronte di salita del segmento; uscita accesa
  *   quando il conteggio arriva al `preset`; il reset lo riporta a 0;
  * - CTD all'indietro: parte dal `preset`, −1 a ogni fronte di salita;
- *   uscita accesa quando arriva a 0; il reset lo ricarica al `preset`.
+ *   uscita accesa quando arriva a 0; il reset lo ricarica al `preset`;
+ * - CTUD avanti/indietro: un solo blocco con due ingressi, CU (+1) e CD (−1);
+ *   nel programma compare come due uscite dello stesso contatore, una con
+ *   `verso: "su"` nel segmento di CU e una con `verso: "giu"` in quello di CD.
+ *   Parte da 0, l'uscita (QU) è accesa quando il conteggio arriva al `preset`,
+ *   il reset lo riporta a 0. L'uscita QD (conteggio a 0) si legge con un
+ *   blocco di confronto «C… <= 0».
  */
-export type TipoContatore = "CTU" | "CTD";
+export type TipoContatore = "CTU" | "CTD" | "CTUD";
 
 export type Uscita =
   | { tipo: TipoUscita; operando: string }
   /** Temporizzatore T0…T63; `preset` in secondi. */
   | { tipo: TipoTemporizzatore; operando: string; preset: number }
-  /** Contatore C0…C63; `preset` = numero di impulsi. */
-  | { tipo: TipoContatore; operando: string; preset: number };
+  /** Contatore C0…C63; `preset` = numero di impulsi; `verso` solo per CTUD. */
+  | { tipo: TipoContatore; operando: string; preset: number; verso?: "su" | "giu" };
 
 /** Vero se l'uscita è un temporizzatore. */
 export function eTemporizzatore(u: Uscita): u is { tipo: TipoTemporizzatore; operando: string; preset: number } {
@@ -64,8 +80,8 @@ export function eTemporizzatore(u: Uscita): u is { tipo: TipoTemporizzatore; ope
 }
 
 /** Vero se l'uscita è un contatore. */
-export function eContatore(u: Uscita): u is { tipo: TipoContatore; operando: string; preset: number } {
-  return u.tipo === "CTU" || u.tipo === "CTD";
+export function eContatore(u: Uscita): u is { tipo: TipoContatore; operando: string; preset: number; verso?: "su" | "giu" } {
+  return u.tipo === "CTU" || u.tipo === "CTD" || u.tipo === "CTUD";
 }
 
 export interface Segmento {
@@ -86,6 +102,12 @@ export const na = (operando: string): Logica => ({ tipo: "contatto", contatto: "
 export const nc = (operando: string): Logica => ({ tipo: "contatto", contatto: "NC", operando });
 export const fronteSalita = (operando: string): Logica => ({ tipo: "contatto", contatto: "P", operando });
 export const fronteDiscesa = (operando: string): Logica => ({ tipo: "contatto", contatto: "N", operando });
+export const confronto = (operando: string, operatore: OperatoreConfronto, valore: number): Logica => ({
+  tipo: "confronto",
+  operatore,
+  operando,
+  valore,
+});
 export const serie = (...elementi: Logica[]): Logica => ({ tipo: "serie", elementi });
 export const parallelo = (...rami: Logica[]): Logica => ({ tipo: "parallelo", rami });
 
@@ -98,3 +120,7 @@ export const tof = (operando: string, preset: number): Uscita => ({ tipo: "TOF",
 export const tp = (operando: string, preset: number): Uscita => ({ tipo: "TP", operando, preset });
 export const ctu = (operando: string, preset: number): Uscita => ({ tipo: "CTU", operando, preset });
 export const ctd = (operando: string, preset: number): Uscita => ({ tipo: "CTD", operando, preset });
+/** Ingresso CU (conta in avanti) di un contatore CTUD. */
+export const ctudSu = (operando: string, preset: number): Uscita => ({ tipo: "CTUD", operando, preset, verso: "su" });
+/** Ingresso CD (conta all'indietro) di un contatore CTUD. */
+export const ctudGiu = (operando: string, preset: number): Uscita => ({ tipo: "CTUD", operando, preset, verso: "giu" });
