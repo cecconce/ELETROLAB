@@ -26,7 +26,9 @@
 //   sezionatori, protezioni e motori viene passato a chi gestisce la simulazione
 // - evidenziazione (prop `evidenzia`): riquadri rossi tratteggiati attorno ai
 //   componenti e cerchi rossi sui morsetti dove c'è un problema (attività 2.6);
-//   la prop `sopraBarra` mostra un pannello (es. "Problemi") fra il foglio e la barra
+//   la prop `sopraBarra` mostra un pannello (es. "Problemi") fra il foglio e la barra;
+//   la prop `inquadra` sposta e ingrandisce la vista sui componenti della riga
+//   scelta nel pannello Problemi (attività 12.5)
 // La logica (calcoli e modifiche allo schema) sta in geometria.ts, schema.ts,
 // fili.ts, appunti.ts, associazioni.ts, cronologia.ts e vistaSimulazione.ts.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -85,6 +87,7 @@ import {
   schermoAFoglio,
   spostaVista,
   vistaPerAdattare,
+  vistaPerInquadrare,
   vistaPizzico,
   zoomRotellina,
   zoomVerso,
@@ -96,6 +99,7 @@ import {
   componentiNelRettangolo,
   eliminaSelezione,
   tuttiGliId,
+  ingombroComponenti,
   ingombroSchema,
   rettangoloTra,
   selezionaConClic,
@@ -144,6 +148,12 @@ export interface PropsAreaDisegno {
   } | null;
   /** Componenti e morsetti ("id:morsetto") da evidenziare in rosso (punti di un problema). */
   evidenzia?: { componenti: readonly string[]; morsetti: readonly string[] } | null;
+  /**
+   * Punto da inquadrare (riga scelta nel pannello Problemi): quando cambia la
+   * `chiave` la vista si sposta e si ingrandisce sui componenti indicati.
+   * null = nessuna richiesta (la vista resta dov'è).
+   */
+  inquadra?: { chiave: string; componenti: readonly string[] } | null;
   /** Contenuto mostrato fra il foglio e la barra in basso (es. il pannello dei problemi). */
   sopraBarra?: React.ReactNode;
   /** Vista realistica (disegni a colori) invece dei simboli CEI, se il modulo la prevede. */
@@ -235,6 +245,7 @@ export function AreaDisegno({
   onSelezione,
   simulazione = null,
   evidenzia = null,
+  inquadra = null,
   sopraBarra = null,
   realistico = false,
   onCambiaRealistico,
@@ -621,6 +632,20 @@ export function AreaDisegno({
     const r = ingombroSchema(schema);
     setVista(r ? vistaPerAdattare(r, larghezza, altezza) : VISTA_INIZIALE);
   }, [schema, larghezza, altezza]);
+
+  // Riga scelta nel pannello Problemi: la vista va sui suoi componenti.
+  // Si reagisce solo al cambio di chiave (non a ogni scatto della simulazione),
+  // così dopo lo studente può spostare la vista liberamente.
+  const datiInquadra = useRef({ schema, larghezza, altezza, componenti: inquadra?.componenti ?? [] });
+  datiInquadra.current = { schema, larghezza, altezza, componenti: inquadra?.componenti ?? [] };
+  const chiaveInquadra = inquadra?.chiave ?? null;
+  useEffect(() => {
+    if (chiaveInquadra === null) return;
+    const d = datiInquadra.current;
+    if (d.larghezza <= 0 || d.altezza <= 0) return;
+    const r = ingombroComponenti(d.schema, d.componenti);
+    if (r) setVista(vistaPerInquadrare(r, d.larghezza, d.altezza));
+  }, [chiaveInquadra]);
 
   // Alla prima misura del riquadro lo schema viene centrato.
   const centrato = useRef(false);

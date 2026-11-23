@@ -201,6 +201,16 @@ export function componentiNelRettangolo(schema: Schema, r: Rettangolo): string[]
     .map((c) => c.id);
 }
 
+/**
+ * Rettangolo che contiene i componenti indicati per id (per inquadrare il punto
+ * di un problema); gli id che non sono nello schema si ignorano, undefined se
+ * non ne resta nessuno.
+ */
+export function ingombroComponenti(schema: Schema, ids: readonly string[]): Rettangolo | undefined {
+  const scelti = new Set(ids);
+  return ingombroSchema({ ...schema, componenti: schema.componenti.filter((c) => scelti.has(c.id)) });
+}
+
 /** Rettangolo che contiene tutti i componenti (per "Adatta alla finestra"); undefined se lo schema è vuoto. */
 export function ingombroSchema(schema: Schema): Rettangolo | undefined {
   if (schema.componenti.length === 0) return undefined;

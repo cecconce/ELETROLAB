@@ -4,6 +4,7 @@ import {
   SCHEMA_VUOTO,
   aggiungiComponente,
   componentiNelRettangolo,
+  ingombroComponenti,
   ingombroSchema,
   rettangoloTra,
   selezionaConClic,
@@ -94,5 +95,12 @@ describe("ingombro", () => {
   it("racchiude tutti i componenti", () => {
     expect(ingombroSchema(SCHEMA_VUOTO)).toBeUndefined();
     expect(ingombroSchema(schemaDiProva())).toEqual({ x: 0, y: 0, larghezza: 140, altezza: 260 });
+  });
+
+  it("racchiude solo i componenti indicati e ignora gli id che non ci sono", () => {
+    expect(ingombroComponenti(schemaDiProva(), ["b"])).toEqual({ x: 100, y: 0, larghezza: 40, altezza: 60 });
+    expect(ingombroComponenti(schemaDiProva(), ["b", "c", "fantasma"])).toEqual({ x: 0, y: 0, larghezza: 140, altezza: 260 });
+    expect(ingombroComponenti(schemaDiProva(), ["fantasma"])).toBeUndefined();
+    expect(ingombroComponenti(schemaDiProva(), [])).toBeUndefined();
   });
 });

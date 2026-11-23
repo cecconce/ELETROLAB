@@ -12,6 +12,8 @@ import {
   schermoAFoglio,
   spostaVista,
   vistaPerAdattare,
+  vistaPerInquadrare,
+  ZOOM_INQUADRA,
   vistaPizzico,
   zoomRotellina,
   zoomVerso,
@@ -129,5 +131,28 @@ describe("pizzico con due dita", () => {
   it("lo zoom resta nei limiti", () => {
     const n = vistaPizzico(v, [{ x: 0, y: 0 }, { x: 1, y: 0 }], [{ x: 0, y: 0 }, { x: 1000, y: 0 }]);
     expect(n.scala).toBe(ZOOM_MAX);
+  });
+});
+
+describe("inquadra il punto di un problema", () => {
+  it("porta al centro e ingrandisce un componente piccolo fino al limite", () => {
+    const v = vistaPerInquadrare({ x: 1000, y: 600, larghezza: 40, altezza: 60 }, 800, 600);
+    expect(v.scala).toBe(ZOOM_INQUADRA);
+    expect(foglioASchermo(v, { x: 1020, y: 630 })).toEqual({ x: 400, y: 300 });
+  });
+
+  it("rimpicciolisce se i componenti del problema sono lontani fra loro", () => {
+    const r = { x: 0, y: 0, larghezza: 1600, altezza: 200 };
+    const v = vistaPerInquadrare(r, 800, 600, 80);
+    expect(v.scala).toBeCloseTo(640 / 1600);
+    const a = foglioASchermo(v, { x: r.x, y: r.y });
+    const b = foglioASchermo(v, { x: r.x + r.larghezza, y: r.y + r.altezza });
+    expect(a.x).toBeCloseTo(80);
+    expect(b.x).toBeCloseTo(720);
+  });
+
+  it("non scende sotto lo zoom minimo", () => {
+    const v = vistaPerInquadrare({ x: 0, y: 0, larghezza: 100000, altezza: 10 }, 800, 600);
+    expect(v.scala).toBe(ZOOM_MIN);
   });
 });

@@ -565,6 +565,14 @@ export function SchermataModulo(props: PropsSchermataModulo) {
       morsetti: [...new Set(daMostrare.flatMap((p) => p.morsetti))],
     };
   }, [vista, problemi, problemaScelto, problemiAperti]);
+  // Riga scelta: la vista si sposta e si ingrandisce sui suoi componenti
+  // (anche quelli indicati solo da un morsetto "id:morsetto").
+  const inquadra = useMemo(() => {
+    const p = vista ? problemi.find((q) => q.chiave === problemaScelto) : undefined;
+    if (!p) return null;
+    const componenti = [...new Set([...p.componenti, ...p.morsetti.map((m) => m.slice(0, m.lastIndexOf(":")))])];
+    return { chiave: p.chiave, componenti };
+  }, [vista, problemi, problemaScelto]);
 
   // F5 avvia e ferma la simulazione (e non ricarica la pagina della WebView).
   const avviaOFermaRif = useRef(avviaOFerma);
@@ -681,6 +689,7 @@ export function SchermataModulo(props: PropsSchermataModulo) {
           onSelezione={setSelezione}
           simulazione={simulazione}
           evidenzia={evidenzia}
+          inquadra={inquadra}
           esportatore={esportatore}
           sopraFoglio={
             <>

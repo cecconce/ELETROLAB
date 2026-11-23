@@ -147,3 +147,26 @@ export function vistaPerAdattare(
   const centro = { x: r.x + r.larghezza / 2, y: r.y + r.altezza / 2 };
   return { scala, x: larghezza / 2 - centro.x * scala, y: altezza / 2 - centro.y * scala };
 }
+
+/** Zoom massimo usato per inquadrare il punto di un problema: abbastanza da vederlo bene, senza perdere il contesto. */
+export const ZOOM_INQUADRA = 1.5;
+
+/**
+ * Vista che porta al centro del riquadro il rettangolo indicato (i componenti
+ * di un problema scelto nel pannello Problemi) e lo ingrandisce: lo zoom è
+ * quello che fa stare il rettangolo con il margine, ma non oltre `scalaMax`
+ * (un solo componente piccolo non riempie lo schermo) e mai sotto il minimo.
+ */
+export function vistaPerInquadrare(
+  r: { x: number; y: number; larghezza: number; altezza: number },
+  larghezza: number,
+  altezza: number,
+  margine = 80,
+  scalaMax = ZOOM_INQUADRA,
+): Vista {
+  const utileL = Math.max(1, larghezza - 2 * margine);
+  const utileA = Math.max(1, altezza - 2 * margine);
+  const scala = limitaScala(Math.min(scalaMax, utileL / Math.max(1, r.larghezza), utileA / Math.max(1, r.altezza)));
+  const centro = { x: r.x + r.larghezza / 2, y: r.y + r.altezza / 2 };
+  return { scala, x: larghezza / 2 - centro.x * scala, y: altezza / 2 - centro.y * scala };
+}

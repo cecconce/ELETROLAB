@@ -213,6 +213,23 @@ async function collega(pagina, a, b) {
   await pagina.waitForTimeout(400);
   controlla((await aspetto(pagina, "H1")) === lampadaSpenta, "rilasciando S1 la lampada H1 si spegne");
   await avvia(pagina); // ferma
+  // Attività 12.5: una lampada lasciata scollegata dà un problema; scegliendo
+  // la riga nel pannello la vista si sposta e si ingrandisce su di essa.
+  await posa("Lampada di segnalazione", 620, 440);
+  await avvia(pagina);
+  const righe = pagina.locator(".riga-problema");
+  controlla((await righe.count()) > 0, "la lampada scollegata compare nel pannello Problemi");
+  if ((await righe.count()) > 0) {
+    await righe.first().click();
+    await pagina.waitForTimeout(400);
+    const zoom = Number(await pagina.locator("[data-zoom]").first().getAttribute("data-zoom"));
+    const t = await pagina.locator("canvas").first().boundingBox();
+    const h2 = await rettangoloComponente(pagina, "H2");
+    const alCentro = h2 && Math.abs(h2.x + h2.w / 2 - (t.x + t.width / 2)) < 40 && Math.abs(h2.y + h2.h / 2 - (t.y + t.height / 2)) < 60;
+    controlla(zoom === 150 && alCentro, `scelta la riga, la vista va su H2 e la ingrandisce (zoom ${zoom}%)`);
+    await foto("03b-problema-inquadrato");
+  }
+  await avvia(pagina); // ferma
 
   // --- Esempio 1: marcia/arresto con autoritenuta ---------------------------
   console.log("Esempio: marcia/arresto con autoritenuta");

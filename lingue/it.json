@@ -282,7 +282,7 @@
   "problemi.mostra": "Mostra",
   "problemi.errore": "Errore",
   "problemi.avviso": "Da controllare",
-  "problemi.aiuto": "Clic su una riga per evidenziare sul foglio il punto del problema. La simulazione continua comunque.",
+  "problemi.aiuto": "Clic su una riga per evidenziare e inquadrare sul foglio il punto del problema. La simulazione continua comunque.",
   "problemi.e": "e",
   "problemi.morsettoDi": "il morsetto {morsetto} di {componente}",
   "problemi.nessunaAlimentazione": "Nello schema non c'è nessuna alimentazione: aggiungi una rete (monofase o trifase) o un alimentatore e collegalo agli utilizzatori.",
