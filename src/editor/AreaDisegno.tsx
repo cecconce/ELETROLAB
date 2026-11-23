@@ -89,6 +89,7 @@ import {
   vistaPerAdattare,
   vistaPerInquadrare,
   vistaPizzico,
+  annullaFiloAlSecondoDito,
   zoomRotellina,
   zoomVerso,
   type Punto,
@@ -739,13 +740,19 @@ export function AreaDisegno({
     const r = contenitore.current!.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
+  // C'era un filo in corso quando il primo dito ha toccato il foglio? (Questo
+  // gestore è in cattura: gira prima del morsetto che potrebbe iniziare il filo.)
+  const filoPrimaDelPrimoDito = useRef(false);
   const ditoGiu = (e: React.PointerEvent) => {
     if (e.pointerType !== "touch") return;
     dita.current.set(e.pointerId, puntoNelRiquadro(e));
+    if (dita.current.size === 1) filoPrimaDelPrimoDito.current = filoInCorsoRif.current;
     if (dita.current.size === 2 && !pizzico.current) {
       const [[ia, a], [ib, b]] = [...dita.current.entries()];
       pizzico.current = { vista, inizio: [a, b], id: [ia, ib] };
-      // Si abbandona quello che il primo dito aveva cominciato.
+      // Si abbandona quello che il primo dito aveva cominciato, anche un filo
+      // partito da un morsetto toccato per sbaglio all'inizio del pizzico.
+      if (annullaFiloAlSecondoDito(filoPrimaDelPrimoDito.current, filoInCorsoRif.current)) setFiloInCorso(null);
       setRettangolo(null);
       filoTrascinato.current = null;
       stageRif.current?.find((n: Konva.Node) => n.isDragging()).forEach((n) => n.stopDrag());

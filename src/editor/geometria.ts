@@ -98,6 +98,17 @@ export function vistaPizzico(vista: Vista, inizio: readonly [Punto, Punto], ora:
   return { scala, x: c.x - fra.x * scala, y: c.y - fra.y * scala };
 }
 
+/**
+ * Arriva il secondo dito sul foglio: il filo in corso va annullato?
+ * Sì solo se è stato il primo dito, ancora appoggiato, a iniziarlo (prima che
+ * toccasse non c'era nessun filo, adesso c'è): voleva fare un pizzico, non un
+ * collegamento. Un filo iniziato prima, con un tocco già finito, resta: si può
+ * ingrandire o spostare la vista per raggiungere il morsetto di arrivo.
+ */
+export function annullaFiloAlSecondoDito(filoPrimaDelPrimoDito: boolean, filoOra: boolean): boolean {
+  return !filoPrimaDelPrimoDito && filoOra;
+}
+
 /** Sposta la vista di (dx, dy) pixel dello schermo. */
 export function spostaVista(vista: Vista, dx: number, dy: number): Vista {
   return { ...vista, x: vista.x + dx, y: vista.y + dy };

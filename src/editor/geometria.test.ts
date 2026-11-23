@@ -15,6 +15,7 @@ import {
   vistaPerInquadrare,
   ZOOM_INQUADRA,
   vistaPizzico,
+  annullaFiloAlSecondoDito,
   zoomRotellina,
   zoomVerso,
 } from "./geometria";
@@ -114,6 +115,19 @@ describe("adatta alla finestra", () => {
     const b = foglioASchermo(v, { x: r.x + r.larghezza, y: r.y + r.altezza });
     expect(a.x).toBeGreaterThanOrEqual(39.9);
     expect(b.x).toBeLessThanOrEqual(760.1);
+  });
+});
+
+describe("filo e secondo dito", () => {
+  it("annulla il filo iniziato dal primo dito ancora appoggiato", () => {
+    expect(annullaFiloAlSecondoDito(false, true)).toBe(true);
+  });
+  it("non annulla un filo iniziato prima, con un tocco già finito", () => {
+    expect(annullaFiloAlSecondoDito(true, true)).toBe(false);
+  });
+  it("senza filo in corso non c'è niente da annullare", () => {
+    expect(annullaFiloAlSecondoDito(false, false)).toBe(false);
+    expect(annullaFiloAlSecondoDito(true, false)).toBe(false);
   });
 });
 
