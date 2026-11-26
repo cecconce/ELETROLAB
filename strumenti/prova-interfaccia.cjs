@@ -1665,5 +1665,37 @@ async function provaFase11(browser, controlla, errori) {
   await pizzica(100, 50);
   const z2 = await zoom();
   controlla(z2 < z1 * 0.6, `stringendole si rimpicciolisce (${z1} % → ${z2} %)`);
+
+  // Fase 12 (attività 12.6): il secondo dito annulla il filo iniziato dal primo dito.
+  console.log("Fase 12: il secondo dito annulla il filo del primo dito");
+  const area = pagina.locator(".area-disegno-canvas");
+  const filoInCorso = async () => (await area.getAttribute("data-filo-in-corso")) || "";
+  const fili0 = await area.getAttribute("data-fili");
+  const morsetti = await morsettiDi(pagina, null);
+  // Un morsetto lontano dai bordi, così il secondo dito resta sul foglio.
+  const m = morsetti.find((p) => p.x > tela.x + 150 && p.x < tela.x + tela.width - 150 && p.y > tela.y + 60 && p.y < tela.y + tela.height - 60);
+  // Caso 1: il primo dito si posa sul morsetto (inizia il filo), poi arriva il secondo.
+  await tocchi("touchStart", [[m.x, m.y]]);
+  await pagina.waitForTimeout(150);
+  const inizioConDito = await filoInCorso();
+  await tocchi("touchStart", [[m.x, m.y], [m.x + 120, m.y]]);
+  for (let k = 1; k <= 6; k++) {
+    await tocchi("touchMove", [[m.x - 5 * k, m.y], [m.x + 120 + 5 * k, m.y]]);
+    await pagina.waitForTimeout(16);
+  }
+  await tocchi("touchEnd", []);
+  await pagina.waitForTimeout(300);
+  controlla(
+    (await filoInCorso()) === "" && (await area.getAttribute("data-fili")) === fili0,
+    `primo dito su un morsetto (filo «${inizioConDito || "non iniziato"}»), arriva il secondo: il filo si annulla e nessun filo nuovo`,
+  );
+  // Caso 2: filo iniziato con un tocco già finito, poi pizzico: il filo resta.
+  const m2 = (await morsettiDi(pagina, null)).find((p) => p.x > tela.x + 150 && p.x < tela.x + tela.width - 150 && p.y > tela.y + 60 && p.y < tela.y + tela.height - 60);
+  await pagina.touchscreen.tap(m2.x, m2.y);
+  await pagina.waitForTimeout(300);
+  const iniziato = await filoInCorso();
+  await pizzica(40, 80);
+  const dopo = await filoInCorso();
+  controlla(iniziato !== "" && dopo === iniziato, `filo iniziato con un tocco (${iniziato || "nessuno"}), poi pizzico: il filo resta per raggiungere l'arrivo`);
   await contesto.close();
 }
